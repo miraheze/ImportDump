@@ -20,6 +20,18 @@
 	"AutoloadNamespaces": {
 		"Miraheze\\ImportDump\\": "includes/"
 	},
+	"GroupPermissions": {
+		"user": {
+			"requestimport": true,
+			"view-own-import-requests": true
+		}
+	},
+	"AvailableRights": [
+		"handle-import-requests",
+		"requestimport",
+		"view-import-requests",
+		"view-own-import-requests"
+	],
 	"LogActionsHandlers": {
 		"/*": "LogFormatter"
 	},
@@ -32,16 +44,12 @@
 	"LogTypes": [
 		"importrequest"
 	],
-	"AvailableRights": [
-		"handle-import-requests",
-		"requestimport"
-	],
 	"SpecialPages": {
-		"RequestImport": {
-			"class": "Miraheze\\ImportDump\\SpecialRequestImport"
+		"RequestImportDump": {
+			"class": "Miraheze\\ImportDump\\SpecialRequestImportDump"
 		},
-		"RequestImportQueue": {
-			"class": "Miraheze\\ImportDump\\SpecialRequestImportQueue"
+		"RequestImportDumpQueue": {
+			"class": "Miraheze\\ImportDump\\SpecialRequestImportDumpQueue"
 		}
 	},
 	"manifest_version": 2
