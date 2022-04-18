@@ -90,7 +90,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'request_target',
 			],
 			[
-				'cw_status' => 'inreview',
+				'request_status' => 'inreview',
 			],
 			__METHOD__
 		);
