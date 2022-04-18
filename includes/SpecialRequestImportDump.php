@@ -2,9 +2,14 @@
 
 namespace Miraheze\ImportDump;
 
+use ErrorPageError;
 use FormSpecialPage;
 use Html;
+use PermissionsError;
 use SpecialPage;
+use UploadBase;
+use UserBlockedError;
+use UserNotLoggedIn;
 
 class SpecialRequestImportDump extends FormSpecialPage {
 	public function __construct() {
@@ -16,8 +21,6 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 * @return bool
 	 */
 	public function execute( $par ) {
-		$out = $this->getOutput();
-
 		$this->setParameter( $par );
 		$this->setHeaders();
 
@@ -28,12 +31,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				]
 			);
 
-			$out->addWikiMsg( 'importdump-notloggedin', $loginurl );
-
-			return false;
+			throw new UserNotLoggedIn( 'importdump-notloggedin', 'exception-nologin', [ $loginurl ] );
 		}
 
-		$this->checkExecutePermissions( $this->getUser() );
+		$this->checkPermissions();
 
 		$form = $this->getForm();
 		if ( $form->show() ) {
@@ -77,7 +78,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 * @return bool
 	 */
 	public function onSubmit( array $formData ) {
-		$out->addHTML( Html::successBox( $this->msg( 'importdump-success' )->text() ) );
+		$this->getOutput()->addHTML( Html::successBox( $this->msg( 'importdump-success' )->text() ) );
 
 		return true;
 	}
@@ -92,6 +93,30 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		}
 
 		return true;
+	}
+
+	public function checkPermissions() {
+		parent::checkPermissions();
+
+		$user = $this->getUser();
+		$permissionRequired = UploadBase::isAllowed( $user );
+		if ( $permissionRequired !== true ) {
+			throw new PermissionsError( $permissionRequired );
+		}
+
+		if ( $user->isBlockedFromUpload() ) {
+			throw new UserBlockedError( $user->getBlock() );
+		}
+
+		$globalBlock = $user->getGlobalBlock();
+		if ( $globalBlock ) {
+			throw new UserBlockedError( $globalBlock );
+		}
+
+		$this->checkReadOnly();
+		if ( !UploadBase::isEnabled() ) {
+			throw new ErrorPageError( 'uploaddisabled', 'uploaddisabledtext' );
+		}
 	}
 
 	/**
