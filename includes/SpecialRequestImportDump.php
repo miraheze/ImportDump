@@ -5,7 +5,7 @@ namespace Miraheze\ImportDump;
 use CentralAuthUser;
 use ErrorPageError;
 use FormSpecialPage;
-use MediaWiki\Linker\LinkRenderer
+use MediaWiki\Linker\LinkRenderer;
 use MWException;
 use PermissionsError;
 use SpecialPage;
