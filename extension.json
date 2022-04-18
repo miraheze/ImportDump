@@ -43,11 +43,11 @@
 		"importrequest"
 	],
 	"SpecialPages": {
+		"ImportDumpRequestQueue": {
+			"class": "Miraheze\\ImportDump\\SpecialImportDumpRequestQueue"
+		},
 		"RequestImportDump": {
 			"class": "Miraheze\\ImportDump\\SpecialRequestImportDump"
-		},
-		"RequestImportDumpQueue": {
-			"class": "Miraheze\\ImportDump\\SpecialRequestImportDumpQueue"
 		}
 	},
 	"manifest_version": 2
