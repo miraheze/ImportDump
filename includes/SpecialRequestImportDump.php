@@ -5,6 +5,7 @@ namespace Miraheze\ImportDump;
 use CentralAuthUser;
 use ErrorPageError;
 use FormSpecialPage;
+use MediaWiki\Linker\LinkRenderer
 use MWException;
 use PermissionsError;
 use SpecialPage;
@@ -13,8 +14,14 @@ use UserBlockedError;
 use UserNotLoggedIn;
 
 class SpecialRequestImportDump extends FormSpecialPage {
-	public function __construct() {
+
+	/** @var LinkRenderer */
+	private $linkRenderer;
+
+	public function __construct( LinkRenderer $linkRenderer ) {
 		parent::__construct( 'RequestImportDump', 'requestimport' );
+
+		$this->linkRenderer = $linkRenderer;
 	}
 
 	/**
@@ -122,11 +129,15 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			[ 'IGNORE' ]
 		);
 
-		return true;
-	}
+		$requestID = $dbw->insertId();
+		$idLink = $this->linkRenderer->makeLink(
+			SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', $requestID ),
+			"#{$requestID}"
+		);
 
-	public function onSuccess() {
-		$this->getOutput()->addWikiMsg( 'importdump-success' );
+		$this->getOutput()->addWikiMsg( 'importdump-success', $idLink );
+
+		return true;
 	}
 
 	/**
