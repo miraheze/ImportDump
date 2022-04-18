@@ -11,6 +11,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		parent::__construct( 'RequestImportDump', 'requestimport' );
 	}
 
+	/**
+	 * @param string $par
+	 * @return bool
+	 */
 	public function execute( $par ) {
 		$out = $this->getOutput();
 
@@ -33,6 +37,9 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		}
 	}
 
+	/**
+	 * @return array
+	 */
 	protected function getFormFields() {
 		$formDescriptor = [
 			'source' => [
@@ -61,13 +68,21 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		return $formDescriptor;
 	}
 
+	/**
+	 * @param array $formData
+	 * @return bool
+	 */
 	public function onSubmit( array $formData ) {
 		$out->addHTML( Html::successBox( $this->msg( 'importdump-success' )->text() ) );
 
 		return true;
 	}
 
-	public function isValidReason( $reason, $allData ) {
+	/**
+	 * @param string $reason
+	 * @return string|bool
+	 */
+	public function isValidReason( $reason ) {
 		if ( !$reason || ctype_space( $reason ) ) {
 			return $this->msg( 'htmlform-required', 'parseinline' )->escaped();
 		}
@@ -75,10 +90,16 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		return true;
 	}
 
+	/**
+	 * @return string
+	 */
 	protected function getDisplayFormat() {
 		return 'ooui';
 	}
 
+	/**
+	 * @return string
+	 */
 	protected function getGroupName() {
 		return 'wikimanage';
 	}
