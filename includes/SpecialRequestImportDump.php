@@ -5,6 +5,7 @@ namespace Miraheze\ImportDump;
 use CentralAuthUser;
 use ErrorPageError;
 use FormSpecialPage;
+use MWException;
 use PermissionsError;
 use SpecialPage;
 use UploadBase;
@@ -80,6 +81,29 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	public function onSubmit( array $data ) {
 		$globalUser = CentralAuthUser::getInstance( $this->getUser() );
 		$dbw = wfGetDB( DB_PRIMARY, [], $this->getConfig()->get( 'ImportDumpRequestsDatabase' ) );
+
+		$inReview = $dbw->select(
+			'importdump_requests',
+			[
+				'request_reason',
+				'request_source',
+				'request_target',
+			],
+			[
+				'cw_status' => 'inreview',
+			],
+			__METHOD__
+		);
+
+		foreach ( $inReview as $row ) {
+			if (
+				$data['source'] == $row->request_source ||
+				$data['target'] == $row->request_target ||
+				$data['reason'] == $row->request_reason
+			) {
+				throw new MWException( 'Request is too similar to an existing open request!' );
+			}
+		}
 
 		$rows = [
 			'request_source' => $data['source'],
