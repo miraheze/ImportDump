@@ -1,5 +1,6 @@
 CREATE TABLE /*_*/importdump_requests (
   request_id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+  request_timestamp VARCHAR(32) NOT NULL,
   request_source VARCHAR(96) DEFAULT NULL,
   request_target VARCHAR(96) NOT NULL,
   request_file VARCHAR(500) DEFAULT NULL,
