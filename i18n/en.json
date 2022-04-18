@@ -1,0 +1,9 @@
+{
+	"@metadata": {
+		"authors": [
+			"Universal Omega"
+		]
+	},
+	"importdump-desc": "An extension designed to automate user import requests.",
+	"importdump-extensionname": "ImportDump"
+}
