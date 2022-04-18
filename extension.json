@@ -22,15 +22,13 @@
 	},
 	"GroupPermissions": {
 		"user": {
-			"requestimport": true,
-			"view-own-import-requests": true
+			"requestimport": true
 		}
 	},
 	"AvailableRights": [
 		"handle-import-requests",
 		"requestimport",
-		"view-import-requests",
-		"view-own-import-requests"
+		"view-private-import-requests"
 	],
 	"LogActionsHandlers": {
 		"/*": "LogFormatter"
