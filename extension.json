@@ -1,0 +1,48 @@
+{
+	"name": "ImportDump",
+	"author": "Universal Omega",
+	"url": "https://github.com/miraheze/ImportDump",
+	"descriptionmsg": "importdump-desc",
+	"namemsg": "importdump-extensionname",
+	"license-name": "GPL-3.0-or-later",
+	"type": "specialpage",
+	"requires": {
+		"MediaWiki": ">= 1.37.0"
+	},
+	"MessagesDirs": {
+		"ImportDump": [
+			"i18n"
+		]
+	},
+	"ExtensionMessagesFiles": {
+		"ImportDumpAliases": "ImportDumpAliases.php"
+	},
+	"AutoloadNamespaces": {
+		"Miraheze\\ImportDump\\": "includes/"
+	},
+	"LogActionsHandlers": {
+		"/*": "LogFormatter"
+	},
+	"LogHeaders": {
+		"importrequest": "importrequest-log-header"
+	},
+	"LogNames": {
+		"importrequest": "importrequest-log-name"
+	},
+	"LogTypes": [
+		"importrequest"
+	],
+	"AvailableRights": [
+		"handle-import-requests",
+		"requestimport"
+	],
+	"SpecialPages": {
+		"RequestImport": {
+			"class": "Miraheze\\ImportDump\\SpecialRequestImport"
+		},
+		"RequestImportQueue": {
+			"class": "Miraheze\\ImportDump\\SpecialRequestImportQueue"
+		}
+	},
+	"manifest_version": 2
+}
