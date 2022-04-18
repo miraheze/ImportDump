@@ -55,13 +55,13 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 				'name' => 'status',
 				'label-message' => 'importdump-request-label-status',
 				'options' => [
-					'Unreviewed' => 'inreview',
+					'Pending' => 'pending',
 					'In-progress' => 'inprogress',
 					'Approved' => 'approved',
 					'Declined' => 'declined',
 					'All' => '*',
 				],
-				'default' => $status ?: 'inreview',
+				'default' => $status ?: 'pending',
 			],
 		];
 
