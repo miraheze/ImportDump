@@ -50,5 +50,11 @@
 			"class": "Miraheze\\ImportDump\\SpecialRequestImportDump"
 		}
 	},
+	"config": {
+		"ImportDumpRequestsDatabase": {
+			"value": "betawiki",
+			"description": ""
+		}
+	},
 	"manifest_version": 2
 }
