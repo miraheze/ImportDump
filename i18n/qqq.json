@@ -5,5 +5,6 @@
 		]
 	},
 	"importdump-desc": "{{desc|name=ImportDump|url=https://github.com/miraheze/ImportDump}}",
-	"importdump-extensionname": "{{name}}"
+	"importdump-extensionname": "{{name}}",
+	"importdump-notloggedin": "Error message if user tries to request an import dump while not being logged in."
 }
