@@ -22,7 +22,11 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$this->setHeaders();
 
 		if ( !$this->getUser()->isRegistered() ) {
-			$loginurl = SpecialPage::getTitleFor( 'Userlogin' )->getFullURL( [ 'returnto' => $this->getPageTitle()->getPrefixedText() ] );
+			$loginurl = SpecialPage::getTitleFor( 'Userlogin' )
+				->getFullURL( [
+					'returnto' => $this->getPageTitle()->getPrefixedText()
+				]
+			);
 
 			$out->addWikiMsg( 'importdump-notloggedin', $loginurl );
 
