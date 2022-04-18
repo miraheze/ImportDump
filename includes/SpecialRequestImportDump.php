@@ -5,6 +5,7 @@ namespace Miraheze\ImportDump;
 use CentralAuthUser;
 use ErrorPageError;
 use FormSpecialPage;
+use Html;
 use MediaWiki\Linker\LinkRenderer;
 use MWException;
 use PermissionsError;
@@ -135,7 +136,9 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			"#{$requestID}"
 		);
 
-		$this->getOutput()->addWikiMsg( 'importdump-success', $idLink );
+		$this->getOutput()->addHTML(
+			Html::successBox( $this->msg( 'importdump-success', $idLink )->plain() )
+		);
 
 		return true;
 	}
