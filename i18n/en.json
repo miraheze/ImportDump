@@ -6,5 +6,6 @@
 	},
 	"importdump-desc": "An extension designed to automate user import requests.",
 	"importdump-extensionname": "ImportDump",
-	"importdump-notloggedin": "Sorry, you need to <span class=\"plainlinks\">[$1 log in]</span> before you can request an import dump."
+	"importdump-notloggedin": "Sorry, you need to <span class=\"plainlinks\">[$1 log in]</span> before you can request an import dump.",
+	"importdump-success": "Your import dump request ($1) was successfully submitted. Your request will be reviewed by a system administrator as soon as possible."
 }
