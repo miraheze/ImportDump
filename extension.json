@@ -47,7 +47,10 @@
 			"class": "Miraheze\\ImportDump\\SpecialImportDumpRequestQueue"
 		},
 		"RequestImportDump": {
-			"class": "Miraheze\\ImportDump\\SpecialRequestImportDump"
+			"class": "Miraheze\\ImportDump\\SpecialRequestImportDump",
+			"services": [
+				"LinkRenderer"
+			]
 		}
 	},
 	"config": {
