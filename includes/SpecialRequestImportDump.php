@@ -90,7 +90,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$globalUser = CentralAuthUser::getInstance( $this->getUser() );
 		$dbw = wfGetDB( DB_PRIMARY, [], $this->getConfig()->get( 'ImportDumpRequestsDatabase' ) );
 
-		$inReview = $dbw->select(
+		$pending = $dbw->select(
 			'importdump_requests',
 			[
 				'request_reason',
@@ -98,12 +98,12 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'request_target',
 			],
 			[
-				'request_status' => 'inreview',
+				'request_status' => 'pending',
 			],
 			__METHOD__
 		);
 
-		foreach ( $inReview as $row ) {
+		foreach ( $pending as $row ) {
 			if (
 				$data['source'] == $row->request_source ||
 				$data['target'] == $row->request_target ||
@@ -118,7 +118,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			'request_target' => $data['target'],
 			'request_file' => $data['file'],
 			'request_reason' => $data['reason'],
-			'request_status' => 'inreview',
+			'request_status' => 'pending',
 			'request_user' => $globalUser->getId(),
 			'request_timestamp' => $dbw->timestamp(),
 		];
