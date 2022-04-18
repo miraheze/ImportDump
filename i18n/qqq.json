@@ -1,0 +1,9 @@
+{
+	"@metadata": {
+		"authors": [
+			"Universal Omega"
+		]
+	},
+	"importdump-desc": "{{desc|name=ImportDump|url=https://github.com/miraheze/ImportDump}}",
+	"importdump-extensionname": "{{name}}"
+}
