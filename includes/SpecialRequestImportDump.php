@@ -2,9 +2,9 @@
 
 namespace Miraheze\ImportDump;
 
+use CentralAuthUser;
 use ErrorPageError;
 use FormSpecialPage;
-use Html;
 use PermissionsError;
 use SpecialPage;
 use UploadBase;
@@ -74,13 +74,35 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	}
 
 	/**
-	 * @param array $formData
+	 * @param array $data
 	 * @return bool
 	 */
-	public function onSubmit( array $formData ) {
-		$this->getOutput()->addHTML( Html::successBox( $this->msg( 'importdump-success' )->text() ) );
+	public function onSubmit( array $data ) {
+		$globalUser = CentralAuthUser::getInstance( $this->getUser() );
+		$dbw = wfGetDB( DB_PRIMARY, [], $this->getConfig()->get( 'ImportDumpRequestsDatabase' ) );
+
+		$rows = [
+			'request_source' => $data['source'],
+			'request_target' => $data['target'],
+			'request_file' => $data['file'],
+			'request_reason' => $data['reason'],
+			'request_status' => 'inreview',
+			'request_user' => $globalUser->getId(),
+			'request_timestamp' => $dbw->timestamp(),
+		];
+
+		$dbw->insert(
+			'importdump_requests',
+			$rows,
+			__METHOD__,
+			[ 'IGNORE' ]
+		);
 
 		return true;
+	}
+
+	public function onSuccess() {
+		$this->getOutput()->addWikiMsg( 'importdump-success' );
 	}
 
 	/**
