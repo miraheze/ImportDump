@@ -4,11 +4,17 @@ namespace Miraheze\ImportDump;
 
 use HTMLForm;
 use SpecialPage;
+use Wikimedia\Rdbms\ILBFactory;
 
 class SpecialImportDumpRequestQueue extends SpecialPage {
 
-	public function __construct() {
+	/** @var ILBFactory */
+	private $dbLoadBalancerFactory;
+
+	public function __construct( ILBFactory $dbLoadBalancerFactory ) {
 		parent::__construct( 'ImportDumpRequestQueue', 'requestimport' );
+
+		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 	}
 
 	/**
@@ -68,7 +74,17 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 		$htmlForm = HTMLForm::factory( 'ooui', $formDescriptor, $this->getContext() );
 		$htmlForm->setMethod( 'get' )->prepareForm()->displayForm( false );
 
-		$pager = new ImportDumpRequestQueuePager( $this, $requester, $source, $target, $status );
+		$pager = new ImportDumpRequestQueuePager(
+			$this->getConfig(),
+			$this->getContext(),
+			$this->dbLoadBalancerFactory,
+			$this->getLinkRenderer(),
+			$requester,
+			$source,
+			$target,
+			$status
+		);
+
 		$table = $pager->getFullOutput();
 
 		$this->getOutput()->addParserOutputContent( $table );
