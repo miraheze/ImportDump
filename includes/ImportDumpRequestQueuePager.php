@@ -4,8 +4,8 @@ namespace Miraheze\ImportDump;
 
 use CentralAuthUser;
 use Config;
+use IContextSource;
 use MediaWiki\Linker\LinkRenderer;
-use RequestContext;
 use SpecialPage;
 use TablePager;
 use Wikimedia\Rdbms\ILBFactory;
@@ -29,7 +29,7 @@ class ImportDumpRequestQueuePager extends TablePager {
 
 	/**
 	 * @param Config $config
-	 * @param RequestContext $context
+	 * @param IContextSource $context
 	 * @param ILBFactory $dbLoadBalancerFactory
 	 * @param LinkRenderer $linkRenderer
 	 * @param string $requester
@@ -39,7 +39,7 @@ class ImportDumpRequestQueuePager extends TablePager {
 	 */
 	public function __construct(
 		Config $config,
-		RequestContext $context,
+		IContextSource $context,
 		ILBFactory $dbLoadBalancerFactory,
 		LinkRenderer $linkRenderer,
 		string $requester,
