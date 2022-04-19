@@ -45,16 +45,9 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 	private function doPagerStuff() {
 		$requester = $this->getRequest()->getText( 'requester' );
 		$status = $this->getRequest()->getText( 'status' );
-		$source = $this->getRequest()->getText( 'source' );
 		$target = $this->getRequest()->getText( 'target' );
 
 		$formDescriptor = [
-			'source' => [
-				'type' => 'text',
-				'name' => 'source',
-				'label-message' => 'importdump-label-source',
-				'default' => $source,
-			],
 			'target' => [
 				'type' => 'text',
 				'name' => 'target',
@@ -93,7 +86,6 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 			$this->getLinkRenderer(),
 			$this->userFactory,
 			$requester,
-			$source,
 			$status,
 			$target
 		);
