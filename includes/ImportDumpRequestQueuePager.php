@@ -22,9 +22,6 @@ class ImportDumpRequestQueuePager extends TablePager {
 	private $requester;
 
 	/** @var string */
-	private $source;
-
-	/** @var string */
 	private $status;
 
 	/** @var string */
@@ -37,7 +34,6 @@ class ImportDumpRequestQueuePager extends TablePager {
 	 * @param LinkRenderer $linkRenderer
 	 * @param UserFactory $userFactory
 	 * @param string $requester
-	 * @param string $source
 	 * @param string $status
 	 * @param string $target
 	 */
@@ -48,7 +44,6 @@ class ImportDumpRequestQueuePager extends TablePager {
 		LinkRenderer $linkRenderer,
 		UserFactory $userFactory,
 		string $requester,
-		string $source,
 		string $status,
 		string $target
 	) {
@@ -66,7 +61,6 @@ class ImportDumpRequestQueuePager extends TablePager {
 		$this->userFactory = $userFactory;
 
 		$this->requester = $requester;
-		$this->source = $source;
 		$this->status = $status;
 		$this->target = $target;
 	}
@@ -78,11 +72,10 @@ class ImportDumpRequestQueuePager extends TablePager {
 		static $headers = null;
 
 		$headers = [
-			'request_timestamp' => 'importdump-request-label-requested-date',
-			'request_source' => 'importdump-label-source',
+			'request_timestamp' => 'importdump-label-requested-date',
+			'request_actor' => 'importdump-label-requester',
+			'request_status' => 'importdump-label-status',
 			'request_target' => 'importdump-label-target',
-			'request_user' => 'importdump-request-label-requester',
-			'request_status' => 'importdump-request-label-status',
 		];
 
 		foreach ( $headers as &$msg ) {
@@ -104,26 +97,26 @@ class ImportDumpRequestQueuePager extends TablePager {
 			case 'request_timestamp':
 				$language = $this->getLanguage();
 				$formatted = $language->timeanddate( $row->request_timestamp );
-				break;
-			case 'request_source':
-				$formatted = $row->request_source;
+
 				break;
 			case 'request_target':
 				$formatted = $row->request_target;
+
 				break;
 			case 'request_actor':
 				$user = $this->userFactory->newFromActorId( $row->request_actor );
 				$formatted = $user->getName();
+
 				break;
 			case 'request_status':
 				$formatted = $this->linkRenderer->makeLink(
 					SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', $row->request_id ),
 					$row->request_status
 				);
+
 				break;
 			default:
 				$formatted = "Unable to format $name";
-				break;
 		}
 
 		return $formatted;
@@ -140,17 +133,12 @@ class ImportDumpRequestQueuePager extends TablePager {
 			'fields' => [
 				'request_actor',
 				'request_id',
-				'request_source',
 				'request_status',
 				'request_timestamp',
 				'request_target',
 			],
 			'joins_conds' => [],
 		];
-
-		if ( $this->source ) {
-			$info['conds']['request_source'] = $this->source;
-		}
 
 		if ( $this->target ) {
 			$info['conds']['request_target'] = $this->target;
