@@ -8,7 +8,6 @@ use MediaWiki\Linker\LinkRenderer;
 use RequestContext;
 use SpecialPage;
 use TablePager;
-use Title;
 use Wikimedia\Rdbms\ILBFactory;
 
 class ImportDumpRequestQueuePager extends TablePager {

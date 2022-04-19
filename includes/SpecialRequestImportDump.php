@@ -6,7 +6,6 @@ use CentralAuthUser;
 use ErrorPageError;
 use FormSpecialPage;
 use Html;
-use MediaWiki\Linker\LinkRenderer;
 use MWException;
 use PermissionsError;
 use SpecialPage;
