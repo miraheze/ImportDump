@@ -3,6 +3,7 @@
 namespace Miraheze\ImportDump;
 
 use HTMLForm;
+use MediaWiki\User\UserFactory;
 use SpecialPage;
 use Wikimedia\Rdbms\ILBFactory;
 
@@ -11,13 +12,21 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
 
+	/** @var UserFactory */
+	private $userFactory;
+
 	/**
 	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param UserFactory $userFactory
 	 */
-	public function __construct( ILBFactory $dbLoadBalancerFactory ) {
+	public function __construct(
+		ILBFactory $dbLoadBalancerFactory,
+		UserFactory $userFactory
+	) {
 		parent::__construct( 'ImportDumpRequestQueue', 'requestimport' );
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
+		$this->userFactory = $userFactory;
 	}
 
 	/**
@@ -82,10 +91,11 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 			$this->getContext(),
 			$this->dbLoadBalancerFactory,
 			$this->getLinkRenderer(),
+			$this->userFactory,
 			$requester,
 			$source,
-			$target,
-			$status
+			$status,
+			$target
 		);
 
 		$table = $pager->getFullOutput();
