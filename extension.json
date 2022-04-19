@@ -47,6 +47,8 @@
 			"class": "Miraheze\\ImportDump\\SpecialImportDumpRequestQueue",
 			"services": [
 				"DBLoadBalancerFactory",
+				"ImportDumpRequest",
+				"PermissionManager",
 				"UserFactory"
 			]
 		},
