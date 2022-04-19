@@ -15,14 +15,8 @@ use UserBlockedError;
 use UserNotLoggedIn;
 
 class SpecialRequestImportDump extends FormSpecialPage {
-
-	/** @var LinkRenderer */
-	private $linkRenderer;
-
-	public function __construct( LinkRenderer $linkRenderer ) {
+	public function __construct() {
 		parent::__construct( 'RequestImportDump', 'requestimport' );
-
-		$this->linkRenderer = $linkRenderer;
 	}
 
 	/**
@@ -131,7 +125,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		);
 
 		$requestID = $dbw->insertId();
-		$idLink = $this->linkRenderer->makeLink(
+		$idLink = $this->getLinkRenderer()->makeLink(
 			SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', $requestID ),
 			"#{$requestID}"
 		);
