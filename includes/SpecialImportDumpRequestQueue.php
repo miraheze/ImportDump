@@ -3,6 +3,7 @@
 namespace Miraheze\ImportDump;
 
 use HTMLForm;
+use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\User\UserFactory;
 use SpecialPage;
 use Wikimedia\Rdbms\ILBFactory;
@@ -12,20 +13,32 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
 
+	/** @var ImportDumpRequest */
+	private $importDumpRequest;
+
+	/** @var PermissionManager */
+	private $permissionManager;
+
 	/** @var UserFactory */
 	private $userFactory;
 
 	/**
 	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param ImportDumpRequest $importDumpRequest
+	 * @param PermissionManager $permissionManager
 	 * @param UserFactory $userFactory
 	 */
 	public function __construct(
 		ILBFactory $dbLoadBalancerFactory,
+		ImportDumpRequest $importDumpRequest,
+		PermissionManager $permissionManager,
 		UserFactory $userFactory
 	) {
 		parent::__construct( 'ImportDumpRequestQueue', 'requestimport' );
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
+		$this->importDumpRequest = $importDumpRequest;
+		$this->permissionManager = $permissionManager;
 		$this->userFactory = $userFactory;
 	}
 
@@ -103,10 +116,15 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 
 		$out->addModules( [ 'ext.importdump.oouiform' ] );
 
-		// $requestViewer = new ImportDumpRequestViewer();
-		// $htmlForm = $requestViewer->getForm( $par, $this->getContext() );
+		$requestViewer = new ImportDumpRequestViewer(
+			$this->getConfig(),
+			$this->importDumpRequest,
+			$this->permissionManager
+		);
 
-		// $htmlForm->show();
+		$htmlForm = $requestViewer->getForm( $par, $this->getContext() );
+
+		$htmlForm->show();
 	}
 
 	/**
