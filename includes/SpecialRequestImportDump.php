@@ -11,6 +11,7 @@ use SpecialPage;
 use UploadBase;
 use UserBlockedError;
 use UserNotLoggedIn;
+use WikiMap;
 
 class SpecialRequestImportDump extends FormSpecialPage {
 	public function __construct() {
