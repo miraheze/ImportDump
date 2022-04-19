@@ -5,7 +5,6 @@ namespace Miraheze\ImportDump;
 use ErrorPageError;
 use FormSpecialPage;
 use Html;
-use MWException;
 use PermissionsError;
 use SpecialPage;
 use Status;
