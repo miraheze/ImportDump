@@ -5,11 +5,9 @@ namespace Miraheze\ImportDump;
 use Config;
 use Html;
 use HTMLForm;
-use HTMLFormField;
 use IContextSource;
 use Linker;
 use MediaWiki\Permissions\PermissionManager;
-use MWException;
 
 class ImportDumpRequestViewer {
 
