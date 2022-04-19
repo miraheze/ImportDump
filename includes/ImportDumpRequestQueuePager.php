@@ -2,10 +2,10 @@
 
 namespace Miraheze\ImportDump;
 
-use CentralAuthUser;
 use Config;
 use IContextSource;
 use MediaWiki\Linker\LinkRenderer;
+use MediaWiki\User\UserFactory;
 use SpecialPage;
 use TablePager;
 use Wikimedia\Rdbms\ILBFactory;
@@ -14,6 +14,9 @@ class ImportDumpRequestQueuePager extends TablePager {
 
 	/** @var LinkRenderer */
 	private $linkRenderer;
+
+	/** @var UserFactory */
+	private $userFactory;
 
 	/** @var string */
 	private $requester;
@@ -32,32 +35,40 @@ class ImportDumpRequestQueuePager extends TablePager {
 	 * @param IContextSource $context
 	 * @param ILBFactory $dbLoadBalancerFactory
 	 * @param LinkRenderer $linkRenderer
+	 * @param UserFactory $userFactory
 	 * @param string $requester
 	 * @param string $source
-	 * @param string $target
 	 * @param string $status
+	 * @param string $target
 	 */
 	public function __construct(
 		Config $config,
 		IContextSource $context,
 		ILBFactory $dbLoadBalancerFactory,
 		LinkRenderer $linkRenderer,
+		UserFactory $userFactory,
 		string $requester,
 		string $source,
-		string $target,
-		string $status
+		string $status,
+		string $target
 	) {
 		parent::__construct( $context, $linkRenderer );
-
-		$this->mDb = $dbLoadBalancerFactory->getMainLB(
-			$config->get( 'ImportDumpRequestsDatabase' )
-		)->getConnectionRef( DB_REPLICA, [], $config->get( 'ImportDumpRequestsDatabase' ) );
+		
+		if ( $config->get( 'ImportDumpCentralWiki' ) ) {
+			$this->mDb = $dbLoadBalancerFactory->getMainLB(
+				$config->get( 'ImportDumpCentralWiki' )
+			)->getConnectionRef( DB_REPLICA, [], $config->get( 'ImportDumpCentralWiki' ) );
+		} else {
+			$this->mDb = $dbLoadBalancerFactory->getMainLB()->getConnectionRef( DB_REPLICA );
+		}
 
 		$this->linkRenderer = $linkRenderer;
+		$this->userFactory = $userFactory;
+
 		$this->requester = $requester;
 		$this->source = $source;
-		$this->target = $target;
 		$this->status = $status;
+		$this->target = $target;
 	}
 
 	/**
@@ -100,9 +111,9 @@ class ImportDumpRequestQueuePager extends TablePager {
 			case 'request_target':
 				$formatted = $row->request_target;
 				break;
-			case 'request_user':
-				$globalUser = CentralAuthUser::newFromId( $row->request_user );
-				$formatted = $globalUser->getName();
+			case 'request_actor':
+				$user = $this->userFactory->newFromActorId( $row->request_actor );
+				$formatted = $user->getName();
 				break;
 			case 'request_status':
 				$formatted = $this->linkRenderer->makeLink(
@@ -127,12 +138,12 @@ class ImportDumpRequestQueuePager extends TablePager {
 				'importdump_requests',
 			],
 			'fields' => [
+				'request_actor',
 				'request_id',
-				'request_timestamp',
 				'request_source',
-				'request_target',
-				'request_user',
 				'request_status',
+				'request_timestamp',
+				'request_target',
 			],
 			'joins_conds' => [],
 		];
@@ -146,8 +157,8 @@ class ImportDumpRequestQueuePager extends TablePager {
 		}
 
 		if ( $this->requester ) {
-			$globalUser = CentralAuthUser::getInstanceByName( $this->requester );
-			$info['conds']['request_user'] = $globalUser->getId();
+			$user = $this->userFactory->newFromName( $this->requester );
+			$info['conds']['request_actor'] = $user->getActorId();
 		}
 
 		if ( $this->status && $this->status != '*' ) {
