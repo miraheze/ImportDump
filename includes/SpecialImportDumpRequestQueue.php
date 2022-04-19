@@ -101,14 +101,14 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 
 		$out->addModules( [ 'ext.importdump.oouiform' ] );
 
-		$requestViewer = new ImportDumpRequestViewer();
-		$htmlForm = $requestViewer->getForm( $par, $this->getContext() );
+		// $requestViewer = new ImportDumpRequestViewer();
+		// $htmlForm = $requestViewer->getForm( $par, $this->getContext() );
 
-		$htmlForm->show();
+		// $htmlForm->show();
 	}
 
 	/**
-	 * @return bool
+	 * @return string
 	 */
 	protected function getGroupName() {
 		return 'wikimanage';
