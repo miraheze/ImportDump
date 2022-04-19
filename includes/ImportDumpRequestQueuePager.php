@@ -95,7 +95,7 @@ class ImportDumpRequestQueuePager extends TablePager {
 		];
 
 		if ( $this->requester ) {
-			$globalUser = CentralAuthUser::newFromId( $this->requester );
+			$globalUser = CentralAuthUser::getInstanceByName( $this->requester );
 			$info['conds']['request_user'] = $globalUser->getId();
 		}
 
