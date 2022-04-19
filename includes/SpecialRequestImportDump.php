@@ -20,7 +20,6 @@ class SpecialRequestImportDump extends FormSpecialPage {
 
 	/**
 	 * @param string $par
-	 * @return bool
 	 */
 	public function execute( $par ) {
 		$this->setParameter( $par );
@@ -123,7 +122,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			[ 'IGNORE' ]
 		);
 
-		$requestID = $dbw->insertId();
+		$requestID = (string)$dbw->insertId();
 		$idLink = $this->getLinkRenderer()->makeLink(
 			SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', $requestID ),
 			"#{$requestID}"
@@ -157,7 +156,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			throw new PermissionsError( $permissionRequired );
 		}
 
-		if ( $user->isBlockedFromUpload() ) {
+		if ( $user->isBlockedFromUpload() && $user->getBlock() ) {
 			throw new UserBlockedError( $user->getBlock() );
 		}
 
