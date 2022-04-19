@@ -53,7 +53,7 @@ class ImportDumpRequestQueuePager extends TablePager {
 		string $target
 	) {
 		parent::__construct( $context, $linkRenderer );
-		
+
 		if ( $config->get( 'ImportDumpCentralWiki' ) ) {
 			$this->mDb = $dbLoadBalancerFactory->getMainLB(
 				$config->get( 'ImportDumpCentralWiki' )
