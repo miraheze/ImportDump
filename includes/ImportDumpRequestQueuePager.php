@@ -19,8 +19,24 @@ class ImportDumpRequestQueuePager extends TablePager {
 	private $requester;
 
 	/** @var string */
+	private $source;
+
+	/** @var string */
 	private $status;
 
+	/** @var string */
+	private $target;
+
+	/**
+	 * @param Config $config
+	 * @param RequestContext $context
+	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param LinkRenderer $linkRenderer
+	 * @param string $requester
+	 * @param string $source
+	 * @param string $target
+	 * @param string $status
+	 */
 	public function __construct(
 		Config $config,
 		RequestContext $context,
@@ -39,9 +55,14 @@ class ImportDumpRequestQueuePager extends TablePager {
 
 		$this->linkRenderer = $linkRenderer;
 		$this->requester = $requester;
+		$this->source = $source;
+		$this->target = $target;
 		$this->status = $status;
 	}
 
+	/**
+	 * @return array
+	 */
 	public function getFieldNames() {
 		static $headers = null;
 
@@ -60,6 +81,11 @@ class ImportDumpRequestQueuePager extends TablePager {
 		return $headers;
 	}
 
+	/**
+	 * @param string $name
+	 * @param string $value
+	 * @return string
+	 */
 	public function formatValue( $name, $value ) {
 		$row = $this->mCurrentRow;
 
@@ -92,6 +118,9 @@ class ImportDumpRequestQueuePager extends TablePager {
 		return $formatted;
 	}
 
+	/**
+	 * @return array
+	 */
 	public function getQueryInfo() {
 		$info = [
 			'tables' => [
@@ -108,6 +137,14 @@ class ImportDumpRequestQueuePager extends TablePager {
 			'joins_conds' => [],
 		];
 
+		if ( $this->source ) {
+			$info['conds']['request_source'] = $this->source;
+		}
+
+		if ( $this->target ) {
+			$info['conds']['request_target'] = $this->target;
+		}
+
 		if ( $this->requester ) {
 			$globalUser = CentralAuthUser::getInstanceByName( $this->requester );
 			$info['conds']['request_user'] = $globalUser->getId();
@@ -122,10 +159,17 @@ class ImportDumpRequestQueuePager extends TablePager {
 		return $info;
 	}
 
+	/**
+	 * @return string
+	 */
 	public function getDefaultSort() {
 		return 'request_id';
 	}
 
+	/**
+	 * @param string $name
+	 * @return bool
+	 */
 	public function isFieldSortable( $name ) {
 		return true;
 	}
