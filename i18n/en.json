@@ -4,8 +4,16 @@
 			"Universal Omega"
 		]
 	},
+	"action-handle-import-requests": "handle user import requests",
+	"action-requestimport": "request import dumps",
+	"action-view-private-import-requests": "view import dump requests for private wikis",
 	"importdump-desc": "An extension designed to automate user import requests.",
 	"importdump-extensionname": "ImportDump",
 	"importdump-notloggedin": "Sorry, you need to <span class=\"plainlinks\">[$1 log in]</span> before you can request an import dump.",
-	"importdump-success": "Your import dump request ($1) was successfully submitted. Your request will be reviewed by a system administrator as soon as possible."
+	"importdump-success": "Your import dump request ($1) was successfully submitted. Your request will be reviewed by a system administrator as soon as possible.",
+	"importdumprequestqueue": "Import Dump Request Queue",
+	"requestimportdump": "Request Import Dump",
+	"right-handle-import-requests": "Handle user import requests",
+	"right-requestimport": "Request import dumps",
+	"right-view-private-import-requests": "View import dump requests for private wikis"
 }
