@@ -3,28 +3,42 @@
 namespace Miraheze\ImportDump;
 
 use CentralAuthUser;
-use MediaWiki\MediaWikiServices;
+use Config;
+use MediaWiki\Linker\LinkRenderer;
+use RequestContext;
+use SpecialPage;
 use TablePager;
 use Title;
+use Wikimedia\Rdbms\ILBFactory;
 
 class ImportDumpRequestQueuePager extends TablePager {
+
+	/** @var LinkRenderer */
+	private $linkRenderer;
 
 	/** @var string */
 	private $requester;
 
 	/** @var string */
-	private $dbname;
-
-	/** @var string */
 	private $status;
 
-	public function __construct( $page, $requester, $source, $target, $status ) {
-		parent::__construct( $page->getContext(), $page->getLinkRenderer() );
+	public function __construct(
+		Config $config,
+		RequestContext $context,
+		ILBFactory $dbLoadBalancerFactory,
+		LinkRenderer $linkRenderer,
+		string $requester,
+		string $source,
+		string $target,
+		string $status
+	) {
+		parent::__construct( $context, $linkRenderer );
 
-		$this->mDb = MediaWikiServices::getInstance()->getDBLoadBalancerFactory()->getMainLB(
-			$page->getConfig()->get( 'ImportDumpRequestsDatabase' )
-		)->getConnectionRef( DB_REPLICA, [], $page->getConfig()->get( 'ImportDumpRequestsDatabase' ) );
+		$this->mDb = $dbLoadBalancerFactory->getMainLB(
+			$config->get( 'ImportDumpRequestsDatabase' )
+		)->getConnectionRef( DB_REPLICA, [], $config->get( 'ImportDumpRequestsDatabase' ) );
 
+		$this->linkRenderer = $linkRenderer;
 		$this->requester = $requester;
 		$this->status = $status;
 	}
@@ -53,7 +67,6 @@ class ImportDumpRequestQueuePager extends TablePager {
 		switch ( $name ) {
 			case 'request_timestamp':
 				$language = $this->getLanguage();
-
 				$formatted = $language->timeanddate( $row->request_timestamp );
 				break;
 			case 'request_source':
@@ -64,11 +77,13 @@ class ImportDumpRequestQueuePager extends TablePager {
 				break;
 			case 'request_user':
 				$globalUser = CentralAuthUser::newFromId( $row->request_user );
-
 				$formatted = $globalUser->getName();
 				break;
 			case 'request_status':
-				$formatted = MediaWikiServices::getInstance()->getLinkRenderer()->makeLink( Title::newFromText( "Special:ImportDumpRequestQueue/{$row->request_id}" ), $row->request_status );
+				$formatted = $this->linkRenderer->makeLink(
+					SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', $row->request_id ),
+					$row->request_status
+				);
 				break;
 			default:
 				$formatted = "Unable to format $name";
