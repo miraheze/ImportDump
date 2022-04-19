@@ -11,6 +11,9 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
 
+	/**
+	 * @param ILBFactory $dbLoadBalancerFactory
+	 */
 	public function __construct( ILBFactory $dbLoadBalancerFactory ) {
 		parent::__construct( 'ImportDumpRequestQueue', 'requestimport' );
 
