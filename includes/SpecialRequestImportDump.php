@@ -8,6 +8,7 @@ use Html;
 use MWException;
 use PermissionsError;
 use SpecialPage;
+use Status;
 use UploadBase;
 use UserBlockedError;
 use UserNotLoggedIn;
@@ -83,9 +84,13 @@ class SpecialRequestImportDump extends FormSpecialPage {
 
 	/**
 	 * @param array $data
-	 * @return bool
+	 * @return Status
 	 */
 	public function onSubmit( array $data ) {
+		if ( $this->getUser()->pingLimiter( 'requestimportdump' ) ) {
+			return Status::newFatal( 'actionthrottledtext' );
+		}
+
 		$dbw = wfGetDB( DB_PRIMARY );
 
 		$pending = $dbw->select(
@@ -107,7 +112,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				$data['target'] == $row->request_target ||
 				$data['reason'] == $row->request_reason
 			) {
-				throw new MWException( 'Request is too similar to an existing open request!' );
+				return Status::newFatal( 'importdump-duplicate-request' );
 			}
 		}
 
@@ -129,16 +134,16 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		);
 
 		$requestID = (string)$dbw->insertId();
-		$idLink = $this->getLinkRenderer()->makeLink(
+		$requestLink = $this->getLinkRenderer()->makeLink(
 			SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', $requestID ),
 			"#{$requestID}"
 		);
 
 		$this->getOutput()->addHTML(
-			Html::successBox( $this->msg( 'importdump-success', $idLink )->plain() )
+			Html::successBox( $this->msg( 'importdump-success', $requestLink )->plain() )
 		);
 
-		return true;
+		return Status::newGood();
 	}
 
 	/**
