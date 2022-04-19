@@ -4,8 +4,16 @@
 			"Universal Omega"
 		]
 	},
+	"action-handle-import-requests": "{{doc-action|handle-import-requests}}",
+	"action-requestimport": "{{doc-action|requestimport}}",
+	"action-view-private-import-requests": "{{doc-action|view-private-import-requests}}",
 	"importdump-desc": "{{desc|name=ImportDump|url=https://github.com/miraheze/ImportDump}}",
 	"importdump-extensionname": "{{name}}",
 	"importdump-notloggedin": "Error message if user tries to request an import dump while not being logged in.",
-	"importdump-success": "Message after an import dump request has been successfully submitted."
+	"importdump-success": "Message after an import dump request has been successfully submitted.",
+	"importdumprequestqueue": "{{doc-special}}",
+	"requestimportdump": "{{doc-special}}",
+	"right-handle-import-requests": "{{doc-right|handle-import-requests}}",
+	"right-requestimport": "{{doc-right|requestimport}}",
+	"right-view-private-import-requests": "{{doc-right|view-private-import-requests}}"
 }
