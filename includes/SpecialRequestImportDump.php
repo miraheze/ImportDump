@@ -2,7 +2,6 @@
 
 namespace Miraheze\ImportDump;
 
-use CentralAuthUser;
 use ErrorPageError;
 use FormSpecialPage;
 use Html;
@@ -36,6 +35,13 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		}
 
 		$this->checkPermissions();
+
+		if (
+			$this->getConfig()->get( 'ImportDumpCentralWiki' ) &&
+			!WikiMap::isCurrentWikiId( $this->getConfig()->get( 'ImportDumpCentralWiki' ) )
+		) {
+			throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
+		}
 
 		$form = $this->getForm();
 		if ( $form->show() ) {
@@ -79,8 +85,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 * @return bool
 	 */
 	public function onSubmit( array $data ) {
-		$globalUser = CentralAuthUser::getInstance( $this->getUser() );
-		$dbw = wfGetDB( DB_PRIMARY, [], $this->getConfig()->get( 'ImportDumpRequestsDatabase' ) );
+		$dbw = wfGetDB( DB_PRIMARY );
 
 		$pending = $dbw->select(
 			'importdump_requests',
@@ -111,7 +116,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			'request_file' => $data['file'],
 			'request_reason' => $data['reason'],
 			'request_status' => 'pending',
-			'request_user' => $globalUser->getId(),
+			'request_actor' => $this->getUser()->getActorId(),
 			'request_timestamp' => $dbw->timestamp(),
 		];
 
