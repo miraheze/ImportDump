@@ -133,6 +133,7 @@ class ImportDumpRequestViewer {
 					'rows' => 4,
 					'label-message' => 'importdump-label-comment',
 					'section' => 'comments',
+					'validation-callback' => [ $this, 'isValidComment' ],
 				],
 				'submit-comment' => [
 					'type' => 'submit',
@@ -199,6 +200,19 @@ class ImportDumpRequestViewer {
 		}
 
 		return $formDescriptor;
+	}
+
+	/**
+	 * @param ?string $comment
+	 * @param array $alldata
+	 * @return string|bool
+	 */
+	public function isValidComment( ?string $comment, array $alldata ) {
+		if ( isset( $alldata['submit-comment'] ) && ( !$comment || ctype_space( $comment ) ) ) {
+			return wfMessage( 'htmlform-required', 'parseinline' )->escaped();
+		}
+
+		return true;
 	}
 
 	/**
@@ -276,6 +290,10 @@ class ImportDumpRequestViewer {
 			$out->addHTML( Html::errorBox( wfMessage( 'exception-nologin-text' )->parse() ) );
 
 			return false;
+		}
+
+		if ( isset( $formData['submit-comment'] ) ) {
+			$this->importDumpRequestManager->addComment( $formData['comment'], $user );
 		}
 
 		$out->addHTML( Html::successBox( wfMessage( 'importdump-edit-success' )->escaped() ) );
