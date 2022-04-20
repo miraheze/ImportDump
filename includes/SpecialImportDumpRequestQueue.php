@@ -13,8 +13,8 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
 
-	/** @var ImportDumpRequest */
-	private $importDumpRequest;
+	/** @var ImportDumpRequestManager */
+	private $importDumpRequestManager;
 
 	/** @var PermissionManager */
 	private $permissionManager;
@@ -24,20 +24,20 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 
 	/**
 	 * @param ILBFactory $dbLoadBalancerFactory
-	 * @param ImportDumpRequest $importDumpRequest
+	 * @param ImportDumpRequestManager $importDumpRequestManager
 	 * @param PermissionManager $permissionManager
 	 * @param UserFactory $userFactory
 	 */
 	public function __construct(
 		ILBFactory $dbLoadBalancerFactory,
-		ImportDumpRequest $importDumpRequest,
+		ImportDumpRequestManager $importDumpRequestManager,
 		PermissionManager $permissionManager,
 		UserFactory $userFactory
 	) {
 		parent::__construct( 'ImportDumpRequestQueue', 'requestimport' );
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
-		$this->importDumpRequest = $importDumpRequest;
+		$this->importDumpRequestManager = $importDumpRequestManager;
 		$this->permissionManager = $permissionManager;
 		$this->userFactory = $userFactory;
 	}
@@ -118,7 +118,7 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 
 		$requestViewer = new ImportDumpRequestViewer(
 			$this->getConfig(),
-			$this->importDumpRequest,
+			$this->importDumpRequestManager,
 			$this->permissionManager
 		);
 
