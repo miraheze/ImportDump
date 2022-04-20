@@ -18,7 +18,7 @@ class ImportDumpOOUIForm extends OOUIHTMLForm {
 
 	/**
 	 * @param string $html
-	 * @return PanelLayout
+	 * @return string
 	 */
 	public function wrapForm( $html ) {
 		$html = Xml::tags( 'div', [ 'id' => 'importdump' ], $html );
