@@ -201,19 +201,19 @@ class ImportDumpRequestViewer {
 	}
 
 	/**
-	 * @param string $requestID
+	 * @param int $requestID
 	 * @param IContextSource $context
 	 * @return ImportDumpOOUIForm
 	 */
 	public function getForm(
-		string $requestID,
+		int $requestID,
 		IContextSource $context
 	) {
 		$this->importDumpRequestManager->fromID( $requestID );
 
 		$context->getOutput()->addModules( [ 'ext.importdump.oouiform' ] );
 
-		if ( !$this->importDumpRequestManager->exists() ) {
+		if ( $requestID === 0 || !$this->importDumpRequestManager->exists() ) {
 			$context->getOutput()->addHTML(
 				Html::errorBox( wfMessage( 'importdump-unknown' )->escaped() )
 			);
