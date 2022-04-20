@@ -202,10 +202,10 @@ class ImportDumpRequestViewer {
 	}
 
 	/**
-	 * @param string $target
+	 * @param ?string $target
 	 * @return string|bool
 	 */
-	public function isValidDatabase( string $target ) {
+	public function isValidDatabase( ?string $target ) {
 		if ( !in_array( $target, $this->config->get( 'LocalDatabases' ) ) ) {
 			return wfMessage( 'importdump-invalid-target' )->escaped();
 		}
@@ -214,10 +214,10 @@ class ImportDumpRequestViewer {
 	}
 
 	/**
-	 * @param string $reason
+	 * @param ?string $reason
 	 * @return string|bool
 	 */
-	public function isValidReason( string $reason ) {
+	public function isValidReason( ?string $reason ) {
 		if ( !$reason || ctype_space( $reason ) ) {
 			return wfMessage( 'htmlform-required', 'parseinline' )->escaped();
 		}
