@@ -72,6 +72,7 @@ class ImportDumpRequestViewer {
 				'default' => $this->importDumpRequestManager->getTarget(),
 			],
 			'requester' => [
+				// @phan-suppress-next-line SecurityCheck-XSS
 				'label-message' => 'importdump-label-requester',
 				'type' => 'info',
 				'section' => 'request',
@@ -205,8 +206,8 @@ class ImportDumpRequestViewer {
 	 * @return string|bool
 	 */
 	public function isValidDatabase( string $target ) {
-		if ( !in_array( $target, $this->getConfig()->get( 'LocalDatabases' ) ) ) {
-			return $this->msg( 'importdump-invalid-target' )->escaped();
+		if ( !in_array( $target, $this->config->get( 'LocalDatabases' ) ) ) {
+			return wfMessage( 'importdump-invalid-target' )->escaped();
 		}
 
 		return true;
@@ -218,7 +219,7 @@ class ImportDumpRequestViewer {
 	 */
 	public function isValidReason( string $reason ) {
 		if ( !$reason || ctype_space( $reason ) ) {
-			return $this->msg( 'htmlform-required', 'parseinline' )->escaped();
+			return wfMessage( 'htmlform-required', 'parseinline' )->escaped();
 		}
 
 		return true;
