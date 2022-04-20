@@ -5,7 +5,6 @@ namespace Miraheze\ImportDump;
 use ExtensionRegistry;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\User\UserFactory;
-use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
 use stdClass;
 use User;
@@ -27,9 +26,6 @@ class ImportDumpRequestManager {
 	/** @var LBFactory */
 	private $lbFactory;
 
-	/** @var MessageLocalizer */
-	private $messageLocalizer;
-
 	/** @var ServiceOptions */
 	private $options;
 
@@ -41,21 +37,17 @@ class ImportDumpRequestManager {
 
 	/**
 	 * @param LBFactory $lbFactory
-	 * @param MessageLocalizer $messageLocalizer
 	 * @param ServiceOptions $options
 	 * @param UserFactory $userFactory
 	 */
 	public function __construct(
 		LBFactory $lbFactory,
-		MessageLocalizer $messageLocalizer,
 		ServiceOptions $options,
 		UserFactory $userFactory
 	) {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
 
 		$this->lbFactory = $lbFactory;
-		$this->messageLocalizer = $messageLocalizer;
-
 		$this->options = $options;
 		$this->userFactory = $userFactory;
 	}
