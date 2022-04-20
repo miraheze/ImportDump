@@ -76,6 +76,9 @@
 			"description": ""
 		}
 	},
+	"ConfigRegistry": {
+		"ImportDump": "GlobalVarConfig::newInstance"
+	},
 	"ServiceWiringFiles": [
 		"includes/ServiceWiring.php"
 	],
