@@ -18,7 +18,7 @@ class ImportDumpRequestManager {
 	];
 
 	/** @var DBConnRef */
-	private $dbr;
+	private $dbw;
 
 	/** @var int */
 	private $ID;
@@ -59,14 +59,14 @@ class ImportDumpRequestManager {
 		$this->ID = $requestID;
 
 		if ( $this->options->get( 'ImportDumpCentralWiki' ) ) {
-			$this->dbr = $this->lbFactory->getMainLB(
+			$this->dbw = $this->lbFactory->getMainLB(
 				$this->options->get( 'ImportDumpCentralWiki' )
-			)->getConnectionRef( DB_REPLICA, [], $this->options->get( 'ImportDumpCentralWiki' ) );
+			)->getConnectionRef( DB_PRIMARY, [], $this->options->get( 'ImportDumpCentralWiki' ) );
 		} else {
-			$this->dbr = $this->lbFactory->getMainLB()->getConnectionRef( DB_REPLICA );
+			$this->dbw = $this->lbFactory->getMainLB()->getConnectionRef( DB_PRIMARY );
 		}
 
-		$this->row = $this->dbr->selectRow(
+		$this->row = $this->dbw->selectRow(
 			'importdump_requests',
 			'*',
 			[
@@ -84,29 +84,54 @@ class ImportDumpRequestManager {
 	}
 
 	/**
+	 * @param string $comment
+	 * @param User $user
+	 */
+	public function addComment( string $comment, User $user ) {
+		$this->dbw->insert(
+			'importdump_request_comments',
+			[
+				'request_id' => $this->ID,
+				'request_comment_text' => $comment,
+				'request_comment_timestamp' => $this->dbw->timestamp(),
+				'request_comment_actor' => $user->getActorId(),
+			],
+			__METHOD__
+		);
+	}
+
+	/**
 	 * @return array
 	 */
 	public function getComments(): array {
-		$row = $this->dbr->selectRow(
+		$res = $this->dbw->select(
 			'importdump_request_comments',
 			'*',
 			[
 				'request_id' => $this->ID,
 			],
-			__METHOD__
+			__METHOD__,
+			[
+				'ORDER BY' => 'request_comment_timestamp DESC',
+			]
 		);
 
-		if ( !$row ) {
+		if ( !$res ) {
 			return [];
 		}
 
-		$user = $this->userFactory->newFromActorId( $row->request_comment_actor );
+		$comments = [];
+		foreach ( $res as $row ) {
+			$user = $this->userFactory->newFromActorId( $row->request_comment_actor );
 
-		return [
-			'comment' => $row->request_comment_text,
-			'timestamp' => $row->request_comment_timestamp,
-			'user' => $user,
-		];
+			$comments[] = [
+				'comment' => $row->request_comment_text,
+				'timestamp' => $row->request_comment_timestamp,
+				'user' => $user,
+			];
+		}
+
+		return $comments;
 	}
 
 	/**
