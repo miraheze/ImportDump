@@ -87,7 +87,9 @@ class ImportDumpRequestViewer {
 				'label-message' => 'importdump-label-requested-date',
 				'type' => 'info',
 				'section' => 'request',
-				'default' => $context->getLanguage()->timeanddate( $this->importDumpRequestManager->getTimestamp(), true ),
+				'default' => $context->getLanguage()->timeanddate(
+					$this->importDumpRequestManager->getTimestamp(), true
+				),
 			],
 			'status' => [
 				'label-message' => 'importdump-label-status',
