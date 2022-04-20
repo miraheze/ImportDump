@@ -147,10 +147,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	}
 
 	/**
-	 * @param string $target
+	 * @param ?string $target
 	 * @return string|bool
 	 */
-	public function isValidDatabase( string $target ) {
+	public function isValidDatabase( ?string $target ) {
 		if ( !in_array( $target, $this->getConfig()->get( 'LocalDatabases' ) ) ) {
 			return $this->msg( 'importdump-invalid-target' )->escaped();
 		}
@@ -159,10 +159,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	}
 
 	/**
-	 * @param string $reason
+	 * @param ?string $reason
 	 * @return string|bool
 	 */
-	public function isValidReason( string $reason ) {
+	public function isValidReason( ?string $reason ) {
 		if ( !$reason || ctype_space( $reason ) ) {
 			return $this->msg( 'htmlform-required', 'parseinline' )->escaped();
 		}
