@@ -80,8 +80,8 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 				'label-message' => 'importdump-request-label-status',
 				'options' => [
 					'Pending' => 'pending',
-					'In-progress' => 'inprogress',
-					'Approved' => 'approved',
+					'In progress' => 'inprogress',
+					'Complete' => 'complete',
 					'Declined' => 'declined',
 					'All' => '*',
 				],
