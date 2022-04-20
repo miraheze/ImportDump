@@ -59,7 +59,7 @@ class ImportDumpRequestViewer {
 		$formDescriptor = [
 			'source' => [
 				'label-message' => 'importdump-label-source',
-				'type' => 'text',
+				'type' => 'url',
 				'readonly' => true,
 				'section' => 'request',
 				'default' => $this->importDumpRequestManager->getSource(),
@@ -140,7 +140,7 @@ class ImportDumpRequestViewer {
 				],
 				'edit-source' => [
 					'label-message' => 'importdump-label-source',
-					'type' => 'text',
+					'type' => 'url',
 					'section' => 'edit',
 					'default' => $this->importDumpRequestManager->getSource(),
 				],
@@ -150,6 +150,7 @@ class ImportDumpRequestViewer {
 					'section' => 'edit',
 					'required' => true,
 					'default' => $this->importDumpRequestManager->getTarget(),
+					'validation-callback' => [ $this, 'isValidDatabase' ],
 				],
 				'edit-reason' => [
 					'type' => 'textarea',
@@ -158,6 +159,7 @@ class ImportDumpRequestViewer {
 					'section' => 'edit',
 					'required' => true,
 					'default' => $this->importDumpRequestManager->getReason(),
+					'validation-callback' => [ $this, 'isValidReason' ],
 					'raw' => true,
 				],
 				'submit-edit' => [
@@ -196,6 +198,30 @@ class ImportDumpRequestViewer {
 		}
 
 		return $formDescriptor;
+	}
+
+	/**
+	 * @param string $target
+	 * @return string|bool
+	 */
+	public function isValidDatabase( string $target ) {
+		if ( !in_array( $target, $this->getConfig()->get( 'LocalDatabases' ) ) ) {
+			return $this->msg( 'importdump-invalid-target' )->escaped();
+		}
+
+		return true;
+	}
+
+	/**
+	 * @param string $reason
+	 * @return string|bool
+	 */
+	public function isValidReason( string $reason ) {
+		if ( !$reason || ctype_space( $reason ) ) {
+			return $this->msg( 'htmlform-required', 'parseinline' )->escaped();
+		}
+
+		return true;
 	}
 
 	/**
