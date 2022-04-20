@@ -14,7 +14,7 @@ class CreateWikiNotificationsManager {
 	];
 
 	/** @var int */
-	private $id;
+	private $ID;
 
 	/** @var LBFactory */
 	private $lbFactory;
@@ -53,6 +53,6 @@ class CreateWikiNotificationsManager {
 	 * @param int $requestID
 	 */
 	public function fromID( int $requestID ) {
-		$this->id = $requestID;
+		$this->ID = $requestID;
 	}
 }
