@@ -122,7 +122,7 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 			$this->permissionManager
 		);
 
-		$htmlForm = $requestViewer->getForm( $par, $this->getContext() );
+		$htmlForm = $requestViewer->getForm( (int)$par, $this->getContext() );
 
 		$htmlForm->show();
 	}
