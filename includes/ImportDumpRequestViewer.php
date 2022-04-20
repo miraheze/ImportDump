@@ -14,24 +14,24 @@ class ImportDumpRequestViewer {
 	/** @var Config */
 	private $config;
 
-	/** @var ImportDumpRequest */
-	private $importDumpRequest;
+	/** @var ImportDumpRequestManager */
+	private $importDumpRequestManager;
 
 	/** @var PermissionManager */
 	private $permissionManager;
 
 	/**
 	 * @param Config $config
-	 * @param ImportDumpRequest $importDumpRequest
+	 * @param ImportDumpRequestManager $importDumpRequestManager
 	 * @param PermissionManager $permissionManager
 	 */
 	public function __construct(
 		Config $config,
-		ImportDumpRequest $importDumpRequest,
+		ImportDumpRequestManager $importDumpRequestManager,
 		PermissionManager $permissionManager
 	) {
 		$this->config = $config;
-		$this->importDumpRequest = $importDumpRequest;
+		$this->importDumpRequestManager = $importDumpRequestManager;
 		$this->permissionManager = $permissionManager;
 	}
 
@@ -43,7 +43,7 @@ class ImportDumpRequestViewer {
 		$user = $context->getUser();
 
 		if (
-			$this->importDumpRequest->isPrivate() &&
+			$this->importDumpRequestManager->isPrivate() &&
 			!$this->permissionManager->userHasRight( $user, 'view-private-import-requests' )
 		) {
 			$context->getOutput()->addHTML(
@@ -53,7 +53,7 @@ class ImportDumpRequestViewer {
 			return [];
 		}
 
-		$unformattedStatus = $this->importDumpRequest->getStatus();
+		$unformattedStatus = $this->importDumpRequestManager->getStatus();
 		$status = ( $unformattedStatus === 'inprogress' ) ? 'In progress' : ucfirst( $unformattedStatus );
 
 		$formDescriptor = [
@@ -62,24 +62,24 @@ class ImportDumpRequestViewer {
 				'type' => 'text',
 				'readonly' => true,
 				'section' => 'request',
-				'default' => (string)$this->importDumpRequest->getSource(),
+				'default' => $this->importDumpRequestManager->getSource(),
 			],
 			'target' => [
 				'label-message' => 'importdump-label-target',
 				'type' => 'text',
 				'readonly' => true,
 				'section' => 'request',
-				'default' => $this->importDumpRequest->getTarget(),
+				'default' => $this->importDumpRequestManager->getTarget(),
 			],
 			'requester' => [
 				// @phan-suppress-next-line SecurityCheck-XSS
 				'label-message' => 'importdump-label-requester',
 				'type' => 'info',
 				'section' => 'request',
-				'default' => $this->importDumpRequest->getRequester()->getName() .
+				'default' => $this->importDumpRequestManager->getRequester()->getName() .
 					Linker::userToolLinks(
-						$this->importDumpRequest->getRequester()->getId(),
-						$this->importDumpRequest->getRequester()->getName()
+						$this->importDumpRequestManager->getRequester()->getId(),
+						$this->importDumpRequestManager->getRequester()->getName()
 					),
 				'raw' => true,
 			],
@@ -87,7 +87,7 @@ class ImportDumpRequestViewer {
 				'label-message' => 'importdump-label-requested-date',
 				'type' => 'info',
 				'section' => 'request',
-				'default' => $context->getLanguage()->timeanddate( $this->importDumpRequest->getTimestamp(), true ),
+				'default' => $context->getLanguage()->timeanddate( $this->importDumpRequestManager->getTimestamp(), true ),
 			],
 			'status' => [
 				'label-message' => 'importdump-label-status',
@@ -107,7 +107,7 @@ class ImportDumpRequestViewer {
 			],
 		];
 
-		foreach ( $this->importDumpRequest->getComments() as $comment ) {
+		foreach ( $this->importDumpRequestManager->getComments() as $comment ) {
 			$formDescriptor['comment' . $comment['timestamp'] ] = [
 				'type' => 'textarea',
 				'readonly' => true,
@@ -124,7 +124,7 @@ class ImportDumpRequestViewer {
 
 		if (
 			$permissionManager->userHasRight( $user, 'handle-import-requests' ) ||
-			$user->getActorId() === $this->importDumpRequest->getRequester()->getActorId()
+			$user->getActorId() === $this->importDumpRequestManager->getRequester()->getActorId()
 		) {
 			$formDescriptor += [
 				'comment' => [
@@ -142,14 +142,14 @@ class ImportDumpRequestViewer {
 					'label-message' => 'importdump-label-source',
 					'type' => 'text',
 					'section' => 'edit',
-					'default' => $this->importDumpRequest->getSource(),
+					'default' => $this->importDumpRequestManager->getSource(),
 				],
 				'edit-target' => [
 					'label-message' => 'importdump-label-target',
 					'type' => 'text',
 					'section' => 'edit',
 					'required' => true,
-					'default' => $this->importDumpRequest->getTarget(),
+					'default' => $this->importDumpRequestManager->getTarget(),
 				],
 				'edit-reason' => [
 					'type' => 'textarea',
@@ -178,7 +178,7 @@ class ImportDumpRequestViewer {
 						wfMessage( 'importdump-complete' )->text() => 'complete',
 						wfMessage( 'importdump-decline' )->text() => 'decline',
 					],
-					'default' => $this->importDumpRequest->getStatus(),
+					'default' => $this->importDumpRequestManager->getStatus(),
 					'cssclass' => 'importdump-infuse',
 					'section' => 'handle',
 				],
@@ -207,11 +207,11 @@ class ImportDumpRequestViewer {
 		string $requestID,
 		IContextSource $context
 	) {
-		$this->importDumpRequest->fromID( $requestID );
+		$this->importDumpRequestManager->fromID( $requestID );
 
 		$context->getOutput()->addModules( [ 'ext.importdump.oouiform' ] );
 
-		if ( !$this->importDumpRequest->exists() ) {
+		if ( !$this->importDumpRequestManager->exists() ) {
 			$context->getOutput()->addHTML(
 				Html::errorBox( wfMessage( 'importdump-unknown' )->escaped() )
 			);
