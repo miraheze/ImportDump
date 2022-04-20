@@ -10,7 +10,7 @@ return [
 			$services->getDBLoadBalancerFactory(),
 			RequestContext::getMain(),
 			new ServiceOptions(
-				ImportDumpRequest::CONSTRUCTOR_OPTIONS,
+				ImportDumpRequestManager::CONSTRUCTOR_OPTIONS,
 				$services->getConfigFactory()->makeConfig( 'ImportDump' )
 			),
 			$services->getUserFactory()
