@@ -8,7 +8,6 @@ return [
 	'ImportDumpRequestManager' => static function ( MediaWikiServices $services ): ImportDumpRequestManager {
 		return new ImportDumpRequestManager(
 			$services->getDBLoadBalancerFactory(),
-			RequestContext::getMain(),
 			new ServiceOptions(
 				ImportDumpRequestManager::CONSTRUCTOR_OPTIONS,
 				$services->getConfigFactory()->makeConfig( 'ImportDump' )
