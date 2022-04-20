@@ -53,7 +53,8 @@ class ImportDumpRequestViewer {
 			return [];
 		}
 
-		$status = ( $this->importDumpRequest->getStatus() === 'inprogress' ) ? 'In progress' : ucfirst( $this->importDumpRequest->getStatus() );
+		$unformattedStatus = $this->importDumpRequest->getStatus();
+		$status = ( $unformattedStatus === 'inprogress' ) ? 'In progress' : ucfirst( $unformattedStatus );
 
 		$formDescriptor = [
 			'source' => [
@@ -75,7 +76,11 @@ class ImportDumpRequestViewer {
 				'label-message' => 'importdump-label-requester',
 				'type' => 'info',
 				'section' => 'request',
-				'default' => $this->importDumpRequest->getRequester()->getName() . Linker::userToolLinks( $this->importDumpRequest->getRequester()->getId(), $this->importDumpRequest->getRequester()->getName() ),
+				'default' => $this->importDumpRequest->getRequester()->getName() .
+					Linker::userToolLinks(
+						$this->importDumpRequest->getRequester()->getId(),
+						$this->importDumpRequest->getRequester()->getName()
+					),
 				'raw' => true,
 			],
 			'requestedDate' => [
@@ -109,12 +114,18 @@ class ImportDumpRequestViewer {
 				'section' => 'comments',
 				'rows' => 4,
 				// @phan-suppress-next-line SecurityCheck-XSS
-				'label' => wfMessage( 'importdump-request-header-comment-withtimestamp' )->rawParams( $comment['user']->getName() )->params( $context->getLanguage()->timeanddate( $comment['timestamp'], true ) )->text(),
+				'label' => wfMessage( 'importdump-header-comment-withtimestamp' )
+						->rawParams( $comment['user']->getName() )
+						->params( $context->getLanguage()->timeanddate( $comment['timestamp'], true ) )
+						->text(),
 				'default' => $comment['comment'],
 			];
 		}
 
-		if ( $permissionManager->userHasRight( $user, 'handle-import-requests' ) || $user->getActorId() === $this->importDumpRequest->getRequester()->getActorId() ) {
+		if (
+			$permissionManager->userHasRight( $user, 'handle-import-requests' ) ||
+			$user->getActorId() === $this->importDumpRequest->getRequester()->getActorId()
+		) {
 			$formDescriptor += [
 				'comment' => [
 					'type' => 'textarea',
