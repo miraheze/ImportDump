@@ -16,12 +16,23 @@ class ImportDumpOOUIForm extends OOUIHTMLForm {
 	/** @var bool */
 	protected $mSubSectionBeforeFields = false;
 
+	/**
+	 * @param string $html
+	 * @return PanelLayout
+	 */
 	public function wrapForm( $html ) {
 		$html = Xml::tags( 'div', [ 'id' => 'importdump' ], $html );
 
 		return parent::wrapForm( $html );
 	}
 
+	/**
+	 * @param string $legend
+	 * @param string $section
+	 * @param array $attributes
+	 * @param bool $isRoot
+	 * @return PanelLayout
+	 */
 	protected function wrapFieldSetSection( $legend, $section, $attributes, $isRoot ) {
 		$layout = parent::wrapFieldSetSection( $legend, $section, $attributes, $isRoot );
 
@@ -31,6 +42,9 @@ class ImportDumpOOUIForm extends OOUIHTMLForm {
 		return $layout;
 	}
 
+	/**
+	 * @return string
+	 */
 	public function getBody() {
 		$tabPanels = [];
 		foreach ( $this->mFieldTree as $key => $val ) {
