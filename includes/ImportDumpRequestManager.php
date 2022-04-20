@@ -88,7 +88,7 @@ class ImportDumpRequestManager {
 	 */
 	public function getComments(): array {
 		$row = $this->dbr->selectRow(
-			'importdump_requests',
+			'importdump_request_comments',
 			'*',
 			[
 				'request_id' => $this->ID,
