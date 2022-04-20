@@ -72,7 +72,6 @@ class ImportDumpRequestViewer {
 				'default' => $this->importDumpRequestManager->getTarget(),
 			],
 			'requester' => [
-				// @phan-suppress-next-line SecurityCheck-XSS
 				'label-message' => 'importdump-label-requester',
 				'type' => 'info',
 				'section' => 'request',
@@ -104,7 +103,7 @@ class ImportDumpRequestViewer {
 				'readonly' => true,
 				'label-message' => 'importdump-label-reason',
 				'section' => 'request',
-				'default' => $this->importRequest->getReason(),
+				'default' => $this->importDumpRequestManager->getReason(),
 				'raw' => true,
 			],
 		];
@@ -115,7 +114,6 @@ class ImportDumpRequestViewer {
 				'readonly' => true,
 				'section' => 'comments',
 				'rows' => 4,
-				// @phan-suppress-next-line SecurityCheck-XSS
 				'label' => wfMessage( 'importdump-header-comment-withtimestamp' )
 						->rawParams( $comment['user']->getName() )
 						->params( $context->getLanguage()->timeanddate( $comment['timestamp'], true ) )
@@ -125,7 +123,7 @@ class ImportDumpRequestViewer {
 		}
 
 		if (
-			$permissionManager->userHasRight( $user, 'handle-import-requests' ) ||
+			$this->permissionManager->userHasRight( $user, 'handle-import-requests' ) ||
 			$user->getActorId() === $this->importDumpRequestManager->getRequester()->getActorId()
 		) {
 			$formDescriptor += [
@@ -159,7 +157,7 @@ class ImportDumpRequestViewer {
 					'label-message' => 'importdump-label-reason',
 					'section' => 'edit',
 					'required' => true,
-					'default' => $this->importRequest->getReason(),
+					'default' => $this->importDumpRequestManager->getReason(),
 					'raw' => true,
 				],
 				'submit-edit' => [
@@ -203,12 +201,12 @@ class ImportDumpRequestViewer {
 	/**
 	 * @param int $requestID
 	 * @param IContextSource $context
-	 * @return ImportDumpOOUIForm
+	 * @return ?ImportDumpOOUIForm
 	 */
 	public function getForm(
 		int $requestID,
 		IContextSource $context
-	) {
+	): ?ImportDumpOOUIForm {
 		$this->importDumpRequestManager->fromID( $requestID );
 
 		$context->getOutput()->addModules( [ 'ext.importdump.oouiform' ] );
@@ -218,7 +216,7 @@ class ImportDumpRequestViewer {
 				Html::errorBox( wfMessage( 'importdump-unknown' )->escaped() )
 			);
 
-			return;
+			return null;
 		}
 
 		$formDescriptor = $this->getFormDescriptor( $context );
