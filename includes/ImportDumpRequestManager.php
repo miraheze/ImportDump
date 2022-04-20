@@ -7,7 +7,7 @@ use MediaWiki\User\UserFactory;
 use MessageLocalizer;
 use Wikimedia\Rdbms\LBFactory;
 
-class CreateWikiNotificationsManager {
+class ImportDumpRequestManager {
 
 	public const CONSTRUCTOR_OPTIONS = [
 		'ImportDumpCentralWiki',
