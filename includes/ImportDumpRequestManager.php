@@ -85,6 +85,13 @@ class ImportDumpRequestManager {
 	}
 
 	/**
+	 * @return bool
+	 */
+	public function exists(): bool {
+		return (bool)$this->row;
+	}
+
+	/**
 	 * @return array
 	 */
 	public function getComments(): array {
@@ -111,10 +118,10 @@ class ImportDumpRequestManager {
 	}
 
 	/**
-	 * @return bool
+	 * @return string
 	 */
-	public function exists(): bool {
-		return (bool)$this->row;
+	public function getReason(): string {
+		return $this->row->request_reason;
 	}
 
 	/**
@@ -122,13 +129,6 @@ class ImportDumpRequestManager {
 	 */
 	public function getRequester(): User {
 		return $this->userFactory->newFromActorId( $this->row->request_actor );
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getReason(): string {
-		return $this->row->request_reason;
 	}
 
 	/**
