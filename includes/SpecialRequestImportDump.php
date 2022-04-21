@@ -68,6 +68,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			'source' => [
 				'type' => 'url',
 				'label-message' => 'importdump-label-source',
+				'required' => true,
 			],
 			'target' => [
 				'type' => 'text',
