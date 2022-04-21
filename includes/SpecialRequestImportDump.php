@@ -74,6 +74,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'type' => 'file',
 				'label-message' => 'importdump-label-file',
 				'required' => true,
+				'cssclass' => 'importdump-infuse',
 			],
 			'reason' => [
 				'type' => 'textarea',
