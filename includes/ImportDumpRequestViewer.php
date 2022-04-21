@@ -185,9 +185,9 @@ class ImportDumpRequestViewer {
 					'type' => 'select',
 					'label-message' => 'importdump-label-update-status',
 					'options' => [
-						wfMessage( 'importdump-inprogress' )->text() => 'inprogress',
-						wfMessage( 'importdump-complete' )->text() => 'complete',
-						wfMessage( 'importdump-decline' )->text() => 'decline',
+						wfMessage( 'importdump-status-inprogress' )->text() => 'inprogress',
+						wfMessage( 'importdump-status-complete' )->text() => 'complete',
+						wfMessage( 'importdump-status-declined' )->text() => 'declined',
 					],
 					'default' => $this->importDumpRequestManager->getStatus(),
 					'cssclass' => 'importdump-infuse',
@@ -328,7 +328,7 @@ class ImportDumpRequestViewer {
 			$this->importDumpRequestManager->startAtomic( __METHOD__ );
 			$this->importDumpRequestManager->setStatus( $formData['handle-status'] );
 
-			$statusMessage = wfMessage( 'importdump-' . $formData['handle-status'] )
+			$statusMessage = wfMessage( 'importdump-status-' . $formData['handle-status'] )
 				->inContentLanguage()
 				->text();
 
