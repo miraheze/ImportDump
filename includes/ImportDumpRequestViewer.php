@@ -332,7 +332,7 @@ class ImportDumpRequestViewer {
 				->inContentLanguage()
 				->text();
 
-			$comment = wfMessage( 'importdump-status-updated', $statusMessage )
+			$comment = wfMessage( 'importdump-status-updated', strtolower( $statusMessage ) )
 				->inContentLanguage()
 				->escaped();
 
