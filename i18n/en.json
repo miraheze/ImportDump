@@ -10,6 +10,7 @@
 	"importdump-comment-given": "Comment given by $1:",
 	"importdump-desc": "An extension designed to automate user import requests.",
 	"importdump-extensionname": "ImportDump",
+	"importdump-header-comment-withtimestamp": "Comment given by $1 at $2",
 	"importdump-notloggedin": "Sorry, you need to <span class=\"plainlinks\">[$1 log in]</span> before you can request an import dump.",
 	"importdump-status-complete": "Complete",
 	"importdump-status-declined": "Declined",
