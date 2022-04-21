@@ -125,7 +125,9 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 
 		$htmlForm = $requestViewer->getForm( (int)$par, $this->getContext() );
 
-		$htmlForm->show();
+		if ( $htmlForm ) {
+			$htmlForm->show();
+		}
 	}
 
 	/**
