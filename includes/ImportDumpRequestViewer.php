@@ -8,6 +8,7 @@ use HTMLForm;
 use IContextSource;
 use Linker;
 use MediaWiki\Permissions\PermissionManager;
+use UserNotLoggedIn;
 
 class ImportDumpRequestViewer {
 
@@ -263,7 +264,7 @@ class ImportDumpRequestViewer {
 		$out->addModuleStyles( [ 'oojs-ui-widgets.styles' ] );
 
 		$formDescriptor = $this->getFormDescriptor( $context );
-		$htmlForm = new ImportDumpOOUIForm( $formDescriptor, $context, 'importdumprequestqueue' );
+		$htmlForm = new ImportDumpOOUIForm( $formDescriptor, $context, 'importdump' );
 
 		$htmlForm->setId( 'importdump-request-viewer' );
 		$htmlForm->suppressDefaultSubmit();
@@ -279,27 +280,27 @@ class ImportDumpRequestViewer {
 	/**
 	 * @param array $formData
 	 * @param HTMLForm $form
-	 * @return bool
 	 */
 	protected function submitForm(
 		array $formData,
 		HTMLForm $form
 	) {
-		$out = $form->getContext()->getOutput();
 		$user = $form->getUser();
-
 		if ( !$user->isRegistered() ) {
-			$out->addHTML( Html::errorBox( wfMessage( 'exception-nologin-text' )->parse() ) );
-
-			return false;
+			throw new UserNotLoggedIn( 'exception-nologin-text', 'exception-nologin' );
 		}
+
+		$out = $form->getContext()->getOutput();
 
 		if ( isset( $formData['submit-comment'] ) ) {
 			$this->importDumpRequestManager->addComment( $formData['comment'], $user );
+			$out->addHTML( Html::successBox( wfMessage( 'importdump-comment-success' )->escaped() ) );
+
+			return;
 		}
 
-		$out->addHTML( Html::successBox( wfMessage( 'importdump-edit-success' )->escaped() ) );
-
-		return true;
+		if ( isset( $formData['submit-edit'] ) ) {
+			$out->addHTML( Html::successBox( wfMessage( 'importdump-edit-success' )->escaped() ) );
+		}
 	}
 }
