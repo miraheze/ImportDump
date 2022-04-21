@@ -72,10 +72,10 @@ class ImportDumpRequestQueuePager extends TablePager {
 		static $headers = null;
 
 		$headers = [
-			'request_timestamp' => 'importdump-pager-requested-date',
-			'request_actor' => 'importdump-pager-requester',
-			'request_status' => 'importdump-pager-status',
-			'request_target' => 'importdump-pager-target',
+			'request_timestamp' => 'importdump-table-requested-date',
+			'request_actor' => 'importdump-table-requester',
+			'request_status' => 'importdump-table-status',
+			'request_target' => 'importdump-table-target',
 		];
 
 		foreach ( $headers as &$msg ) {
