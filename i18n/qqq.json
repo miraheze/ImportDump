@@ -10,6 +10,7 @@
 	"importdump-comment-given": "Displayed if a custom comment is given. $1 is the handler's username.",
 	"importdump-desc": "{{desc|name=ImportDump|url=https://github.com/miraheze/ImportDump}}",
 	"importdump-extensionname": "{{name}}",
+	"importdump-header-comment-withtimestamp": "Timestamp for comment.",
 	"importdump-notloggedin": "Error message if user tries to request an import dump while not being logged in.",
 	"importdump-status-complete": "'Complete' status label.",
 	"importdump-status-declined": "'Declined' status label.",
