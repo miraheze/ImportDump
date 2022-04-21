@@ -144,6 +144,7 @@ class ImportDumpRequestViewer {
 					'label-message' => 'importdump-label-source',
 					'type' => 'url',
 					'section' => 'editing',
+					'required' => true,
 					'default' => $this->importDumpRequestManager->getSource(),
 				],
 				'edit-target' => [
