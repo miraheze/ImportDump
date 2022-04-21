@@ -54,9 +54,6 @@ class ImportDumpRequestViewer {
 			return [];
 		}
 
-		$unformattedStatus = $this->importDumpRequestManager->getStatus();
-		$status = ( $unformattedStatus === 'inprogress' ) ? 'In progress' : ucfirst( $unformattedStatus );
-
 		$formDescriptor = [
 			'source' => [
 				'label-message' => 'importdump-label-source',
@@ -73,7 +70,6 @@ class ImportDumpRequestViewer {
 				'default' => $this->importDumpRequestManager->getTarget(),
 			],
 			'requester' => [
-				// @phan-suppress-next-line SecurityCheck-XSS
 				'label-message' => 'importdump-label-requester',
 				'type' => 'info',
 				'section' => 'details',
@@ -97,7 +93,9 @@ class ImportDumpRequestViewer {
 				'type' => 'text',
 				'readonly' => true,
 				'section' => 'details',
-				'default' => $status,
+				'default' => wfMessage(
+					'importdump-label-' . $this->importDumpRequestManager->getStatus()
+				)->text(),
 			],
 			'reason' => [
 				'type' => 'textarea',
