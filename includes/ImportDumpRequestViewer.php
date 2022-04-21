@@ -300,7 +300,15 @@ class ImportDumpRequestViewer {
 		}
 
 		if ( isset( $formData['submit-edit'] ) ) {
+			$this->importDumpRequestManager->startAtomic( __METHOD__ );
+			$this->importDumpRequestManager->setReason( $formData['edit-reason'] );
+			$this->importDumpRequestManager->setSource( $formData['edit-source'] );
+			$this->importDumpRequestManager->setTarget( $formData['edit-target'] );
+			$this->importDumpRequestManager->endAtomic( __METHOD__ );
+
 			$out->addHTML( Html::successBox( wfMessage( 'importdump-edit-success' )->escaped() ) );
+
+			return;
 		}
 	}
 }
