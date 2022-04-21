@@ -62,21 +62,21 @@ class ImportDumpRequestViewer {
 				'label-message' => 'importdump-label-source',
 				'type' => 'url',
 				'readonly' => true,
-				'section' => 'request',
+				'section' => 'details',
 				'default' => $this->importDumpRequestManager->getSource(),
 			],
 			'target' => [
 				'label-message' => 'importdump-label-target',
 				'type' => 'text',
 				'readonly' => true,
-				'section' => 'request',
+				'section' => 'details',
 				'default' => $this->importDumpRequestManager->getTarget(),
 			],
 			'requester' => [
 				// @phan-suppress-next-line SecurityCheck-XSS
 				'label-message' => 'importdump-label-requester',
 				'type' => 'info',
-				'section' => 'request',
+				'section' => 'details',
 				'default' => $this->importDumpRequestManager->getRequester()->getName() .
 					Linker::userToolLinks(
 						$this->importDumpRequestManager->getRequester()->getId(),
@@ -87,7 +87,7 @@ class ImportDumpRequestViewer {
 			'requestedDate' => [
 				'label-message' => 'importdump-label-requested-date',
 				'type' => 'info',
-				'section' => 'request',
+				'section' => 'details',
 				'default' => $context->getLanguage()->timeanddate(
 					$this->importDumpRequestManager->getTimestamp(), true
 				),
@@ -96,7 +96,7 @@ class ImportDumpRequestViewer {
 				'label-message' => 'importdump-label-status',
 				'type' => 'text',
 				'readonly' => true,
-				'section' => 'request',
+				'section' => 'details',
 				'default' => $status,
 			],
 			'reason' => [
@@ -107,7 +107,7 @@ class ImportDumpRequestViewer {
 				'default' => $this->importDumpRequestManager->getReason(),
 				'raw' => true,
 				'cssclass' => 'importdump-infuse',
-				'section' => 'request',
+				'section' => 'details',
 			],
 		];
 
@@ -179,7 +179,7 @@ class ImportDumpRequestViewer {
 				'handle-info' => [
 					'type' => 'info',
 					'default' => wfMessage( 'importdump-handle-info' )->text(),
-					'section' => 'handle',
+					'section' => 'handling',
 				],
 				'handle-status' => [
 					'type' => 'select',
@@ -191,18 +191,18 @@ class ImportDumpRequestViewer {
 					],
 					'default' => $this->importDumpRequestManager->getStatus(),
 					'cssclass' => 'importdump-infuse',
-					'section' => 'handle',
+					'section' => 'handling',
 				],
 				'handle-comment' => [
 					'type' => 'textarea',
 					'rows' => 4,
 					'label-message' => 'importdump-label-status-updated-comment',
-					'section' => 'handle',
+					'section' => 'handling',
 				],
 				'submit-handle' => [
 					'type' => 'submit',
 					'default' => wfMessage( 'htmlform-submit' )->text(),
-					'section' => 'handle',
+					'section' => 'handling',
 				],
 			];
 		}
