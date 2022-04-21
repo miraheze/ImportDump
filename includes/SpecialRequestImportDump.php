@@ -12,10 +12,20 @@ use UploadBase;
 use UserBlockedError;
 use UserNotLoggedIn;
 use WikiMap;
+use Wikimedia\Rdbms\ILBFactory;
 
 class SpecialRequestImportDump extends FormSpecialPage {
-	public function __construct() {
+
+	/** @var ILBFactory */
+	private $dbLoadBalancerFactory;
+
+	/**
+	 * @param ILBFactory $dbLoadBalancerFactory
+	 */
+	public function __construct( ILBFactory $dbLoadBalancerFactory ) {
 		parent::__construct( 'RequestImportDump', 'requestimport' );
+
+		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 	}
 
 	/**
@@ -91,7 +101,13 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return Status::newFatal( 'actionthrottledtext' );
 		}
 
-		$dbw = wfGetDB( DB_PRIMARY );
+		if ( $this->getConfig()->get( 'ImportDumpCentralWiki' ) ) {
+			$dbw = $this->dbLoadBalancerFactory->getMainLB(
+				$this->getConfig()->get( 'ImportDumpCentralWiki' )
+			)->getConnectionRef( DB_PRIMARY, [], $this->getConfig()->get( 'ImportDumpCentralWiki' ) );
+		} else {
+			$dbw = $this->dbLoadBalancerFactory->getMainLB()->getConnectionRef( DB_PRIMARY );
+		}
 
 		$pending = $dbw->select(
 			'importdump_requests',
