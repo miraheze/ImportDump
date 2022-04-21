@@ -190,4 +190,66 @@ class ImportDumpRequestManager {
 		// @phan-suppress-next-line PhanUndeclaredClassMethod
 		return (bool)$remoteWiki->isPrivate();
 	}
+
+	/**
+	 * @param string $fname
+	 */
+	public function startAtomic( string $fname ) {
+		$this->dbw->startAtomic( $fname );
+	}
+
+	/**
+	 * @param string $reason
+	 */
+	public function setReason( string $reason ) {
+		$this->dbw->update(
+			'importdump_requests',
+			[
+				'request_reason' => $reason,
+			],
+			[
+				'request_id' => $this->ID,
+			],
+			__METHOD__
+		);
+	}
+
+	/**
+	 * @param ?string $source
+	 */
+	public function setSource( ?string $source ) {
+		$this->dbw->update(
+			'importdump_requests',
+			[
+				'request_source' => $source,
+			],
+			[
+				'request_id' => $this->ID,
+			],
+			__METHOD__
+		);
+	}
+
+	/**
+	 * @param string $target
+	 */
+	public function setTarget( string $target ) {
+		$this->dbw->update(
+			'importdump_requests',
+			[
+				'request_target' => $target,
+			],
+			[
+				'request_id' => $this->ID,
+			],
+			__METHOD__
+		);
+	}
+
+	/**
+	 * @param string $fname
+	 */
+	public function endAtomic( string $fname ) {
+		$this->dbw->endAtomic( $fname );
+	}
 }
