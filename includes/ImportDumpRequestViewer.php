@@ -341,7 +341,7 @@ class ImportDumpRequestViewer {
 					->inContentLanguage()
 					->escaped();
 
-				$comment .= $formData['handle-comment'];
+				$comment .= ' ' . $formData['handle-comment'];
 			}
 
 			$this->importDumpRequestManager->addComment( $comment, $user );
