@@ -139,7 +139,7 @@ class ImportDumpRequestViewer {
 				],
 				'submit-comment' => [
 					'type' => 'submit',
-					'default' => wfMessage( 'htmlform-submit' )->text(),
+					'default' => wfMessage( 'importdump-label-add-comment' )->text(),
 					'section' => 'comments',
 				],
 				'edit-source' => [
