@@ -250,7 +250,10 @@ class ImportDumpRequestViewer {
 	): ?ImportDumpOOUIForm {
 		$this->importDumpRequestManager->fromID( $requestID );
 
-		$context->getOutput()->addModules( [ 'ext.importdump.oouiform' ] );
+		$out = $context->getOutput();
+
+		$out->addModules( [ 'ext.importdump.oouiform' ] );
+		$out->addModuleStyles( [ 'oojs-ui-widgets.styles' ] );
 
 		if ( $requestID === 0 || !$this->importDumpRequestManager->exists() ) {
 			$context->getOutput()->addHTML(
