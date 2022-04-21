@@ -53,7 +53,10 @@
 			]
 		},
 		"RequestImportDump": {
-			"class": "Miraheze\\ImportDump\\SpecialRequestImportDump"
+			"class": "Miraheze\\ImportDump\\SpecialRequestImportDump",
+			"services": [
+				"DBLoadBalancerFactory"
+			]
 		}
 	},
 	"Hooks": {
