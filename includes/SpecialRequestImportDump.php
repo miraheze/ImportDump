@@ -44,11 +44,6 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
 		}
 
-		$out = $this->getOutput();
-
-		$out->addModules( [ 'ext.importdump.oouiform' ] );
-		$out->addModuleStyles( [ 'oojs-ui-widgets.styles' ] );
-
 		$form = $this->getForm();
 		if ( $form->show() ) {
 			$this->onSuccess();
@@ -74,7 +69,6 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'type' => 'file',
 				'label-message' => 'importdump-label-file',
 				'required' => true,
-				'cssclass' => 'importdump-infuse',
 			],
 			'reason' => [
 				'type' => 'textarea',
