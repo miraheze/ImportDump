@@ -115,6 +115,7 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 		$out = $this->getOutput();
 
 		$out->addModules( [ 'ext.importdump.oouiform' ] );
+		$out->addModuleStyles( [ 'oojs-ui-widgets.styles' ] );
 
 		$requestViewer = new ImportDumpRequestViewer(
 			$this->getConfig(),
