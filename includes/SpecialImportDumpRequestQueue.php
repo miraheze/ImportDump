@@ -112,11 +112,6 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 	 * @param string $par
 	 */
 	private function lookupRequest( $par ) {
-		$out = $this->getOutput();
-
-		$out->addModules( [ 'ext.importdump.oouiform' ] );
-		$out->addModuleStyles( [ 'oojs-ui-widgets.styles' ] );
-
 		$requestViewer = new ImportDumpRequestViewer(
 			$this->getConfig(),
 			$this->importDumpRequestManager,
