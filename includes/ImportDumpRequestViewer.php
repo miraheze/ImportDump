@@ -271,7 +271,7 @@ class ImportDumpRequestViewer {
 		$out->addModuleStyles( [ 'oojs-ui-widgets.styles' ] );
 
 		$formDescriptor = $this->getFormDescriptor( $context );
-		$htmlForm = new ImportDumpOOUIForm( $formDescriptor, $context, 'importdump' );
+		$htmlForm = new ImportDumpOOUIForm( $formDescriptor, $context, 'importdump-section' );
 
 		$htmlForm->setId( 'importdump-request-viewer' );
 		$htmlForm->suppressDefaultSubmit();
