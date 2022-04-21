@@ -170,14 +170,19 @@ class ImportDumpRequestViewer {
 					'default' => wfMessage( 'importdump-label-edit-request' )->text(),
 					'section' => 'edit',
 				],
-				'info-submission' => [
+			];
+		}
+
+		if ( $this->permissionManager->userHasRight( $user, 'handle-import-requests' ) ) {
+			$formDescriptor += [
+				'handle-info' => [
 					'type' => 'info',
-					'default' => wfMessage( 'importdump-info-submission' )->text(),
+					'default' => wfMessage( 'importdump-handle-info' )->text(),
 					'section' => 'handle',
 				],
-				'submission-action' => [
+				'handle-status' => [
 					'type' => 'select',
-					'label-message' => 'importdump-label-action',
+					'label-message' => 'importdump-label-update-status',
 					'options' => [
 						wfMessage( 'importdump-inprogress' )->text() => 'inprogress',
 						wfMessage( 'importdump-complete' )->text() => 'complete',
@@ -187,9 +192,10 @@ class ImportDumpRequestViewer {
 					'cssclass' => 'importdump-infuse',
 					'section' => 'handle',
 				],
-				'reason' => [
-					'label-message' => 'importdump-label-reason',
-					'cssclass' => 'importdump-infuse',
+				'handle-comment' => [
+					'type' => 'textarea',
+					'rows' => 4,
+					'label-message' => 'importdump-label-status-updated-comment',
 					'section' => 'handle',
 				],
 				'submit-handle' => [
@@ -301,14 +307,46 @@ class ImportDumpRequestViewer {
 
 		if ( isset( $formData['submit-edit'] ) ) {
 			$this->importDumpRequestManager->startAtomic( __METHOD__ );
+
 			$this->importDumpRequestManager->setReason( $formData['edit-reason'] );
 			$this->importDumpRequestManager->setSource( $formData['edit-source'] );
 			$this->importDumpRequestManager->setTarget( $formData['edit-target'] );
+
+			if ( $this->importDumpRequestManager->getStatus() === 'declined' ) {
+				$this->importDumpRequestManager->setStatus( 'pending' );
+			}
+
 			$this->importDumpRequestManager->endAtomic( __METHOD__ );
 
 			$out->addHTML( Html::successBox( wfMessage( 'importdump-edit-success' )->escaped() ) );
 
 			return;
+		}
+
+		if ( isset( $formData['submit-handle'] ) ) {
+			$this->importDumpRequestManager->startAtomic( __METHOD__ );
+			$this->importDumpRequestManager->setStatus( $formData['handle-status'] );
+
+			$statusMessage = wfMessage( 'importdump-' . $formData['handle-status'] )
+				->inContentLanguage()
+				->text();
+
+			$comment = wfMessage( 'importdump-status-updated', $statusMessage )
+				->inContentLanguage()
+				->escaped();
+
+			if ( $formData['handle-comment'] ) {
+				$comment .= "\n" . wfMessage( 'importdump-comment-given', $user->getName() )
+					->inContentLanguage()
+					->escaped();
+
+				$comment .= $formData['handle-comment'];
+			}
+
+			$this->importDumpRequestManager->addComment( $comment, $user );
+			$this->importDumpRequestManager->endAtomic( __METHOD__ );
+
+			$out->addHTML( Html::successBox( wfMessage( 'importdump-status-updated-success' )->escaped() ) );
 		}
 	}
 }
