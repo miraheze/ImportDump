@@ -231,6 +231,22 @@ class ImportDumpRequestManager {
 	}
 
 	/**
+	 * @param string $status
+	 */
+	public function setStatus( string $status ) {
+		$this->dbw->update(
+			'importdump_requests',
+			[
+				'request_status' => $status,
+			],
+			[
+				'request_id' => $this->ID,
+			],
+			__METHOD__
+		);
+	}
+
+	/**
 	 * @param string $target
 	 */
 	public function setTarget( string $target ) {
