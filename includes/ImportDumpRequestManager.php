@@ -149,9 +149,9 @@ class ImportDumpRequestManager {
 	}
 
 	/**
-	 * @return ?string
+	 * @return string
 	 */
-	public function getSource(): ?string {
+	public function getSource(): string {
 		return $this->row->request_source;
 	}
 
@@ -215,9 +215,9 @@ class ImportDumpRequestManager {
 	}
 
 	/**
-	 * @param ?string $source
+	 * @param string $source
 	 */
-	public function setSource( ?string $source ) {
+	public function setSource( string $source ) {
 		$this->dbw->update(
 			'importdump_requests',
 			[
