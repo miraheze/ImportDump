@@ -104,9 +104,10 @@ class ImportDumpRequestViewer {
 				'rows' => 4,
 				'readonly' => true,
 				'label-message' => 'importdump-label-reason',
-				'section' => 'request',
 				'default' => $this->importDumpRequestManager->getReason(),
 				'raw' => true,
+				'cssclass' => 'importdump-infuse',
+				'section' => 'request',
 			],
 		];
 
