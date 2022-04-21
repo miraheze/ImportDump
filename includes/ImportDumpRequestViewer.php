@@ -145,13 +145,13 @@ class ImportDumpRequestViewer {
 				'edit-source' => [
 					'label-message' => 'importdump-label-source',
 					'type' => 'url',
-					'section' => 'edit',
+					'section' => 'editing',
 					'default' => $this->importDumpRequestManager->getSource(),
 				],
 				'edit-target' => [
 					'label-message' => 'importdump-label-target',
 					'type' => 'text',
-					'section' => 'edit',
+					'section' => 'editing',
 					'required' => true,
 					'default' => $this->importDumpRequestManager->getTarget(),
 					'validation-callback' => [ $this, 'isValidDatabase' ],
@@ -160,7 +160,7 @@ class ImportDumpRequestViewer {
 					'type' => 'textarea',
 					'rows' => 4,
 					'label-message' => 'importdump-label-reason',
-					'section' => 'edit',
+					'section' => 'editing',
 					'required' => true,
 					'default' => $this->importDumpRequestManager->getReason(),
 					'validation-callback' => [ $this, 'isValidReason' ],
@@ -169,7 +169,7 @@ class ImportDumpRequestViewer {
 				'submit-edit' => [
 					'type' => 'submit',
 					'default' => wfMessage( 'importdump-label-edit-request' )->text(),
-					'section' => 'edit',
+					'section' => 'editing',
 				],
 			];
 		}
