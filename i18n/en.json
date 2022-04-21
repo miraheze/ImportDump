@@ -13,7 +13,7 @@
 	"importdump-notloggedin": "Sorry, you need to <span class=\"plainlinks\">[$1 log in]</span> before you can request an import dump.",
 	"importdump-status-complete": "Complete",
 	"importdump-status-declined": "Declined",
-	"importdump-status-inprogress": "In progress",
+	"importdump-status-inprogress": "In Progress",
 	"importdump-status-pending": "Pending",
 	"importdump-status-updated": "Request $1.",
 	"importdump-success": "Your import dump request ($1) was successfully submitted. Your request will be reviewed by a system administrator as soon as possible.",
