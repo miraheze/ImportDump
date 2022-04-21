@@ -21,7 +21,7 @@
 	"importdump-label-declined": "'Declined' status label.",
 	"importdump-label-edit-request": "Label for the 'Edit Request' submit button.",
 	"importdump-label-file": "Label for the file upload field.",
-	"importdump-label-inprogress": "'In Progress' status label.",
+	"importdump-label-inprogress": "'In progress' status label.",
 	"importdump-label-pending": "'Pending' status label.",
 	"importdump-label-requested-date": "Label for 'Requested Date'.",
 	"importdump-label-requester": "Label for 'Requester'.",
