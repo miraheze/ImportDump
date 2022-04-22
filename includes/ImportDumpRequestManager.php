@@ -16,6 +16,7 @@ class ImportDumpRequestManager {
 	public const CONSTRUCTOR_OPTIONS = [
 		'ImportDumpCentralWiki',
 		'ImportDumpInterwikiMap',
+		'InterwikiCentralDB',
 	];
 
 	/** @var DBConnRef */
@@ -171,7 +172,32 @@ class ImportDumpRequestManager {
 			__METHOD__
 		);
 
-		return $row['iw_prefix'] ?? '';
+		if ( $row['iw_prefix'] ?? '' ) {
+			return $row['iw_prefix'];
+		}
+
+		if ( $this->options->get( 'InterwikiCentralDB' ) ) {
+			$dbr = $this->lbFactory->getMainLB(
+				$this->options->get( 'InterwikiCentralDB' )
+			)->getConnectionRef( DB_REPLICA, [], $this->options->get( 'InterwikiCentralDB' ) );
+
+			$row = $dbr->selectRow(
+				'interwiki',
+				[
+					'iw_prefix',
+				],
+				[
+					'iw_url' . $dbr->buildLike( $this->getSource(), $dbr->anyString() ),
+				],
+				__METHOD__
+			);
+
+			if ( $row['iw_prefix'] ?? '' ) {
+				return $row['iw_prefix'];
+			}
+		}
+
+		return '';
 	}
 
 	/**
