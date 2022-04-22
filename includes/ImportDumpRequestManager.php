@@ -19,6 +19,9 @@ class ImportDumpRequestManager {
 		'ImportDumpInterwikiMap',
 	];
 
+	/** @var Config */
+	private $config;
+
 	/** @var DBConnRef */
 	private $dbw;
 
