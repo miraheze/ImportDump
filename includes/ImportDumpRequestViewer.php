@@ -3,7 +3,6 @@
 namespace Miraheze\ImportDump;
 
 use Config;
-use GlobalVarConfig;
 use Html;
 use HTMLForm;
 use IContextSource;
@@ -183,7 +182,7 @@ class ImportDumpRequestViewer {
 				],
 				'handle-command' => [
 					'type' => 'info',
-					'default' => $this->generateCommand(),
+					'default' => $this->importDumpRequestManager->getCommand(),
 					'section' => 'handling',
 				],
 				'handle-status' => [
@@ -250,26 +249,6 @@ class ImportDumpRequestViewer {
 		}
 
 		return true;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function generateCommand(): string {
-		$blankConfig = new GlobalVarConfig( '' );
-
-		$command = $this->config->get( 'ImportDumpScriptCommand' );
-		return str_replace( [
-			'{$IP}',
-			'{wiki}',
-			'{username-prefix}',
-			'{file}',
-		], [
-			$blankConfig->get( 'IP' ),
-			$this->importDumpRequestManager->getTarget(),
-			$this->importDumpRequestManager->getInterwikiPrefix(),
-			'',
-		], $command );
 	}
 
 	/**
