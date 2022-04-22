@@ -48,6 +48,8 @@
 	"importdump-table-target": "'Target' label for the table on Special:ImportDumpRequestQueue.",
 	"importdump-unknown": "Message displayed if the request is not found.",
 	"importdumprequestqueue": "{{doc-special}}",
+	"importrequest-log-header": "Header for the ImportRequest log.",
+	"importrequest-log-name": "{{doc-logpage}}",
 	"requestimportdump": "{{doc-special}}",
 	"right-handle-import-requests": "{{doc-right|handle-import-requests}}",
 	"right-requestimport": "{{doc-right|requestimport}}",
