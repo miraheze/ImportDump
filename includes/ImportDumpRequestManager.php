@@ -2,6 +2,7 @@
 
 namespace Miraheze\ImportDump;
 
+use Config;
 use ExtensionRegistry;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\User\UserFactory;
@@ -16,7 +17,6 @@ class ImportDumpRequestManager {
 	public const CONSTRUCTOR_OPTIONS = [
 		'ImportDumpCentralWiki',
 		'ImportDumpInterwikiMap',
-		'InterwikiCentralDB',
 	];
 
 	/** @var DBConnRef */
@@ -38,17 +38,20 @@ class ImportDumpRequestManager {
 	private $userFactory;
 
 	/**
+	 * @param Config $config
 	 * @param LBFactory $lbFactory
 	 * @param ServiceOptions $options
 	 * @param UserFactory $userFactory
 	 */
 	public function __construct(
+		Config $config,
 		LBFactory $lbFactory,
 		ServiceOptions $options,
 		UserFactory $userFactory
 	) {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
 
+		$this->config = $config;
 		$this->lbFactory = $lbFactory;
 		$this->options = $options;
 		$this->userFactory = $userFactory;
@@ -176,10 +179,10 @@ class ImportDumpRequestManager {
 			return $row->iw_prefix;
 		}
 
-		if ( $this->options->get( 'InterwikiCentralDB' ) ) {
+		if ( $this->config->get( 'InterwikiCentralDB' ) ) {
 			$dbr = $this->lbFactory->getMainLB(
-				$this->options->get( 'InterwikiCentralDB' )
-			)->getConnectionRef( DB_REPLICA, [], $this->options->get( 'InterwikiCentralDB' ) );
+				$this->config->get( 'InterwikiCentralDB' )
+			)->getConnectionRef( DB_REPLICA, [], $this->config->get( 'InterwikiCentralDB' ) );
 
 			$row = $dbr->selectRow(
 				'interwiki',
