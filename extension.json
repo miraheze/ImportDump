@@ -87,7 +87,11 @@
 	"config": {
 		"ImportDumpCentralWiki": {
 			"value": "betawiki",
-			"description": ""
+			"description": "If set, only allow users to request import dumps on this wiki."
+		},
+		"ImportDumpInterwikiMap": {
+			"value": [],
+			"description": "A mapping of 'domain => interwiki prefix' for multi-level interwiki prefix generation for --username-prefix."
 		}
 	},
 	"ConfigRegistry": {
