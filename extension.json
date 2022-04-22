@@ -86,12 +86,16 @@
 	},
 	"config": {
 		"ImportDumpCentralWiki": {
-			"value": "betawiki",
+			"value": "",
 			"description": "If set, only allow users to request import dumps on this wiki."
 		},
 		"ImportDumpInterwikiMap": {
 			"value": [],
 			"description": "A mapping of 'domain => interwiki prefix' for multi-level interwiki prefix generation for --username-prefix."
+		},
+		"ImportDumpScriptCommand": {
+			"value": "php {$IP}/maintenance/importDump.php --wiki={wiki} --username-prefix={username-prefix} {file}",
+			"description": "Generated maintenance script command to use."
 		}
 	},
 	"ConfigRegistry": {
