@@ -253,18 +253,6 @@ class ImportDumpRequestViewer {
 	}
 
 	/**
-	 * @param ?string $reason
-	 * @return string|bool
-	 */
-	public function isValidReason( ?string $reason ) {
-		if ( !$reason || ctype_space( $reason ) ) {
-			return wfMessage( 'htmlform-required', 'parseinline' )->escaped();
-		}
-
-		return true;
-	}
-
-	/**
 	 * @return string
 	 */
 	public function generateCommand(): string {
@@ -282,6 +270,43 @@ class ImportDumpRequestViewer {
 			$this->importDumpRequestManager->getInterwikiPrefix(),
 			''
 		], $command );
+	}
+
+	/**
+	 * @param int $requestID
+	 * @param IContextSource $context
+	 * @return ?ImportDumpOOUIForm
+	 */
+	public function getForm(
+		int $requestID,
+		IContextSource $context
+	): ?ImportDumpOOUIForm {
+		$this->importDumpRequestManager->fromID( $requestID );
+		$out = $context->getOutput();
+
+		if ( $requestID === 0 || !$this->importDumpRequestManager->exists() ) {
+			$out->addHTML(
+				Html::errorBox( wfMessage( 'importdump-unknown' )->escaped() )
+			);
+
+			return null;
+		}
+
+		$out->addModules( [ 'ext.importdump.oouiform' ] );
+		$out->addModuleStyles( [ 'oojs-ui-widgets.styles' ] );
+
+		$formDescriptor = $this->getFormDescriptor( $context );
+		$htmlForm = new ImportDumpOOUIForm( $formDescriptor, $context, 'importdump-section' );
+
+		$htmlForm->setId( 'importdump-request-viewer' );
+		$htmlForm->suppressDefaultSubmit();
+		$htmlForm->setSubmitCallback(
+			function ( array $formData, HTMLForm $form ) {
+				return $this->submitForm( $formData, $form );
+			}
+		);
+
+		return $htmlForm;
 	}
 
 	/**
