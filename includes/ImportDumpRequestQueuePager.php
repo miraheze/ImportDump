@@ -137,6 +137,7 @@ class ImportDumpRequestQueuePager extends TablePager {
 				'request_timestamp',
 				'request_target',
 			],
+			'conds' => [],
 			'joins_conds' => [],
 		];
 
