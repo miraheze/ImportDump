@@ -175,11 +175,6 @@ class ImportDumpRequestViewer {
 
 		if ( $this->permissionManager->userHasRight( $user, 'handle-import-requests' ) ) {
 			$formDescriptor += [
-				'handle-info' => [
-					'type' => 'info',
-					'default' => wfMessage( 'importdump-handle-info' )->text(),
-					'section' => 'handling',
-				],
 				'handle-command' => [
 					'type' => 'info',
 					'default' => $this->importDumpRequestManager->getCommand(),
