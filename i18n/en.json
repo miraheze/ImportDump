@@ -48,6 +48,8 @@
 	"importdump-table-target": "Target",
 	"importdump-unknown": "Unknown request.",
 	"importdumprequestqueue": "Import Dump Request Queue",
+	"importrequest-log-header": "This is a log of all ImportDump requests and status updates.",
+	"importrequest-log-name": "ImportDump request log",
 	"requestimportdump": "Request Import Dump",
 	"right-handle-import-requests": "Handle user import requests",
 	"right-requestimport": "Request import dumps",
