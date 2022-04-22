@@ -259,11 +259,11 @@ class ImportDumpRequestViewer {
 		$blankConfig = new GlobalVarConfig( '' );
 
 		$command = $this->config->get( 'ImportDumpScriptCommand' );
-		return preg_replace( [
-			'/\{\$IP\}/',
-			'/\{wiki\}/',
-			'/\{username-prefix\}/',
-			'/\{file\}/',
+		return str_replace( [
+			'{$IP}',
+			'{wiki}',
+			'{username-prefix}',
+			'{file}',
 		], [
 			$blankConfig->get( 'IP' ),
 			$this->importDumpRequestManager->getTarget(),
