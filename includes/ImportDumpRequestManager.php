@@ -172,8 +172,8 @@ class ImportDumpRequestManager {
 			__METHOD__
 		);
 
-		if ( $row['iw_prefix'] ?? '' ) {
-			return $row['iw_prefix'];
+		if ( $row->iw_prefix ?? '' ) {
+			return $row->iw_prefix;
 		}
 
 		if ( $this->options->get( 'InterwikiCentralDB' ) ) {
@@ -192,8 +192,8 @@ class ImportDumpRequestManager {
 				__METHOD__
 			);
 
-			if ( $row['iw_prefix'] ?? '' ) {
-				return $row['iw_prefix'];
+			if ( $row->iw_prefix ?? '' ) {
+				return $row->iw_prefix;
 			}
 		}
 
