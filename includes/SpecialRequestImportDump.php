@@ -124,11 +124,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		);
 
 		foreach ( $pending as $row ) {
-			if (
-				$data['source'] == $row->request_source ||
-				$data['target'] == $row->request_target ||
-				$data['reason'] == $row->request_reason
-			) {
+			if ( $data['reason'] === $row->request_reason ) {
 				return Status::newFatal( 'importdump-duplicate-request' );
 			}
 		}
