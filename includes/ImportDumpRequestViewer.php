@@ -3,6 +3,7 @@
 namespace Miraheze\ImportDump;
 
 use Config;
+use GlobalVarConfig;
 use Html;
 use HTMLForm;
 use IContextSource;
@@ -182,7 +183,7 @@ class ImportDumpRequestViewer {
 				],
 				'handle-command' => [
 					'type' => 'info',
-					'default' => 'mwscript importDump.php ' . $this->importDumpRequestManager->getTarget() . '--no-updates --username-prefix=' . $this->importDumpRequestManager->getInterwikiPrefix(),
+					'default' => $this->generateCommand(),
 					'section' => 'handling',
 				],
 				'handle-status' => [
@@ -252,40 +253,35 @@ class ImportDumpRequestViewer {
 	}
 
 	/**
-	 * @param int $requestID
-	 * @param IContextSource $context
-	 * @return ?ImportDumpOOUIForm
+	 * @param ?string $reason
+	 * @return string|bool
 	 */
-	public function getForm(
-		int $requestID,
-		IContextSource $context
-	): ?ImportDumpOOUIForm {
-		$this->importDumpRequestManager->fromID( $requestID );
-		$out = $context->getOutput();
-
-		if ( $requestID === 0 || !$this->importDumpRequestManager->exists() ) {
-			$out->addHTML(
-				Html::errorBox( wfMessage( 'importdump-unknown' )->escaped() )
-			);
-
-			return null;
+	public function isValidReason( ?string $reason ) {
+		if ( !$reason || ctype_space( $reason ) ) {
+			return wfMessage( 'htmlform-required', 'parseinline' )->escaped();
 		}
 
-		$out->addModules( [ 'ext.importdump.oouiform' ] );
-		$out->addModuleStyles( [ 'oojs-ui-widgets.styles' ] );
+		return true;
+	}
 
-		$formDescriptor = $this->getFormDescriptor( $context );
-		$htmlForm = new ImportDumpOOUIForm( $formDescriptor, $context, 'importdump-section' );
+	/**
+	 * @return string
+	 */
+	public function generateCommand(): string {
+		$blankConfig = new GlobalVarConfig( '' );
 
-		$htmlForm->setId( 'importdump-request-viewer' );
-		$htmlForm->suppressDefaultSubmit();
-		$htmlForm->setSubmitCallback(
-			function ( array $formData, HTMLForm $form ) {
-				return $this->submitForm( $formData, $form );
-			}
-		);
-
-		return $htmlForm;
+		$command = $this->config->get( 'ImportDumpScriptCommand' );
+		return preg_replace( [
+			'/\{$IP\}/',
+			'/\{wiki\}/',
+			'/\{username-prefix\}/',
+			'/\{file\}/'
+		], [
+			$blankConfig->get( 'IP' ),
+			$this->importDumpRequestManager->getTarget(),
+			$this->importDumpRequestManager->getInterwikiPrefix(),
+			''
+		], $command );
 	}
 
 	/**
