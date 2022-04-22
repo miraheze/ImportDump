@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump;
 
 use Config;
 use ExtensionRegistry;
+use GlobalVarConfig;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\User\UserFactory;
 use Miraheze\CreateWiki\RemoteWiki;
@@ -17,6 +18,7 @@ class ImportDumpRequestManager {
 	public const CONSTRUCTOR_OPTIONS = [
 		'ImportDumpCentralWiki',
 		'ImportDumpInterwikiMap',
+		'ImportDumpScriptCommand',
 	];
 
 	/** @var Config */
@@ -207,6 +209,26 @@ class ImportDumpRequestManager {
 		}
 
 		return '';
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getCommand(): string {
+		$blankConfig = new GlobalVarConfig( '' );
+
+		$command = $this->options->get( 'ImportDumpScriptCommand' );
+		return str_replace( [
+			'{$IP}',
+			'{wiki}',
+			'{username-prefix}',
+			'{file}',
+		], [
+			$blankConfig->get( 'IP' ),
+			$this->getTarget(),
+			$this->getInterwikiPrefix(),
+			'',
+		], $command );
 	}
 
 	/**
