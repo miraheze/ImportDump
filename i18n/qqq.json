@@ -13,7 +13,6 @@
 	"importdump-duplicate-request": "Message displayed when user attempts to submit a request that is to similar to an existing open request.",
 	"importdump-edit-success": "Message displayed when the request is successfully edited.",
 	"importdump-extensionname": "{{name}}",
-	"importdump-handle-info": "Info message displayed on the handling section of Special:ImportDumpRequestQueue.",
 	"importdump-header-comment-withtimestamp": "Timestamp for comment.",
 	"importdump-invalid-target": "Status message displayed when invalid database name was entered for the 'target' field.",
 	"importdump-label-add-comment": "Label for the 'Add Comment' submit button.",
