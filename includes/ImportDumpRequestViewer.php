@@ -263,12 +263,12 @@ class ImportDumpRequestViewer {
 			'/\{\$IP\}/',
 			'/\{wiki\}/',
 			'/\{username-prefix\}/',
-			'/\{file\}/'
+			'/\{file\}/',
 		], [
 			$blankConfig->get( 'IP' ),
 			$this->importDumpRequestManager->getTarget(),
 			$this->importDumpRequestManager->getInterwikiPrefix(),
-			''
+			'',
 		], $command );
 	}
 
