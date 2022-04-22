@@ -182,7 +182,10 @@ class ImportDumpRequestManager {
 			return $row->iw_prefix;
 		}
 
-		if ( $this->config->get( 'InterwikiCentralDB' ) ) {
+		if (
+			ExtensionRegistry::getInstance()->isLoaded( 'Interwiki' ) &&
+			$this->config->get( 'InterwikiCentralDB' )
+		) {
 			$dbr = $this->lbFactory->getMainLB(
 				$this->config->get( 'InterwikiCentralDB' )
 			)->getConnectionRef( DB_REPLICA, [], $this->config->get( 'InterwikiCentralDB' ) );
