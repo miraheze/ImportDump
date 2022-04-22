@@ -260,7 +260,7 @@ class ImportDumpRequestViewer {
 
 		$command = $this->config->get( 'ImportDumpScriptCommand' );
 		return preg_replace( [
-			'/\{$IP\}/',
+			'/\{\$IP\}/',
 			'/\{wiki\}/',
 			'/\{username-prefix\}/',
 			'/\{file\}/'
