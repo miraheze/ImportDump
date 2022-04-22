@@ -180,6 +180,11 @@ class ImportDumpRequestViewer {
 					'default' => wfMessage( 'importdump-handle-info' )->text(),
 					'section' => 'handling',
 				],
+				'handle-command' => [
+					'type' => 'info',
+					'default' => 'mwscript importDump.php ' . $this->importDumpRequestManager->getTarget() . '--no-updates --username-prefix=' . $this->importDumpRequestManager->getInterwikiPrefix(),
+					'section' => 'handling',
+				],
 				'handle-status' => [
 					'type' => 'select',
 					'label-message' => 'importdump-label-update-status',
