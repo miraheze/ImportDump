@@ -140,7 +140,7 @@ class ImportDumpRequestManager {
 	 */
 	public function getInterwikiPrefix(): string {
 		if ( $this->options->get( 'ImportDumpInterwikiMap' ) ) {
-			$parsedSource = parse_url( $this->getSource() )['host'] ?? '' );
+			$parsedSource = parse_url( $this->getSource() )['host'] ?? '';
 			$domain = explode( '.', $parsedSource )[1] ?? '';
 			$domain .= '.' . explode( '.', $parsedSource )[2] ?? '';
 
