@@ -149,7 +149,7 @@ class ImportDumpRequestManager {
 		if ( $this->options->get( 'ImportDumpInterwikiMap' ) ) {
 			$parsedSource = parse_url( $this->getSource() )['host'] ?? '';
 			$domain = explode( '.', $parsedSource )[1] ?? '';
-			$domain .= '.' . explode( '.', $parsedSource )[2] ?? '';
+			$domain .= '.' . ( explode( '.', $parsedSource )[2] ?? '' );
 
 			if ( $domain ) {
 				if ( $this->options->get( 'ImportDumpInterwikiMap' )[$domain] ?? '' ) {
