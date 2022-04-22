@@ -31,7 +31,7 @@
 		"view-private-import-requests"
 	],
 	"LogActionsHandlers": {
-		"/*": "LogFormatter"
+		"importrequest/*": "LogFormatter"
 	},
 	"LogHeaders": {
 		"importrequest": "importrequest-log-header"
