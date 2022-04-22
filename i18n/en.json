@@ -13,7 +13,6 @@
 	"importdump-duplicate-request": "Unable to submit this request. It is to similar to an already open request.",
 	"importdump-edit-success": "Request successfully edited.",
 	"importdump-extensionname": "ImportDump",
-	"importdump-handle-info": "You are currently managing this request. This will update the status of this request.",
 	"importdump-header-comment-withtimestamp": "Comment given by $1 at $2",
 	"importdump-invalid-target": "The provided target is not a valid database name.",
 	"importdump-label-add-comment": "Add Comment",
