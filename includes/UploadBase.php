@@ -12,4 +12,11 @@ class UploadBase extends CoreUploadBase {
 	public function setTempPath( string $tempPath ) {
 		$this->mTempPath = $tempPath;
 	}
+
+	/**
+	 * @param WebRequest &$request
+	 */
+	public function initializeFromRequest( &$request ) {
+		parent::initializeFromRequest( $request );
+	}
 }
