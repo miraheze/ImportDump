@@ -7,7 +7,6 @@ use File;
 use FormSpecialPage;
 use Html;
 use MimeAnalyzer;
-use MWFileProps;
 use PermissionsError;
 use SpecialPage;
 use Status;
