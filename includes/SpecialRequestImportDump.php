@@ -141,12 +141,13 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return Status::newFatal( 'importdump-duplicate-request' );
 		}
 
-		$uploadBase = UploadBase::createFromRequest( $this->getRequest(), $data['FileSourceType'] );
+		$request = $this->getRequest();
+		$uploadBase = UploadBase::createFromRequest( $request, $data['FileSourceType'] );
 
 		$rows = [
 			'request_source' => $data['source'],
 			'request_target' => $data['target'],
-			'request_file' => $data['file'],
+			'request_file' => $uploadBase->getLocalFile()->getTitle()->getFullURL(),
 			'request_reason' => $data['reason'],
 			'request_status' => 'pending',
 			'request_actor' => $this->getUser()->getActorId(),
