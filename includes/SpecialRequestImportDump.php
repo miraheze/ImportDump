@@ -155,12 +155,21 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return Status::newFatal( 'importdump-duplicate-request' );
 		}
 
-		$fileName = $this->getUser()->getName() . '-' . rand( 0, 10000 ) . '.jpg';
+		$fileName = $this->getUser()->getName() . '-' . rand( 0, 10000 ) . '.tar.gz';
 
 		$request = $this->getRequest();
 		$request->setVal( 'wpDestFile', $fileName );
 
+		if ( $data['UploadSourceType'] === 'Url' ) {
+			$request->setVal( 'wpUploadFileURL', $data['UploadFileURL'] );
+		}
+
 		$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] );
+
+		$status = $uploadBase->fetchFile();
+		if ( !$status->isOK() ) {
+			return $status;
+		}
 
 		if ( $uploadBase instanceof UploadFromFile ) {
 			$uploadBase = new UploadFromChunks( $this->getUser() );
