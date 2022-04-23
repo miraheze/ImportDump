@@ -76,9 +76,25 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'required' => true,
 				'validation-callback' => [ $this, 'isValidDatabase' ],
 			],
-			'file' => [
+			'FileSourceType' => [
+				'type' => 'radio',
+				'label-message' => 'importdump-label-file-source-type',
+				'default' => 'File',
+				'options-messages' => [
+					'importdump-label-file' => 'File',
+					'importdump-label-url' => 'Url',
+				],
+			],
+			'FileUpload' => [
 				'type' => 'file',
-				'label-message' => 'importdump-label-file',
+				'label-message' => 'importdump-label-file-upload',
+				'hide-if' => [ '!==', 'wpFileSourceType', 'File' ],
+				'required' => true,
+			],
+			'FileUrl' => [
+				'type' => 'url',
+				'label-message' => 'importdump-label-file-upload-by-url',
+				'hide-if' => [ '!==', 'wpFileSourceType', 'Url' ],
 				'required' => true,
 			],
 			'reason' => [
@@ -124,6 +140,8 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		if ( (bool)$duplicate ) {
 			return Status::newFatal( 'importdump-duplicate-request' );
 		}
+
+		$uploadBase = UploadBase::createFromRequest( $this->getRequest(), $data['FileSourceType'] );
 
 		$rows = [
 			'request_source' => $data['source'],
