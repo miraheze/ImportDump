@@ -162,7 +162,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 
 		$uploadPath = '/mnt/mediawiki-static/ImportDump/' . $fileName;
 
-		$mimeType = $this->mimeAnalyzer->guessMimeType( $uploadPath );
+		/* $mimeType = $this->mimeAnalyzer->guessMimeType( $uploadPath );
 
 		if ( $mimeType !== 'unknown/unknown' ) {
 			$mimeExt = $this->mimeAnalyzer->getExtensionFromMimeTypeOrNull( $mimeType );
@@ -172,23 +172,14 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			}
 		} else {
 			return Status::newFatal( 'importdump-upload-unknown' );
-		}
+		} */
 
 		/* if ( $mimeType !== 'application/xml' ) {
 			return Status::newFatal( 'importdump-not-xml' );
 		} */
 
 		$mwProps = new MWFileProps( $this->mimeAnalyzer );
-		$props = $mwProps->getPropsFromPath( $uploadPath, $mimeExt );
-
-		$error = null;
-		if ( $error ) {
-			if ( !is_array( $error ) ) {
-				$error = [ $error ];
-			}
-
-			return Status::newFatal( ...$error );
-		}
+		$props = $mwProps->getPropsFromPath( $uploadPath, 'jpg' );
 
 		$status = $uploadBase->getLocalFile()->upload(
 			$uploadPath,
