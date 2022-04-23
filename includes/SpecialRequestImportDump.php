@@ -196,7 +196,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$rows = [
 			'request_source' => $data['source'],
 			'request_target' => $data['target'],
-			'request_file' => $metadata['us_orig_path'],
+			'request_file' => $metadata['us_path'],
 			'request_reason' => $data['reason'],
 			'request_status' => 'pending',
 			'request_actor' => $this->getUser()->getActorId(),
