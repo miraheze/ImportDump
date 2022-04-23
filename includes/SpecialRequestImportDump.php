@@ -169,33 +169,23 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$dbname = $this->getConfig()->get( 'DBname' );
 		$uploadPath = '/mnt/mediawiki-static/' . $dbname . '/ImportDump';
 
-		$fileKey = $uploadBase->tryStashFile( $this->getUser() )
-			->getStatusValue()
-			->getValue()
-			->getFileKey();
-
-		UploadBase::setSessionStatus(
-			$this->getUser(),
-			$fileKey,
-			[
-				'result' => 'Poll',
-				'stage' => 'queued',
-				'status' => Status::newGood(),
-			]
-		);
-
-		\MediaWiki\MediaWikiServices::getInstance()->getJobQueueGroup()->push( new AssembleUploadChunksJob(
-			Title::makeTitle( NS_FILE, $fileKey ),
-			[
-				'filename' => $fileName,
-				'filekey' => $fileKey,
-				'session' => $this->getContext()->exportSession(),
-			]
-		) );
-
+		$status = $uploadBase->tryStashFile( $this->getUser() );
 		if ( !$status->isGood() ) {
 			return $status;
 		}
+
+		$fileKey = $status->getStatusValue()->getValue()->getFileKey();
+
+		\MediaWiki\MediaWikiServices::getInstance()->getJobQueueGroup()->push(
+			new AssembleUploadChunksJob(
+				Title::makeTitle( NS_FILE, $fileKey ),
+				[
+					'filename' => $fileName,
+					'filekey' => $fileKey,
+					'session' => $this->getContext()->exportSession(),
+				]
+			)
+		);
 
 		$rows = [
 			'request_source' => $data['source'],
