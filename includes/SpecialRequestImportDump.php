@@ -3,8 +3,11 @@
 namespace Miraheze\ImportDump;
 
 use ErrorPageError;
+use File;
 use FormSpecialPage;
 use Html;
+use MimeAnalyzer;
+use MWFileProps;
 use PermissionsError;
 use SpecialPage;
 use Status;
@@ -19,13 +22,21 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
 
+	/** @var MimeAnalyzer */
+	private $mimeAnalyzer;
+
 	/**
 	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param MimeAnalyzer $mimeAnalyzer
 	 */
-	public function __construct( ILBFactory $dbLoadBalancerFactory ) {
+	public function __construct(
+		ILBFactory $dbLoadBalancerFactory,
+		MimeAnalyzer $mimeAnalyzer
+	) {
 		parent::__construct( 'RequestImportDump', 'requestimport' );
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
+		$this->mimeAnalyzer = $mimeAnalyzer;
 	}
 
 	/**
@@ -76,25 +87,25 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'required' => true,
 				'validation-callback' => [ $this, 'isValidDatabase' ],
 			],
-			'FileSourceType' => [
+			'UploadSourceType' => [
 				'type' => 'radio',
-				'label-message' => 'importdump-label-file-source-type',
+				'label-message' => 'importdump-label-upload-source-type',
 				'default' => 'File',
 				'options-messages' => [
 					'importdump-label-file' => 'File',
 					'importdump-label-url' => 'Url',
 				],
 			],
-			'FileUpload' => [
+			'UploadFile' => [
 				'type' => 'file',
-				'label-message' => 'importdump-label-file-upload',
-				'hide-if' => [ '!==', 'wpFileSourceType', 'File' ],
+				'label-message' => 'importdump-label-upload-file',
+				'hide-if' => [ '!==', 'wpUploadSourceType', 'File' ],
 				'required' => true,
 			],
-			'FileUrl' => [
+			'UploadFileURL' => [
 				'type' => 'url',
-				'label-message' => 'importdump-label-file-upload-by-url',
-				'hide-if' => [ '!==', 'wpFileSourceType', 'Url' ],
+				'label-message' => 'importdump-label-upload-file-url',
+				'hide-if' => [ '!==', 'wpUploadSourceType', 'Url' ],
 				'required' => true,
 			],
 			'reason' => [
@@ -142,7 +153,62 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		}
 
 		$request = $this->getRequest();
-		$uploadBase = UploadBase::createFromRequest( $request, $data['FileSourceType'] );
+
+		$request->setVal(
+			'wpDestFile',
+			'ImportDump-' . $this->getUser()->getName() . '-' rand( 0, 10000 ) . '.jpg'
+		)
+
+		$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] );
+
+		$uploadBase->getLocalFile()->load( File::READ_LATEST );
+
+		$uploadPath = '/mnt/mediawiki-static/ImportDump';
+
+		$mimeType = $this->mimeAnalyzer->guessMimeType( $uploadPath );
+
+		if ( $mimeType !== 'unknown/unknown' ) {
+			$mimeExt = $this->mimeAnalyzer->getExtensionFromMimeTypeOrNull( $mimeType );
+
+			if ( $mimeExt === null ) {
+				return Status::newFatal( 'importdump-upload-null' );
+			}
+		}  else {
+			return Status::newFatal( 'importdump-upload-unknown' );
+		}
+
+		/* if ( $mimeType !== 'application/xml' ) {
+			return Status::newFatal( 'importdump-not-xml' );
+		} */
+
+		$mwProps = new MWFileProps( $this->mimeAnalyzer );
+		$props = $mwProps->getPropsFromPath( $uploadPath, $mimeExt );
+
+		$error = null;
+		if ( $error ) {
+			if ( !is_array( $error ) ) {
+				$error = [ $error ];
+			}
+
+			return Status::newFatal( ...$error );
+		}
+
+		$status = $uploadBase->getLocalFile()->upload(
+			$uploadPath,
+			'',
+			'',
+			File::DELETE_SOURCE,
+			$props,
+			false,
+			$this->getUser(),
+			[]
+		);
+
+		if ( $status->isGood() ) {
+			$uploadBase->postProcessUpload();
+		} else {
+			return $status;
+		}
 
 		$rows = [
 			'request_source' => $data['source'],
