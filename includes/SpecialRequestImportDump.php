@@ -160,10 +160,6 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$request = $this->getRequest();
 		$request->setVal( 'wpDestFile', $fileName );
 
-		if ( $data['UploadSourceType'] === 'Url' ) {
-			$request->setVal( 'wpUploadFileURL', $data['UploadFileURL'] );
-		}
-
 		$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] );
 
 		$status = $uploadBase->fetchFile();
