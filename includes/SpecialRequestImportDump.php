@@ -167,9 +167,6 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			$uploadBase->initializeFromRequest( $request );
 		}
 
-		$dbname = $this->getConfig()->get( 'DBname' );
-		$uploadPath = '/mnt/mediawiki-static/' . $dbname . '/ImportDump';
-
 		$status = $uploadBase->tryStashFile( $this->getUser() );
 		if ( !$status->isGood() ) {
 			return $status;
@@ -192,11 +189,12 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$uploadStash = new UploadStash( $repo, $this->getUser() );
 
 		$metadata = $uploadStash->getMetadata( $fileKey );
+		$file = $repo->resolveVirtualUrl( $path );
 
 		$rows = [
 			'request_source' => $data['source'],
 			'request_target' => $data['target'],
-			'request_file' => $metadata['us_path'],
+			'request_file' => $file,
 			'request_reason' => $data['reason'],
 			'request_status' => 'pending',
 			'request_actor' => $this->getUser()->getActorId(),
