@@ -55,7 +55,8 @@
 		"RequestImportDump": {
 			"class": "Miraheze\\ImportDump\\SpecialRequestImportDump",
 			"services": [
-				"DBLoadBalancerFactory"
+				"DBLoadBalancerFactory",
+				"MimeAnalyzer"
 			]
 		}
 	},
