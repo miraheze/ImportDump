@@ -161,7 +161,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$dbname = $this->getConfig()->get( 'DBname' );
 		$uploadPath = '/mnt/mediawiki-static/' . $dbname . '/ImportDump';
 
-		( new UploadBase() )->setTempPath( $uploadPath );
+		$uploadBase->setTempFile( $uploadPath, $uploadBase->getFileSize() );
 		$status = $uploadBase->performUpload( '', '', false, $this->getUser() );
 
 		if ( !$status->isGood() ) {
