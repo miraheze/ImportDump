@@ -66,7 +66,7 @@
 	},
 	"HookHandlers": {
 		"Installer": {
-			"class": "Miraheze\\ImportDump\\Hooks"
+			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Installer"
 		}
 	},
 	"ResourceModules": {
