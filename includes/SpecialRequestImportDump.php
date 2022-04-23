@@ -156,7 +156,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 
 		$request->setVal(
 			'wpDestFile',
-			'ImportDump-' . $this->getUser()->getName() . '-' rand( 0, 10000 ) . '.jpg'
+			'ImportDump-' . $this->getUser()->getName() . '-' . rand( 0, 10000 ) . '.jpg'
 		);
 
 		$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] );
