@@ -168,11 +168,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$dbname = $this->getConfig()->get( 'DBname' );
 		$uploadPath = '/mnt/mediawiki-static/' . $dbname . '/ImportDump';
 
-		$uploadBase->tryStashFile( $this->getUser() );
-
-		$stash = \MediaWiki\MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo()->getUploadStash( $this->getUser() );
-		$file = $stash->stashFile( $uploadPath, $uploadBase->getSourceType() );
-		$fileKey = $file->getFileKey();
+		$fileKey = $uploadBase->tryStashFile( $this->getUser() )
+			->getStatusValue()
+			->getValue()
+			->getFileKey();
 
 		UploadBase::setSessionStatus(
 			$this->getUser(),
