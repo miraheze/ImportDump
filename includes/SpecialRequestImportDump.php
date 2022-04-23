@@ -189,7 +189,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$uploadStash = new UploadStash( $repo, $this->getUser() );
 
 		$metadata = $uploadStash->getMetadata( $fileKey );
-		$file = $repo->resolveVirtualUrl( $path );
+		$file = $repo->resolveVirtualUrl( $metadata['us_path'] );
 
 		$rows = [
 			'request_source' => $data['source'],
