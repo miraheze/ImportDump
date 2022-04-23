@@ -10,7 +10,7 @@ class UploadBase extends CoreUploadBase {
 	 * @param string $tempPath
 	 * @param int|null $fileSize
 	 */
-	public function setTempFile( string $tempPath, int $fileSize = null ) {
+	public function setTempFile( $tempPath, $fileSize = null ) {
 		parent::setTempFile( $tempPath, $fileSize );
 	}
 
