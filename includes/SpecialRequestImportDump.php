@@ -194,7 +194,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$uploadStash = new UploadStash( $repo, $this->getUser() );
 
 		$file = $uploadStash->getFile( $fileKey );
-		$fileUrl = $this->getConfig()->get( 'UploadDirectory' ) . '/' . $file->getUrlRel();
+		$fileUrl = $this->getConfig()->get( 'UploadDirectory' ) . '/' . $file->getRel();
 
 		$rows = [
 			'request_source' => $data['source'],
