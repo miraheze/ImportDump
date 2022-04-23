@@ -11,7 +11,6 @@ use MWFileProps;
 use PermissionsError;
 use SpecialPage;
 use Status;
-use UploadBase;
 use UserBlockedError;
 use UserNotLoggedIn;
 use WikiMap;
@@ -163,39 +162,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$dbname = $this->getConfig()->get( 'DBname' );
 		$uploadPath = '/mnt/mediawiki-static/' . $dbname . '/ImportDump';
 
-		/* $mimeType = $this->mimeAnalyzer->guessMimeType( $uploadPath );
+		$uploadBase->setTempPath( $uploadPath );
+		$status = $uploadBase->performUpload( '', '', false, $this->getUser() );
 
-		if ( $mimeType !== 'unknown/unknown' ) {
-			$mimeExt = $this->mimeAnalyzer->getExtensionFromMimeTypeOrNull( $mimeType );
-
-			if ( $mimeExt === null ) {
-				return Status::newFatal( 'importdump-upload-null' );
-			}
-		} else {
-			return Status::newFatal( 'importdump-upload-unknown' );
-		} */
-
-		/* if ( $mimeType !== 'application/xml' ) {
-			return Status::newFatal( 'importdump-not-xml' );
-		} */
-
-		$mwProps = new MWFileProps( $this->mimeAnalyzer );
-		$props = $mwProps->getPropsFromPath( $uploadPath, 'jpg' );
-
-		$status = $uploadBase->getLocalFile()->upload(
-			$uploadPath,
-			'',
-			'',
-			File::DELETE_SOURCE,
-			$props,
-			false,
-			$this->getUser(),
-			[]
-		);
-
-		if ( $status->isGood() ) {
-			$uploadBase->postProcessUpload();
-		} else {
+		if ( !$status->isGood() ) {
 			return $status;
 		}
 
