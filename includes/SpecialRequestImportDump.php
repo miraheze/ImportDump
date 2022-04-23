@@ -102,31 +102,27 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return Status::newFatal( 'actionthrottledtext' );
 		}
 
-		if ( $this->getConfig()->get( 'ImportDumpCentralWiki' ) ) {
+		$centralWiki = $this->getConfig()->get( 'ImportDumpCentralWiki' );
+		if ( $centralWiki ) {
 			$dbw = $this->dbLoadBalancerFactory->getMainLB(
-				$this->getConfig()->get( 'ImportDumpCentralWiki' )
-			)->getConnectionRef( DB_PRIMARY, [], $this->getConfig()->get( 'ImportDumpCentralWiki' ) );
+				$centralWiki
+			)->getConnectionRef( DB_PRIMARY, [], $centralWiki );
 		} else {
 			$dbw = $this->dbLoadBalancerFactory->getMainLB()->getConnectionRef( DB_PRIMARY );
 		}
 
-		$pending = $dbw->select(
+		$duplicate = $dbw->selectRow(
 			'importdump_requests',
+			'*',
 			[
-				'request_reason',
-				'request_source',
-				'request_target',
-			],
-			[
+				'request_reason' => $data['reason'],
 				'request_status' => 'pending',
 			],
 			__METHOD__
 		);
 
-		foreach ( $pending as $row ) {
-			if ( $data['reason'] === $row->request_reason ) {
-				return Status::newFatal( 'importdump-duplicate-request' );
-			}
+		if ( (bool)$duplicate ) {
+			return Status::newFatal( 'importdump-duplicate-request' );
 		}
 
 		$rows = [
