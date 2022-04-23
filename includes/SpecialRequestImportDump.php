@@ -162,8 +162,8 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] );
 
 		if ( $uploadBase instanceof UploadFromFile ) {
-			$uploadFromChunks = new UploadFromChunks( $this->getUser() );
-			$uploadBase = $uploadFromChunks->initializeFromRequest( $request );
+			$uploadBase = new UploadFromChunks( $this->getUser() );
+			$uploadBase->initializeFromRequest( $request );
 		}
 
 		$dbname = $this->getConfig()->get( 'DBname' );
