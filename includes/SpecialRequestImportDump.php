@@ -160,7 +160,8 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] );
 		$uploadBase->getLocalFile()->load( File::READ_LATEST );
 
-		$uploadPath = '/mnt/mediawiki-static/ImportDump/' . $fileName;
+		$dbname = $this->getConfig()->get( 'DBname' );
+		$uploadPath = '/mnt/mediawiki-static/' . $dbname . '/ImportDump/' . $fileName;
 
 		/* $mimeType = $this->mimeAnalyzer->guessMimeType( $uploadPath );
 
