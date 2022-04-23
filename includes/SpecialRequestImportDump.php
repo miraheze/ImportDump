@@ -155,7 +155,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return Status::newFatal( 'importdump-duplicate-request' );
 		}
 
-		$fileName = $this->getUser()->getName() . '-' . rand( 0, 10000 ) . '.tar.gz';
+		$fileName = $this->getUser()->getName() . '-' . rand( 0, 10000 ) . '.jpg';
 
 		$request = $this->getRequest();
 		$request->setVal( 'wpDestFile', $fileName );
