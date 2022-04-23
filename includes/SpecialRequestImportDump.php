@@ -14,6 +14,7 @@ use Title;
 use UploadBase;
 use UploadFromChunks;
 use UploadFromFile;
+use UploadStash;
 use UserBlockedError;
 use UserNotLoggedIn;
 use WikiMap;
@@ -187,10 +188,15 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			)
 		);
 
+		$repo = \MediaWiki\MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo();
+		$uploadStash = new UploadStash( $repo, $this->getUser() );
+
+		$metadata = $uploadStash->getMetadata( $fileKey );
+
 		$rows = [
 			'request_source' => $data['source'],
 			'request_target' => $data['target'],
-			'request_file' => $uploadBase->getLocalFile()->getTitle()->getFullURL(),
+			'request_file' => $metadata['us_orig_path'],
 			'request_reason' => $data['reason'],
 			'request_status' => 'pending',
 			'request_actor' => $this->getUser()->getActorId(),
