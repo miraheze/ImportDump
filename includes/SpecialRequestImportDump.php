@@ -2,14 +2,18 @@
 
 namespace Miraheze\ImportDump;
 
+use AssembleUploadChunksJob;
 use ErrorPageError;
-use File;
 use FormSpecialPage;
 use Html;
 use MimeAnalyzer;
 use PermissionsError;
 use SpecialPage;
 use Status;
+use Title;
+use UploadBase;
+use UploadFromChunks;
+use UploadFromFile;
 use UserBlockedError;
 use UserNotLoggedIn;
 use WikiMap;
@@ -156,13 +160,38 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$request->setVal( 'wpDestFile', $fileName );
 
 		$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] );
-		$uploadBase->getLocalFile()->load( File::READ_LATEST );
+
+		if ( $uploadBase instanceof UploadFromFile ) {
+			$uploadBase = new UploadFromChunks( $this->getUser() );
+		}
 
 		$dbname = $this->getConfig()->get( 'DBname' );
 		$uploadPath = '/mnt/mediawiki-static/' . $dbname . '/ImportDump';
 
-		$uploadBase->setTempFile( $uploadPath, $uploadBase->getFileSize() );
-		$status = $uploadBase->performUpload( '', '', false, $this->getUser() );
+		$uploadBase->tryStashFile( $this->getUser() );
+
+		$stash = \MediaWiki\MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo()->getUploadStash( $this->getUser() );
+		$file = $stash->stashFile( $uploadPath, $uploadBase->getSourceType() );
+		$fileKey = $file->getFileKey();
+
+		UploadBase::setSessionStatus(
+			$this->getUser(),
+			$fileKey,
+			[
+				'result' => 'Poll',
+				'stage' => 'queued',
+				'status' => Status::newGood(),
+			]
+		);
+
+		\MediaWiki\MediaWikiServices::getInstance()->getJobQueueGroup()->push( new AssembleUploadChunksJob(
+			Title::makeTitle( NS_FILE, $fileKey ),
+			[
+				'filename' => $fileName,
+				'filekey' => $fileKey,
+				'session' => $this->getContext()->exportSession(),
+			]
+		) );
 
 		if ( !$status->isGood() ) {
 			return $status;
