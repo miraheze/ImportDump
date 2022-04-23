@@ -152,18 +152,15 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return Status::newFatal( 'importdump-duplicate-request' );
 		}
 
-		$request = $this->getRequest();
+		$fileName = $this->getUser()->getName() . '-' . rand( 0, 10000 ) . '.jpg';
 
-		$request->setVal(
-			'wpDestFile',
-			'ImportDump-' . $this->getUser()->getName() . '-' . rand( 0, 10000 ) . '.jpg'
-		);
+		$request = $this->getRequest();
+		$request->setVal( 'wpDestFile', $fileName );
 
 		$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] );
-
 		$uploadBase->getLocalFile()->load( File::READ_LATEST );
 
-		$uploadPath = '/mnt/mediawiki-static/ImportDump';
+		$uploadPath = '/mnt/mediawiki-static/ImportDump/' . $fileName;
 
 		$mimeType = $this->mimeAnalyzer->guessMimeType( $uploadPath );
 
