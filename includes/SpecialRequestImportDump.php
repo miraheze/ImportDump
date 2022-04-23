@@ -173,7 +173,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			if ( $mimeExt === null ) {
 				return Status::newFatal( 'importdump-upload-null' );
 			}
-		}  else {
+		} else {
 			return Status::newFatal( 'importdump-upload-unknown' );
 		}
 
