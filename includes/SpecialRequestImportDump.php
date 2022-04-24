@@ -10,7 +10,6 @@ use MimeAnalyzer;
 use PermissionsError;
 use SpecialPage;
 use Status;
-use Title;
 use UploadBase;
 use UploadStash;
 use UserBlockedError;
