@@ -136,7 +136,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 * @return Status
 	 */
 	public function onSubmit( array $data ) {
-		if ( $this->getUser()->pingLimiter( 'requestimportdump' ) ) {
+		if (
+			$this->getUser()->pingLimiter( 'requestimportdump' ) ||
+			UploadBase::isThrottled( $this->getUser() )
+		) {
 			return Status::newFatal( 'actionthrottledtext' );
 		}
 
@@ -169,6 +172,18 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$request->setVal( 'wpDestFile', $fileName );
 
 		$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] );
+
+		$mime = $this->mimeAnalyzer->guessMimeType( $uploadBase->getTempPath() );
+		if ( $mime !== 'application/xml' ) {
+			return Status::newFatal( 'filetype-mime-mismatch', 'xml', $mime );
+		}
+
+		$mimeExt = $this->mimeAnalyzer->getExtensionFromMimeTypeOrNull( $mime );
+		if ( $mimeExt !== 'xml' ) {
+			return Status::newFatal(
+				'filetype-banned-type', $mimeExt ?? 'unknown', 'xml', 1, 1
+			);
+		}
 
 		$status = $uploadBase->fetchFile();
 		if ( !$status->isOK() ) {
