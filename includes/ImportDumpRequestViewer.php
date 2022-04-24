@@ -191,6 +191,7 @@ class ImportDumpRequestViewer {
 					] ], $context->getLanguage()->commaList(
 						$this->importDumpRequestManager->getUserGroupsFromTarget()
 					) ),
+					'raw' => true,
 					'section' => 'handling',
 				],
 				'handle-status' => [
