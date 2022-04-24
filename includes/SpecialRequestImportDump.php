@@ -157,7 +157,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		}
 
 		$username = str_replace( ' ', '_', $this->getUser()->getName() );
-		$fileName = $username . '-' . rand() . '.jpg';
+		$fileName = $username . '-' . $data['target'] . '-' . rand() . '.jpg';
 
 		$request = $this->getRequest();
 		$request->setVal( 'wpDestFile', $fileName );
