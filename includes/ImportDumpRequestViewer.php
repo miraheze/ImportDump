@@ -183,6 +183,16 @@ class ImportDumpRequestViewer {
 					)->text(),
 					'section' => 'handling',
 				],
+				'handle-groups' => [
+					'type' => 'info',
+					'default' => Html::element( 'div', [ 'class' => [
+						'mw-message-box',
+						'mw-message-box-notice',
+					], $context->getLanguage()->commaList(
+						$this->importDumpRequestManager->getUserGroupsFromTarget()
+					) ),
+					'section' => 'handling',
+				],
 				'handle-status' => [
 					'type' => 'select',
 					'label-message' => 'importdump-label-update-status',
