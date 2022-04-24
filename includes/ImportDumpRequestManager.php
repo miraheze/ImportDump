@@ -64,7 +64,8 @@ class ImportDumpRequestManager {
 		ILBFactory $dbLoadBalancerFactory,
 		MessageLocalizer $messageLocalizer,
 		ServiceOptions $options,
-		UserFactory $userFactory
+		UserFactory $userFactory,
+		UserGroupManagerFactory $userGroupManagerFactory
 	) {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
 
