@@ -163,7 +163,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return Status::newFatal( 'importdump-duplicate-request' );
 		}
 
-		$fileName = $data['target'] . '-' . rand() . '.xml';
+		$fileName = $data['target'] . '-' . $dbw->timestamp() . '.xml';
 
 		$request = $this->getRequest();
 		$request->setVal( 'wpDestFile', $fileName );
