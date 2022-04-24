@@ -178,19 +178,21 @@ class ImportDumpRequestViewer {
 			$formDescriptor += [
 				'handle-command' => [
 					'type' => 'info',
-					'default' => wfMessage( 'importdump-info-command',
-						$this->importDumpRequestManager->getCommand()
-					)->text(),
+					'default' => Html::warningBox(
+						wfMessage( 'importdump-info-command' )->rawParams(
+							$this->importDumpRequestManager->getCommand()
+						) )->escaped()
+					),
+					'raw' => true,
 					'section' => 'handling',
 				],
 				'handle-groups' => [
 					'type' => 'info',
-					'default' => Html::element( 'div', [ 'class' => [
-						'mw-message-box',
-						'mw-message-box-notice',
-					] ], $context->getLanguage()->commaList(
-						$this->importDumpRequestManager->getUserGroupsFromTarget()
-					) ),
+					'default' => Html::warningBox(
+						$context->getLanguage()->commaList(
+							$this->importDumpRequestManager->getUserGroupsFromTarget()
+						)
+					),
 					'raw' => true,
 					'section' => 'handling',
 				],
