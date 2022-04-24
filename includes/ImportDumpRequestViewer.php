@@ -177,16 +177,18 @@ class ImportDumpRequestViewer {
 			$formDescriptor += [
 				'handle-command' => [
 					'type' => 'info',
-					'default' => $this->importDumpRequestManager->getCommand(),
+					'default' => wfMessage( 'importdump-info-command',
+						$this->importDumpRequestManager->getCommand()
+					)->text(),
 					'section' => 'handling',
 				],
 				'handle-status' => [
 					'type' => 'select',
 					'label-message' => 'importdump-label-update-status',
-					'options' => [
-						wfMessage( 'importdump-label-inprogress' )->text() => 'inprogress',
-						wfMessage( 'importdump-label-complete' )->text() => 'complete',
-						wfMessage( 'importdump-label-declined' )->text() => 'declined',
+					'options-messages' => [
+						'importdump-label-inprogress' => 'inprogress',
+						'importdump-label-complete' => 'complete',
+						'importdump-label-declined' => 'declined',
 					],
 					'default' => $this->importDumpRequestManager->getStatus(),
 					'cssclass' => 'importdump-infuse',
