@@ -13,3 +13,4 @@ class Main implements UserGetReservedNamesHook {
 		$reservedUsernames[] = 'ImportDump Extension';
 		$reservedUsernames[] = 'ImportDump Status Update';
 	}
+}
