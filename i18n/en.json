@@ -54,7 +54,7 @@
 	"importdump-table-status": "Status",
 	"importdump-table-target": "Target",
 	"importdump-unknown": "Unknown request.",
-	"importdump-unknown-interwiki-prefix": "unknown",
+	"importdump-unknown-username-prefix": "unknown",
 	"importdumprequestqueue": "Import Dump Request Queue",
 	"importrequest-log-header": "This is a log of all ImportDump requests and status updates.",
 	"importrequest-log-name": "ImportDump request log",
