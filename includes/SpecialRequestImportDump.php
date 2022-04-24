@@ -2,7 +2,6 @@
 
 namespace Miraheze\ImportDump;
 
-use AssembleUploadChunksJob;
 use ErrorPageError;
 use FileRepo;
 use FormSpecialPage;
@@ -13,8 +12,6 @@ use SpecialPage;
 use Status;
 use Title;
 use UploadBase;
-use UploadFromChunks;
-use UploadFromFile;
 use UploadStash;
 use UserBlockedError;
 use UserNotLoggedIn;
@@ -156,7 +153,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return Status::newFatal( 'importdump-duplicate-request' );
 		}
 
-		$fileName = $data['target'] . '-' . rand() . '.jpg';
+		$fileName = $data['target'] . '-' . rand() . '.xml';
 
 		$request = $this->getRequest();
 		$request->setVal( 'wpDestFile', $fileName );
@@ -168,34 +165,16 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return $status;
 		}
 
-		if ( $uploadBase instanceof UploadFromFile ) {
-			$uploadBase = new UploadFromChunks( $this->getUser() );
-			$uploadBase->initializeFromRequest( $request );
-		}
-
 		$status = $uploadBase->tryStashFile( $this->getUser() );
 		if ( !$status->isGood() ) {
 			return $status;
 		}
 
-		$fileKey = $status->getStatusValue()->getValue()->getFileKey();
-
-		\MediaWiki\MediaWikiServices::getInstance()->getJobQueueGroup()->push(
-			new AssembleUploadChunksJob(
-				Title::makeTitle( NS_FILE, $fileKey ),
-				[
-					'filename' => $fileName,
-					'filekey' => $fileKey,
-					'session' => $this->getContext()->exportSession(),
-				]
-			)
-		);
-
 		$repo = \MediaWiki\MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo();
 		$uploadStash = new UploadStash( $repo, $this->getUser() );
 
+		$fileKey = $status->getStatusValue()->getValue()->getFileKey();
 		$file = $uploadStash->getFile( $fileKey );
-		$dbname = $this->getConfig()->get( 'DBname' );
 
 		$status = $repo->publish(
 			$file->getPath(),
