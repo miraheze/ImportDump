@@ -255,7 +255,7 @@ class ImportDumpRequestManager {
 	 */
 	public function getUserGroupsFromTarget() {
 		$userName = $this->getRequester()->getName();
-		$userRightsProxy = UserRightsProxy::newFromName( $userName );
+		$userRightsProxy = UserRightsProxy::newFromName( $this->getTarget(), $userName );
 
 		return $this->userGroupManagerFactory
 			->getUserGroupManager( $this->getTarget() )
