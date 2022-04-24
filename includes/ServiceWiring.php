@@ -9,6 +9,7 @@ return [
 		return new ImportDumpRequestManager(
 			$services->getConfigFactory()->makeConfig( 'ImportDump' ),
 			$services->getDBLoadBalancerFactory(),
+			RequestContext::getMain(),
 			new ServiceOptions(
 				ImportDumpRequestManager::CONSTRUCTOR_OPTIONS,
 				$services->getConfigFactory()->makeConfig( 'ImportDump' )
