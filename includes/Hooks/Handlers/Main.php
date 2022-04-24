@@ -10,6 +10,6 @@ class Main implements UserGetReservedNamesHook {
 	 * @param array &$reservedUsernames
 	 */
 	public function onUserGetReservedNames( &$reservedUsernames ) {
-		$reservedUsernames[] = 'ImportDump extension';
-		$reservedUsernames[] = 'ImportDump status update';
+		$reservedUsernames[] = 'ImportDump Extension';
+		$reservedUsernames[] = 'ImportDump Status Update';
 	}
