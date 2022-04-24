@@ -26,7 +26,7 @@
 	"importdump-label-reason": "Label for the 'reason' field.",
 	"importdump-label-requested-date": "Label for 'Requested Date'.",
 	"importdump-label-requester": "Label for 'Requester'.",
-	"importdump-label-source": "Label for 'Source URL'.",
+	"importdump-label-source": "Label for the 'source' field.",
 	"importdump-label-status": "Label for 'Status'.",
 	"importdump-label-status-updated-comment": "Label for the optional comment field in the handling section of Special:ImportDumpRequestQueue.",
 	"importdump-label-target": "Label for the 'target' field.",
