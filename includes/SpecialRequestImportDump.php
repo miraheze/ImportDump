@@ -199,8 +199,8 @@ class SpecialRequestImportDump extends FormSpecialPage {
 
 		$status = $repo->publish(
 			$file->getPath(),
-			'/mnt/mediawiki-static/' . $dbname . '/ImportDump/' . $fileName,
-			'/mnt/mediawiki-static/' . $dbname . '/ImportDump/archive/' . $fileName,
+			'/ImportDump/' . $fileName,
+			'/ImportDump/archive/' . $fileName,
 			FileRepo::DELETE_SOURCE
 		);
 
