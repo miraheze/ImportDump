@@ -8,6 +8,7 @@ use HTMLForm;
 use IContextSource;
 use Linker;
 use MediaWiki\Permissions\PermissionManager;
+use User;
 use UserNotLoggedIn;
 
 class ImportDumpRequestViewer {
@@ -345,7 +346,7 @@ class ImportDumpRequestViewer {
 				$comment .= ' ' . $formData['handle-comment'];
 			}
 
-			$this->importDumpRequestManager->addComment( $comment, $user );
+			$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Status Update' ) );
 			$this->importDumpRequestManager->endAtomic( __METHOD__ );
 
 			$out->addHTML( Html::successBox( wfMessage( 'importdump-status-updated-success' )->escaped() ) );
