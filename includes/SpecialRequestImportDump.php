@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump;
 
 use AssembleUploadChunksJob;
 use ErrorPageError;
+use FileRepo;
 use FormSpecialPage;
 use Html;
 use MimeAnalyzer;
@@ -194,6 +195,14 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$uploadStash = new UploadStash( $repo, $this->getUser() );
 
 		$file = $uploadStash->getFile( $fileKey );
+
+		$repo->publish(
+			$file->getPath(),
+			'/mnt/mediawiki-static/ImportDump',
+			'/mnt/mediawiki-static/ImportDump/archive',
+			FileRepo::DELETE_SOURCE
+		);
+
 		$fileUrl = $this->getConfig()->get( 'UploadDirectory' ) . '/' . $file->getRel();
 
 		$rows = [
