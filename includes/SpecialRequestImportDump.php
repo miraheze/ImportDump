@@ -86,11 +86,13 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			'source' => [
 				'type' => 'url',
 				'label-message' => 'importdump-label-source',
+				'help-message' => 'importdump-help-source',
 				'required' => true,
 			],
 			'target' => [
 				'type' => 'text',
 				'label-message' => 'importdump-label-target',
+				'help-message' => 'importdump-help-target',
 				'required' => true,
 				'validation-callback' => [ $this, 'isValidDatabase' ],
 			],
@@ -106,12 +108,14 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			'UploadFile' => [
 				'type' => 'file',
 				'label-message' => 'importdump-label-upload-file',
+				'help-message' => 'importdump-help-upload',
 				'hide-if' => [ '!==', 'wpUploadSourceType', 'File' ],
 				'required' => true,
 			],
 			'UploadFileURL' => [
 				'type' => 'url',
 				'label-message' => 'importdump-label-upload-file-url',
+				'help-message' => 'importdump-help-upload',
 				'hide-if' => [ '!==', 'wpUploadSourceType', 'Url' ],
 				'required' => true,
 			],
