@@ -234,6 +234,13 @@ class ImportDumpRequestManager {
 	/**
 	 * @return string
 	 */
+	public function getFile(): string {
+		return $this->row->request_file;
+	}
+
+	/**
+	 * @return string
+	 */
 	public function getReason(): string {
 		return $this->row->request_reason;
 	}
