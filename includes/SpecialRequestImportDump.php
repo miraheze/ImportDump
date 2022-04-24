@@ -136,6 +136,13 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 * @return Status
 	 */
 	public function onSubmit( array $data ) {
+		$token = $this->getRequest()->getVal( 'wpEditToken' );
+		$userToken = $this->getContext()->getCsrfTokenSet();
+
+		if ( !$userToken->matchToken( $token ) ) {
+			return Status::newFatal( 'sessionfailure' );
+		}
+
 		if (
 			$this->getUser()->pingLimiter( 'requestimportdump' ) ||
 			UploadBase::isThrottled( $this->getUser() )
@@ -173,6 +180,11 @@ class SpecialRequestImportDump extends FormSpecialPage {
 
 		$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] );
 
+		$status = $uploadBase->fetchFile();
+		if ( !$status->isOK() ) {
+			return $status;
+		}
+
 		$mime = $this->mimeAnalyzer->guessMimeType( $uploadBase->getTempPath() );
 		if ( $mime !== 'application/xml' ) {
 			return Status::newFatal( 'filetype-mime-mismatch', 'xml', $mime );
@@ -183,11 +195,6 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return Status::newFatal(
 				'filetype-banned-type', $mimeExt ?? 'unknown', 'xml', 1, 1
 			);
-		}
-
-		$status = $uploadBase->fetchFile();
-		if ( !$status->isOK() ) {
-			return $status;
 		}
 
 		$status = $uploadBase->tryStashFile( $this->getUser() );
