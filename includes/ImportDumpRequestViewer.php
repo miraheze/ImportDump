@@ -270,6 +270,7 @@ class ImportDumpRequestViewer {
 		}
 
 		$out->addModules( [ 'ext.importdump.oouiform' ] );
+		$out->addModuleStyles( [ 'ext.importdump.oouiform.styles' ] );
 		$out->addModuleStyles( [ 'oojs-ui-widgets.styles' ] );
 
 		$formDescriptor = $this->getFormDescriptor( $context );
