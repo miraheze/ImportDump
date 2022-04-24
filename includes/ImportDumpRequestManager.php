@@ -7,11 +7,12 @@ use ExtensionRegistry;
 use GlobalVarConfig;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\User\UserFactory;
+use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
 use stdClass;
 use User;
 use Wikimedia\Rdbms\DBConnRef;
-use Wikimedia\Rdbms\LBFactory;
+use Wikimedia\Rdbms\ILBFactory;
 
 class ImportDumpRequestManager {
 
@@ -30,8 +31,11 @@ class ImportDumpRequestManager {
 	/** @var int */
 	private $ID;
 
-	/** @var LBFactory */
-	private $lbFactory;
+	/** @var ILBFactory */
+	private $dbLoadBalancerFactory;
+
+	/** @var MessageLocalizer */
+	private $messageLocalizer;
 
 	/** @var ServiceOptions */
 	private $options;
@@ -50,14 +54,16 @@ class ImportDumpRequestManager {
 	 */
 	public function __construct(
 		Config $config,
-		LBFactory $lbFactory,
+		ILBFactory $dbLoadBalancerFactory,
+		MessageLocalizer $messageLocalizer,
 		ServiceOptions $options,
 		UserFactory $userFactory
 	) {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
 
 		$this->config = $config;
-		$this->lbFactory = $lbFactory;
+		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
+		$this->messageLocalizer = $messageLocalizer;
 		$this->options = $options;
 		$this->userFactory = $userFactory;
 	}
@@ -69,11 +75,11 @@ class ImportDumpRequestManager {
 		$this->ID = $requestID;
 
 		if ( $this->options->get( 'ImportDumpCentralWiki' ) ) {
-			$this->dbw = $this->lbFactory->getMainLB(
+			$this->dbw = $this->dbLoadBalancerFactory->getMainLB(
 				$this->options->get( 'ImportDumpCentralWiki' )
 			)->getConnectionRef( DB_PRIMARY, [], $this->options->get( 'ImportDumpCentralWiki' ) );
 		} else {
-			$this->dbw = $this->lbFactory->getMainLB()->getConnectionRef( DB_PRIMARY );
+			$this->dbw = $this->dbLoadBalancerFactory->getMainLB()->getConnectionRef( DB_PRIMARY );
 		}
 
 		$this->row = $this->dbw->selectRow(
@@ -165,7 +171,7 @@ class ImportDumpRequestManager {
 			}
 		}
 
-		$dbr = $this->lbFactory->getMainLB(
+		$dbr = $this->dbLoadBalancerFactory->getMainLB(
 			$this->getTarget()
 		)->getConnectionRef( DB_REPLICA, [], $this->getTarget() );
 
@@ -188,7 +194,7 @@ class ImportDumpRequestManager {
 			ExtensionRegistry::getInstance()->isLoaded( 'Interwiki' ) &&
 			$this->config->get( 'InterwikiCentralDB' )
 		) {
-			$dbr = $this->lbFactory->getMainLB(
+			$dbr = $this->dbLoadBalancerFactory->getMainLB(
 				$this->config->get( 'InterwikiCentralDB' )
 			)->getConnectionRef( DB_REPLICA, [], $this->config->get( 'InterwikiCentralDB' ) );
 
@@ -208,7 +214,7 @@ class ImportDumpRequestManager {
 			}
 		}
 
-		return '';
+		return $this->messageLocalizer->msg( 'importdump-unknown-interwiki-prefix' );
 	}
 
 	/**
