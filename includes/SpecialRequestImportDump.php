@@ -8,6 +8,7 @@ use FormSpecialPage;
 use Html;
 use MimeAnalyzer;
 use PermissionsError;
+use RepoGroup;
 use SpecialPage;
 use Status;
 use UploadBase;
@@ -25,18 +26,24 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	/** @var MimeAnalyzer */
 	private $mimeAnalyzer;
 
+	/** @var RepoGroup */
+	private $repoGroup;
+
 	/**
 	 * @param ILBFactory $dbLoadBalancerFactory
 	 * @param MimeAnalyzer $mimeAnalyzer
+	 * @param RepoGroup $repoGroup
 	 */
 	public function __construct(
 		ILBFactory $dbLoadBalancerFactory,
-		MimeAnalyzer $mimeAnalyzer
+		MimeAnalyzer $mimeAnalyzer,
+		RepoGroup $repoGroup
 	) {
 		parent::__construct( 'RequestImportDump', 'requestimport' );
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->mimeAnalyzer = $mimeAnalyzer;
+		$this->repoGroup = $repoGroup;
 	}
 
 	/**
@@ -169,7 +176,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return $status;
 		}
 
-		$repo = \MediaWiki\MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo();
+		$repo = $this->repoGroup->getLocalRepo();
 		$uploadStash = new UploadStash( $repo, $this->getUser() );
 
 		$fileKey = $status->getStatusValue()->getValue()->getFileKey();
