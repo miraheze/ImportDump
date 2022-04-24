@@ -190,6 +190,8 @@ class ImportDumpRequestViewer {
 					'type' => 'info',
 					'default' => Html::warningBox(
 						wfMessage( 'importdump-info-groups',
+							$this->importDumpRequestManager->getRequester()->getName(),
+							$this->importDumpRequestManager->getTarget(),
 							$context->getLanguage()->commaList(
 								$this->importDumpRequestManager->getUserGroupsFromTarget()
 							)
