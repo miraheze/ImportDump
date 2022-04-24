@@ -215,7 +215,7 @@ class ImportDumpRequestManager {
 			}
 		}
 
-		return $this->messageLocalizer->msg( 'importdump-unknown-interwiki-prefix' );
+		return '';
 	}
 
 	/**
@@ -225,6 +225,10 @@ class ImportDumpRequestManager {
 		$blankConfig = new GlobalVarConfig( '' );
 
 		$command = $this->options->get( 'ImportDumpScriptCommand' );
+
+		$userNamePrefix = $this->getInterwikiPrefix() ?:
+			$this->messageLocalizer->msg( 'importdump-unknown-username-prefix' );
+
 		return str_replace( [
 			'{IP}',
 			'{wiki}',
@@ -233,7 +237,7 @@ class ImportDumpRequestManager {
 		], [
 			$blankConfig->get( 'IP' ),
 			$this->getTarget(),
-			$this->getInterwikiPrefix(),
+			$userNamePrefix,
 			$this->getFile(),
 		], $command );
 	}
