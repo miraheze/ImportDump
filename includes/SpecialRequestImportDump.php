@@ -99,8 +99,8 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'label-message' => 'importdump-label-upload-source-type',
 				'default' => 'File',
 				'options-messages' => [
-					'importdump-label-file' => 'File',
-					'importdump-label-url' => 'Url',
+					'importdump-label-upload-source-file' => 'File',
+					'importdump-label-upload-source-url' => 'Url',
 				],
 			],
 			'UploadFile' => [
