@@ -66,15 +66,15 @@
 			"handler": "Installer"
 		},
 		"UserGetReservedNames": {
-			"handler": "Default"
+			"handler": "Main"
 		}
 	},
 	"HookHandlers": {
-		"Default": {
-			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Default"
-		},
 		"Installer": {
 			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Installer"
+		},
+		"Main": {
+			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Main"
 		}
 	},
 	"ResourceModules": {
