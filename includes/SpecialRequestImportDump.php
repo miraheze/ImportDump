@@ -195,7 +195,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$uploadStash = new UploadStash( $repo, $this->getUser() );
 
 		$file = $uploadStash->getFile( $fileKey );
-		$dbname = $this->getConfig->get( 'DBname' );
+		$dbname = $this->getConfig()->get( 'DBname' );
 
 		$repo->publish(
 			$file->getPath(),
