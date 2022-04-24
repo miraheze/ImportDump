@@ -7,10 +7,12 @@ use ExtensionRegistry;
 use GlobalVarConfig;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\User\UserFactory;
+use MediaWiki\User\UserGroupManagerFactory;
 use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
 use stdClass;
 use User;
+use UserRightsProxy;
 use Wikimedia\Rdbms\DBConnRef;
 use Wikimedia\Rdbms\ILBFactory;
 
@@ -46,12 +48,16 @@ class ImportDumpRequestManager {
 	/** @var UserFactory */
 	private $userFactory;
 
+	/** @var UserGroupManagerFactory */
+	private $userGroupManagerFactory;
+
 	/**
 	 * @param Config $config
 	 * @param ILBFactory $dbLoadBalancerFactory
 	 * @param MessageLocalizer $messageLocalizer
 	 * @param ServiceOptions $options
 	 * @param UserFactory $userFactory
+	 * @param UserGroupManagerFactory $userGroupManagerFactory
 	 */
 	public function __construct(
 		Config $config,
@@ -67,6 +73,7 @@ class ImportDumpRequestManager {
 		$this->messageLocalizer = $messageLocalizer;
 		$this->options = $options;
 		$this->userFactory = $userFactory;
+		$this->userGroupManagerFactory = $userGroupManagerFactory;
 	}
 
 	/**
@@ -240,6 +247,18 @@ class ImportDumpRequestManager {
 			$userNamePrefix,
 			$this->getFile(),
 		], $command );
+	}
+
+	/**
+	 * @return string[]
+	 */
+	public function getUserGroupsFromTarget() {
+		$userName = $this->getRequester()->getName();
+		$userRightsProxy = UserRightsProxy::newFromName( $userName );
+
+		return $this->userGroupManagerFactory
+			->getUserGroupManager( $this->getTarget() )
+			->getUserGroups( $userRightsProxy );
 	}
 
 	/**
