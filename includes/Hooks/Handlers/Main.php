@@ -4,7 +4,7 @@ namespace Miraheze\ImportDump\Hooks\Handlers;
 
 use MediaWiki\User\Hook\UserGetReservedNamesHook;
 
-class Default implements UserGetReservedNamesHook {
+class Main implements UserGetReservedNamesHook {
 
 	/**
 	 * @param array &$reservedUsernames
