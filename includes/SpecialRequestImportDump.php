@@ -156,8 +156,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return Status::newFatal( 'importdump-duplicate-request' );
 		}
 
-		$username = str_replace( ' ', '_', $this->getUser()->getName() );
-		$fileName = $username . '-' . $data['target'] . '-' . rand() . '.jpg';
+		$fileName = $data['target'] . '-' . rand() . '.jpg';
 
 		$request = $this->getRequest();
 		$request->setVal( 'wpDestFile', $fileName );
