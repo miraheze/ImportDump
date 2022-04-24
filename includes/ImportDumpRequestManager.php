@@ -48,7 +48,8 @@ class ImportDumpRequestManager {
 
 	/**
 	 * @param Config $config
-	 * @param LBFactory $lbFactory
+	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param MessageLocalizer $messageLocalizer
 	 * @param ServiceOptions $options
 	 * @param UserFactory $userFactory
 	 */
