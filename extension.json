@@ -56,7 +56,8 @@
 			"class": "Miraheze\\ImportDump\\SpecialRequestImportDump",
 			"services": [
 				"DBLoadBalancerFactory",
-				"MimeAnalyzer"
+				"MimeAnalyzer",
+				"RepoGroup"
 			]
 		}
 	},
