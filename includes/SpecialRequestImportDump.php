@@ -195,11 +195,12 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$uploadStash = new UploadStash( $repo, $this->getUser() );
 
 		$file = $uploadStash->getFile( $fileKey );
+		$dbname = $this->getConfig->get( 'DBname' );
 
 		$repo->publish(
 			$file->getPath(),
-			'/mnt/mediawiki-static/ImportDump',
-			'/mnt/mediawiki-static/ImportDump/archive',
+			'/mnt/mediawiki-static/' . $dbname . '/ImportDump',
+			'/mnt/mediawiki-static/' . $dbname . '/ImportDump/archive',
 			FileRepo::DELETE_SOURCE
 		);
 
