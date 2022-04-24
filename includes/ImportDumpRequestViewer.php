@@ -181,7 +181,7 @@ class ImportDumpRequestViewer {
 					'default' => Html::warningBox(
 						wfMessage( 'importdump-info-command' )->rawParams(
 							$this->importDumpRequestManager->getCommand()
-						) )->escaped()
+						)->escaped()
 					),
 					'raw' => true,
 					'section' => 'handling',
