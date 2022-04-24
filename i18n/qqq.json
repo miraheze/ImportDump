@@ -54,6 +54,7 @@
 	"importdump-table-status": "'Status' label for the table on Special:ImportDumpRequestQueue.",
 	"importdump-table-target": "'Target' label for the table on Special:ImportDumpRequestQueue.",
 	"importdump-unknown": "Message displayed if the request is not found.",
+	"importdump-unknown-interwiki-prefix": "Displayed value for --username-prefix in the generated command, when there is no prefix for the source wiki on the target wiki.",
 	"importdumprequestqueue": "{{doc-special}}",
 	"importrequest-log-header": "Header for the ImportRequest log.",
 	"importrequest-log-name": "{{doc-logpage}}",
