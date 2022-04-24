@@ -239,7 +239,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 
 		$this->getOutput()->addHTML(
 			Html::successBox(
-				$this->msg( 'importdump-success' )->plaintextParams( $requestLink )->escaped()
+				$this->msg( 'importdump-success' )->rawParams( $requestLink )->escaped()
 			)
 		);
 
