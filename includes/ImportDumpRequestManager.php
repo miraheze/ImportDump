@@ -219,7 +219,7 @@ class ImportDumpRequestManager {
 
 		$command = $this->options->get( 'ImportDumpScriptCommand' );
 		return str_replace( [
-			'{$IP}',
+			'{IP}',
 			'{wiki}',
 			'{username-prefix}',
 			'{file}',
@@ -227,7 +227,7 @@ class ImportDumpRequestManager {
 			$blankConfig->get( 'IP' ),
 			$this->getTarget(),
 			$this->getInterwikiPrefix(),
-			'',
+			$this->getFile(),
 		], $command );
 	}
 
