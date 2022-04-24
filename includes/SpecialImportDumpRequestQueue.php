@@ -78,12 +78,12 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 				'type' => 'select',
 				'name' => 'status',
 				'label-message' => 'importdump-label-status',
-				'options' => [
-					$this->msg( 'importdump-label-pending' )->text() => 'pending',
-					$this->msg( 'importdump-label-inprogress' )->text() => 'inprogress',
-					$this->msg( 'importdump-label-complete' )->text() => 'complete',
-					$this->msg( 'importdump-label-declined' )->text() => 'declined',
-					$this->msg( 'importdump-label-all' )->text() => '*',
+				'options-messages' => [
+					'importdump-label-pending' => 'pending',
+					'importdump-label-inprogress' => 'inprogress',
+					'importdump-label-complete' => 'complete',
+					'importdump-label-declined' => 'declined',
+					'importdump-label-all' => '*',
 				],
 				'default' => $status ?: 'pending',
 			],
