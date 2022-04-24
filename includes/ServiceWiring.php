@@ -14,7 +14,8 @@ return [
 				ImportDumpRequestManager::CONSTRUCTOR_OPTIONS,
 				$services->getConfigFactory()->makeConfig( 'ImportDump' )
 			),
-			$services->getUserFactory()
+			$services->getUserFactory(),
+			$services->getUserGroupManagerFactory()
 		);
 	},
 ];
