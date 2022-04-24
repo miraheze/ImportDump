@@ -79,13 +79,16 @@
 	},
 	"ResourceModules": {
 		"ext.importdump.oouiform": {
-			"scripts": "ext.importdump.oouiform.ooui.js",
-			"styles": "ext.importdump.oouiform.ooui.less",
 			"targets": [ "desktop", "mobile" ],
+			"scripts": "ext.importdump.oouiform.ooui.js"
 			"dependencies": [
 				"mediawiki.storage",
 				"oojs-ui-widgets"
 			]
+		},
+		"ext.importdump.oouiform.styles": {
+			"targets": [ "desktop", "mobile" ],
+			"styles": "ext.importdump.oouiform.ooui.less"
 		}
 	},
 	"ResourceFileModulePaths": {
