@@ -188,7 +188,7 @@ class ImportDumpRequestViewer {
 					'default' => Html::element( 'div', [ 'class' => [
 						'mw-message-box',
 						'mw-message-box-notice',
-					], $context->getLanguage()->commaList(
+					] ], $context->getLanguage()->commaList(
 						$this->importDumpRequestManager->getUserGroupsFromTarget()
 					) ),
 					'section' => 'handling',
