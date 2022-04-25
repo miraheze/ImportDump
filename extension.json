@@ -37,11 +37,16 @@
 		"importdump": "importdump-log-header"
 	},
 	"LogNames": {
-		"importdump": "importdump-log-name"
+		"importdump": "importdump-log-name",
+		"importdumpprivate": "importdumpprivate-log-name"
 	},
 	"LogTypes": [
-		"importdump"
+		"importdump",
+		"importdumpprivate"
 	],
+	"LogRestrictions": {
+		"importdumpprivate": "view-private-import-requests"
+	},
 	"SpecialPages": {
 		"ImportDumpRequestQueue": {
 			"class": "Miraheze\\ImportDump\\SpecialImportDumpRequestQueue",
