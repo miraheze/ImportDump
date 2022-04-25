@@ -5,11 +5,15 @@ namespace Miraheze\ImportDump;
 use Config;
 use ExtensionRegistry;
 use GlobalVarConfig;
+use ManualLogEntry;
 use MediaWiki\Config\ServiceOptions;
+use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManagerFactory;
+use Message;
 use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
+use SpecialPage;
 use stdClass;
 use User;
 use UserRightsProxy;
@@ -39,6 +43,10 @@ class ImportDumpRequestManager {
 	/** @var MessageLocalizer */
 	private $messageLocalizer;
 
+
+	/** @var LinkRenderer */
+	private $linkRenderer;
+
 	/** @var ServiceOptions */
 	private $options;
 
@@ -54,6 +62,7 @@ class ImportDumpRequestManager {
 	/**
 	 * @param Config $config
 	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param LinkRenderer $linkRenderer
 	 * @param MessageLocalizer $messageLocalizer
 	 * @param ServiceOptions $options
 	 * @param UserFactory $userFactory
@@ -62,6 +71,7 @@ class ImportDumpRequestManager {
 	public function __construct(
 		Config $config,
 		ILBFactory $dbLoadBalancerFactory,
+		LinkRenderer $linkRenderer,
 		MessageLocalizer $messageLocalizer,
 		ServiceOptions $options,
 		UserFactory $userFactory,
@@ -71,6 +81,7 @@ class ImportDumpRequestManager {
 
 		$this->config = $config;
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
+		$this->linkRenderer = $linkRenderer;
 		$this->messageLocalizer = $messageLocalizer;
 		$this->options = $options;
 		$this->userFactory = $userFactory;
@@ -123,6 +134,39 @@ class ImportDumpRequestManager {
 			],
 			__METHOD__
 		);
+	}
+
+	/**
+	 * @param string $comment
+	 * @param string $newStatus
+	 * @param User $user
+	 */
+	public function logStatusUpdate( string $comment, string $newStatus, User $user ) {
+		$requestQueueLink = SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', $this->ID );
+
+		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
+
+		$logEntry = new ManualLogEntry(
+			$this->isPrivate() ? 'importdumpprivate' : 'importdump',
+			'statusupdate'
+		);
+
+		$logEntry->setPerformer( $user );
+		$logEntry->setTarget( $requestQueueLink );
+
+		if ( $comment ) {
+			$logEntry->setComment( $comment );
+		}
+
+		$logEntry->setParameters(
+			[
+				'4::requestStatus' => $newStatus,
+				'5::requestLink' => Message::rawParam( $requestLink ),
+			]
+		);
+
+		$logID = $logEntry->insert( $this->dbw );
+		$logEntry->publish( $logID );
 	}
 
 	/**
