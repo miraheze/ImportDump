@@ -360,7 +360,10 @@ class ImportDumpRequestManager {
 	 * @return bool
 	 */
 	public function isPrivate(): bool {
-		if ( !ExtensionRegistry::getInstance()->isLoaded( 'CreateWiki' ) ) {
+		if (
+			!ExtensionRegistry::getInstance()->isLoaded( 'CreateWiki' ) ||
+			!$this->config->get( 'CreateWikiUsePrivateWikis' )
+		) {
 			return false;
 		}
 
