@@ -175,50 +175,38 @@ class ImportDumpRequestViewer {
 		}
 
 		if ( $this->permissionManager->userHasRight( $user, 'handle-import-requests' ) ) {
-			$formDescriptor += [
-				'handle-command' => [
-					'type' => 'info',
-					'default' => Html::warningBox(
-						wfMessage( 'importdump-info-command' )->plaintextParams(
-							$this->importDumpRequestManager->getCommand()
-						)->escaped()
-					),
-					'raw' => true,
-					'section' => 'handling',
-				],
-				'handle-groups' => [
-					'type' => 'info',
-					'default' => Html::warningBox(
-						wfMessage( 'importdump-info-groups',
-							$this->importDumpRequestManager->getRequester()->getName(),
-							$this->importDumpRequestManager->getTarget(),
-							$context->getLanguage()->commaList(
-								$this->importDumpRequestManager->getUserGroupsFromTarget()
-							)
-						)->escaped()
-					),
-					'raw' => true,
-					'section' => 'handling',
-				],
-			];
+			$info = Html::warningBox(
+				wfMessage( 'importdump-info-command' )->plaintextParams(
+					$this->importDumpRequestManager->getCommand()
+				)->escaped()
+			);
+
+			$info .= Html::warningBox(
+				wfMessage( 'importdump-info-groups',
+					$this->importDumpRequestManager->getRequester()->getName(),
+					$this->importDumpRequestManager->getTarget(),
+					$context->getLanguage()->commaList(
+						$this->importDumpRequestManager->getUserGroupsFromTarget()
+					)
+				)->escaped()
+			);
 
 			if ( !$this->importDumpRequestManager->getInterwikiPrefix() ) {
-				$formDescriptor += [
-					'handle-no-interwiki-prefix' => [
-						'type' => 'info',
-						'default' => Html::errorBox(
-							wfMessage( 'importdump-info-no-interwiki-prefix',
-								$this->importDumpRequestManager->getTarget(),
-								$this->importDumpRequestManager->getSource()
-							)->escaped()
-						),
-						'raw' => true,
-						'section' => 'handling',
-					],
-				];
+				$info .= Html::errorBox(
+					wfMessage( 'importdump-info-no-interwiki-prefix',
+						$this->importDumpRequestManager->getTarget(),
+						$this->importDumpRequestManager->getSource()
+					)->escaped()
+				);
 			}
 
 			$formDescriptor += [
+				'handle-info' => [
+					'type' => 'info',
+					'default' => $info,
+					'raw' => true,
+					'section' => 'handling',
+				],
 				'handle-status' => [
 					'type' => 'select',
 					'label-message' => 'importdump-label-update-status',
