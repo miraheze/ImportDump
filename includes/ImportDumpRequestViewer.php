@@ -74,7 +74,7 @@ class ImportDumpRequestViewer {
 				'label-message' => 'importdump-label-requester',
 				'type' => 'info',
 				'section' => 'details',
-				'default' => $this->importDumpRequestManager->getRequester()->getName() .
+				'default' => htmlspecialchars( $this->importDumpRequestManager->getRequester()->getName() ) .
 					Linker::userToolLinks(
 						$this->importDumpRequestManager->getRequester()->getId(),
 						$this->importDumpRequestManager->getRequester()->getName()
