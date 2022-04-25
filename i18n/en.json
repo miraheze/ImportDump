@@ -17,7 +17,7 @@
 	"importdump-help-source": "Enter the full URL of the source wiki (where you are importing from).",
 	"importdump-help-target": "This must be a valid database name.",
 	"importdump-help-upload": "Only XML files are permitted.",
-	"importdump-info-command": "Command for this import: $1",	
+	"importdump-info-command": "Command for this import: $1",
 	"importdump-info-groups": "User groups that $1 has on $2: $3",
 	"importdump-invalid-target": "The provided target is not a valid database name.",
 	"importdump-label-add-comment": "Add Comment",
