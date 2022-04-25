@@ -224,7 +224,7 @@ class ImportDumpRequestViewer {
 						'importdump-label-declined' => 'declined',
 					],
 					'default' => $status,
-					'disabled' => $validRequest,
+					'disabled' => !$validRequest,
 					'cssclass' => 'importdump-infuse',
 					'section' => 'handling',
 				],
