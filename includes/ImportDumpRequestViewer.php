@@ -179,7 +179,7 @@ class ImportDumpRequestViewer {
 				'handle-command' => [
 					'type' => 'info',
 					'default' => Html::warningBox(
-						wfMessage( 'importdump-info-command' )->rawParams(
+						wfMessage( 'importdump-info-command' )->plaintextParams(
 							$this->importDumpRequestManager->getCommand()
 						)->escaped()
 					),
@@ -195,11 +195,30 @@ class ImportDumpRequestViewer {
 							$context->getLanguage()->commaList(
 								$this->importDumpRequestManager->getUserGroupsFromTarget()
 							)
-						)
+						)->escaped()
 					),
 					'raw' => true,
 					'section' => 'handling',
 				],
+			];
+
+			if ( !$this->importDumpRequestManager->getInterwikiPrefix() ) {
+				$formDescriptor += [
+					'handle-no-interwiki-prefix' => [
+						'type' => 'info',
+						'default' => Html::errorBox(
+							wfMessage( 'importdump-info-no-interwiki-prefix',
+								$this->importDumpRequestManager->getTarget(),
+								$this->importDumpRequestManager->getSource()
+							)->escaped()
+						),
+						'raw' => true,
+						'section' => 'handling',
+					],
+				];
+			}
+
+			$formDescriptor += [
 				'handle-status' => [
 					'type' => 'select',
 					'label-message' => 'importdump-label-update-status',
