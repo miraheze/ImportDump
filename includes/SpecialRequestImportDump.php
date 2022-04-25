@@ -256,7 +256,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			)
 		);
 
-		$logEntry = new ManualLogEntry( $this->getLogType(), 'request' );
+		$logEntry = new ManualLogEntry( $this->getLogType( $data['target'] ), 'request' );
 
 		$logEntry->setPerformer( $this->getUser() );
 		$logEntry->setTarget( $requestQueueLink );
@@ -276,15 +276,16 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	}
 
 	/**
+	 * @param string $target
 	 * @return bool
 	 */
-	public function getLogType(): string {
+	public function getLogType( string $target ): string {
 		if ( !ExtensionRegistry::getInstance()->isLoaded( 'CreateWiki' ) ) {
 			return 'importdump';
 		}
 
 		// @phan-suppress-next-line PhanUndeclaredClassMethod
-		$remoteWiki = new RemoteWiki( $this->getTarget() );
+		$remoteWiki = new RemoteWiki( $target );
 
 		// @phan-suppress-next-line PhanUndeclaredClassMethod
 		return $remoteWiki->isPrivate() ? 'importdumpprivate' : 'importdump';
