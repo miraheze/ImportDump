@@ -219,6 +219,7 @@ class ImportDumpRequestViewer {
 					'type' => 'select',
 					'label-message' => 'importdump-label-update-status',
 					'options-messages' => [
+						'importdump-label-pending' => 'pending',
 						'importdump-label-inprogress' => 'inprogress',
 						'importdump-label-complete' => 'complete',
 						'importdump-label-declined' => 'declined',
