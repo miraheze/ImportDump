@@ -289,10 +289,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return 'importdump';
 		}
 
-		// @phan-suppress-next-line PhanUndeclaredClassMethod
 		$remoteWiki = new RemoteWiki( $target );
-
-		// @phan-suppress-next-line PhanUndeclaredClassMethod
 		return $remoteWiki->isPrivate() ? 'importdumpprivate' : 'importdump';
 	}
 
