@@ -6,6 +6,8 @@ use ErrorPageError;
 use FileRepo;
 use FormSpecialPage;
 use Html;
+use ManualLogEntry;
+use Message;
 use MimeAnalyzer;
 use PermissionsError;
 use RepoGroup;
@@ -239,8 +241,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		);
 
 		$requestID = (string)$dbw->insertId();
+		$requestQueueLink = SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', $requestID );
+
 		$requestLink = $this->getLinkRenderer()->makeLink(
-			SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', $requestID ),
+			$requestQueueLink,
 			"#{$requestID}"
 		);
 
@@ -249,6 +253,19 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				$this->msg( 'importdump-success' )->rawParams( $requestLink )->escaped()
 			)
 		);
+
+		$logEntry = new ManualLogEntry( 'importdump', 'request' );
+		$logEntry->setPerformer( $this->getUser() );
+		$logEntry->setTarget( $requestQueueLink );
+
+		$logEntry->setParameters(
+			[
+				'4::requestID' => Message::rawParam( $requestLink ),
+			]
+		);
+
+		$logID = $logEntry->insert( $dbw );
+		$logEntry->publish( $logID );
 
 		return Status::newGood();
 	}
