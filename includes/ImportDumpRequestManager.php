@@ -364,10 +364,7 @@ class ImportDumpRequestManager {
 			return false;
 		}
 
-		// @phan-suppress-next-line PhanUndeclaredClassMethod
 		$remoteWiki = new RemoteWiki( $this->getTarget() );
-
-		// @phan-suppress-next-line PhanUndeclaredClassMethod
 		return (bool)$remoteWiki->isPrivate();
 	}
 
