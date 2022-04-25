@@ -141,7 +141,7 @@ class ImportDumpRequestManager {
 	 * @param User $user
 	 */
 	public function logStatusUpdate( string $comment, string $newStatus, User $user ) {
-		$requestQueueLink = SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', $this->ID );
+		$requestQueueLink = SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', (string)$this->ID );
 
 		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
