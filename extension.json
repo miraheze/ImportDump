@@ -35,7 +35,8 @@
 		"importdumpprivate/*": "LogFormatter"
 	},
 	"LogHeaders": {
-		"importdump": "importdump-log-header"
+		"importdump": "importdump-log-header",
+		"importdumpprivate": "importdumpprivate-log-header"
 	},
 	"LogNames": {
 		"importdump": "importdump-log-name",
