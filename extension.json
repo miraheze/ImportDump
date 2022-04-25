@@ -31,7 +31,8 @@
 		"view-private-import-requests"
 	],
 	"LogActionsHandlers": {
-		"importdump/*": "LogFormatter"
+		"importdump/*": "LogFormatter",
+		"importdumpprivate/*": "LogFormatter"
 	},
 	"LogHeaders": {
 		"importdump": "importdump-log-header"
