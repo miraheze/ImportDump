@@ -60,7 +60,7 @@
 	"importdump-table-target": "Target",
 	"importdump-unknown": "Unknown request.",
 	"importdump-unknown-username-prefix": "unknown",
-	"importdumpprivate-log-header": "This is a log of all ImportDump requests and status updates for requests with targets that are for private wikis.",
+	"importdumpprivate-log-header": "This is a log of all ImportDump requests and status updates for requests with targets that are private wikis.",
 	"importdumpprivate-log-name": "ImportDump private log",
 	"importdumprequestqueue": "Import Dump Request Queue",
 	"logentry-importdump-request": "$1 requested an import dump for $4 in $5.",
