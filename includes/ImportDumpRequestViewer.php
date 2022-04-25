@@ -385,7 +385,9 @@ class ImportDumpRequestViewer {
 			}
 
 			$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Status Update' ) );
-			$this->importDumpRequestManager->logStatusUpdate( $comment, $formData['handle-status'], $user );
+			$this->importDumpRequestManager->logStatusUpdate(
+				$formData['handle-comment'], $formData['handle-status'], $user
+			);
 
 			$this->importDumpRequestManager->endAtomic( __METHOD__ );
 
