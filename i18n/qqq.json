@@ -61,6 +61,7 @@
 	"importdump-unknown": "Message displayed if the request is not found.",
 	"importdump-unknown-username-prefix": "Displayed value for --username-prefix in the generated command, when there is no prefix for the source wiki on the target wiki.",
 	"importdumprequestqueue": "{{doc-special}}",
+	"logentry-importdump-request": "{{logentry|[[Special:Log/importdump]]}}",
 	"requestimportdump": "{{doc-special}}",
 	"right-handle-import-requests": "{{doc-right|handle-import-requests}}",
 	"right-requestimport": "{{doc-right|requestimport}}",
