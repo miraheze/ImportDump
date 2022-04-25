@@ -175,6 +175,9 @@ class ImportDumpRequestViewer {
 		}
 
 		if ( $this->permissionManager->userHasRight( $user, 'handle-import-requests' ) ) {
+			$validRequest = true;
+			$status = $this->importDumpRequestManager->getStatus();
+
 			$info = Html::warningBox(
 				wfMessage( 'importdump-info-command' )->plaintextParams(
 					$this->importDumpRequestManager->getCommand()
@@ -198,6 +201,11 @@ class ImportDumpRequestViewer {
 						$this->importDumpRequestManager->getSource()
 					)->escaped()
 				);
+
+				$validRequest = false;
+				if ( $status === 'pending' || $status === 'inprogress' ) {
+					$status = 'declined';
+				}
 			}
 
 			$formDescriptor += [
@@ -215,7 +223,8 @@ class ImportDumpRequestViewer {
 						'importdump-label-complete' => 'complete',
 						'importdump-label-declined' => 'declined',
 					],
-					'default' => $this->importDumpRequestManager->getStatus(),
+					'default' => $status,
+					'disabled' => $validRequest,
 					'cssclass' => 'importdump-infuse',
 					'section' => 'handling',
 				],
