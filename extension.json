@@ -31,16 +31,16 @@
 		"view-private-import-requests"
 	],
 	"LogActionsHandlers": {
-		"importrequest/*": "LogFormatter"
+		"importdump/*": "LogFormatter"
 	},
 	"LogHeaders": {
-		"importrequest": "importrequest-log-header"
+		"importdump": "importdump-log-header"
 	},
 	"LogNames": {
-		"importrequest": "importrequest-log-name"
+		"importdump": "importdump-log-name"
 	},
 	"LogTypes": [
-		"importrequest"
+		"importdump"
 	],
 	"SpecialPages": {
 		"ImportDumpRequestQueue": {
