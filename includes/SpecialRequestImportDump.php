@@ -189,6 +189,11 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return $status;
 		}
 
+		$virus = $uploadBase->detectVirus( $uploadBase->getTempPath() );
+		if ( $virus ) {
+			return Status::newFatal( 'uploadvirus', $virus );
+		}
+
 		$mime = $this->mimeAnalyzer->guessMimeType( $uploadBase->getTempPath() );
 		if ( $mime !== 'application/xml' ) {
 			return Status::newFatal( 'filetype-mime-mismatch', 'xml', $mime );
