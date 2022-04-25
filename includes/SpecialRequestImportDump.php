@@ -189,7 +189,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return $status;
 		}
 
-		$virus = $uploadBase->detectVirus( $uploadBase->getTempPath() );
+		$virus = UploadBase::detectVirus( $uploadBase->getTempPath() );
 		if ( $virus ) {
 			return Status::newFatal( 'uploadvirus', $virus );
 		}
