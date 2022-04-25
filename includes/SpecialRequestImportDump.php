@@ -255,8 +255,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		);
 
 		$logEntry = new ManualLogEntry( 'importdump', 'request' );
+
 		$logEntry->setPerformer( $this->getUser() );
 		$logEntry->setTarget( $requestQueueLink );
+		$logEntry->setComment( $data['reason'] );
 
 		$logEntry->setParameters(
 			[
