@@ -61,7 +61,7 @@
 	"importdump-unknown": "Unknown request.",
 	"importdump-unknown-username-prefix": "unknown",
 	"importdumprequestqueue": "Import Dump Request Queue",
-	"logentry-importdump-request": "$1 requested an import dump ($4).",
+	"logentry-importdump-request": "$1 requested an import dump for $4 in $5 ($6).",
 	"requestimportdump": "Request Import Dump",
 	"right-handle-import-requests": "Handle user import requests",
 	"right-requestimport": "Request import dumps",
