@@ -57,6 +57,13 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$this->setParameter( $par );
 		$this->setHeaders();
 
+		if (
+			$this->getConfig()->get( 'ImportDumpCentralWiki' ) &&
+			!WikiMap::isCurrentWikiId( $this->getConfig()->get( 'ImportDumpCentralWiki' ) )
+		) {
+			throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
+		}
+
 		if ( !$this->getUser()->isRegistered() ) {
 			$loginurl = SpecialPage::getTitleFor( 'Userlogin' )
 				->getFullURL( [
@@ -68,13 +75,6 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		}
 
 		$this->checkPermissions();
-
-		if (
-			$this->getConfig()->get( 'ImportDumpCentralWiki' ) &&
-			!WikiMap::isCurrentWikiId( $this->getConfig()->get( 'ImportDumpCentralWiki' ) )
-		) {
-			throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
-		}
 
 		$form = $this->getForm();
 		if ( $form->show() ) {
