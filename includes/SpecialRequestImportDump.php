@@ -277,7 +277,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 
 	/**
 	 * @param string $target
-	 * @return bool
+	 * @return string
 	 */
 	public function getLogType( string $target ): string {
 		if ( !ExtensionRegistry::getInstance()->isLoaded( 'CreateWiki' ) ) {
