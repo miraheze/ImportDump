@@ -361,6 +361,10 @@ class ImportDumpRequestViewer {
 		}
 
 		if ( isset( $formData['submit-handle'] ) ) {
+			if ( $this->importDumpRequestManager->getStatus() === $formData['handle-status'] ) {
+				return;
+			}
+
 			$this->importDumpRequestManager->startAtomic( __METHOD__ );
 			$this->importDumpRequestManager->setStatus( $formData['handle-status'] );
 
@@ -381,6 +385,8 @@ class ImportDumpRequestViewer {
 			}
 
 			$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Status Update' ) );
+			$this->importDumpRequestManager->logStatusUpdate( $comment, $formData['handle-status'], $user );
+
 			$this->importDumpRequestManager->endAtomic( __METHOD__ );
 
 			$out->addHTML( Html::successBox( wfMessage( 'importdump-status-updated-success' )->escaped() ) );
