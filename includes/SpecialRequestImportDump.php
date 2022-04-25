@@ -212,10 +212,12 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$fileKey = $status->getStatusValue()->getValue()->getFileKey();
 		$file = $uploadStash->getFile( $fileKey );
 
+		$privateDirectory = ( $this->isTargetPrivate( $data['target'] ) ? '/private' : '' );
+
 		$status = $repo->publish(
 			$file->getPath(),
-			'/ImportDump/' . $fileName,
-			'/ImportDump/archive/' . $fileName,
+			$privateDirectory . '/ImportDump/' . $fileName,
+			$privateDirectory . '/ImportDump/archive/' . $fileName,
 			FileRepo::DELETE_SOURCE
 		);
 
@@ -223,7 +225,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return $status;
 		}
 
-		$filePath = $this->getConfig()->get( 'UploadDirectory' ) . '/ImportDump/' . $fileName;
+		$filePath = $this->getConfig()->get( 'UploadDirectory' ) . $fileDirectory . $fileName;
 
 		$rows = [
 			'request_source' => $data['source'],
@@ -256,7 +258,9 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			)
 		);
 
-		$logEntry = new ManualLogEntry( $this->getLogType( $data['target'] ), 'request' );
+		$logType = $this->isTargetPrivate( $data['target'] ) ? 'importdumpprivate' : 'importdump';
+
+		$logEntry = new ManualLogEntry( $logType, 'request' );
 
 		$logEntry->setPerformer( $this->getUser() );
 		$logEntry->setTarget( $requestQueueLink );
@@ -277,18 +281,18 @@ class SpecialRequestImportDump extends FormSpecialPage {
 
 	/**
 	 * @param string $target
-	 * @return string
+	 * @return bool
 	 */
-	public function getLogType( string $target ): string {
+	public function isTargetPrivate( string $target ): bool {
 		if ( !ExtensionRegistry::getInstance()->isLoaded( 'CreateWiki' ) ) {
-			return 'importdump';
+			return false;
 		}
 
 		// @phan-suppress-next-line PhanUndeclaredClassMethod
 		$remoteWiki = new RemoteWiki( $target );
 
 		// @phan-suppress-next-line PhanUndeclaredClassMethod
-		return $remoteWiki->isPrivate() ? 'importdumpprivate' : 'importdump';
+		return (bool)$remoteWiki->isPrivate();
 	}
 
 	/**
