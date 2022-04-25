@@ -285,7 +285,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 * @return string
 	 */
 	public function getLogType( string $target ): string {
-		if ( !ExtensionRegistry::getInstance()->isLoaded( 'CreateWiki' ) ) {
+		if (
+			!ExtensionRegistry::getInstance()->isLoaded( 'CreateWiki' ) ||
+			!$this->getConfig()->get( 'CreateWikiUsePrivateWikis' )
+		) {
 			return 'importdump';
 		}
 
