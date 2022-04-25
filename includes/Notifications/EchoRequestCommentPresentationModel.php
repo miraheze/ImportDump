@@ -7,14 +7,24 @@ use EchoEventPresentationModel;
 use RawMessage;
 
 class EchoRequestCommentPresentationModel extends EchoEventPresentationModel {
+
+	/**
+	 * @return string
+	 */
 	public function getIconType() {
 		return 'chat';
 	}
 
+	/**
+	 * @return string
+	 */
 	public function getHeaderMessage() {
 		return $this->msg( 'importdump-notification-header-comment' );
 	}
 
+	/**
+	 * @return string
+	 */
 	public function getBodyMessage() {
 		$comment = $this->event->getExtraParam( 'comment' );
 		$text = EchoDiscussionParser::getTextSnippet( $comment, $this->language );
@@ -22,10 +32,16 @@ class EchoRequestCommentPresentationModel extends EchoEventPresentationModel {
 		return new RawMessage( '$1', [ $text ] );
 	}
 
+	/**
+	 * @return bool
+	 */
 	public function getPrimaryLink() {
 		return false;
 	}
 
+	/**
+	 * @return array
+	 */
 	public function getSecondaryLinks() {
 		$visitLink = [
 			'url' => $this->event->getExtraParam( 'request-url', 0 ),
