@@ -43,7 +43,6 @@ class ImportDumpRequestManager {
 	/** @var MessageLocalizer */
 	private $messageLocalizer;
 
-
 	/** @var LinkRenderer */
 	private $linkRenderer;
 
