@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump\Notifications;
 
 use EchoDiscussionParser;
 use EchoEventPresentationModel;
+use Message;
 use RawMessage;
 
 class EchoRequestCommentPresentationModel extends EchoEventPresentationModel {
@@ -16,14 +17,14 @@ class EchoRequestCommentPresentationModel extends EchoEventPresentationModel {
 	}
 
 	/**
-	 * @return string
+	 * @return Message
 	 */
 	public function getHeaderMessage() {
 		return $this->msg( 'importdump-notification-header-comment' );
 	}
 
 	/**
-	 * @return string
+	 * @return Message
 	 */
 	public function getBodyMessage() {
 		$comment = $this->event->getExtraParam( 'comment' );
