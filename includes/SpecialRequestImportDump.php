@@ -7,6 +7,7 @@ use FileRepo;
 use FormSpecialPage;
 use Html;
 use ManualLogEntry;
+use Message;
 use MimeAnalyzer;
 use PermissionsError;
 use RepoGroup;
@@ -256,6 +257,12 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$logEntry = new ManualLogEntry( 'importdump', 'request' );
 		$logEntry->setPerformer( $this->getUser() );
 		$logEntry->setTarget( $requestQueueLink );
+
+		$logEntry->setParameters(
+			[
+				'4::requestLink' => Message::rawParam( $requestLink ),
+			]
+		);
 
 		$logID = $logEntry->insert( $dbw );
 		$logEntry->publish( $logID );
