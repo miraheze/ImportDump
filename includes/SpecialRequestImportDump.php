@@ -3,12 +3,14 @@
 namespace Miraheze\ImportDump;
 
 use ErrorPageError;
+use ExtensionRegistry;
 use FileRepo;
 use FormSpecialPage;
 use Html;
 use ManualLogEntry;
 use Message;
 use MimeAnalyzer;
+use Miraheze\CreateWiki\RemoteWiki;
 use PermissionsError;
 use RepoGroup;
 use SpecialPage;
@@ -254,7 +256,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			)
 		);
 
-		$logEntry = new ManualLogEntry( 'importdump', 'request' );
+		$logEntry = new ManualLogEntry( $this->getLogType(), 'request' );
 
 		$logEntry->setPerformer( $this->getUser() );
 		$logEntry->setTarget( $requestQueueLink );
@@ -271,6 +273,21 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$logEntry->publish( $logID );
 
 		return Status::newGood();
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function getLogType(): string {
+		if ( !ExtensionRegistry::getInstance()->isLoaded( 'CreateWiki' ) ) {
+			return 'importdump';
+		}
+
+		// @phan-suppress-next-line PhanUndeclaredClassMethod
+		$remoteWiki = new RemoteWiki( $this->getTarget() );
+
+		// @phan-suppress-next-line PhanUndeclaredClassMethod
+		return $remoteWiki->isPrivate() ? 'importdumpprivate' : 'importdump';
 	}
 
 	/**
