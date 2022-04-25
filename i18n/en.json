@@ -43,7 +43,7 @@
 	"importdump-label-upload-source-type": "Upload source:",
 	"importdump-label-upload-source-url": "Upload from URL",
 	"importdump-log-header": "This is a log of all ImportDump requests and status updates.",
-	"importdump-log-name": "ImportDump request log",
+	"importdump-log-name": "ImportDump log",
 	"importdump-notcentral": "Disabled",
 	"importdump-notcentral-text": "ImportDump requests are disabled on this wiki. Please request an import dump from the central wiki.",
 	"importdump-notloggedin": "Sorry, you need to <span class=\"plainlinks\">[$1 log in]</span> before you can request an import dump.",
