@@ -264,7 +264,6 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			[
 				'4::requestTarget' => $data['target'],
 				'5::requestLink' => Message::rawParam( $requestLink ),
-				'6::requestReason' => $data['reason'],
 			]
 		);
 
