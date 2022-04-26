@@ -10,6 +10,7 @@ use Linker;
 use MediaWiki\Permissions\PermissionManager;
 use User;
 use UserNotLoggedIn;
+use WikiMap;
 
 class ImportDumpRequestViewer {
 
@@ -199,6 +200,41 @@ class ImportDumpRequestViewer {
 					wfMessage( 'importdump-info-no-interwiki-prefix',
 						$this->importDumpRequestManager->getTarget(),
 						$this->importDumpRequestManager->getSource()
+					)->escaped()
+				);
+
+				$validRequest = false;
+				if ( $status === 'pending' || $status === 'inprogress' ) {
+					$status = 'declined';
+				}
+			}
+
+			if ( $this->importDumpRequestManager->getRequester()->getBlock() ) {
+				$info .= Html::warningBox(
+					wfMessage( 'importdump-info-requester-locally-blocked',
+						$this->importDumpRequestManager->getRequester()->getName(),
+						WikiMap::getCurrentWikiId()
+					)->escaped()
+				);
+			}
+
+			if ( $this->importDumpRequestManager->getRequester()->getGlobalBlock() ) {
+				$info .= Html::errorBox(
+					wfMessage( 'importdump-info-requester-globally-blocked',
+						$this->importDumpRequestManager->getRequester()->getName()
+					)->escaped()
+				);
+
+				$validRequest = false;
+				if ( $status === 'pending' || $status === 'inprogress' ) {
+					$status = 'declined';
+				}
+			}
+
+			if ( $this->importDumpRequestManager->getRequester()->isLocked() ) {
+				$info .= Html::errorBox(
+					wfMessage( 'importdump-info-requester-locked',
+						$this->importDumpRequestManager->getRequester()->getName()
 					)->escaped()
 				);
 
