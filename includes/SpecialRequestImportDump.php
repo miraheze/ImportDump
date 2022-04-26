@@ -16,7 +16,9 @@ use RepoGroup;
 use SpecialPage;
 use Status;
 use UploadBase;
+use UploadFromUrl;
 use UploadStash;
+use User;
 use UserBlockedError;
 use UserNotLoggedIn;
 use WikiMap;
@@ -100,29 +102,49 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'required' => true,
 				'validation-callback' => [ $this, 'isValidDatabase' ],
 			],
-			'UploadSourceType' => [
-				'type' => 'radio',
-				'label-message' => 'importdump-label-upload-source-type',
-				'default' => 'File',
-				'options-messages' => [
-					'importdump-label-upload-source-file' => 'File',
-					'importdump-label-upload-source-url' => 'Url',
+		];
+
+		if (
+			UploadFromUrl::isEnabled() &&
+			UploadFromUrl::isAllowed( $this->getUser() ) === true
+		) {
+			$formDescriptor += [
+				'UploadSourceType' => [
+					'type' => 'radio',
+					'label-message' => 'importdump-label-upload-source-type',
+					'default' => 'File',
+					'options-messages' => [
+						'importdump-label-upload-source-file' => 'File',
+						'importdump-label-upload-source-url' => 'Url',
+					],
 				],
-			],
-			'UploadFile' => [
-				'type' => 'file',
-				'label-message' => 'importdump-label-upload-file',
-				'help-message' => 'importdump-help-upload',
-				'hide-if' => [ '!==', 'wpUploadSourceType', 'File' ],
-				'required' => true,
-			],
-			'UploadFileURL' => [
-				'type' => 'url',
-				'label-message' => 'importdump-label-upload-file-url',
-				'help-message' => 'importdump-help-upload',
-				'hide-if' => [ '!==', 'wpUploadSourceType', 'Url' ],
-				'required' => true,
-			],
+				'UploadFile' => [
+					'type' => 'file',
+					'label-message' => 'importdump-label-upload-file',
+					'help-message' => 'importdump-help-upload',
+					'hide-if' => [ '!==', 'wpUploadSourceType', 'File' ],
+					'required' => true,
+				],
+				'UploadFileURL' => [
+					'type' => 'url',
+					'label-message' => 'importdump-label-upload-file-url',
+					'help-message' => 'importdump-help-upload',
+					'hide-if' => [ '!==', 'wpUploadSourceType', 'Url' ],
+					'required' => true,
+				],
+			];
+		} else {
+			$formDescriptor += [
+				'UploadFile' => [
+					'type' => 'file',
+					'label-message' => 'importdump-label-upload-file',
+					'help-message' => 'importdump-help-upload',
+					'required' => true,
+				],
+			];
+		}
+
+		$formDescriptor += [
 			'reason' => [
 				'type' => 'textarea',
 				'rows' => 4,
@@ -182,7 +204,16 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$request = $this->getRequest();
 		$request->setVal( 'wpDestFile', $fileName );
 
-		$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] );
+		$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] ?? 'File' );
+
+		if ( !$uploadBase->isEnabled() ) {
+			return Status::newFatal( 'uploaddisabled' );
+		}
+
+		$permission = $uploadBase->isAllowed( $this->getUser() );
+		if ( $permission !== true ) {
+			return User::newFatalPermissionDeniedStatus( $permission );
+		}
 
 		$status = $uploadBase->fetchFile();
 		if ( !$status->isOK() ) {
