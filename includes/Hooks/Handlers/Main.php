@@ -18,10 +18,10 @@ class Main implements UserGetReservedNamesHook {
 	}
 
 	/**
-	* @param array &$notifications
-	* @param array &$notificationCategories
-	* @param array &$icons
-	*/
+	 * @param array &$notifications
+	 * @param array &$notificationCategories
+	 * @param array &$icons
+	 */
 	public function onBeforeCreateEchoEvent(
 		&$notifications, &$notificationCategories, &$icons
 	) {
