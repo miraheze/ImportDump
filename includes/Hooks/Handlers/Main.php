@@ -27,12 +27,12 @@ class Main implements UserGetReservedNamesHook {
 	) {
 		$notificationCategories['request-comment'] = [
 			'priority' => 3,
-			'tooltip' => 'importdump-echo-pref-tooltip-request-comment',
+			'tooltip' => 'echo-pref-tooltip-request-comment',
 		];
 
 		$notificationCategories['request-status-update'] = [
 			'priority' => 3,
-			'tooltip' => 'importdump-echo-pref-tooltip-request-status-update',
+			'tooltip' => 'echo-pref-tooltip-request-status-update',
 		];
 
 		$notifications['request-comment'] = [
