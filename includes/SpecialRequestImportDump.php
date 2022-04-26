@@ -250,10 +250,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$requestID = (string)$dbw->insertId();
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', $requestID );
 
-		$requestLink = $this->getLinkRenderer()->makeLink(
-			$requestQueueLink,
-			"#{$requestID}"
-		);
+		$requestLink = $this->getLinkRenderer()->makeLink( $requestQueueLink, "#{$requestID}" );
 
 		$this->getOutput()->addHTML(
 			Html::successBox(
