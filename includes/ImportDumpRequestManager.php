@@ -205,6 +205,13 @@ class ImportDumpRequestManager {
 	}
 
 	/**
+	 * @return array
+	 */
+	public function getInvolvedUsers(): array {
+		return array_unique( array_column( $this->getComments(), 'user' ) + [ $this->getRequester() ] );
+	}
+
+	/**
 	 * @return string
 	 */
 	public function getInterwikiPrefix(): string {
