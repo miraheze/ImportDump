@@ -25,21 +25,21 @@ class Main implements UserGetReservedNamesHook {
 	public function onBeforeCreateEchoEvent(
 		&$notifications, &$notificationCategories, &$icons
 	) {
-		$notificationCategories['importdump-comment'] = [
+		$notificationCategories['importdump-request-comment'] = [
 			'priority' => 3,
-			'tooltip' => 'echo-pref-tooltip-importdump-comment',
+			'tooltip' => 'echo-pref-tooltip-importdump-request-comment',
 		];
 
-		$notificationCategories['importdump-status-update'] = [
+		$notificationCategories['importdump-request-status-update'] = [
 			'priority' => 3,
-			'tooltip' => 'echo-pref-tooltip-importdump-status-update',
+			'tooltip' => 'echo-pref-tooltip-importdump-request-status-update',
 		];
 
-		$notifications['importdump-comment'] = [
+		$notifications['importdump-request-comment'] = [
 			EchoAttributeManager::ATTR_LOCATORS => [
 				'EchoUserLocator::locateEventAgent'
 			],
-			'category' => 'importdump-comment',
+			'category' => 'importdump-request-comment',
 			'group' => 'positive',
 			'section' => 'alert',
 			'canNotifyAgent' => true,
@@ -47,11 +47,11 @@ class Main implements UserGetReservedNamesHook {
 			'immediate' => true,
 		];
 
-		$notifications['importdump-status-update'] = [
+		$notifications['importdump-request-status-update'] = [
 			EchoAttributeManager::ATTR_LOCATORS => [
 				'EchoUserLocator::locateEventAgent'
 			],
-			'category' => 'importdump-status-update',
+			'category' => 'importdump-request-status-update',
 			'group' => 'positive',
 			'section' => 'alert',
 			'canNotifyAgent' => true,
