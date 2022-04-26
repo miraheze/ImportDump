@@ -3,6 +3,7 @@
 namespace Miraheze\ImportDump;
 
 use Config;
+use EchoEvent;
 use ExtensionRegistry;
 use GlobalVarConfig;
 use ManualLogEntry;
@@ -142,7 +143,6 @@ class ImportDumpRequestManager {
 	 */
 	public function logStatusUpdate( string $comment, string $newStatus, User $user ) {
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', (string)$this->ID );
-
 		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
 		$logEntry = new ManualLogEntry(
@@ -168,6 +168,33 @@ class ImportDumpRequestManager {
 
 		$logID = $logEntry->insert( $this->dbw );
 		$logEntry->publish( $logID );
+
+		$this->sendNotification( $comment, 'importdump-request-status-update' );
+	}
+
+	/**
+	 * @param string $comment
+	 * @param string $type
+	 */
+	public function sendNotification( string $comment, string $type ) {
+		$requestLink = SpecialPage::getTitleFor( 'ImportDumpRequestQueue', (string)$this->ID )
+			->getFullURL();
+
+		foreach ( $this->getInvolvedUsers() as $receiver ) {
+			if ( !$receiver ) {
+				continue;
+			}
+
+			EchoEvent::create( [
+				'type' => $type,
+				'extra' => [
+					'request-url' => $requestLink,
+					'comment' => $comment,
+					'notifyAgent' => true
+				],
+				'agent' => $receiver,
+			] );
+		}
 	}
 
 	/**
