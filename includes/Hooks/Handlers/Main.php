@@ -25,21 +25,21 @@ class Main implements UserGetReservedNamesHook {
 	public function onBeforeCreateEchoEvent(
 		&$notifications, &$notificationCategories, &$icons
 	) {
-		$notificationCategories['request-comment'] = [
+		$notificationCategories['importdump-comment'] = [
 			'priority' => 3,
-			'tooltip' => 'echo-pref-tooltip-request-comment',
+			'tooltip' => 'echo-pref-tooltip-importdump-comment',
 		];
 
-		$notificationCategories['request-status-update'] = [
+		$notificationCategories['importdump-status-update'] = [
 			'priority' => 3,
-			'tooltip' => 'echo-pref-tooltip-request-status-update',
+			'tooltip' => 'echo-pref-tooltip-importdump-status-update',
 		];
 
-		$notifications['request-comment'] = [
+		$notifications['importdump-comment'] = [
 			EchoAttributeManager::ATTR_LOCATORS => [
 				'EchoUserLocator::locateEventAgent'
 			],
-			'category' => 'request-comment',
+			'category' => 'importdump-comment',
 			'group' => 'positive',
 			'section' => 'alert',
 			'canNotifyAgent' => true,
@@ -47,11 +47,11 @@ class Main implements UserGetReservedNamesHook {
 			'immediate' => true,
 		];
 
-		$notifications['request-status-update'] = [
+		$notifications['importdump-status-update'] = [
 			EchoAttributeManager::ATTR_LOCATORS => [
 				'EchoUserLocator::locateEventAgent'
 			],
-			'category' => 'request-status-update',
+			'category' => 'importdump-status-update',
 			'group' => 'positive',
 			'section' => 'alert',
 			'canNotifyAgent' => true,
