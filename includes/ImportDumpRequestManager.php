@@ -23,6 +23,11 @@ use Wikimedia\Rdbms\ILBFactory;
 
 class ImportDumpRequestManager {
 
+	private const SYSTEM_USERS = [
+		'ImportDump Extension',
+		'ImportDump Status Update',
+	];
+
 	public const CONSTRUCTOR_OPTIONS = [
 		'ImportDumpCentralWiki',
 		'ImportDumpInterwikiMap',
@@ -134,6 +139,10 @@ class ImportDumpRequestManager {
 			],
 			__METHOD__
 		);
+
+		if ( !in_array( $user->getName(), self::SYSTEM_USERS ) ) {
+			$this->sendNotification( $comment, 'importdump-request-comment' );
+		}
 	}
 
 	/**
@@ -168,6 +177,16 @@ class ImportDumpRequestManager {
 
 		$logID = $logEntry->insert( $this->dbw );
 		$logEntry->publish( $logID );
+
+		if ( !$comment ) {
+			$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . $newStatus )
+				->inContentLanguage()
+				->text();
+
+			$comment = $this->messageLocalizer->msg( 'importdump-status-updated', strtolower( $statusMessage ) )
+				->inContentLanguage()
+				->escaped();
+		}
 
 		$this->sendNotification( $comment, 'importdump-request-status-update' );
 	}
