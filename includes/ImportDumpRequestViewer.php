@@ -17,6 +17,9 @@ class ImportDumpRequestViewer {
 	/** @var Config */
 	private $config;
 
+	/** @var IContextSource */
+	private $context;
+
 	/** @var ImportDumpRequestManager */
 	private $importDumpRequestManager;
 
@@ -25,40 +28,42 @@ class ImportDumpRequestViewer {
 
 	/**
 	 * @param Config $config
+	 * @param IContextSource $context
 	 * @param ImportDumpRequestManager $importDumpRequestManager
 	 * @param PermissionManager $permissionManager
 	 */
 	public function __construct(
 		Config $config,
+		IContextSource $context,
 		ImportDumpRequestManager $importDumpRequestManager,
 		PermissionManager $permissionManager
 	) {
 		$this->config = $config;
+		$this->context = $context;
 		$this->importDumpRequestManager = $importDumpRequestManager;
 		$this->permissionManager = $permissionManager;
 	}
 
 	/**
-	 * @param IContextSource $context
 	 * @return array
 	 */
-	public function getFormDescriptor( IContextSource $context ): array {
-		$user = $context->getUser();
+	public function getFormDescriptor(): array {
+		$user = $this->context->getUser();
 
 		if (
 			$this->importDumpRequestManager->isPrivate() &&
 			!$this->permissionManager->userHasRight( $user, 'view-private-import-requests' )
 		) {
-			$context->getOutput()->addHTML(
-				Html::errorBox( wfMessage( 'importdump-unknown' )->escaped() )
+			$this->context->getOutput()->addHTML(
+				Html::errorBox( $this->context->msg( 'importdump-unknown' )->escaped() )
 			);
 
 			return [];
 		}
 
 		if ( $this->importDumpRequestManager->isLocked() ) {
-			$context->getOutput()->addHTML(
-				Html::errorBox( wfMessage( 'importdump-request-locked' )->escaped() )
+			$this->context->getOutput()->addHTML(
+				Html::errorBox( $this->context->msg( 'importdump-request-locked' )->escaped() )
 			);
 		}
 
@@ -92,7 +97,7 @@ class ImportDumpRequestViewer {
 				'label-message' => 'importdump-label-requested-date',
 				'type' => 'info',
 				'section' => 'details',
-				'default' => $context->getLanguage()->timeanddate(
+				'default' => $this->context->getLanguage()->timeanddate(
 					$this->importDumpRequestManager->getTimestamp(), true
 				),
 			],
@@ -101,7 +106,7 @@ class ImportDumpRequestViewer {
 				'type' => 'text',
 				'readonly' => true,
 				'section' => 'details',
-				'default' => wfMessage(
+				'default' => $this->context->msg(
 					'importdump-label-' . $this->importDumpRequestManager->getStatus()
 				)->text(),
 			],
@@ -123,9 +128,9 @@ class ImportDumpRequestViewer {
 				'readonly' => true,
 				'section' => 'comments',
 				'rows' => 4,
-				'label' => wfMessage( 'importdump-header-comment-withtimestamp' )
+				'label' => $this->context->msg( 'importdump-header-comment-withtimestamp' )
 						->rawParams( $comment['user']->getName() )
-						->params( $context->getLanguage()->timeanddate( $comment['timestamp'], true ) )
+						->params( $this->context->getLanguage()->timeanddate( $comment['timestamp'], true ) )
 						->text(),
 				'default' => $comment['comment'],
 			];
@@ -146,7 +151,7 @@ class ImportDumpRequestViewer {
 				],
 				'submit-comment' => [
 					'type' => 'submit',
-					'default' => wfMessage( 'importdump-label-add-comment' )->text(),
+					'default' => $this->context->msg( 'importdump-label-add-comment' )->text(),
 					'section' => 'comments',
 					'disabled' => $this->importDumpRequestManager->isLocked(),
 				],
@@ -180,7 +185,7 @@ class ImportDumpRequestViewer {
 				],
 				'submit-edit' => [
 					'type' => 'submit',
-					'default' => wfMessage( 'importdump-label-edit-request' )->text(),
+					'default' => $this->context->msg( 'importdump-label-edit-request' )->text(),
 					'section' => 'editing',
 					'disabled' => $this->importDumpRequestManager->isLocked(),
 				],
@@ -192,16 +197,16 @@ class ImportDumpRequestViewer {
 			$status = $this->importDumpRequestManager->getStatus();
 
 			$info = Html::warningBox(
-				wfMessage( 'importdump-info-command' )->plaintextParams(
+				$this->context->msg( 'importdump-info-command' )->plaintextParams(
 					$this->importDumpRequestManager->getCommand()
 				)->escaped()
 			);
 
 			$info .= Html::warningBox(
-				wfMessage( 'importdump-info-groups',
+				$this->context->msg( 'importdump-info-groups',
 					$this->importDumpRequestManager->getRequester()->getName(),
 					$this->importDumpRequestManager->getTarget(),
-					$context->getLanguage()->commaList(
+					$this->context->getLanguage()->commaList(
 						$this->importDumpRequestManager->getUserGroupsFromTarget()
 					)
 				)->escaped()
@@ -209,13 +214,13 @@ class ImportDumpRequestViewer {
 
 			if ( $this->importDumpRequestManager->isPrivate() ) {
 				$info .= Html::warningBox(
-					wfMessage( 'importdump-info-request-private' )->escaped()
+					$this->context->msg( 'importdump-info-request-private' )->escaped()
 				);
 			}
 
 			if ( $this->importDumpRequestManager->getRequester()->getBlock() ) {
 				$info .= Html::warningBox(
-					wfMessage( 'importdump-info-requester-locally-blocked',
+					$this->context->msg( 'importdump-info-requester-locally-blocked',
 						$this->importDumpRequestManager->getRequester()->getName(),
 						WikiMap::getCurrentWikiId()
 					)->escaped()
@@ -224,7 +229,7 @@ class ImportDumpRequestViewer {
 
 			if ( $this->importDumpRequestManager->getRequester()->getGlobalBlock() ) {
 				$info .= Html::errorBox(
-					wfMessage( 'importdump-info-requester-globally-blocked',
+					$this->context->msg( 'importdump-info-requester-globally-blocked',
 						$this->importDumpRequestManager->getRequester()->getName()
 					)->escaped()
 				);
@@ -237,7 +242,7 @@ class ImportDumpRequestViewer {
 
 			if ( $this->importDumpRequestManager->getRequester()->isLocked() ) {
 				$info .= Html::errorBox(
-					wfMessage( 'importdump-info-requester-locked',
+					$this->context->msg( 'importdump-info-requester-locked',
 						$this->importDumpRequestManager->getRequester()->getName()
 					)->escaped()
 				);
@@ -250,7 +255,7 @@ class ImportDumpRequestViewer {
 
 			if ( !$this->importDumpRequestManager->getInterwikiPrefix() ) {
 				$info .= Html::errorBox(
-					wfMessage( 'importdump-info-no-interwiki-prefix',
+					$this->context->msg( 'importdump-info-no-interwiki-prefix',
 						$this->importDumpRequestManager->getTarget(),
 						$this->importDumpRequestManager->getSource()
 					)->escaped()
@@ -312,7 +317,7 @@ class ImportDumpRequestViewer {
 				],
 				'submit-handle' => [
 					'type' => 'submit',
-					'default' => wfMessage( 'htmlform-submit' )->text(),
+					'default' => $this->context->msg( 'htmlform-submit' )->text(),
 					'section' => 'handling',
 				],
 			];
@@ -328,7 +333,7 @@ class ImportDumpRequestViewer {
 	 */
 	public function isValidComment( ?string $comment, array $alldata ) {
 		if ( isset( $alldata['submit-comment'] ) && ( !$comment || ctype_space( $comment ) ) ) {
-			return wfMessage( 'htmlform-required', 'parseinline' )->escaped();
+			return $this->context->msg( 'htmlform-required', 'parseinline' )->escaped();
 		}
 
 		return true;
@@ -340,7 +345,7 @@ class ImportDumpRequestViewer {
 	 */
 	public function isValidDatabase( ?string $target ) {
 		if ( !in_array( $target, $this->config->get( 'LocalDatabases' ) ) ) {
-			return wfMessage( 'importdump-invalid-target' )->escaped();
+			return $this->context->msg( 'importdump-invalid-target' )->escaped();
 		}
 
 		return true;
@@ -352,7 +357,7 @@ class ImportDumpRequestViewer {
 	 */
 	public function isValidReason( ?string $reason ) {
 		if ( !$reason || ctype_space( $reason ) ) {
-			return wfMessage( 'htmlform-required', 'parseinline' )->escaped();
+			return $this->context->msg( 'htmlform-required', 'parseinline' )->escaped();
 		}
 
 		return true;
@@ -360,19 +365,15 @@ class ImportDumpRequestViewer {
 
 	/**
 	 * @param int $requestID
-	 * @param IContextSource $context
 	 * @return ?ImportDumpOOUIForm
 	 */
-	public function getForm(
-		int $requestID,
-		IContextSource $context
-	): ?ImportDumpOOUIForm {
+	public function getForm( int $requestID ): ?ImportDumpOOUIForm {
 		$this->importDumpRequestManager->fromID( $requestID );
-		$out = $context->getOutput();
+		$out = $this->context->getOutput();
 
 		if ( $requestID === 0 || !$this->importDumpRequestManager->exists() ) {
 			$out->addHTML(
-				Html::errorBox( wfMessage( 'importdump-unknown' )->escaped() )
+				Html::errorBox( $this->context->msg( 'importdump-unknown' )->escaped() )
 			);
 
 			return null;
@@ -382,8 +383,8 @@ class ImportDumpRequestViewer {
 		$out->addModuleStyles( [ 'ext.importdump.oouiform.styles' ] );
 		$out->addModuleStyles( [ 'oojs-ui-widgets.styles' ] );
 
-		$formDescriptor = $this->getFormDescriptor( $context );
-		$htmlForm = new ImportDumpOOUIForm( $formDescriptor, $context, 'importdump-section' );
+		$formDescriptor = $this->getFormDescriptor();
+		$htmlForm = new ImportDumpOOUIForm( $formDescriptor, $this->context, 'importdump-section' );
 
 		$htmlForm->setId( 'importdump-request-viewer' );
 		$htmlForm->suppressDefaultSubmit();
@@ -413,7 +414,7 @@ class ImportDumpRequestViewer {
 
 		if ( isset( $formData['submit-comment'] ) ) {
 			$this->importDumpRequestManager->addComment( $formData['comment'], $user );
-			$out->addHTML( Html::successBox( wfMessage( 'importdump-comment-success' )->escaped() ) );
+			$out->addHTML( Html::successBox( $this->context->msg( 'importdump-comment-success' )->escaped() ) );
 
 			return;
 		}
@@ -431,7 +432,7 @@ class ImportDumpRequestViewer {
 
 			$this->importDumpRequestManager->endAtomic( __METHOD__ );
 
-			$out->addHTML( Html::successBox( wfMessage( 'importdump-edit-success' )->escaped() ) );
+			$out->addHTML( Html::successBox( $this->context->msg( 'importdump-edit-success' )->escaped() ) );
 
 			return;
 		}
@@ -456,16 +457,16 @@ class ImportDumpRequestViewer {
 				return;
 			}
 
-			$statusMessage = wfMessage( 'importdump-label-' . $formData['handle-status'] )
+			$statusMessage = $this->context->msg( 'importdump-label-' . $formData['handle-status'] )
 				->inContentLanguage()
 				->text();
 
-			$comment = wfMessage( 'importdump-status-updated', strtolower( $statusMessage ) )
+			$comment = $this->context->msg( 'importdump-status-updated', strtolower( $statusMessage ) )
 				->inContentLanguage()
 				->escaped();
 
 			if ( $formData['handle-comment'] ) {
-				$comment .= "\n" . wfMessage( 'importdump-comment-given', $user->getName() )
+				$comment .= "\n" . $this->context->msg( 'importdump-comment-given', $user->getName() )
 					->inContentLanguage()
 					->escaped();
 
@@ -479,7 +480,7 @@ class ImportDumpRequestViewer {
 
 			$this->importDumpRequestManager->endAtomic( __METHOD__ );
 
-			$out->addHTML( Html::successBox( wfMessage( 'importdump-status-updated-success' )->escaped() ) );
+			$out->addHTML( Html::successBox( $this->context->msg( 'importdump-status-updated-success' )->escaped() ) );
 		}
 	}
 }
