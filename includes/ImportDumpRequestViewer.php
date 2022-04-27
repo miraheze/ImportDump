@@ -195,20 +195,6 @@ class ImportDumpRequestViewer {
 				)->escaped()
 			);
 
-			if ( !$this->importDumpRequestManager->getInterwikiPrefix() ) {
-				$info .= Html::errorBox(
-					wfMessage( 'importdump-info-no-interwiki-prefix',
-						$this->importDumpRequestManager->getTarget(),
-						$this->importDumpRequestManager->getSource()
-					)->escaped()
-				);
-
-				$validRequest = false;
-				if ( $status === 'pending' || $status === 'inprogress' ) {
-					$status = 'declined';
-				}
-			}
-
 			if ( $this->importDumpRequestManager->getRequester()->getBlock() ) {
 				$info .= Html::warningBox(
 					wfMessage( 'importdump-info-requester-locally-blocked',
@@ -235,6 +221,20 @@ class ImportDumpRequestViewer {
 				$info .= Html::errorBox(
 					wfMessage( 'importdump-info-requester-locked',
 						$this->importDumpRequestManager->getRequester()->getName()
+					)->escaped()
+				);
+
+				$validRequest = false;
+				if ( $status === 'pending' || $status === 'inprogress' ) {
+					$status = 'declined';
+				}
+			}
+
+			if ( !$this->importDumpRequestManager->getInterwikiPrefix() ) {
+				$info .= Html::errorBox(
+					wfMessage( 'importdump-info-no-interwiki-prefix',
+						$this->importDumpRequestManager->getTarget(),
+						$this->importDumpRequestManager->getSource()
 					)->escaped()
 				);
 
