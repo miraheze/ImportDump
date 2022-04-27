@@ -263,13 +263,21 @@ class ImportDumpRequestViewer {
 					'default' => $this->importDumpRequestManager->isLocked(),
 					'section' => 'handling',
 				],
-				'handle-private' => [
-					'type' => 'check',
-					'label-message' => 'importdump-label-private',
-					'default' => $this->importDumpRequestManager->isPrivate(),
-					'disabled' => $this->importDumpRequestManager->isPrivate( true ),
-					'section' => 'handling',
-				],
+			];
+
+			if ( $this->permissionManager->userHasRight( $user, 'view-private-import-requests' ) ) {
+				$formDescriptor += [
+					'handle-private' => [
+						'type' => 'check',
+						'label-message' => 'importdump-label-private',
+						'default' => $this->importDumpRequestManager->isPrivate(),
+						'disabled' => $this->importDumpRequestManager->isPrivate( true ),
+						'section' => 'handling',
+					],
+				];
+			};
+
+			$formDescriptor += [
 				'handle-status' => [
 					'type' => 'select',
 					'label-message' => 'importdump-label-update-status',
@@ -423,8 +431,8 @@ class ImportDumpRequestViewer {
 				$this->importDumpRequestManager->setLocked( (int)$formData['handle-locked'] );
 			}
 
-			if ( $this->importDumpRequestManager->isPrivate() !== (bool)$formData['handle-locked'] ) {
-				$this->importDumpRequestManager->setPrivate( (int)$formData['handle-locked'] );
+			if ( $this->importDumpRequestManager->isPrivate() !== (bool)$formData['handle-private'] ?? '' ) {
+				$this->importDumpRequestManager->setPrivate( (int)$formData['handle-private'] );
 			}
 
 			if ( $this->importDumpRequestManager->getStatus() === $formData['handle-status'] ) {
