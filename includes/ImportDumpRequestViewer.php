@@ -430,7 +430,7 @@ class ImportDumpRequestViewer {
 			if ( $this->importDumpRequestManager->getStatus() === $formData['handle-status'] ) {
 				return;
 			}
- 
+
 			$statusMessage = wfMessage( 'importdump-label-' . $formData['handle-status'] )
 				->inContentLanguage()
 				->text();
