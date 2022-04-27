@@ -2,13 +2,26 @@
 
 namespace Miraheze\ImportDump\Hooks\Handlers;
 
+use Config;
+use ConfigFactory;
 use EchoAttributeManager;
 use MediaWiki\User\Hook\UserGetReservedNamesHook;
 use Miraheze\ImportDump\Notifications\EchoNewRequestPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestCommentPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestStatusUpdatePresentationModel;
+use WikiMap;
 
 class Main implements UserGetReservedNamesHook {
+
+	/** @var Config */
+	private $config;
+
+	/**
+	 * @param ConfigFactory $configFactory
+	 */
+	public function __construct( ConfigFactory $configFactory ) {
+		$this->config = $configFactory->makeConfig( 'ImportDump' );
+	}
 
 	/**
 	 * @param array &$reservedUsernames
@@ -23,9 +36,14 @@ class Main implements UserGetReservedNamesHook {
 	 * @param array &$notificationCategories
 	 * @param array &$icons
 	 */
-	public function onBeforeCreateEchoEvent(
-		&$notifications, &$notificationCategories, &$icons
-	) {
+	public function onBeforeCreateEchoEvent( &$notifications, &$notificationCategories, &$icons ) {
+		if (
+			$this->config->get( 'ImportDumpCentralWiki' ) &&
+			!WikiMap::isCurrentWikiId( $this->config->get( 'ImportDumpCentralWiki' ) )
+		) {
+			return;
+		}
+
 		$notificationCategories['importdump-new-request'] = [
 			'priority' => 3,
 			'tooltip' => 'echo-pref-tooltip-importdump-new-request',
