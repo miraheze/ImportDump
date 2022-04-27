@@ -360,6 +360,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			EchoEvent::create( [
 				'type' => 'importdump-new-request',
 				'extra' => [
+					'request-id' => $requestID,
 					'request-url' => $requestLink,
 					'reason' => $reason,
 					'requester' => $requester,
