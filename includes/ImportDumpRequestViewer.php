@@ -451,6 +451,14 @@ class ImportDumpRequestViewer {
 				$this->importDumpRequestManager->setTarget( $formData['edit-target'] );
 			}
 
+			if ( !$changes ) {
+				$this->importDumpRequestManager->endAtomic( __METHOD__ );
+
+				$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-no-changes' )->escaped() ) );
+
+				return;
+			}
+
 			if ( $this->importDumpRequestManager->getStatus() === 'declined' ) {
 				$this->importDumpRequestManager->setStatus( 'pending' );
 
@@ -461,8 +469,13 @@ class ImportDumpRequestViewer {
 				$this->importDumpRequestManager->logStatusUpdate( $comment, 'pending', $user );
 
 				$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
+
+				$comment = $this->context->msg( 'importdump-request-reopened', $user->getName() )->rawParams(
+					implode( '<br />', $changes )
+				)->inContentLanguage()->escaped();
+
 				$this->importDumpRequestManager->sendNotification(
-					str_replace( "\n", '<br />', $comment ), 'importdump-request-status-update', $user
+					$comment, 'importdump-request-status-update', $user
 				);
 			} else {
 				$comment = $this->context->msg( 'importdump-request-edited', $user->getName() )->rawParams(
