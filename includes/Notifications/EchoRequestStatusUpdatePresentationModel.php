@@ -30,7 +30,7 @@ class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationMode
 		$comment = $this->event->getExtraParam( 'comment' );
 		$text = EchoDiscussionParser::getTextSnippet( $comment, $this->language );
 
-		return new RawMessage( '$1', [ $text ] );
+		return new RawMessage( '$1', [ nl2br( $text ) ] );
 	}
 
 	/**
