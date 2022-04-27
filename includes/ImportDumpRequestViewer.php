@@ -422,12 +422,52 @@ class ImportDumpRequestViewer {
 		if ( isset( $formData['submit-edit'] ) ) {
 			$this->importDumpRequestManager->startAtomic( __METHOD__ );
 
-			$this->importDumpRequestManager->setReason( $formData['edit-reason'] );
-			$this->importDumpRequestManager->setSource( $formData['edit-source'] );
-			$this->importDumpRequestManager->setTarget( $formData['edit-target'] );
+			$changes = [];
+			if ( $this->importDumpRequestManager->getReason() !== $formData['edit-reason'] ) {
+				$changes[] = $this->context->msg( 'importdump-request-edited-reason' )->plaintextParams(
+					$this->importDumpRequestManager->getReason(),
+					$formData['edit-reason']
+				)->escaped();
+
+				$this->importDumpRequestManager->setReason( $formData['edit-reason'] );
+			}
+
+			if ( $this->importDumpRequestManager->getSource() !== $formData['edit-source'] ) {
+				$changes[] = $this->context->msg( 'importdump-request-edited-source' )->plaintextParams(
+					$this->importDumpRequestManager->getSource(),
+					$formData['edit-source']
+				)->escaped();
+
+				$this->importDumpRequestManager->setSource( $formData['edit-source'] );
+			}
+
+			if ( $this->importDumpRequestManager->getTarget() !== $formData['edit-target'] ) {
+				$changes[] = $this->context->msg(
+					'importdump-request-edited-target',
+					$this->importDumpRequestManager->getTarget(),
+					$formData['edit-target']
+				)->escaped();
+
+				$this->importDumpRequestManager->setTarget( $formData['edit-target'] );
+			}
 
 			if ( $this->importDumpRequestManager->getStatus() === 'declined' ) {
 				$this->importDumpRequestManager->setStatus( 'pending' );
+
+				$comment = $this->context->msg( 'importdump-request-reopened', $user->getName() )->rawParams(
+					implode( "\n", $changes )
+				) )->inContentLanguage()->escaped();
+
+				$this->importDumpRequestManager->logStatusUpdate( $comment, 'pending', $user );
+
+				$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
+				$this->importDumpRequestManager->sendNotification( nl2br( $comment ), 'importdump-request-status-update', $user );
+			} else {
+				$comment = $this->context->msg( 'importdump-request-edited', $user->getName() )->rawParams(
+					implode( "\n", $changes )
+				) )->inContentLanguage()->escaped();
+
+				$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
 			}
 
 			$this->importDumpRequestManager->endAtomic( __METHOD__ );
@@ -477,6 +517,8 @@ class ImportDumpRequestViewer {
 			$this->importDumpRequestManager->logStatusUpdate(
 				$formData['handle-comment'], $formData['handle-status'], $user
 			);
+
+			$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $user );
 
 			$this->importDumpRequestManager->endAtomic( __METHOD__ );
 
