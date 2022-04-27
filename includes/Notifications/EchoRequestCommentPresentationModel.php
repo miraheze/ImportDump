@@ -20,7 +20,10 @@ class EchoRequestCommentPresentationModel extends EchoEventPresentationModel {
 	 * @return Message
 	 */
 	public function getHeaderMessage() {
-		return $this->msg( 'importdump-notification-header-comment' );
+		return $this->msg(
+			'importdump-notification-header-comment',
+			$this->event->getExtraParam( 'id' )
+		);
 	}
 
 	/**
