@@ -99,10 +99,11 @@ class ImportDumpRequestManager {
 	public function fromID( int $requestID ) {
 		$this->ID = $requestID;
 
-		if ( $this->options->get( 'ImportDumpCentralWiki' ) ) {
+		$centralWiki = $this->options->get( 'ImportDumpCentralWiki' );
+		if ( $centralWiki ) {
 			$this->dbw = $this->dbLoadBalancerFactory->getMainLB(
-				$this->options->get( 'ImportDumpCentralWiki' )
-			)->getConnectionRef( DB_PRIMARY, [], $this->options->get( 'ImportDumpCentralWiki' ) );
+				$centralWiki
+			)->getConnectionRef( DB_PRIMARY, [], $centralWiki );
 		} else {
 			$this->dbw = $this->dbLoadBalancerFactory->getMainLB()->getConnectionRef( DB_PRIMARY );
 		}
@@ -196,8 +197,7 @@ class ImportDumpRequestManager {
 	 * @param string $type
 	 */
 	public function sendNotification( string $comment, string $type ) {
-		$requestLink = SpecialPage::getTitleFor( 'ImportDumpRequestQueue', (string)$this->ID )
-			->getFullURL();
+		$requestLink = SpecialPage::getTitleFor( 'ImportDumpRequestQueue', (string)$this->ID )->getFullURL();
 
 		foreach ( $this->getInvolvedUsers() as $receiver ) {
 			if ( !$receiver ) {
