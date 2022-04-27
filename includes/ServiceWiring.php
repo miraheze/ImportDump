@@ -2,7 +2,6 @@
 
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\MediaWikiServices;
-use Miraheze\ImportDump\ImportDumpNotificationsManager;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 
 return [
