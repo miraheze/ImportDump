@@ -6,9 +6,6 @@ use Miraheze\ImportDump\ImportDumpNotificationsManager;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 
 return [
-	'ImportDumpNotificationsManager' => static function (): ImportDumpNotificationsManager {
-		return new ImportDumpNotificationsManager();
-	},
 	'ImportDumpRequestManager' => static function ( MediaWikiServices $services ): ImportDumpRequestManager {
 		return new ImportDumpRequestManager(
 			$services->getConfigFactory()->makeConfig( 'ImportDump' ),
