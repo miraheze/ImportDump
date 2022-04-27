@@ -19,7 +19,10 @@ class EchoNewRequestPresentationModel extends EchoEventPresentationModel {
 	 * @return Message
 	 */
 	public function getHeaderMessage() {
-		return $this->msg( 'importdump-notification-header-new-request' );
+		return $this->msg(
+			'importdump-notification-header-new-request',
+			$this->event->getExtraParam( 'id' )
+		);
 	}
 
 	/**
