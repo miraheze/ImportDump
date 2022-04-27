@@ -142,7 +142,7 @@ class ImportDumpRequestManager {
 		);
 
 		if ( !in_array( $user->getName(), self::SYSTEM_USERS ) ) {
-			$this->sendNotification( $comment, 'importdump-request-comment' );
+			$this->sendNotification( $comment, 'importdump-request-comment', $user );
 		}
 	}
 
@@ -189,21 +189,22 @@ class ImportDumpRequestManager {
 				->escaped();
 		}
 
-		$this->sendNotification( $comment, 'importdump-request-status-update' );
+		$this->sendNotification( $comment, 'importdump-request-status-update', $user );
 	}
 
 	/**
 	 * @param string $comment
 	 * @param string $type
+	 * @param User $user
 	 */
-	public function sendNotification( string $comment, string $type ) {
+	public function sendNotification( string $comment, string $type, User $user ) {
 		$requestLink = SpecialPage::getTitleFor( 'ImportDumpRequestQueue', (string)$this->ID )->getFullURL();
 
-		foreach ( $this->getInvolvedUsers() as $receiver ) {
-			if ( !$receiver ) {
-				continue;
-			}
+		$involvedUsers = array_values( array_filter(
+			array_diff( $this->getInvolvedUsers(), [ $user ] )
+		) );
 
+		foreach ( $involvedUsers as $receiver ) {
 			EchoEvent::create( [
 				'type' => $type,
 				'extra' => [
