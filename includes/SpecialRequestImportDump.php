@@ -2,6 +2,7 @@
 
 namespace Miraheze\ImportDump;
 
+use EchoEvent;
 use ErrorPageError;
 use ExtensionRegistry;
 use FileRepo;
@@ -305,6 +306,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$logID = $logEntry->insert( $dbw );
 		$logEntry->publish( $logID );
 
+		if ( $this->getConfig()->get( 'ImportDumpUsersNotifiedOnAllRequests' ) ) {
+			$this->sendNotifications( $this->getUser()->getName(), $requestID, $data['target'] );
+		}
+
 		return Status::newGood();
 	}
 
@@ -322,6 +327,39 @@ class SpecialRequestImportDump extends FormSpecialPage {
 
 		$remoteWiki = new RemoteWiki( $target );
 		return $remoteWiki->isPrivate() ? 'importdumpprivate' : 'importdump';
+	}
+
+	/**
+	 * @param string $requester
+	 * @param string $requestID
+	 * @param string $target
+	 */
+	public function sendNotifications( string $requester, string $requestID, string $target ) {
+		$notifiedUsers = array_map(
+			function( string $userName ): User {
+				return User::newFromName( $userName );
+			}, $this->getConfig()->get( 'ImportDumpUsersNotifiedOnAllRequests' )
+		);
+
+		$requestLink = SpecialPage::getTitleFor( 'ImportDumpRequestQueue', $requestID )
+			->getFullURL();
+
+		foreach ( $notifiedUsers as $receiver ) {
+			if ( !$receiver ) {
+				continue;
+			}
+
+			EchoEvent::create( [
+				'type' => 'importdump-new-request',
+				'extra' => [
+					'request-url' => $requestLink,
+					'requester' => $requester,
+					'target' => $target,
+					'notifyAgent' => true
+				],
+				'agent' => $receiver,
+			] );
+		}
 	}
 
 	/**
