@@ -209,9 +209,7 @@ class ImportDumpRequestViewer {
 
 			if ( $this->importDumpRequestManager->isPrivate() ) {
 				$info .= Html::warningBox(
-					wfMessage( 'importdump-info-request-private',
-						$this->importDumpRequestManager->getTarget(),
-					)->escaped()
+					wfMessage( 'importdump-info-request-private' )->escaped()
 				);
 			}
 
