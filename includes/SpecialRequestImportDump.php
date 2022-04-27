@@ -9,6 +9,7 @@ use FileRepo;
 use FormSpecialPage;
 use Html;
 use ManualLogEntry;
+use MediaWiki\User\UserFactory;
 use Message;
 use MimeAnalyzer;
 use Miraheze\CreateWiki\RemoteWiki;
@@ -36,21 +37,27 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	/** @var RepoGroup */
 	private $repoGroup;
 
+	/** @var UserFactory */
+	private $userFactory;
+
 	/**
 	 * @param ILBFactory $dbLoadBalancerFactory
 	 * @param MimeAnalyzer $mimeAnalyzer
 	 * @param RepoGroup $repoGroup
+	 * @param UserFactory $userFactory
 	 */
 	public function __construct(
 		ILBFactory $dbLoadBalancerFactory,
 		MimeAnalyzer $mimeAnalyzer,
-		RepoGroup $repoGroup
+		RepoGroup $repoGroup,
+		UserFactory $userFactory
 	) {
 		parent::__construct( 'RequestImportDump', 'requestimport' );
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->mimeAnalyzer = $mimeAnalyzer;
 		$this->repoGroup = $repoGroup;
+		$this->userFactory = $userFactory;
 	}
 
 	/**
@@ -337,8 +344,8 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 */
 	public function sendNotifications( string $reason, string $requester, string $requestID, string $target ) {
 		$notifiedUsers = array_map(
-			static function ( string $userName ): User {
-				return User::newFromName( $userName );
+			function ( string $userName ): User {
+				return $this->userFactory->newFromName( $userName );
 			}, $this->getConfig()->get( 'ImportDumpUsersNotifiedOnAllRequests' )
 		);
 
