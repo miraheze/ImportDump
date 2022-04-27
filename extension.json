@@ -134,7 +134,7 @@
 		"echo-subscriptions-email-importdump-new-request": true,
 		"echo-subscriptions-email-importdump-request-comment": true,
 		"echo-subscriptions-email-importdump-request-status-update": true,
-		"echo-subscriptions-web-importdump-new-request": true,
+		"echo-subscriptions-web-importdump-new-request": false,
 		"echo-subscriptions-web-importdump-request-comment": true,
 		"echo-subscriptions-web-importdump-request-status-update": true
 	},
