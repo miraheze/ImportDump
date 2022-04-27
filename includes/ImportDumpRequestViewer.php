@@ -443,7 +443,10 @@ class ImportDumpRequestViewer {
 				$this->importDumpRequestManager->setLocked( (int)$formData['handle-lock'] );
 			}
 
-			if ( $this->importDumpRequestManager->isPrivate() !== (bool)$formData['handle-private'] ?? '' ) {
+			if (
+				isset( $formData['handle-private'] ) &&
+				$this->importDumpRequestManager->isPrivate() !== (bool)$formData['handle-private']
+			) {
 				$this->importDumpRequestManager->setPrivate( (int)$formData['handle-private'] );
 			}
 
