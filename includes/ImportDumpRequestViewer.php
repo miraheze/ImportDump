@@ -428,6 +428,8 @@ class ImportDumpRequestViewer {
 			}
 
 			if ( $this->importDumpRequestManager->getStatus() === $formData['handle-status'] ) {
+				$this->importDumpRequestManager->endAtomic( __METHOD__ );
+
 				return;
 			}
 
