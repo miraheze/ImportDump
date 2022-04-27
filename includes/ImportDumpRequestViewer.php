@@ -56,6 +56,12 @@ class ImportDumpRequestViewer {
 			return [];
 		}
 
+		if ( $this->importDumpRequestManager->isLocked() ) {
+			$context->getOutput()->addHTML(
+				Html::warningBox( wfMessage( 'importdump-request-locked' )->escaped() )
+			);
+		}
+
 		$formDescriptor = [
 			'source' => [
 				'label-message' => 'importdump-label-source',
@@ -200,6 +206,14 @@ class ImportDumpRequestViewer {
 					)
 				)->escaped()
 			);
+
+			if ( $this->importDumpRequestManager->isPrivate() ) {
+				$info .= Html::warningBox(
+					wfMessage( 'importdump-info-request-private',
+						$this->importDumpRequestManager->getTarget(),
+					)->escaped()
+				);
+			}
 
 			if ( $this->importDumpRequestManager->getRequester()->getBlock() ) {
 				$info .= Html::warningBox(
@@ -427,8 +441,8 @@ class ImportDumpRequestViewer {
 		if ( isset( $formData['submit-handle'] ) ) {
 			$this->importDumpRequestManager->startAtomic( __METHOD__ );
 
-			if ( $this->importDumpRequestManager->isLocked() !== (bool)$formData['handle-locked'] ) {
-				$this->importDumpRequestManager->setLocked( (int)$formData['handle-locked'] );
+			if ( $this->importDumpRequestManager->isLocked() !== (bool)$formData['handle-lock'] ) {
+				$this->importDumpRequestManager->setLocked( (int)$formData['handle-lock'] );
 			}
 
 			if ( $this->importDumpRequestManager->isPrivate() !== (bool)$formData['handle-private'] ?? '' ) {
