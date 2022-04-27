@@ -417,10 +417,11 @@ class ImportDumpRequestManager {
 	}
 
 	/**
+	 * @param bool $forced
 	 * @return bool
 	 */
-	public function isPrivate(): bool {
-		if ( $this->row->request_private ) {
+	public function isPrivate( bool $forced = false ): bool {
+		if ( !$forced && $this->row->request_private ) {
 			return true;
 		}
 
