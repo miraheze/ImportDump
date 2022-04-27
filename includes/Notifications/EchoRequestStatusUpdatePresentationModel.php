@@ -6,6 +6,7 @@ use EchoDiscussionParser;
 use EchoEventPresentationModel;
 use Message;
 use RawMessage;
+use Sanitizer;
 
 class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationModel {
 
@@ -28,9 +29,8 @@ class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationMode
 	 */
 	public function getBodyMessage() {
 		$comment = $this->event->getExtraParam( 'comment' );
-		$text = EchoDiscussionParser::getTextSnippet( $comment, $this->language );
 
-		return new RawMessage( '$1', [ nl2br( $text ) ] );
+		return new RawMessage( '$1', [ nl2br( htmlspecialchars( $comment ) ) ] );
 	}
 
 	/**
