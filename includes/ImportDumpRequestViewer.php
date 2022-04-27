@@ -462,7 +462,7 @@ class ImportDumpRequestViewer {
 
 				$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
 				$this->importDumpRequestManager->sendNotification(
-					nl2br( $comment ), 'importdump-request-status-update', $user
+					str_replace( "\n", '<br />', $comment ), 'importdump-request-status-update', $user
 				);
 			} else {
 				$comment = $this->context->msg( 'importdump-request-edited', $user->getName() )->rawParams(
