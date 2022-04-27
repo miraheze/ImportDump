@@ -55,7 +55,7 @@
 	"importdump-log-name": "ImportDump log",
 	"importdump-notcentral": "Disabled",
 	"importdump-notcentral-text": "ImportDump requests are disabled on this wiki. Please request an import dump from the central wiki.",
-	"importdump-notification-body-new-request": "A new ImportDump request was received.\nReason given: $1\nRequester: $2\nTarget Database Name: $3",
+	"importdump-notification-body-new-request": "A new ImportDump request was received.<br />Reason given: $1<br />Requester: $2<br />Target Database Name: $3",
 	"importdump-notification-header-comment": "ImportDump request received a comment.",
 	"importdump-notification-header-new-request": "New ImportDump request",
 	"importdump-notification-header-status-update": "ImportDump request status updated",
