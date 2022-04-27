@@ -2,7 +2,6 @@
 
 namespace Miraheze\ImportDump\Notifications;
 
-use EchoDiscussionParser;
 use EchoEventPresentationModel;
 use Message;
 use RawMessage;
