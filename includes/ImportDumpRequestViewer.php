@@ -58,7 +58,7 @@ class ImportDumpRequestViewer {
 
 		if ( $this->importDumpRequestManager->isLocked() ) {
 			$context->getOutput()->addHTML(
-				Html::warningBox( wfMessage( 'importdump-request-locked' )->escaped() )
+				Html::errorBox( wfMessage( 'importdump-request-locked' )->escaped() )
 			);
 		}
 
