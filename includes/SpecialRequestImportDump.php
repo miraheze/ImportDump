@@ -307,7 +307,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$logEntry->publish( $logID );
 
 		if ( $this->getConfig()->get( 'ImportDumpUsersNotifiedOnAllRequests' ) ) {
-			$this->sendNotifications( $this->getUser()->getName(), $requestID, $data['target'] );
+			$this->sendNotifications( $data['reason'], $this->getUser()->getName(), $requestID, $data['target'] );
 		}
 
 		return Status::newGood();
@@ -330,11 +330,12 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	}
 
 	/**
+	 * @param string $reason
 	 * @param string $requester
 	 * @param string $requestID
 	 * @param string $target
 	 */
-	public function sendNotifications( string $requester, string $requestID, string $target ) {
+	public function sendNotifications( string $reason, string $requester, string $requestID, string $target ) {
 		$notifiedUsers = array_map(
 			static function ( string $userName ): User {
 				return User::newFromName( $userName );
@@ -353,6 +354,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'type' => 'importdump-new-request',
 				'extra' => [
 					'request-url' => $requestLink,
+					'reason' => $reason,
 					'requester' => $requester,
 					'target' => $target,
 					'notifyAgent' => true
