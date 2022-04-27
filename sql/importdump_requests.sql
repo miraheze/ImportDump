@@ -7,6 +7,8 @@ CREATE TABLE /*_*/importdump_requests (
   request_file VARCHAR(500) DEFAULT NULL,
   request_reason BLOB NOT NULL,
   request_status VARCHAR(16) NOT NULL,
+  request_locked TINYINT UNSIGNED NOT NULL DEFAULT '0',
+  request_private TINYINT UNSIGNED NOT NULL DEFAULT '0',
   PRIMARY KEY(request_id)
 ) /*$wgDBTableOptions*/;
 
