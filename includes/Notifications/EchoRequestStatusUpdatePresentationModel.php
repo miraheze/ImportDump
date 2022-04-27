@@ -5,7 +5,6 @@ namespace Miraheze\ImportDump\Notifications;
 use EchoEventPresentationModel;
 use Message;
 use RawMessage;
-use Sanitizer;
 
 class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationModel {
 
