@@ -260,13 +260,14 @@ class ImportDumpRequestViewer {
 				'handle-lock' => [
 					'type' => 'check',
 					'label-message' => 'importdump-label-lock',
-					'default' => 0,
+					'default' => $this->importDumpRequestManager->isLocked(),
 					'section' => 'handling',
 				],
 				'handle-private' => [
 					'type' => 'check',
 					'label-message' => 'importdump-label-private',
-					'default' => 0,
+					'default' => $this->importDumpRequestManager->isPrivate(),
+					'disabled' => $this->importDumpRequestManager->isPrivate( true ),
 					'section' => 'handling',
 				],
 				'handle-status' => [
@@ -416,16 +417,20 @@ class ImportDumpRequestViewer {
 		}
 
 		if ( isset( $formData['submit-handle'] ) ) {
+			$this->importDumpRequestManager->startAtomic( __METHOD__ );
+
+			if ( $this->importDumpRequestManager->isLocked() !== (bool)$formData['handle-locked'] ) {
+				$this->importDumpRequestManager->setLocked( (int)$formData['handle-locked'] );
+			}
+
+			if ( $this->importDumpRequestManager->isPrivate() !== (bool)$formData['handle-locked'] ) {
+				$this->importDumpRequestManager->setPrivate( (int)$formData['handle-locked'] );
+			}
+
 			if ( $this->importDumpRequestManager->getStatus() === $formData['handle-status'] ) {
 				return;
 			}
-
-			$this->importDumpRequestManager->startAtomic( __METHOD__ );
-			$this->importDumpRequestManager->setStatus( $formData['handle-status'] );
-
-			$this->importDumpRequestManager->setLocked( (int)$formData['handle-locked'] );
-			$this->importDumpRequestManager->setPrivate( (int)$formData['handle-private'] );
-
+ 
 			$statusMessage = wfMessage( 'importdump-label-' . $formData['handle-status'] )
 				->inContentLanguage()
 				->text();
