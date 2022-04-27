@@ -85,7 +85,10 @@
 			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Installer"
 		},
 		"Main": {
-			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Main"
+			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Main",
+			"services": [
+				"ConfigFactory"
+			]
 		}
 	},
 	"ResourceModules": {
