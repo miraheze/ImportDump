@@ -196,6 +196,7 @@ class ImportDumpRequestManager {
 			EchoEvent::create( [
 				'type' => $type,
 				'extra' => [
+					'request-id' => $this->ID,
 					'request-url' => $requestLink,
 					'comment' => $comment,
 					'notifyAgent' => true
