@@ -470,10 +470,6 @@ class ImportDumpRequestViewer {
 
 				$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
 
-				$comment = $this->context->msg( 'importdump-request-reopened', $user->getName() )->rawParams(
-					implode( '<br />', $changes )
-				)->inContentLanguage()->escaped();
-
 				$this->importDumpRequestManager->sendNotification(
 					$comment, 'importdump-request-status-update', $user
 				);
