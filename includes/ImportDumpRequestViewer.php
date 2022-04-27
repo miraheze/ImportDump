@@ -275,7 +275,7 @@ class ImportDumpRequestViewer {
 						'section' => 'handling',
 					],
 				];
-			};
+			}
 
 			$formDescriptor += [
 				'handle-status' => [
