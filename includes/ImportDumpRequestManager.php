@@ -178,18 +178,6 @@ class ImportDumpRequestManager {
 
 		$logID = $logEntry->insert( $this->dbw );
 		$logEntry->publish( $logID );
-
-		if ( !$comment ) {
-			$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . $newStatus )
-				->inContentLanguage()
-				->text();
-
-			$comment = $this->messageLocalizer->msg( 'importdump-status-updated', strtolower( $statusMessage ) )
-				->inContentLanguage()
-				->escaped();
-		}
-
-		$this->sendNotification( $comment, 'importdump-request-status-update', $user );
 	}
 
 	/**
@@ -200,11 +188,11 @@ class ImportDumpRequestManager {
 	public function sendNotification( string $comment, string $type, User $user ) {
 		$requestLink = SpecialPage::getTitleFor( 'ImportDumpRequestQueue', (string)$this->ID )->getFullURL();
 
-		$involvedUsers = array_values( array_filter(
+		/* $involvedUsers = array_values( array_filter(
 			array_diff( $this->getInvolvedUsers(), [ $user ] )
-		) );
+		) ); */
 
-		foreach ( $involvedUsers as $receiver ) {
+		foreach ( $this->getInvolvedUsers() as $receiver ) {
 			EchoEvent::create( [
 				'type' => $type,
 				'extra' => [
