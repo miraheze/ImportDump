@@ -136,11 +136,13 @@ class ImportDumpRequestViewer {
 					'label-message' => 'importdump-label-comment',
 					'section' => 'comments',
 					'validation-callback' => [ $this, 'isValidComment' ],
+					'disabled' => $this->importDumpRequestManager->isLocked(),
 				],
 				'submit-comment' => [
 					'type' => 'submit',
 					'default' => wfMessage( 'importdump-label-add-comment' )->text(),
 					'section' => 'comments',
+					'disabled' => $this->importDumpRequestManager->isLocked(),
 				],
 				'edit-source' => [
 					'label-message' => 'importdump-label-source',
@@ -148,6 +150,7 @@ class ImportDumpRequestViewer {
 					'section' => 'editing',
 					'required' => true,
 					'default' => $this->importDumpRequestManager->getSource(),
+					'disabled' => $this->importDumpRequestManager->isLocked(),
 				],
 				'edit-target' => [
 					'label-message' => 'importdump-label-target',
@@ -156,6 +159,7 @@ class ImportDumpRequestViewer {
 					'required' => true,
 					'default' => $this->importDumpRequestManager->getTarget(),
 					'validation-callback' => [ $this, 'isValidDatabase' ],
+					'disabled' => $this->importDumpRequestManager->isLocked(),
 				],
 				'edit-reason' => [
 					'type' => 'textarea',
@@ -165,12 +169,14 @@ class ImportDumpRequestViewer {
 					'required' => true,
 					'default' => $this->importDumpRequestManager->getReason(),
 					'validation-callback' => [ $this, 'isValidReason' ],
+					'disabled' => $this->importDumpRequestManager->isLocked(),
 					'raw' => true,
 				],
 				'submit-edit' => [
 					'type' => 'submit',
 					'default' => wfMessage( 'importdump-label-edit-request' )->text(),
 					'section' => 'editing',
+					'disabled' => $this->importDumpRequestManager->isLocked(),
 				],
 			];
 		}
@@ -249,6 +255,18 @@ class ImportDumpRequestViewer {
 					'type' => 'info',
 					'default' => $info,
 					'raw' => true,
+					'section' => 'handling',
+				],
+				'handle-lock' => [
+					'type' => 'check',
+					'label-message' => 'importdump-label-lock',
+					'default' => 0,
+					'section' => 'handling',
+				],
+				'handle-private' => [
+					'type' => 'check',
+					'label-message' => 'importdump-label-private',
+					'default' => 0,
 					'section' => 'handling',
 				],
 				'handle-status' => [
@@ -404,6 +422,9 @@ class ImportDumpRequestViewer {
 
 			$this->importDumpRequestManager->startAtomic( __METHOD__ );
 			$this->importDumpRequestManager->setStatus( $formData['handle-status'] );
+
+			$this->importDumpRequestManager->setLocked( (int)$formData['handle-locked'] );
+			$this->importDumpRequestManager->setPrivate( (int)$formData['handle-private'] );
 
 			$statusMessage = wfMessage( 'importdump-label-' . $formData['handle-status'] )
 				->inContentLanguage()
