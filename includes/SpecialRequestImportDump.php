@@ -336,7 +336,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 */
 	public function sendNotifications( string $requester, string $requestID, string $target ) {
 		$notifiedUsers = array_map(
-			function( string $userName ): User {
+			static function ( string $userName ): User {
 				return User::newFromName( $userName );
 			}, $this->getConfig()->get( 'ImportDumpUsersNotifiedOnAllRequests' )
 		);
