@@ -49,10 +49,11 @@ class ImportDumpRequestQueuePager extends TablePager {
 	) {
 		parent::__construct( $context, $linkRenderer );
 
-		if ( $config->get( 'ImportDumpCentralWiki' ) ) {
+		$centralWiki = $config->get( 'ImportDumpCentralWiki' );
+		if ( $centralWiki ) {
 			$this->mDb = $dbLoadBalancerFactory->getMainLB(
-				$config->get( 'ImportDumpCentralWiki' )
-			)->getConnectionRef( DB_REPLICA, [], $config->get( 'ImportDumpCentralWiki' ) );
+				$centralWiki
+			)->getConnectionRef( DB_REPLICA, [], $centralWiki );
 		} else {
 			$this->mDb = $dbLoadBalancerFactory->getMainLB()->getConnectionRef( DB_REPLICA );
 		}
