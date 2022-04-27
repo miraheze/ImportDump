@@ -64,7 +64,8 @@
 			"services": [
 				"DBLoadBalancerFactory",
 				"MimeAnalyzer",
-				"RepoGroup"
+				"RepoGroup",
+				"UserFactory"
 			]
 		}
 	},
