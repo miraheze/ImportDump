@@ -412,7 +412,18 @@ class ImportDumpRequestManager {
 	/**
 	 * @return bool
 	 */
+	public function isLocked(): bool {
+		return (bool)$this->row->request_locked;
+	}
+
+	/**
+	 * @return bool
+	 */
 	public function isPrivate(): bool {
+		if ( $this->row->request_private ) {
+			return true;
+		}
+
 		if (
 			!ExtensionRegistry::getInstance()->isLoaded( 'CreateWiki' ) ||
 			!$this->config->get( 'CreateWikiUsePrivateWikis' )
@@ -429,6 +440,38 @@ class ImportDumpRequestManager {
 	 */
 	public function startAtomic( string $fname ) {
 		$this->dbw->startAtomic( $fname );
+	}
+
+	/**
+	 * @param int $locked
+	 */
+	public function setLocked( int $locked ) {
+		$this->dbw->update(
+			'importdump_requests',
+			[
+				'request_locked' => $locked,
+			],
+			[
+				'request_id' => $this->ID,
+			],
+			__METHOD__
+		);
+	}
+
+	/**
+	 * @param int $private
+	 */
+	public function setPrivate( int $private ) {
+		$this->dbw->update(
+			'importdump_requests',
+			[
+				'request_private' => $private,
+			],
+			[
+				'request_id' => $this->ID,
+			],
+			__METHOD__
+		);
 	}
 
 	/**
