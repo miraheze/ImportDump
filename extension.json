@@ -134,6 +134,10 @@
 		"echo-subscriptions-web-importdump-request-comment": true,
 		"echo-subscriptions-web-importdump-request-status-update": true
 	},
+	"HiddenPrefs": {
+		"echo-subscriptions-email-importdump-new-request": true,
+		"echo-subscriptions-web-importdump-new-request": true
+	},
 	"ServiceWiringFiles": [
 		"includes/ServiceWiring.php"
 	],
