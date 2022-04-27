@@ -114,11 +114,12 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 	private function lookupRequest( $par ) {
 		$requestViewer = new ImportDumpRequestViewer(
 			$this->getConfig(),
+			$this->getContext(),
 			$this->importDumpRequestManager,
 			$this->permissionManager
 		);
 
-		$htmlForm = $requestViewer->getForm( (int)$par, $this->getContext() );
+		$htmlForm = $requestViewer->getForm( (int)$par );
 
 		if ( $htmlForm ) {
 			$htmlForm->show();
