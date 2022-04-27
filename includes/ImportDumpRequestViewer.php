@@ -497,6 +497,8 @@ class ImportDumpRequestViewer {
 				return;
 			}
 
+			$this->importDumpRequestManager->setStatus( $formData['handle-status'] );
+
 			$statusMessage = $this->context->msg( 'importdump-label-' . $formData['handle-status'] )
 				->inContentLanguage()
 				->text();
