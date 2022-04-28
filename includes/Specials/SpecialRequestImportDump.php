@@ -1,6 +1,6 @@
 <?php
 
-namespace Miraheze\ImportDump;
+namespace Miraheze\ImportDump\Specials;
 
 use EchoEvent;
 use ErrorPageError;
