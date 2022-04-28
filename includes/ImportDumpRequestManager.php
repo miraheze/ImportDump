@@ -188,11 +188,11 @@ class ImportDumpRequestManager {
 	public function sendNotification( string $comment, string $type, User $user ) {
 		$requestLink = SpecialPage::getTitleFor( 'ImportDumpRequestQueue', (string)$this->ID )->getFullURL();
 
-		/* $involvedUsers = array_values( array_filter(
+		$involvedUsers = array_values( array_filter(
 			array_diff( $this->getInvolvedUsers(), [ $user ] )
-		) ); */
+		) );
 
-		foreach ( $this->getInvolvedUsers() as $receiver ) {
+		foreach ( $involvedUsers as $receiver ) {
 			EchoEvent::create( [
 				'type' => $type,
 				'extra' => [
