@@ -4,7 +4,6 @@ CREATE TABLE /*_*/importdump_requests (
   request_timestamp VARCHAR(32) NOT NULL,
   request_source TEXT NOT NULL,
   request_target VARCHAR(64) NOT NULL,
-  request_file VARCHAR(500) DEFAULT NULL,
   request_reason BLOB NOT NULL,
   request_status VARCHAR(16) NOT NULL,
   request_locked TINYINT UNSIGNED NOT NULL DEFAULT '0',
