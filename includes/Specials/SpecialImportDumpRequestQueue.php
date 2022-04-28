@@ -37,7 +37,7 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 		PermissionManager $permissionManager,
 		UserFactory $userFactory
 	) {
-		parent::__construct( 'ImportDumpRequestQueue', 'requestimport' );
+		parent::__construct( 'ImportDumpRequestQueue', 'request-import-dump' );
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->importDumpRequestManager = $importDumpRequestManager;
