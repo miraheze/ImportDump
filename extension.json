@@ -51,7 +51,7 @@
 	},
 	"SpecialPages": {
 		"ImportDumpRequestQueue": {
-			"class": "Miraheze\\ImportDump\\SpecialImportDumpRequestQueue",
+			"class": "Miraheze\\ImportDump\\Specials\\SpecialImportDumpRequestQueue",
 			"services": [
 				"DBLoadBalancerFactory",
 				"ImportDumpRequestManager",
@@ -60,7 +60,7 @@
 			]
 		},
 		"RequestImportDump": {
-			"class": "Miraheze\\ImportDump\\SpecialRequestImportDump",
+			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportDump",
 			"services": [
 				"DBLoadBalancerFactory",
 				"MimeAnalyzer",
