@@ -432,6 +432,6 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 * @return string
 	 */
 	protected function getGroupName() {
-		return 'wikimanage';
+		return 'other';
 	}
 }
