@@ -1,10 +1,12 @@
 <?php
 
-namespace Miraheze\ImportDump;
+namespace Miraheze\ImportDump\Specials;
 
 use HTMLForm;
 use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\User\UserFactory;
+use Miraheze\ImportDump\ImportDumpRequestManager;
+use Miraheze\ImportDump\ImportDumpRequestViewer;
 use SpecialPage;
 use Wikimedia\Rdbms\ILBFactory;
 
