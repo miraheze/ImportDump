@@ -4,9 +4,9 @@
 			"Universal Omega"
 		]
 	},
-	"action-handle-import-requests": "{{doc-action|handle-import-requests}}",
-	"action-requestimport": "{{doc-action|requestimport}}",
-	"action-view-private-import-requests": "{{doc-action|view-private-import-requests}}",
+	"action-handle-import-dump-requests": "{{doc-action|handle-import-dump-requests}}",
+	"action-request-import-dump": "{{doc-action|request-import-dump}}",
+	"action-view-private-import-dump-requests": "{{doc-action|view-private-import-dump-requests}}",
 	"echo-category-title-importdump-new-request": "Echo category title for 'importdump-new-request'.",
 	"echo-category-title-importdump-request-comment": "Echo category title for 'importdump-request-comment'.",
 	"echo-category-title-importdump-request-status-update": "Echo category title for 'importdump-request-status-update'.",
@@ -94,7 +94,7 @@
 	"logentry-importdumpprivate-request": "{{logentry|[[Special:Log/importdumpprivate]]}}",
 	"logentry-importdumpprivate-statusupdate": "{{logentry|[[Special:Log/importdumpprivate]]}}",
 	"requestimportdump": "{{doc-special}}",
-	"right-handle-import-requests": "{{doc-right|handle-import-requests}}",
-	"right-requestimport": "{{doc-right|requestimport}}",
-	"right-view-private-import-requests": "{{doc-right|view-private-import-requests}}"
+	"right-handle-import-dump-requests": "{{doc-right|handle-import-dump-requests}}",
+	"right-request-import-dump": "{{doc-right|request-import-dump}}",
+	"right-view-private-import-dump-requests": "{{doc-right|view-private-import-dump-requests}}"
 }
