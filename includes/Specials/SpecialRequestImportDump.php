@@ -52,7 +52,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		RepoGroup $repoGroup,
 		UserFactory $userFactory
 	) {
-		parent::__construct( 'RequestImportDump', 'requestimport' );
+		parent::__construct( 'RequestImportDump', 'request-import-dump' );
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->mimeAnalyzer = $mimeAnalyzer;
@@ -352,10 +352,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 
 		foreach ( $notifiedUsers as $receiver ) {
 			if (
-				!$receiver->isAllowed( 'handle-import-requests' ) ||
+				!$receiver->isAllowed( 'handle-import-dump-requests' ) ||
 				(
 					$this->getLogType( $target ) === 'importdumpprivate' &&
-					!$receiver->isAllowed( 'view-private-import-requests' )
+					!$receiver->isAllowed( 'view-private-import-dump-requests' )
 				)
 			) {
 				continue;
