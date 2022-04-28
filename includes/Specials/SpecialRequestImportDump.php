@@ -339,17 +339,25 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 * @param string $target
 	 */
 	public function sendNotifications( string $reason, string $requester, string $requestID, string $target ) {
-		$notifiedUsers = array_map(
-			function ( string $userName ): ?User {
-				return $this->userFactory->newFromName( $userName );
-			}, $this->getConfig()->get( 'ImportDumpUsersNotifiedOnAllRequests' )
+		$notifiedUsers = array_filter(
+			array_map(
+				function ( string $userName ): ?User {
+					return $this->userFactory->newFromName( $userName );
+				}, $this->getConfig()->get( 'ImportDumpUsersNotifiedOnAllRequests' )
+			)
 		);
 
 		$requestLink = SpecialPage::getTitleFor( 'ImportDumpRequestQueue', $requestID )
 			->getFullURL();
 
 		foreach ( $notifiedUsers as $receiver ) {
-			if ( !$receiver ) {
+			if (
+				!$receiver->isAllowed( 'handle-import-requests' ) ||
+				(
+					$this->getLogType( $target ) === 'importdumpprivate' && 
+					!$receiver->isAllowed( 'view-private-import-requests' )
+				)
+			) {
 				continue;
 			}
 
