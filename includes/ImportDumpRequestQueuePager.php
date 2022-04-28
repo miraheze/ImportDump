@@ -69,21 +69,13 @@ class ImportDumpRequestQueuePager extends TablePager {
 	/**
 	 * @return array
 	 */
-	public function getFieldNames() {
-		static $headers = null;
-
-		$headers = [
-			'request_timestamp' => 'importdump-table-requested-date',
-			'request_actor' => 'importdump-table-requester',
-			'request_status' => 'importdump-table-status',
-			'request_target' => 'importdump-table-target',
+	protected function getFieldNames() {
+		rerurn [
+			'request_timestamp' => $this->msg( 'importdump-table-requested-date' )->text(),
+			'request_actor' => $this->msg( 'importdump-table-requester' )->text(),
+			'request_status' => $this->msg( 'importdump-table-status' )->text(),
+			'request_target' => $this->msg( 'importdump-table-target' )->text(),
 		];
-
-		foreach ( $headers as &$msg ) {
-			$msg = $this->msg( $msg )->text();
-		}
-
-		return $headers;
 	}
 
 	/**
@@ -171,7 +163,7 @@ class ImportDumpRequestQueuePager extends TablePager {
 	 * @param string $name
 	 * @return bool
 	 */
-	public function isFieldSortable( $name ) {
+	protected function isFieldSortable( $name ) {
 		return $name !== 'request_actor';
 	}
 }
