@@ -490,9 +490,11 @@ class ImportDumpRequestViewer {
 
 		if ( isset( $formData['submit-handle'] ) ) {
 			$this->importDumpRequestManager->startAtomic( __METHOD__ );
+			$changes = [];
 
 			if ( $this->importDumpRequestManager->isLocked() !== (bool)$formData['handle-lock'] ) {
 				$this->importDumpRequestManager->setLocked( (int)$formData['handle-lock'] );
+				$changes[] = 'locked';
 			}
 
 			if (
@@ -500,10 +502,24 @@ class ImportDumpRequestViewer {
 				$this->importDumpRequestManager->isPrivate() !== (bool)$formData['handle-private']
 			) {
 				$this->importDumpRequestManager->setPrivate( (int)$formData['handle-private'] );
+				$changes[] = 'private';
 			}
 
 			if ( $this->importDumpRequestManager->getStatus() === $formData['handle-status'] ) {
 				$this->importDumpRequestManager->endAtomic( __METHOD__ );
+
+				if ( !$changes ) {
+					$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-no-changes' )->escaped() ) );
+					return;
+				}
+
+				if ( in_array( 'private', $changes ) ) {
+					$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-success-private' )->escaped() ) );
+				}
+
+				if ( in_array( 'locked', $changes ) ) {
+					$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-success-locked' )->escaped() ) );
+				}
 
 				return;
 			}
