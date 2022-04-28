@@ -47,7 +47,7 @@
 		"importdumpprivate"
 	],
 	"LogRestrictions": {
-		"importdumpprivate": "view-private-import-requests"
+		"importdumpprivate": "view-private-import-dump-requests"
 	},
 	"SpecialPages": {
 		"ImportDumpRequestQueue": {
