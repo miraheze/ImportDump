@@ -32,6 +32,7 @@ class ImportDumpRequestManager {
 		'ImportDumpCentralWiki',
 		'ImportDumpInterwikiMap',
 		'ImportDumpScriptCommand',
+		'UploadDirectory',
 	];
 
 	/** @var Config */
@@ -354,7 +355,9 @@ class ImportDumpRequestManager {
 	 * @return string
 	 */
 	public function getFile(): string {
-		return $this->row->request_file;
+		$fileName = $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
+
+		return $this->options->get( 'UploadDirectory' ) . '/ImportDump/' . $fileName;
 	}
 
 	/**
