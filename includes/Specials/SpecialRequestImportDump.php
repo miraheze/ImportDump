@@ -354,7 +354,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			if (
 				!$receiver->isAllowed( 'handle-import-requests' ) ||
 				(
-					$this->getLogType( $target ) === 'importdumpprivate' && 
+					$this->getLogType( $target ) === 'importdumpprivate' &&
 					!$receiver->isAllowed( 'view-private-import-requests' )
 				)
 			) {
