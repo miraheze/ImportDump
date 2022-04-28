@@ -104,16 +104,16 @@ class ImportDumpRequestQueuePager extends TablePager {
 				$formatted = $row->request_target;
 
 				break;
-			case 'request_actor':
-				$user = $this->userFactory->newFromActorId( $row->request_actor );
-				$formatted = $user->getName();
-
-				break;
 			case 'request_status':
 				$formatted = $this->linkRenderer->makeLink(
 					SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', $row->request_id ),
 					$this->msg( 'importdump-label-' . $row->request_status )->text()
 				);
+
+				break;
+			case 'request_actor ':
+				$user = $this->userFactory->newFromActorId( $row->request_actor );
+				$formatted = $user->getName();
 
 				break;
 			default:
@@ -172,6 +172,6 @@ class ImportDumpRequestQueuePager extends TablePager {
 	 * @return bool
 	 */
 	public function isFieldSortable( $name ) {
-		return true;
+		return $name !== 'request_actor';
 	}
 }
