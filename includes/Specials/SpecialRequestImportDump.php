@@ -207,7 +207,8 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return Status::newFatal( 'importdump-duplicate-request' );
 		}
 
-		$fileName = $data['target'] . '-' . $dbw->timestamp() . '.xml';
+		$timestamp = $dbw->timestamp();
+		$fileName = $data['target'] . '-' . $timestamp . '.xml';
 
 		$request = $this->getRequest();
 		$request->setVal( 'wpDestFile', $fileName );
@@ -267,21 +268,16 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return $status;
 		}
 
-		$filePath = $this->getConfig()->get( 'UploadDirectory' ) . '/ImportDump/' . $fileName;
-
-		$rows = [
-			'request_source' => $data['source'],
-			'request_target' => $data['target'],
-			'request_file' => $filePath,
-			'request_reason' => $data['reason'],
-			'request_status' => 'pending',
-			'request_actor' => $this->getUser()->getActorId(),
-			'request_timestamp' => $dbw->timestamp(),
-		];
-
 		$dbw->insert(
 			'importdump_requests',
-			$rows,
+			[
+				'request_source' => $data['source'],
+				'request_target' => $data['target'],
+				'request_reason' => $data['reason'],
+				'request_status' => 'pending',
+				'request_actor' => $this->getUser()->getActorId(),
+				'request_timestamp' => $timestamp,
+			],
 			__METHOD__,
 			[ 'IGNORE' ]
 		);
