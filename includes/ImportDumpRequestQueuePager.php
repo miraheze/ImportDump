@@ -70,7 +70,7 @@ class ImportDumpRequestQueuePager extends TablePager {
 	 * @return array
 	 */
 	protected function getFieldNames() {
-		rerurn [
+		return [
 			'request_timestamp' => $this->msg( 'importdump-table-requested-date' )->text(),
 			'request_actor' => $this->msg( 'importdump-table-requester' )->text(),
 			'request_status' => $this->msg( 'importdump-table-status' )->text(),
