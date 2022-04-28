@@ -514,11 +514,11 @@ class ImportDumpRequestViewer {
 				}
 
 				if ( in_array( 'private', $changes ) ) {
-					$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-success-private' )->escaped() ) );
+					$out->addHTML( Html::successBox( $this->context->msg( 'importdump-success-private' )->escaped() ) );
 				}
 
 				if ( in_array( 'locked', $changes ) ) {
-					$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-success-locked' )->escaped() ) );
+					$out->addHTML( Html::successBox( $this->context->msg( 'importdump-success-locked' )->escaped() ) );
 				}
 
 				return;
