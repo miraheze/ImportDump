@@ -130,6 +130,6 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 	 * @return string
 	 */
 	protected function getGroupName() {
-		return 'wikimanage';
+		return 'other';
 	}
 }
