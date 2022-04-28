@@ -169,10 +169,10 @@ class ImportDumpRequestManager {
 
 		$logEntry->setParameters(
 			[
-				'4::requestStatus' => strtolower( $this->messageLocalizer->msg(
+				'4::requestLink' => Message::rawParam( $requestLink ),
+				'5::requestStatus' => strtolower( $this->messageLocalizer->msg(
 					'importdump-label-' . $newStatus
 				)->inContentLanguage()->text() ),
-				'5::requestLink' => Message::rawParam( $requestLink ),
 			]
 		);
 
