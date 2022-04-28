@@ -1,5 +1,5 @@
 CREATE TABLE /*_*/importdump_requests (
-  request_id INT AUTO_INCREMENT NOT NULL,
+  request_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
   request_actor BIGINT UNSIGNED NOT NULL,
   request_timestamp BINARY(14) NOT NULL,
   request_source TEXT NOT NULL,
