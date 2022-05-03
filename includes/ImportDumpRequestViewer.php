@@ -535,6 +535,8 @@ class ImportDumpRequestViewer {
 				->escaped();
 
 			if ( $formData['handle-comment'] ) {
+				$commentUser = User::newSystemUser( 'ImportDump Status Update' );
+
 				$comment .= "\n" . $this->context->msg( 'importdump-comment-given', $user->getName() )
 					->inContentLanguage()
 					->escaped();
@@ -542,7 +544,7 @@ class ImportDumpRequestViewer {
 				$comment .= ' ' . $formData['handle-comment'];
 			}
 
-			$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Status Update' ) );
+			$this->importDumpRequestManager->addComment( $comment, $commentUser ?? $user );
 			$this->importDumpRequestManager->logStatusUpdate(
 				$formData['handle-comment'], $formData['handle-status'], $user
 			);
