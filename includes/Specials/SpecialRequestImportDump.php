@@ -86,6 +86,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 
 		$this->checkPermissions();
 
+		if ( $this->getConfig()->get( 'ImportDumpHelpUrl' ) ) {
+			$this->getOutput()->addHelpLink( $this->getConfig()->get( 'ImportDumpHelpUrl' ), true );
+		}
+
 		$form = $this->getForm();
 		if ( $form->show() ) {
 			$this->onSuccess();
