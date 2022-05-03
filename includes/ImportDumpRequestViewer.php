@@ -131,7 +131,7 @@ class ImportDumpRequestViewer {
 				'label-message' => [
 					'importdump-header-comment-withtimestamp',
 					$comment['user']->getName(),
-					$this->context->getLanguage()->timeanddate( $comment['timestamp'], true )
+					$this->context->getLanguage()->timeanddate( $comment['timestamp'], true ),
 				],
 				'default' => $comment['comment'],
 			];
