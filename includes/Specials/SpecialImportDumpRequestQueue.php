@@ -37,7 +37,7 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 		PermissionManager $permissionManager,
 		UserFactory $userFactory
 	) {
-		parent::__construct( 'ImportDumpRequestQueue', 'request-import-dump' );
+		parent::__construct( 'ImportDumpRequestQueue' );
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->importDumpRequestManager = $importDumpRequestManager;
@@ -51,11 +51,12 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 	public function execute( $par ) {
 		$this->setHeaders();
 
-		if ( $par === null || $par === '' ) {
-			$this->doPagerStuff();
-		} else {
+		if ( $par ) {
 			$this->lookupRequest( $par );
+			return;
 		}
+
+		$this->doPagerStuff();
 	}
 
 	private function doPagerStuff() {
