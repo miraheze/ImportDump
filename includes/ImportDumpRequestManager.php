@@ -200,7 +200,7 @@ class ImportDumpRequestManager {
 					'request-id' => $this->ID,
 					'request-url' => $requestLink,
 					'comment' => $comment,
-					'notifyAgent' => true
+					'notifyAgent' => true,
 				],
 				'agent' => $receiver,
 			] );
