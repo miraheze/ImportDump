@@ -75,13 +75,13 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		}
 
 		if ( !$this->getUser()->isRegistered() ) {
-			$loginurl = SpecialPage::getTitleFor( 'Userlogin' )
+			$loginURL = SpecialPage::getTitleFor( 'Userlogin' )
 				->getFullURL( [
-					'returnto' => $this->getPageTitle()->getPrefixedText()
+					'returnto' => $this->getPageTitle()->getPrefixedText(),
 				]
 			);
 
-			throw new UserNotLoggedIn( 'importdump-notloggedin', 'exception-nologin', [ $loginurl ] );
+			throw new UserNotLoggedIn( 'importdump-notloggedin', 'exception-nologin', [ $loginURL ] );
 		}
 
 		$this->checkPermissions();
@@ -351,8 +351,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			)
 		);
 
-		$requestLink = SpecialPage::getTitleFor( 'ImportDumpRequestQueue', $requestID )
-			->getFullURL();
+		$requestLink = SpecialPage::getTitleFor( 'ImportDumpRequestQueue', $requestID )->getFullURL();
 
 		foreach ( $notifiedUsers as $receiver ) {
 			if (
@@ -373,7 +372,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 					'reason' => $reason,
 					'requester' => $requester,
 					'target' => $target,
-					'notifyAgent' => true
+					'notifyAgent' => true,
 				],
 				'agent' => $receiver,
 			] );
