@@ -114,6 +114,10 @@
 			"value": "",
 			"description": "If set, only allow users to request import dumps on this wiki."
 		},
+		"ImportDumpHelpUrl": {
+			"value": "",
+			"description": "Full URL. If set, adds a help URL to Special:RequestImportDump."
+		},
 		"ImportDumpInterwikiMap": {
 			"value": [],
 			"description": "A mapping of 'domain => interwiki prefix' for multi-level interwiki prefix generation for --username-prefix."
