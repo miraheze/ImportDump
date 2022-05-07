@@ -1,7 +1,6 @@
 ( function () {
 	$( function () {
-		var autoinfuseLazy = true,
-			tabs, previousTab, switchingNoHash;
+		var tabs, previousTab, switchingNoHash;
 
 		tabs = OO.ui.infuse( $( '.importdump-tabs' ) );
 
@@ -17,7 +16,7 @@
 				}
 			} );
 
-			if ( autoinfuseLazy && !panel.$element.data( 'mw-section-infused' ) ) {
+			if ( !panel.$element.data( 'mw-section-infused' ) ) {
 				panel.$element.removeClass( 'mw-htmlform-autoinfuse-lazy' );
 				mw.hook( 'htmlform.enhance' ).fire( panel.$element );
 				panel.$element.data( 'mw-section-infused', true );
