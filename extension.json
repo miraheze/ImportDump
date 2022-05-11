@@ -73,6 +73,9 @@
 		"BeforeCreateEchoEvent": {
 			"handler": "Main"
 		},
+		"GetAllBlockActionsHook": {
+			"handler": "Main"
+		},
 		"LoadExtensionSchemaUpdates": {
 			"handler": "Installer"
 		},
