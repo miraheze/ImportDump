@@ -412,9 +412,14 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			throw new PermissionsError( $permissionRequired );
 		}
 
-		if ( $user->isBlockedFromUpload() ) {
-			// @phan-suppress-next-line PhanTypeMismatchArgumentNullable
-			throw new UserBlockedError( $user->getBlock() );
+		$block = $user->getBlock();
+		if (
+			$block && (
+				$user->isBlockedFromUpload() ||
+				$block->appliesToRight( 'request-import-dump' )
+			)
+		) {
+			throw new UserBlockedError( $block );
 		}
 
 		$globalBlock = $user->getGlobalBlock();
