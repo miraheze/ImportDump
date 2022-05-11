@@ -89,6 +89,7 @@
 	"importdumpprivate-log-name": "{{doc-logpage}}",
 	"importdumpprivate-log-header": "Header for the ImportDump private log.",
 	"importdumprequestqueue": "{{doc-special}}",
+	"ipb-action-request-import-dump": "The label for the action select option on [[Special:Block]] to block a user from requesting import dumps.",
 	"logentry-importdump-request": "{{logentry|[[Special:Log/importdump]]}}",
 	"logentry-importdump-statusupdate": "{{logentry|[[Special:Log/importdump]]}}",
 	"logentry-importdumpprivate-request": "{{logentry|[[Special:Log/importdumpprivate]]}}",
