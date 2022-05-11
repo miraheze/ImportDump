@@ -89,6 +89,7 @@
 	"importdumpprivate-log-header": "This is a log of all import dump requests and status updates for requests with targets that are private wikis.",
 	"importdumpprivate-log-name": "Import dump requests private log",
 	"importdumprequestqueue": "Import Dump Request Queue",
+	"ipb-action-request-import-dump": "Requesting import dumps",
 	"logentry-importdump-request": "$1 requested an import dump for $4 in $5.",
 	"logentry-importdump-statusupdate": "$1 updated status of import dump request $4 to '$5'.",
 	"logentry-importdumpprivate-request": "$1 requested an import dump for private wiki $4 in $5.",
