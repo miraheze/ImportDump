@@ -5,13 +5,17 @@ namespace Miraheze\ImportDump\Hooks\Handlers;
 use Config;
 use ConfigFactory;
 use EchoAttributeManager;
+use MediaWiki\Block\Hook\GetAllBlockActionsHook;
 use MediaWiki\User\Hook\UserGetReservedNamesHook;
 use Miraheze\ImportDump\Notifications\EchoNewRequestPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestCommentPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestStatusUpdatePresentationModel;
 use WikiMap;
 
-class Main implements UserGetReservedNamesHook {
+class Main implements
+	GetAllBlockActionsHook,
+	UserGetReservedNamesHook
+{
 
 	/** @var Config */
 	private $config;
@@ -29,6 +33,20 @@ class Main implements UserGetReservedNamesHook {
 	public function onUserGetReservedNames( &$reservedUsernames ) {
 		$reservedUsernames[] = 'ImportDump Extension';
 		$reservedUsernames[] = 'ImportDump Status Update';
+	}
+
+	/**
+	 * @param array &$actions
+	 */
+	public function onGetAllBlockActions( &$actions ) {
+		if (
+			$this->config->get( 'ImportDumpCentralWiki' ) &&
+			!WikiMap::isCurrentWikiId( $this->config->get( 'ImportDumpCentralWiki' ) )
+		) {
+			return;
+		}
+
+		$actions[ 'request-import-dump' ] = 200;
 	}
 
 	/**
