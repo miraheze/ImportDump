@@ -397,7 +397,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 */
 	public function isValidReason( ?string $reason ) {
 		if ( !$reason || ctype_space( $reason ) ) {
-			return $this->msg( 'htmlform-required', 'parseinline' )->escaped();
+			return $this->msg( 'htmlform-required' )->escaped();
 		}
 
 		return true;
