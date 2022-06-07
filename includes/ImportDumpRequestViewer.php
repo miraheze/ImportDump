@@ -334,7 +334,7 @@ class ImportDumpRequestViewer {
 	 */
 	public function isValidComment( ?string $comment, array $alldata ) {
 		if ( isset( $alldata['submit-comment'] ) && ( !$comment || ctype_space( $comment ) ) ) {
-			return $this->context->msg( 'htmlform-required', 'parseinline' )->escaped();
+			return $this->context->msg( 'htmlform-required' )->escaped();
 		}
 
 		return true;
@@ -358,7 +358,7 @@ class ImportDumpRequestViewer {
 	 */
 	public function isValidReason( ?string $reason ) {
 		if ( !$reason || ctype_space( $reason ) ) {
-			return $this->context->msg( 'htmlform-required', 'parseinline' )->escaped();
+			return $this->context->msg( 'htmlform-required' )->escaped();
 		}
 
 		return true;
