@@ -57,13 +57,13 @@ class ImportDumpOOUIForm extends OOUIHTMLForm {
 			$label = $this->getLegend( $key );
 
 			$content =
-				$this->getHeaderText( $key ) .
+				$this->getHeaderHtml( $key ) .
 				$this->displaySection(
 					$val,
 					'',
 					"mw-section-{$key}-"
 				) .
-				$this->getFooterText( $key );
+				$this->getFooterHtml( $key );
 
 			$tabPanels[] = new TabPanelLayout( 'mw-section-' . $key, [
 				'classes' => [ 'mw-htmlform-autoinfuse-lazy' ],
