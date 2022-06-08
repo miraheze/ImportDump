@@ -255,9 +255,9 @@ class ImportDumpRequestManager {
 		if ( $this->options->get( 'ImportDumpInterwikiMap' ) ) {
 			$parsedSource = parse_url( $this->getSource() )['host'] ?? '';
 			$domain = explode( '.', $parsedSource )[1] ?? '';
-			$domain .= '.' . ( explode( '.', $parsedSource )[2] ?? '' );
 
 			if ( $domain ) {
+				$domain .= '.' . ( explode( '.', $parsedSource )[2] ?? '' );
 				if ( $this->options->get( 'ImportDumpInterwikiMap' )[$domain] ?? '' ) {
 					$domain = $this->options->get( 'ImportDumpInterwikiMap' )[$domain];
 					$subdomain = explode( '.', $parsedSource )[0] ?? '';
