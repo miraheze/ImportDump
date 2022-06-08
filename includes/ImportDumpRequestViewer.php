@@ -200,7 +200,8 @@ class ImportDumpRequestViewer {
 			$info = Html::noticeBox(
 				$this->context->msg( 'importdump-info-command' )->plaintextParams(
 					$this->importDumpRequestManager->getCommand()
-				)->escaped()
+				)->escaped(),
+				''
 			);
 
 			$info .= Html::noticeBox(
@@ -210,7 +211,8 @@ class ImportDumpRequestViewer {
 					$this->context->getLanguage()->commaList(
 						$this->importDumpRequestManager->getUserGroupsFromTarget()
 					)
-				)->escaped()
+				)->escaped(),
+				''
 			);
 
 			if ( $this->importDumpRequestManager->isPrivate() ) {
