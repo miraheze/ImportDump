@@ -104,9 +104,9 @@ class ImportDumpRequestManager {
 		if ( $centralWiki ) {
 			$this->dbw = $this->dbLoadBalancerFactory->getMainLB(
 				$centralWiki
-			)->getConnectionRef( DB_PRIMARY, [], $centralWiki );
+			)->getConnection( DB_PRIMARY, [], $centralWiki );
 		} else {
-			$this->dbw = $this->dbLoadBalancerFactory->getMainLB()->getConnectionRef( DB_PRIMARY );
+			$this->dbw = $this->dbLoadBalancerFactory->getMainLB()->getConnection( DB_PRIMARY );
 		}
 
 		$this->row = $this->dbw->selectRow(
@@ -271,7 +271,7 @@ class ImportDumpRequestManager {
 
 		$dbr = $this->dbLoadBalancerFactory->getMainLB(
 			$this->getTarget()
-		)->getConnectionRef( DB_REPLICA, [], $this->getTarget() );
+		)->getConnection( DB_REPLICA, [], $this->getTarget() );
 
 		$row = $dbr->selectRow(
 			'interwiki',
@@ -294,7 +294,7 @@ class ImportDumpRequestManager {
 		) {
 			$dbr = $this->dbLoadBalancerFactory->getMainLB(
 				$this->config->get( 'InterwikiCentralDB' )
-			)->getConnectionRef( DB_REPLICA, [], $this->config->get( 'InterwikiCentralDB' ) );
+			)->getConnection( DB_REPLICA, [], $this->config->get( 'InterwikiCentralDB' ) );
 
 			$row = $dbr->selectRow(
 				'interwiki',
