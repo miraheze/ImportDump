@@ -53,9 +53,9 @@ class ImportDumpRequestQueuePager extends TablePager {
 		if ( $centralWiki ) {
 			$this->mDb = $dbLoadBalancerFactory->getMainLB(
 				$centralWiki
-			)->getConnectionRef( DB_REPLICA, [], $centralWiki );
+			)->getConnection( DB_REPLICA, [], $centralWiki );
 		} else {
-			$this->mDb = $dbLoadBalancerFactory->getMainLB()->getConnectionRef( DB_REPLICA );
+			$this->mDb = $dbLoadBalancerFactory->getMainLB()->getConnection( DB_REPLICA );
 		}
 
 		$this->linkRenderer = $linkRenderer;
