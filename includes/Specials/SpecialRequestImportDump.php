@@ -192,9 +192,9 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		if ( $centralWiki ) {
 			$dbw = $this->dbLoadBalancerFactory->getMainLB(
 				$centralWiki
-			)->getConnectionRef( DB_PRIMARY, [], $centralWiki );
+			)->getConnection( DB_PRIMARY, [], $centralWiki );
 		} else {
-			$dbw = $this->dbLoadBalancerFactory->getMainLB()->getConnectionRef( DB_PRIMARY );
+			$dbw = $this->dbLoadBalancerFactory->getMainLB()->getConnection( DB_PRIMARY );
 		}
 
 		$duplicate = $dbw->selectRow(
