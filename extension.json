@@ -1,0 +1,156 @@
+{
+	"name": "ImportDump",
+	"author": "Universal Omega",
+	"url": "https://github.com/miraheze/ImportDump",
+	"descriptionmsg": "importdump-desc",
+	"namemsg": "importdump-extensionname",
+	"license-name": "GPL-3.0-or-later",
+	"type": "specialpage",
+	"requires": {
+		"MediaWiki": ">= 1.38.0"
+	},
+	"MessagesDirs": {
+		"ImportDump": [
+			"i18n"
+		]
+	},
+	"ExtensionMessagesFiles": {
+		"ImportDumpAliases": "ImportDumpAliases.php"
+	},
+	"AutoloadNamespaces": {
+		"Miraheze\\ImportDump\\": "includes/"
+	},
+	"GroupPermissions": {
+		"user": {
+			"request-import-dump": true
+		}
+	},
+	"AvailableRights": [
+		"handle-import-dump-requests",
+		"request-import-dump",
+		"view-private-import-dump-requests"
+	],
+	"LogActionsHandlers": {
+		"importdump/*": "LogFormatter",
+		"importdumpprivate/*": "LogFormatter"
+	},
+	"LogHeaders": {
+		"importdump": "importdump-log-header",
+		"importdumpprivate": "importdumpprivate-log-header"
+	},
+	"LogNames": {
+		"importdump": "importdump-log-name",
+		"importdumpprivate": "importdumpprivate-log-name"
+	},
+	"LogTypes": [
+		"importdump",
+		"importdumpprivate"
+	],
+	"LogRestrictions": {
+		"importdumpprivate": "view-private-import-dump-requests"
+	},
+	"SpecialPages": {
+		"ImportDumpRequestQueue": {
+			"class": "Miraheze\\ImportDump\\Specials\\SpecialImportDumpRequestQueue",
+			"services": [
+				"DBLoadBalancerFactory",
+				"ImportDumpRequestManager",
+				"PermissionManager",
+				"UserFactory"
+			]
+		},
+		"RequestImportDump": {
+			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportDump",
+			"services": [
+				"DBLoadBalancerFactory",
+				"MimeAnalyzer",
+				"RepoGroup",
+				"UserFactory"
+			]
+		}
+	},
+	"Hooks": {
+		"BeforeCreateEchoEvent": {
+			"handler": "Main"
+		},
+		"GetAllBlockActions": {
+			"handler": "Main"
+		},
+		"LoadExtensionSchemaUpdates": {
+			"handler": "Installer"
+		},
+		"UserGetReservedNames": {
+			"handler": "Main"
+		}
+	},
+	"HookHandlers": {
+		"Installer": {
+			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Installer"
+		},
+		"Main": {
+			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Main",
+			"services": [
+				"ConfigFactory"
+			]
+		}
+	},
+	"ResourceModules": {
+		"ext.importdump.oouiform": {
+			"targets": [ "desktop", "mobile" ],
+			"scripts": "ext.importdump.oouiform.ooui.js",
+			"dependencies": [
+				"mediawiki.storage",
+				"oojs-ui-widgets"
+			]
+		},
+		"ext.importdump.oouiform.styles": {
+			"targets": [ "desktop", "mobile" ],
+			"styles": "ext.importdump.oouiform.ooui.less"
+		}
+	},
+	"ResourceFileModulePaths": {
+		"localBasePath": "modules",
+		"remoteExtPath": "ImportDump/modules"
+	},
+	"config": {
+		"ImportDumpCentralWiki": {
+			"value": "",
+			"description": "If set, only allow users to request import dumps on this wiki."
+		},
+		"ImportDumpHelpUrl": {
+			"value": "",
+			"description": "Full URL. If set, adds a help URL to Special:RequestImportDump."
+		},
+		"ImportDumpInterwikiMap": {
+			"value": [],
+			"description": "A mapping of 'domain => interwiki prefix' for multi-level interwiki prefix generation for --username-prefix."
+		},
+		"ImportDumpScriptCommand": {
+			"value": "php {IP}/maintenance/importDump.php --wiki={wiki} --username-prefix={username-prefix} {file}",
+			"description": "Generated maintenance script command to use."
+		},
+		"ImportDumpUsersNotifiedOnAllRequests": {
+			"value": [],
+			"description": "Array of usernames to send notifications for all requests."
+		}
+	},
+	"ConfigRegistry": {
+		"ImportDump": "GlobalVarConfig::newInstance"
+	},
+	"DefaultUserOptions": {
+		"echo-subscriptions-email-importdump-new-request": true,
+		"echo-subscriptions-email-importdump-request-comment": true,
+		"echo-subscriptions-email-importdump-request-status-update": true,
+		"echo-subscriptions-web-importdump-new-request": false,
+		"echo-subscriptions-web-importdump-request-comment": true,
+		"echo-subscriptions-web-importdump-request-status-update": true
+	},
+	"HiddenPrefs": [
+		"echo-subscriptions-email-importdump-new-request",
+		"echo-subscriptions-web-importdump-new-request"
+	],
+	"ServiceWiringFiles": [
+		"includes/ServiceWiring.php"
+	],
+	"manifest_version": 2
+}

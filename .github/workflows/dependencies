@@ -1,0 +1,6 @@
+CreateWiki:
+  branch: master
+  repo: https://github.com/miraheze/CreateWiki
+Echo:
+  branch: auto
+  repo: auto
