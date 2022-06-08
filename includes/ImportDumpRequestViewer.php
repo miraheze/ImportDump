@@ -197,13 +197,13 @@ class ImportDumpRequestViewer {
 			$validRequest = true;
 			$status = $this->importDumpRequestManager->getStatus();
 
-			$info = Html::warningBox(
+			$info = Html::noticeBox(
 				$this->context->msg( 'importdump-info-command' )->plaintextParams(
 					$this->importDumpRequestManager->getCommand()
 				)->escaped()
 			);
 
-			$info .= Html::warningBox(
+			$info .= Html::noticeBox(
 				$this->context->msg( 'importdump-info-groups',
 					$this->importDumpRequestManager->getRequester()->getName(),
 					$this->importDumpRequestManager->getTarget(),
