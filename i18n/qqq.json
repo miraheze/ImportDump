@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Ajeje Brazorf",
 			"Universal Omega"
 		]
 	},
@@ -32,7 +33,7 @@
 	"importdump-info-requester-locked": "Message that is displayed on the 'handling' section of Special:ImportDumpRequestQueue when the requester has been locked. $1 is the requester's username.",
 	"importdump-invalid-target": "Status message displayed when invalid database name was entered for the 'target' field.",
 	"importdump-label-add-comment": "Label for the 'Add Comment' submit button.",
-	"importdump-label-all": "Label for 'All'.",
+	"importdump-label-all": "Label for 'All'.\n\n{{Identical|All}}",
 	"importdump-label-comment": "Label for 'Comment'.",
 	"importdump-label-complete": "'Complete' status label.",
 	"importdump-label-declined": "'Declined' status label.",

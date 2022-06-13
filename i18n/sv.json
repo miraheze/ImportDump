@@ -1,0 +1,37 @@
+{
+	"@metadata": {
+		"authors": [
+			"Sabelöga"
+		]
+	},
+	"action-handle-import-dump-requests": "hantera importeringsbegäran från användare",
+	"action-request-import-dump": "begära att importera dumpar",
+	"action-view-private-import-dump-requests": "visa begäran att importera dumpar",
+	"importdump-label-add-comment": "Lägg till kommentar",
+	"importdump-label-all": "Alla",
+	"importdump-label-comment": "Kommentera:",
+	"importdump-label-complete": "Avslutad",
+	"importdump-label-declined": "Nekad",
+	"importdump-label-edit-request": "Redigeringsbegäran",
+	"importdump-label-inprogress": "Pågående",
+	"importdump-label-lock": "Låsa begäran från att redigeras eller från att kommentarer läggs till?",
+	"importdump-label-pending": "Väntande",
+	"importdump-label-private": "Markera begäran som privat?",
+	"importdump-label-reason": "Anledning till begäran:",
+	"importdump-label-requested-date": "Begärans datum:",
+	"importdump-label-requester": "Begärare:",
+	"importdump-label-source": "Käll-URL:",
+	"importdump-label-status": "Status:",
+	"importdump-label-status-updated-comment": "Alternativ ytterligare kommentar att lägga till i begäran:",
+	"importdump-label-target": "Måldatabasens namn:",
+	"importdump-label-update-status": "Ange begärans status som:",
+	"importdump-label-upload-file": "Ladda upp fil:",
+	"importdump-label-upload-file-url": "Käll-URL:",
+	"importdump-label-upload-source-file": "Ladda upp fil",
+	"importdump-label-upload-source-type": "Ladda upp källa:",
+	"importdump-label-upload-source-url": "Ladda upp från URL",
+	"importdump-log-header": "Detta är en logg över alla importerade dumpbegäran och statusuppdateringar.",
+	"importdump-log-name": "Importera logg över dumpbegäran",
+	"importdump-no-changes": "Inga gjorda ändringar.",
+	"importdump-notcentral": "Inaktiverad"
+}
