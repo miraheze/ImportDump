@@ -2,7 +2,8 @@
 	"@metadata": {
 		"authors": [
 			"Ajeje Brazorf",
-			"Universal Omega"
+			"Universal Omega",
+			"Verdy p"
 		]
 	},
 	"action-handle-import-dump-requests": "{{doc-action|handle-import-dump-requests}}",
@@ -58,7 +59,7 @@
 	"importdump-log-header": "Header for the ImportDump log.",
 	"importdump-log-name": "{{doc-logpage}}",
 	"importdump-no-changes": "Message displayed if attempting to edit request without making any changes.",
-	"importdump-notcentral": "Heading for the message displayed if there is a configured central wiki, and it is not the current wiki.",
+	"importdump-notcentral": "Heading for the message displayed if there is a configured central wiki, and it is not the current wiki.\n{{Identical|Disabled}}",
 	"importdump-notcentral-text": "Text for the message displayed if there is a configured central wiki, and it is not the current wiki.",
 	"importdump-notification-body-new-request": "Echo notification body for 'importdump-new-request'. $1 is reason; $2 is the requester's username; $3 is the target wiki's database name.",
 	"importdump-notification-header-comment": "Echo notification header for 'importdump-request-comment'. $1 is the request ID.",
