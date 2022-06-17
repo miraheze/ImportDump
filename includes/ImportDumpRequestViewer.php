@@ -285,7 +285,7 @@ class ImportDumpRequestViewer {
 				],
 			];
 
-			if ( $this->permissionManager->userHasRight( $user, 'view-private-import-requests' ) ) {
+			if ( $this->permissionManager->userHasRight( $user, 'view-private-import-dump-requests' ) ) {
 				$formDescriptor += [
 					'handle-private' => [
 						'type' => 'check',
