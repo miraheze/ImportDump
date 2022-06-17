@@ -138,7 +138,7 @@ class ImportDumpRequestViewer {
 		}
 
 		if (
-			$this->permissionManager->userHasRight( $user, 'handle-import-requests' ) ||
+			$this->permissionManager->userHasRight( $user, 'handle-import-dump-requests' ) ||
 			$user->getActorId() === $this->importDumpRequestManager->getRequester()->getActorId()
 		) {
 			$formDescriptor += [
@@ -193,7 +193,7 @@ class ImportDumpRequestViewer {
 			];
 		}
 
-		if ( $this->permissionManager->userHasRight( $user, 'handle-import-requests' ) ) {
+		if ( $this->permissionManager->userHasRight( $user, 'handle-import-dump-requests' ) ) {
 			$validRequest = true;
 			$status = $this->importDumpRequestManager->getStatus();
 
