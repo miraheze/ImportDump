@@ -103,7 +103,7 @@ class ImportDumpRequestQueuePager extends TablePager {
 				);
 
 				break;
-			case 'request_actor ':
+			case 'request_actor':
 				$user = $this->userFactory->newFromActorId( $row->request_actor );
 				$formatted = $user->getName();
 
