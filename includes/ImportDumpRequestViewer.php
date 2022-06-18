@@ -496,16 +496,30 @@ class ImportDumpRequestViewer {
 			$changes = [];
 
 			if ( $this->importDumpRequestManager->isLocked() !== (bool)$formData['handle-lock'] ) {
+				if ( !$this->importDumpRequestManager->isLocked() ) {
+					$changes[] = 'locked';
+				}
+
+				if ( $this->importDumpRequestManager->isLocked() ) {
+					$changes[] = 'unlocked';
+				}
+
 				$this->importDumpRequestManager->setLocked( (int)$formData['handle-lock'] );
-				$changes[] = 'locked';
 			}
 
 			if (
 				isset( $formData['handle-private'] ) &&
 				$this->importDumpRequestManager->isPrivate() !== (bool)$formData['handle-private']
 			) {
+				if ( $this->importDumpRequestManager->isPrivate() ) {
+					$changes[] = 'private';
+				}
+
+				if ( !$this->importDumpRequestManager->isPrivate() ) {
+					$changes[] = 'public';
+				}
+
 				$this->importDumpRequestManager->setPrivate( (int)$formData['handle-private'] );
-				$changes[] = 'private';
 			}
 
 			if ( $this->importDumpRequestManager->getStatus() === $formData['handle-status'] ) {
@@ -520,8 +534,16 @@ class ImportDumpRequestViewer {
 					$out->addHTML( Html::successBox( $this->context->msg( 'importdump-success-private' )->escaped() ) );
 				}
 
+				if ( in_array( 'public', $changes ) ) {
+					$out->addHTML( Html::successBox( $this->context->msg( 'importdump-success-public' )->escaped() ) );
+				}
+
 				if ( in_array( 'locked', $changes ) ) {
 					$out->addHTML( Html::successBox( $this->context->msg( 'importdump-success-locked' )->escaped() ) );
+				}
+
+				if ( in_array( 'unlocked', $changes ) ) {
+					$out->addHTML( Html::successBox( $this->context->msg( 'importdump-success-unlocked' )->escaped() ) );
 				}
 
 				return;
