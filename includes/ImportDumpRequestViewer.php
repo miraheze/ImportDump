@@ -496,13 +496,8 @@ class ImportDumpRequestViewer {
 			$changes = [];
 
 			if ( $this->importDumpRequestManager->isLocked() !== (bool)$formData['handle-lock'] ) {
-				if ( !$this->importDumpRequestManager->isLocked() ) {
-					$changes[] = 'locked';
-				}
-
-				if ( $this->importDumpRequestManager->isLocked() ) {
-					$changes[] = 'unlocked';
-				}
+				$changes[] = $this->importDumpRequestManager->isLocked() ?
+					'unlocked' : 'locked';
 
 				$this->importDumpRequestManager->setLocked( (int)$formData['handle-lock'] );
 			}
@@ -511,13 +506,8 @@ class ImportDumpRequestViewer {
 				isset( $formData['handle-private'] ) &&
 				$this->importDumpRequestManager->isPrivate() !== (bool)$formData['handle-private']
 			) {
-				if ( $this->importDumpRequestManager->isPrivate() ) {
-					$changes[] = 'private';
-				}
-
-				if ( !$this->importDumpRequestManager->isPrivate() ) {
-					$changes[] = 'public';
-				}
+				$changes[] = $this->importDumpRequestManager->isPrivate() ?
+					'private' : 'public';
 
 				$this->importDumpRequestManager->setPrivate( (int)$formData['handle-private'] );
 			}
@@ -531,19 +521,27 @@ class ImportDumpRequestViewer {
 				}
 
 				if ( in_array( 'private', $changes ) ) {
-					$out->addHTML( Html::successBox( $this->context->msg( 'importdump-success-private' )->escaped() ) );
+					$out->addHTML(
+						Html::successBox( $this->context->msg( 'importdump-success-private' )->escaped() )
+					);
 				}
 
 				if ( in_array( 'public', $changes ) ) {
-					$out->addHTML( Html::successBox( $this->context->msg( 'importdump-success-public' )->escaped() ) );
+					$out->addHTML(
+						Html::successBox( $this->context->msg( 'importdump-success-public' )->escaped() )
+					);
 				}
 
 				if ( in_array( 'locked', $changes ) ) {
-					$out->addHTML( Html::successBox( $this->context->msg( 'importdump-success-locked' )->escaped() ) );
+					$out->addHTML(
+						Html::successBox( $this->context->msg( 'importdump-success-locked' )->escaped() )
+					);
 				}
 
 				if ( in_array( 'unlocked', $changes ) ) {
-					$out->addHTML( Html::successBox( $this->context->msg( 'importdump-success-unlocked' )->escaped() ) );
+					$out->addHTML(
+						Html::successBox( $this->context->msg( 'importdump-success-unlocked' )->escaped() )
+					);
 				}
 
 				return;
