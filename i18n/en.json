@@ -80,6 +80,8 @@
 	"importdump-success": "Your import dump request ($1) was successfully submitted. Your request will be reviewed by a system administrator as soon as possible.",
 	"importdump-success-locked": "This request has been successfully locked. It can no longer be edited and comments can not be added to it.",
 	"importdump-success-private": "This request has been successfully marked as private. It is no longer publicly viewable.",
+	"importdump-success-public": "This request has been successfully marked as public. It is now publicly viewable.",
+	"importdump-success-unlocked": "This request has been successfully unlocked.",
 	"importdump-table-requested-date": "Requested Date",
 	"importdump-table-requester": "Requester",
 	"importdump-table-status": "Status",

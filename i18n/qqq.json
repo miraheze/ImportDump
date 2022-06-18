@@ -82,6 +82,8 @@
 	"importdump-success": "Message after an import dump request has been successfully submitted.",
 	"importdump-success-locked": "Message displayed when a request has been successfully locked.",
 	"importdump-success-private": "Message displayed when a request has been successfully marked as private.",
+	"importdump-success-public": "Message displayed when a request has been successfully marked as public.",
+	"importdump-success-unlocked": "Message displayed when a request has been successfully unlocked.",
 	"importdump-table-requested-date": "'Requested Date' label for the table on Special:ImportDumpRequestQueue.",
 	"importdump-table-requester": "'Requester' label for the table on Special:ImportDumpRequestQueue.",
 	"importdump-table-status": "'Status' label for the table on Special:ImportDumpRequestQueue.",
