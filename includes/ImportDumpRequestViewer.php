@@ -507,7 +507,7 @@ class ImportDumpRequestViewer {
 				$this->importDumpRequestManager->isPrivate() !== (bool)$formData['handle-private']
 			) {
 				$changes[] = $this->importDumpRequestManager->isPrivate() ?
-					'public': 'private';
+					'public' : 'private';
 
 				$this->importDumpRequestManager->setPrivate( (int)$formData['handle-private'] );
 			}
