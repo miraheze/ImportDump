@@ -298,6 +298,13 @@ class ImportDumpRequestViewer {
 			}
 
 			$formDescriptor += [
+				'handle-filesize' => [
+					'type' => 'info',
+					'default' => $this->context->msg( 'importdump-info-filesize',
+						$this->importDumpRequestManager->getFileSize()
+					)->escaped(),
+					'section' => 'handling',
+				],
 				'handle-status' => [
 					'type' => 'select',
 					'label-message' => 'importdump-label-update-status',
