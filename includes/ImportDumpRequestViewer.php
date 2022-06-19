@@ -197,12 +197,33 @@ class ImportDumpRequestViewer {
 			$validRequest = true;
 			$status = $this->importDumpRequestManager->getStatus();
 
-			$info = Html::noticeBox(
-				$this->context->msg( 'importdump-info-command' )->plaintextParams(
+			if ( file_exists( $this->importDumpRequestManager->getFilePath() ) ) {
+				$fileInfo = $this->context->msg( 'importdump-info-command' )->plaintextParams(
 					$this->importDumpRequestManager->getCommand()
-				)->escaped(),
-				''
-			);
+				)->parse();
+
+				$fileInfo .= Html::element( 'button', [
+						'type' => 'button',
+						'onclick' => 'navigator.clipboard.writeText( $( \'.mw-message-box-notice code\' ).text() );',
+					],
+					$this->context->msg( 'importdump-button-copy' )->text()
+				);
+
+				if ( $this->importDumpRequestManager->getFileSize() > 0 ) {
+					$fileInfo .= Html::element( 'br' );
+					$fileInfo .= $this->context->msg( 'importdump-info-filesize' )->sizeParams(
+						$this->importDumpRequestManager->getFileSize()
+					)->parse();
+				}
+
+				$info = Html::noticeBox( $fileInfo, '' );
+			} else {
+				$info = Html::errorBox(
+					$this->context->msg( 'importdump-info-no-file-found',
+						$this->importDumpRequestManager->getFilePath()
+					)->escaped()
+				);
+			}
 
 			$info .= Html::noticeBox(
 				$this->context->msg( 'importdump-info-groups',

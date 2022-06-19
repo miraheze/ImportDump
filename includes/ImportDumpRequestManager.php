@@ -335,7 +335,7 @@ class ImportDumpRequestManager {
 			$blankConfig->get( 'IP' ),
 			$this->getTarget(),
 			$userNamePrefix,
-			$this->getFile(),
+			$this->getFilePath(),
 		], $command );
 	}
 
@@ -354,10 +354,21 @@ class ImportDumpRequestManager {
 	/**
 	 * @return string
 	 */
-	public function getFile(): string {
+	public function getFilePath(): string {
 		$fileName = $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
 
 		return $this->options->get( 'UploadDirectory' ) . '/ImportDump/' . $fileName;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getFileSize(): int {
+		if ( !file_exists( $this->getFilePath() ) ) {
+			return 0;
+		}
+
+		return (int)filesize( $this->getFilePath() );
 	}
 
 	/**
