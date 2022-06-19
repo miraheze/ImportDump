@@ -131,7 +131,7 @@
 		},
 		"ImportDumpUsersNotifiedOnAllRequests": {
 			"value": [],
-			"description": "Array of usernames to send email notifications for all requests. Users listed here must have a verified email address on their account."
+			"description": "Array of usernames to send email notifications to for all requests. Users listed here must have a verified email address on their account."
 		}
 	},
 	"ConfigRegistry": {
