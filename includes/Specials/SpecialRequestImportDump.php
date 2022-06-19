@@ -135,6 +135,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 					'label-message' => 'importdump-label-upload-file',
 					'help-message' => 'importdump-help-upload',
 					'hide-if' => [ '!==', 'wpUploadSourceType', 'File' ],
+					'accept' => [ 'application/xml', 'text/xml' ],
 					'required' => true,
 				],
 				'UploadFileURL' => [
@@ -151,6 +152,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 					'type' => 'file',
 					'label-message' => 'importdump-label-upload-file',
 					'help-message' => 'importdump-help-upload',
+					'accept' => [ 'application/xml', 'text/xml' ],
 					'required' => true,
 				],
 			];
@@ -240,7 +242,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		}
 
 		$mime = $this->mimeAnalyzer->guessMimeType( $uploadBase->getTempPath() );
-		if ( $mime !== 'application/xml' ) {
+		if ( $mime !== 'application/xml' && $mime !== 'text/xml' ) {
 			return Status::newFatal( 'filetype-mime-mismatch', 'xml', $mime );
 		}
 
