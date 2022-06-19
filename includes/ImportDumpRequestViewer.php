@@ -302,7 +302,7 @@ class ImportDumpRequestViewer {
 					'type' => 'info',
 					'default' => $this->context->msg( 'importdump-info-filesize',
 						$this->importDumpRequestManager->getFileSize()
-					)->escaped(),
+					)->text(),
 					'section' => 'handling',
 				],
 				'handle-status' => [
