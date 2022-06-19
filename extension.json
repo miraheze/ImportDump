@@ -126,12 +126,12 @@
 			"description": "A mapping of 'domain => interwiki prefix' for multi-level interwiki prefix generation for --username-prefix."
 		},
 		"ImportDumpScriptCommand": {
-			"value": "php {IP}/maintenance/importDump.php --wiki={wiki} --username-prefix={username-prefix} {file}",
+			"value": "php {IP}/maintenance/importDump.php --wiki={wiki} --username-prefix=\"{username-prefix}\" {file}",
 			"description": "Generated maintenance script command to use."
 		},
 		"ImportDumpUsersNotifiedOnAllRequests": {
 			"value": [],
-			"description": "Array of usernames to send notifications for all requests."
+			"description": "Array of usernames to send email notifications for all requests. Users listed here must have a verified email address on their account."
 		}
 	},
 	"ConfigRegistry": {
