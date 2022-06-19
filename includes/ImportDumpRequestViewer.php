@@ -202,6 +202,13 @@ class ImportDumpRequestViewer {
 					$this->importDumpRequestManager->getCommand()
 				)->parse();
 
+				$fileInfo .= Html::element( 'button', [
+						'type' => 'button',
+						'onclick' => 'navigator.clipboard.writeText( $( \'.mw-message-box-notice code\' ).text() );',
+					],
+					' (' . $this->context->msg( 'importdump-button-copy' ) . ')'
+				);
+
 				if ( $this->importDumpRequestManager->getFileSize() > 0 ) {
 					$fileInfo .= Html::element( 'br' );
 					$fileInfo .= $this->context->msg( 'importdump-info-filesize' )->sizeParams(
