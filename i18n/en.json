@@ -25,6 +25,7 @@
 	"importdump-help-target": "This must be a valid database name.",
 	"importdump-help-upload": "Only XML files are permitted.",
 	"importdump-info-command": "Command for this import: $1",
+	"importdump-info-filesize": "The file size for the requested XML file is: $1",
 	"importdump-info-groups": "User groups that $1 has on $2: $3",
 	"importdump-info-no-interwiki-prefix": "No interwiki prefix exists on the target wiki ($1), which is pointing to the source wiki ($2), please add one before this request can be approved.",
 	"importdump-info-request-private": "This request is marked as private. It is not publicly viewable.",
