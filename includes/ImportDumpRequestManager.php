@@ -14,6 +14,7 @@ use MediaWiki\User\UserGroupManagerFactory;
 use Message;
 use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
+use RepoGroup;
 use SpecialPage;
 use stdClass;
 use User;
@@ -56,6 +57,9 @@ class ImportDumpRequestManager {
 	/** @var ServiceOptions */
 	private $options;
 
+	/** @var RepoGroup */
+	private $repoGroup;
+
 	/** @var stdClass|bool */
 	private $row;
 
@@ -71,6 +75,7 @@ class ImportDumpRequestManager {
 	 * @param LinkRenderer $linkRenderer
 	 * @param MessageLocalizer $messageLocalizer
 	 * @param ServiceOptions $options
+	 * @param RepoGroup $repoGroup
 	 * @param UserFactory $userFactory
 	 * @param UserGroupManagerFactory $userGroupManagerFactory
 	 */
@@ -80,6 +85,7 @@ class ImportDumpRequestManager {
 		LinkRenderer $linkRenderer,
 		MessageLocalizer $messageLocalizer,
 		ServiceOptions $options,
+		RepoGroup $repoGroup,
 		UserFactory $userFactory,
 		UserGroupManagerFactory $userGroupManagerFactory
 	) {
@@ -90,6 +96,7 @@ class ImportDumpRequestManager {
 		$this->linkRenderer = $linkRenderer;
 		$this->messageLocalizer = $messageLocalizer;
 		$this->options = $options;
+		$this->repoGroup = $repoGroup;
 		$this->userFactory = $userFactory;
 		$this->userGroupManagerFactory = $userGroupManagerFactory;
 	}
@@ -335,7 +342,7 @@ class ImportDumpRequestManager {
 			$blankConfig->get( 'IP' ),
 			$this->getTarget(),
 			$userNamePrefix,
-			$this->getFile(),
+			$this->getFilePath(),
 		], $command );
 	}
 
@@ -354,10 +361,17 @@ class ImportDumpRequestManager {
 	/**
 	 * @return string
 	 */
-	public function getFile(): string {
+	public function getFilePath(): string {
 		$fileName = $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
 
 		return $this->options->get( 'UploadDirectory' ) . '/ImportDump/' . $fileName;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getFileSize(): string {
+		return $this->repoGroup->getLocalRepo()->getFileSize( $this->getFilePath() );
 	}
 
 	/**
