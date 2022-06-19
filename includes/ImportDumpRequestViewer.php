@@ -197,12 +197,26 @@ class ImportDumpRequestViewer {
 			$validRequest = true;
 			$status = $this->importDumpRequestManager->getStatus();
 
-			$info = Html::noticeBox(
-				$this->context->msg( 'importdump-info-command' )->plaintextParams(
+			if ( file_exists( $this->importDumpRequestManager->getFilePath() ) ) {
+				$fileInfo = $this->context->msg( 'importdump-info-command' )->plaintextParams(
 					$this->importDumpRequestManager->getCommand()
-				)->escaped(),
-				''
-			);
+				)->escaped();
+
+				if ( $this->importDumpRequestManager->getFileSize() > 0 ) {
+					$fileInfo .= Html::element( 'br' );
+					$fileInfo .= $this->context->msg( 'importdump-info-filesize' )->sizeParams(
+						$this->importDumpRequestManager->getFileSize()
+					)->escaped();
+				}
+
+				$info = Html::noticeBox( $fileInfo, '' );
+			} else {
+				$info = Html::errorBox(
+					$this->context->msg( 'importdump-info-no-file-found',
+						$this->importDumpRequestManager->getRequester()->getName()
+					)->escaped()
+				);
+			}
 
 			$info .= Html::noticeBox(
 				$this->context->msg( 'importdump-info-groups',
@@ -298,13 +312,6 @@ class ImportDumpRequestViewer {
 			}
 
 			$formDescriptor += [
-				'handle-filesize' => [
-					'type' => 'info',
-					'default' => $this->context->msg( 'importdump-info-filesize' )->sizeParams(
-						$this->importDumpRequestManager->getFileSize()
-					)->text(),
-					'section' => 'handling',
-				],
 				'handle-status' => [
 					'type' => 'select',
 					'label-message' => 'importdump-label-update-status',
