@@ -15,6 +15,7 @@
 	"echo-pref-tooltip-importdump-new-request": "Echo preference tooltip for 'importdump-new-request'.",
 	"echo-pref-tooltip-importdump-request-comment": "Echo preference tooltip for 'importdump-request-comment'.",
 	"echo-pref-tooltip-importdump-request-status-update": "Echo preference tooltip for 'importdump-request-status-update'.",
+	"importdump-button-copy": "Text for the 'Copy to Clipboard' button.",
 	"importdump-comment-given": "Displayed if a custom comment is given. $1 is the handler's username.",
 	"importdump-comment-success": "Message displayed when a comment is successfully added to the request.",
 	"importdump-desc": "{{desc|name=ImportDump|url=https://github.com/miraheze/ImportDump}}",
