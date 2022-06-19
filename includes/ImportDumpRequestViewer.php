@@ -200,13 +200,14 @@ class ImportDumpRequestViewer {
 			if ( file_exists( $this->importDumpRequestManager->getFilePath() ) ) {
 				$fileInfo = $this->context->msg( 'importdump-info-command' )->plaintextParams(
 					$this->importDumpRequestManager->getCommand()
-				)->escaped();
+				)->parse();
 
 				if ( $this->importDumpRequestManager->getFileSize() > 0 ) {
 					$fileInfo .= Html::element( 'br' );
+					$fileInfo .= Html::element( 'br' );
 					$fileInfo .= $this->context->msg( 'importdump-info-filesize' )->sizeParams(
 						$this->importDumpRequestManager->getFileSize()
-					)->escaped();
+					)->parse();
 				}
 
 				$info = Html::noticeBox( $fileInfo, '' );
