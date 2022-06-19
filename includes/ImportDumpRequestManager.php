@@ -368,10 +368,10 @@ class ImportDumpRequestManager {
 	}
 
 	/**
-	 * @return string
+	 * @return int
 	 */
-	public function getFileSize(): string {
-		return (string)$this->repoGroup->getLocalRepo()->getFileSize( $this->getFilePath() );
+	public function getFileSize(): int {
+		return (int)$this->repoGroup->getLocalRepo()->getFileSize( $this->getFilePath() );
 	}
 
 	/**
