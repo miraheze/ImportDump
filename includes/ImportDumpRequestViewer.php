@@ -213,7 +213,7 @@ class ImportDumpRequestViewer {
 			} else {
 				$info = Html::errorBox(
 					$this->context->msg( 'importdump-info-no-file-found',
-						$this->importDumpRequestManager->getRequester()->getName()
+						$this->importDumpRequestManager->getFilePath()
 					)->escaped()
 				);
 			}
