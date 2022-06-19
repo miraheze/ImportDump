@@ -300,7 +300,7 @@ class ImportDumpRequestViewer {
 			$formDescriptor += [
 				'handle-filesize' => [
 					'type' => 'info',
-					'default' => $this->context->msg( 'importdump-info-filesize',
+					'default' => $this->context->msg( 'importdump-info-filesize' )->sizeParams(
 						$this->importDumpRequestManager->getFileSize()
 					)->text(),
 					'section' => 'handling',
