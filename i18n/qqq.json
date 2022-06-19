@@ -22,6 +22,7 @@
 	"importdump-edit-success": "Message displayed when the request is successfully edited.",
 	"importdump-extensionname": "{{name}}",
 	"importdump-header-comment-withtimestamp": "Timestamp for comment.",
+	"importdump-help-reason": "Help for the 'reason' field.",
 	"importdump-help-source": "Help for the 'source' field.",
 	"importdump-help-target": "Help for the 'target' field.",
 	"importdump-help-upload": "Help for the 'Upload File' and 'Source URL' fields.",

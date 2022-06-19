@@ -161,6 +161,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'type' => 'textarea',
 				'rows' => 4,
 				'label-message' => 'importdump-label-reason',
+				'help-message' => 'importdump-help-reason',
 				'required' => true,
 				'validation-callback' => [ $this, 'isValidReason' ],
 			],
