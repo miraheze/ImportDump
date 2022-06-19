@@ -252,23 +252,6 @@ class ImportDumpRequestManager {
 	 * @return string
 	 */
 	public function getInterwikiPrefix(): string {
-		if ( $this->options->get( 'ImportDumpInterwikiMap' ) ) {
-			$parsedSource = parse_url( $this->getSource() )['host'] ?? '';
-			$domain = explode( '.', $parsedSource )[1] ?? '';
-
-			if ( $domain ) {
-				$domain .= '.' . ( explode( '.', $parsedSource )[2] ?? '' );
-				if ( $this->options->get( 'ImportDumpInterwikiMap' )[$domain] ?? '' ) {
-					$domain = $this->options->get( 'ImportDumpInterwikiMap' )[$domain];
-					$subdomain = explode( '.', $parsedSource )[0] ?? '';
-
-					if ( $subdomain ) {
-						return $domain . ':' . $subdomain;
-					}
-				}
-			}
-		}
-
 		$dbr = $this->dbLoadBalancerFactory->getMainLB(
 			$this->getTarget()
 		)->getConnection( DB_REPLICA, [], $this->getTarget() );
@@ -309,6 +292,23 @@ class ImportDumpRequestManager {
 
 			if ( $row->iw_prefix ?? '' ) {
 				return $row->iw_prefix;
+			}
+		}
+
+		if ( $this->options->get( 'ImportDumpInterwikiMap' ) ) {
+			$parsedSource = parse_url( $this->getSource() )['host'] ?? '';
+			$domain = explode( '.', $parsedSource )[1] ?? '';
+
+			if ( $domain ) {
+				$domain .= '.' . ( explode( '.', $parsedSource )[2] ?? '' );
+				if ( $this->options->get( 'ImportDumpInterwikiMap' )[$domain] ?? '' ) {
+					$domain = $this->options->get( 'ImportDumpInterwikiMap' )[$domain];
+					$subdomain = explode( '.', $parsedSource )[0] ?? '';
+
+					if ( $subdomain ) {
+						return $domain . ':' . $subdomain;
+					}
+				}
 			}
 		}
 
