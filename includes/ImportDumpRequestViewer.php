@@ -206,7 +206,7 @@ class ImportDumpRequestViewer {
 						'type' => 'button',
 						'onclick' => 'navigator.clipboard.writeText( $( \'.mw-message-box-notice code\' ).text() );',
 					],
-					' (' . $this->context->msg( 'importdump-button-copy' ) . ')'
+					$this->context->msg( 'importdump-button-copy' )
 				);
 
 				if ( $this->importDumpRequestManager->getFileSize() > 0 ) {
