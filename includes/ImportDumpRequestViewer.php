@@ -204,7 +204,6 @@ class ImportDumpRequestViewer {
 
 				if ( $this->importDumpRequestManager->getFileSize() > 0 ) {
 					$fileInfo .= Html::element( 'br' );
-					$fileInfo .= Html::element( 'br' );
 					$fileInfo .= $this->context->msg( 'importdump-info-filesize' )->sizeParams(
 						$this->importDumpRequestManager->getFileSize()
 					)->parse();
