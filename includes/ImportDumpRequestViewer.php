@@ -3,6 +3,7 @@
 namespace Miraheze\ImportDump;
 
 use Config;
+use ExtensionRegistry;
 use Html;
 use HTMLForm;
 use IContextSource;
