@@ -8,6 +8,7 @@ use ExtensionRegistry;
 use GlobalVarConfig;
 use ManualLogEntry;
 use MediaWiki\Config\ServiceOptions;
+use MediaWiki\Interwiki\InterwikiLookup;
 use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManagerFactory;
@@ -15,6 +16,7 @@ use Message;
 use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
 use SpecialPage;
+use Status;
 use stdClass;
 use User;
 use UserRightsProxy;
@@ -47,6 +49,9 @@ class ImportDumpRequestManager {
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
 
+	/** @var InterwikiLookup */
+	private $interwikiLookup;
+
 	/** @var MessageLocalizer */
 	private $messageLocalizer;
 
@@ -68,6 +73,7 @@ class ImportDumpRequestManager {
 	/**
 	 * @param Config $config
 	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param InterwikiLookup $interwikiLookup
 	 * @param LinkRenderer $linkRenderer
 	 * @param MessageLocalizer $messageLocalizer
 	 * @param ServiceOptions $options
@@ -77,6 +83,7 @@ class ImportDumpRequestManager {
 	public function __construct(
 		Config $config,
 		ILBFactory $dbLoadBalancerFactory,
+		InterwikiLookup $interwikiLookup,
 		LinkRenderer $linkRenderer,
 		MessageLocalizer $messageLocalizer,
 		ServiceOptions $options,
@@ -87,6 +94,7 @@ class ImportDumpRequestManager {
 
 		$this->config = $config;
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
+		$this->interwikiLookup = $interwikiLookup;
 		$this->linkRenderer = $linkRenderer;
 		$this->messageLocalizer = $messageLocalizer;
 		$this->options = $options;
@@ -246,6 +254,49 @@ class ImportDumpRequestManager {
 	 */
 	public function getInvolvedUsers(): array {
 		return array_unique( array_column( $this->getComments(), 'user' ) + [ $this->getRequester() ] );
+	}
+
+	/**
+	 * @param string $prefix
+	 * @param string $url
+	 * @return Status
+	 */
+	public function insertInterwikiPrefix( string $prefix, string $url ): Status {
+		$dbw = $this->dbLoadBalancerFactory->getMainLB(
+			$this->getTarget()
+		)->getConnection( DB_PRIMARY, [], $this->getTarget() );
+
+		if ( $prefix === '' || $url === '' ) {
+			return Status::newFatal( 'interwiki-submit-empty' );
+		}
+
+		if (
+			!parse_url( $url, PHP_URL_SCHEME ) ||
+			!parse_url( $url, PHP_URL_HOST )
+		) {
+			return Status::newFatal( 'interwiki-submit-invalidurl' );
+		}
+
+		$dbw->insert(
+			'interwiki',
+			[
+				'iw_prefix' => $prefix,
+				'iw_url' => $url,
+				'iw_api' => '',
+				'iw_local' => 0,
+				'iw_trans' => 0,
+			],
+			__METHOD__,
+			[ 'IGNORE' ]
+		);
+
+		if ( $dbw->affectedRows() === 0 ) {
+			return Status::newFatal( 'interwiki_addfailed', $prefix );
+		}
+
+		$this->interwikiLookup->invalidateCache( $prefix );
+
+		return Status::newGood();
 	}
 
 	/**
