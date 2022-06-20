@@ -256,7 +256,12 @@ class ImportDumpRequestManager {
 			$this->getTarget()
 		)->getConnection( DB_REPLICA, [], $this->getTarget() );
 
-		$sourceHost = parse_url( $this->getSource() )['host'] ?? $this->getSource();
+		$sourceHost = parse_url( $this->getSource() )['host'] ?? '';
+		if ( !$sourceHost ) {
+			return '';
+		}
+
+		$sourceHost = '://' . $sourceHost;
 
 		$row = $dbr->selectRow(
 			'interwiki',
@@ -264,7 +269,7 @@ class ImportDumpRequestManager {
 				'iw_prefix',
 			],
 			[
-				'iw_url' . $dbr->buildLike( $sourceHost, $dbr->anyString() ),
+				'iw_url' . $dbr->buildLike( $dbr->anyString(), $sourceHost, $dbr->anyString() ),
 			],
 			__METHOD__
 		);
@@ -287,7 +292,7 @@ class ImportDumpRequestManager {
 					'iw_prefix',
 				],
 				[
-					'iw_url' . $dbr->buildLike( $sourceHost, $dbr->anyString() ),
+					'iw_url' . $dbr->buildLike( $dbr->anyString(), $sourceHost, $dbr->anyString() ),
 				],
 				__METHOD__
 			);
