@@ -318,6 +318,37 @@ class ImportDumpRequestViewer {
 				];
 			}
 
+			if (
+				!$this->importDumpRequestManager->getInterwikiPrefix() &&
+				ExtensionRegistry::getInstance()->isLoaded( 'Interwiki' ) &&
+				$this->permissionManager->userHasRight( $user, 'interwiki' )
+			) {
+				$formDescriptor += [
+					'handle-interwiki-info' => [
+						'type' => 'info',
+						'default' => $this->context->msg( 'importdump-info-interwiki' )->text(),
+						'section' => 'handling',
+					],
+					'handle-interwiki-prefix' => [
+						'type' => 'text',
+						'label-message' => 'interwiki-prefix-label',
+						'default' => '',
+						'section' => 'handling',
+					],
+					'handle-interwiki-url' => [
+						'type' => 'url',
+						'label-message' => 'interwiki-url-label',
+						'default' => '',
+						'section' => 'handling',
+					],
+					'handle-submit-interwiki' => [
+						'type' => 'submit',
+						'default' => $this->context->msg( 'htmlform-submit' )->text(),
+						'section' => 'handling',
+					],
+				];
+			}
+
 			$formDescriptor += [
 				'handle-status' => [
 					'type' => 'select',
