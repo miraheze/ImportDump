@@ -282,7 +282,7 @@ class ImportDumpRequestViewer {
 				$info .= Html::errorBox(
 					$this->context->msg( 'importdump-info-no-interwiki-prefix',
 						$this->importDumpRequestManager->getTarget(),
-						$this->importDumpRequestManager->getSource()
+						parse_url( $this->importDumpRequestManager->getSource(), PHP_URL_HOST )	
 					)->escaped()
 				);
 
