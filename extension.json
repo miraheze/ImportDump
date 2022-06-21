@@ -50,6 +50,30 @@
 	"LogRestrictions": {
 		"importdumpprivate": "view-private-import-dump-requests"
 	},
+	"ActionFilteredLogs": {
+		"importdump": {
+			"interwiki": [
+				"interwiki"
+			],
+			"request": [
+				"request"
+			],
+			"statusupdate": [
+				"statusupdate"
+			]
+		},
+		"importdumpprivate": {
+			"interwiki": [
+				"interwiki"
+			],
+			"request": [
+				"request"
+			],
+			"statusupdate": [
+				"statusupdate"
+			]
+		}
+	},
 	"SpecialPages": {
 		"ImportDumpRequestQueue": {
 			"class": "Miraheze\\ImportDump\\Specials\\SpecialImportDumpRequestQueue",
