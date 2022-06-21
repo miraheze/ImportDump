@@ -258,9 +258,10 @@ class ImportDumpRequestManager {
 	/**
 	 * @param string $prefix
 	 * @param string $url
+	 * @param User $user
 	 * @return bool
 	 */
-	public function insertInterwikiPrefix( string $prefix, string $url ): bool {
+	public function insertInterwikiPrefix( string $prefix, string $url, User $user ): bool {
 		$dbw = $this->dbLoadBalancerFactory->getMainLB(
 			$this->getTarget()
 		)->getConnection( DB_PRIMARY, [], $this->getTarget() );
@@ -283,6 +284,28 @@ class ImportDumpRequestManager {
 		}
 
 		$this->interwikiLookup->invalidateCache( $prefix );
+
+		$requestQueueLink = SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', (string)$this->ID );
+		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
+
+		$logEntry = new ManualLogEntry(
+			$this->isPrivate() ? 'importdumpprivate' : 'importdump',
+			'interwiki'
+		);
+
+		$logEntry->setPerformer( $user );
+		$logEntry->setTarget( $requestQueueLink );
+
+		$logEntry->setParameters(
+			[
+				'4::prefix' => $prefix,
+				'5::target' => $this->getTarget(),
+				'6::requestLink' => Message::rawParam( $requestLink ),
+			]
+		);
+
+		$logID = $logEntry->insert( $dbw );
+		$logEntry->publish( $logID );
 
 		return true;
 	}
