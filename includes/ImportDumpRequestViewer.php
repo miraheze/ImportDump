@@ -596,11 +596,21 @@ class ImportDumpRequestViewer {
 				$formData['handle-interwiki-url'],
 				$user
 			) ) {
-				$out->addHTML( Html::successBox( $this->context->msg( 'importdump-interwiki-success' )->escaped() ) );
+				$out->addHTML( Html::successBox(
+					$this->context->msg( 'importdump-interwiki-success',
+						$this->importDumpRequestManager->getTarget()
+					)->escaped() )
+				);
+
 				return;
 			}
 
-			$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-interwiki-failed' )->escaped() ) );
+			$out->addHTML( Html::errorBox(
+				$this->context->msg( 'importdump-interwiki-failed',
+					$this->importDumpRequestManager->getTarget()
+				)->escaped() )
+			);
+
 			return;
 		}
 
