@@ -585,7 +585,8 @@ class ImportDumpRequestViewer {
 		if ( isset( $formData['submit-interwiki'] ) ) {
 			if ( $this->importDumpRequestManager->insertInterwikiPrefix(
 				$formData['handle-interwiki-prefix'],
-				$formData['handle-interwiki-url']
+				$formData['handle-interwiki-url'],
+				$user
 			) ) {
 				$out->addHTML( Html::successBox( $this->context->msg( 'importdump-interwiki-success' )->escaped() ) );
 				return;
