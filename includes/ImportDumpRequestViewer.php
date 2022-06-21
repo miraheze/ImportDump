@@ -582,6 +582,19 @@ class ImportDumpRequestViewer {
 			return;
 		}
 
+		if ( isset( $formData['submit-interwiki'] ) ) {
+			if ( $this->importDumpRequestManager->insertInterwikiPrefix(
+				$formData['handle-interwiki-prefix'],
+				$formData['handle-interwiki-url']
+			) ) {
+				$out->addHTML( Html::successBox( $this->context->msg( 'importdump-interwiki-success' )->escaped() ) );
+				return;
+			}
+
+			$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-interwiki-failed' )->escaped() ) );
+			return;
+		}
+
 		if ( isset( $formData['submit-handle'] ) ) {
 			$this->importDumpRequestManager->startAtomic( __METHOD__ );
 			$changes = [];
