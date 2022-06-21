@@ -6,6 +6,7 @@
 			"Verdy p"
 		]
 	},
+	"action-handle-import-dump-interwiki": "{{doc-action|handle-import-dump-interwiki}}",
 	"action-handle-import-dump-requests": "{{doc-action|handle-import-dump-requests}}",
 	"action-request-import-dump": "{{doc-action|request-import-dump}}",
 	"action-view-private-import-dump-requests": "{{doc-action|view-private-import-dump-requests}}",
@@ -103,6 +104,7 @@
 	"logentry-importdumpprivate-request": "{{logentry|[[Special:Log/importdumpprivate]]}}",
 	"logentry-importdumpprivate-statusupdate": "{{logentry|[[Special:Log/importdumpprivate]]}}",
 	"requestimportdump": "{{doc-special}}",
+	"right-handle-import-dump-interwiki": "{{doc-right|handle-import-dump-interwiki}}",
 	"right-handle-import-dump-requests": "{{doc-right|handle-import-dump-requests}}",
 	"right-request-import-dump": "{{doc-right|request-import-dump}}",
 	"right-view-private-import-dump-requests": "{{doc-right|view-private-import-dump-requests}}"
