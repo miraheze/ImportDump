@@ -439,8 +439,19 @@ class ImportDumpRequestViewer {
 	 * @return string|bool
 	 */
 	public function isValidInterwikiUrl( ?string $url, array $alldata ) {
-		if ( isset( $alldata['submit-interwiki'] ) && ( !$url || ctype_space( $url ) ) ) {
+		if ( !isset( $alldata['submit-interwiki'] ) ) {
+			return true;
+		}
+
+		if ( !$url || ctype_space( $url ) ) {
 			return Status::newFatal( 'htmlform-required' )->getMessage();
+		}
+
+		if (
+			!parse_url( $url, PHP_URL_SCHEME ) ||
+			!parse_url( $url, PHP_URL_HOST )
+		) {
+			return Status::newFatal( 'importdump-invalid-interwiki-url' )->getMessage();
 		}
 
 		return true;
