@@ -3,12 +3,12 @@
 namespace Miraheze\ImportDump;
 
 use Config;
-use ExtensionRegistry;
 use Html;
 use HTMLForm;
 use IContextSource;
 use Linker;
 use MediaWiki\Permissions\PermissionManager;
+use Status;
 use User;
 use UserNotLoggedIn;
 use WikiMap;
@@ -321,8 +321,7 @@ class ImportDumpRequestViewer {
 
 			if (
 				!$this->importDumpRequestManager->getInterwikiPrefix() &&
-				ExtensionRegistry::getInstance()->isLoaded( 'Interwiki' ) &&
-				$this->permissionManager->userHasRight( $user, 'interwiki' )
+				$this->permissionManager->userHasRight( $user, 'handle-import-dump-interwiki' )
 			) {
 				$formDescriptor += [
 					'handle-interwiki-info' => [
@@ -332,17 +331,19 @@ class ImportDumpRequestViewer {
 					],
 					'handle-interwiki-prefix' => [
 						'type' => 'text',
-						'label-message' => 'interwiki-prefix-label',
+						'label-message' => 'importdump-label-interwiki-prefix',
 						'default' => '',
+						'validation-callback' => [ $this, 'isValidInterwikiPrefix' ],
 						'section' => 'handling',
 					],
 					'handle-interwiki-url' => [
 						'type' => 'url',
-						'label-message' => 'interwiki-url-label',
+						'label-message' => 'importdump-label-interwiki-url',
 						'default' => '',
+						'validation-callback' => [ $this, 'isValidInterwikiUrl' ],
 						'section' => 'handling',
 					],
-					'handle-submit-interwiki' => [
+					'submit-interwiki' => [
 						'type' => 'submit',
 						'default' => $this->context->msg( 'htmlform-submit' )->text(),
 						'section' => 'handling',
@@ -389,7 +390,7 @@ class ImportDumpRequestViewer {
 	 */
 	public function isValidComment( ?string $comment, array $alldata ) {
 		if ( isset( $alldata['submit-comment'] ) && ( !$comment || ctype_space( $comment ) ) ) {
-			return $this->context->msg( 'htmlform-required' )->escaped();
+			return Status::newFatal( 'htmlform-required' )->getMessage();
 		}
 
 		return true;
@@ -401,7 +402,7 @@ class ImportDumpRequestViewer {
 	 */
 	public function isValidDatabase( ?string $target ) {
 		if ( !in_array( $target, $this->config->get( 'LocalDatabases' ) ) ) {
-			return $this->context->msg( 'importdump-invalid-target' )->escaped();
+			return Status::newFatal( 'importdump-invalid-target' )->getMessage();
 		}
 
 		return true;
@@ -413,7 +414,33 @@ class ImportDumpRequestViewer {
 	 */
 	public function isValidReason( ?string $reason ) {
 		if ( !$reason || ctype_space( $reason ) ) {
-			return $this->context->msg( 'htmlform-required' )->escaped();
+			return Status::newFatal( 'htmlform-required' )->getMessage();
+		}
+
+		return true;
+	}
+
+	/**
+	 * @param ?string $prefix
+	 * @param array $alldata
+	 * @return string|bool
+	 */
+	public function isValidInterwikiPrefix( ?string $prefix, array $alldata ) {
+		if ( isset( $alldata['submit-interwiki'] ) && ( !$prefix || ctype_space( $prefix ) ) ) {
+			return Status::newFatal( 'htmlform-required' )->getMessage();
+		}
+
+		return true;
+	}
+
+	/**
+	 * @param ?string $url
+	 * @param array $alldata
+	 * @return string|bool
+	 */
+	public function isValidInterwikiUrl( ?string $url, array $alldata ) {
+		if ( isset( $alldata['submit-interwiki'] ) && ( !$url || ctype_space( $url ) ) ) {
+			return Status::newFatal( 'htmlform-required' )->getMessage();
 		}
 
 		return true;
