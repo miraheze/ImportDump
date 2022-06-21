@@ -304,7 +304,7 @@ class ImportDumpRequestManager {
 			]
 		);
 
-		$logID = $logEntry->insert( $dbw );
+		$logID = $logEntry->insert( $this->dbw );
 		$logEntry->publish( $logID );
 
 		return true;
