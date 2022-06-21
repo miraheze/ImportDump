@@ -283,7 +283,7 @@ class ImportDumpRequestViewer {
 					$this->context->msg( 'importdump-info-no-interwiki-prefix',
 						$this->importDumpRequestManager->getTarget(),
 						parse_url( $this->importDumpRequestManager->getSource(), PHP_URL_HOST )
- )->escaped()
+					)->escaped()
 				);
 
 				$validRequest = false;
