@@ -323,10 +323,13 @@ class ImportDumpRequestViewer {
 				!$this->importDumpRequestManager->getInterwikiPrefix() &&
 				$this->permissionManager->userHasRight( $user, 'handle-import-dump-interwiki' )
 			) {
+				$source = $this->importDumpRequestManager->getSource();
+				$target = $this->importDumpRequestManager->getTarget();
+
 				$formDescriptor += [
 					'handle-interwiki-info' => [
 						'type' => 'info',
-						'default' => $this->context->msg( 'importdump-info-interwiki' )->text(),
+						'default' => $this->context->msg( 'importdump-info-interwiki', $target )->text(),
 						'section' => 'handling',
 					],
 					'handle-interwiki-prefix' => [
@@ -338,7 +341,12 @@ class ImportDumpRequestViewer {
 					],
 					'handle-interwiki-url' => [
 						'type' => 'url',
-						'label-message' => 'importdump-label-interwiki-url',
+						'label-message' => [
+							'importdump-label-interwiki-url',
+							( parse_url( $source, PHP_URL_SCHEME ) ?: 'https' ) . '://' .
+							( parse_url( $source, PHP_URL_HOST ) ?: 'www.example.com' ) .
+							'/wiki/$1',
+						],
 						'default' => '',
 						'validation-callback' => [ $this, 'isValidInterwikiUrl' ],
 						'section' => 'handling',
