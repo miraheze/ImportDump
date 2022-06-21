@@ -16,7 +16,6 @@ use Message;
 use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
 use SpecialPage;
-use Status;
 use stdClass;
 use User;
 use UserRightsProxy;
@@ -259,9 +258,9 @@ class ImportDumpRequestManager {
 	/**
 	 * @param string $prefix
 	 * @param string $url
-	 * @return Status
+	 * @return bool
 	 */
-	public function insertInterwikiPrefix( string $prefix, string $url ): Status {
+	public function insertInterwikiPrefix( string $prefix, string $url ): bool {
 		$dbw = $this->dbLoadBalancerFactory->getMainLB(
 			$this->getTarget()
 		)->getConnection( DB_PRIMARY, [], $this->getTarget() );
@@ -280,12 +279,12 @@ class ImportDumpRequestManager {
 		);
 
 		if ( $dbw->affectedRows() === 0 ) {
-			return Status::newFatal( 'interwiki_addfailed', $prefix );
+			return false;
 		}
 
 		$this->interwikiLookup->invalidateCache( $prefix );
 
-		return Status::newGood();
+		return true;
 	}
 
 	/**
