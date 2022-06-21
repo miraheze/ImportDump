@@ -40,7 +40,7 @@
 	"importdump-info-requester-locked": "Message that is displayed on the 'handling' section of Special:ImportDumpRequestQueue when the requester has been locked. $1 is the requester's username.",
 	"importdump-interwiki-failed": "Error message displayed when submitting the interwiki table changes fails. $1 is the target database name.",
 	"importdump-interwiki-success": "Success message displayed when submitting the interwiki table changes successfully. $1 is the target database name.",
-	"importdump-invalid-interwiki-url": "Status message displayed when invalid URL was entered for the 'url' field for adding interwiki."
+	"importdump-invalid-interwiki-url": "Status message displayed when invalid URL was entered for the 'url' field for adding interwiki.",
 	"importdump-invalid-target": "Status message displayed when invalid database name was entered for the 'target' field.",
 	"importdump-label-add-comment": "Label for the 'Add Comment' submit button.",
 	"importdump-label-all": "Label for 'All'.\n\n{{Identical|All}}",
