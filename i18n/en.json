@@ -4,7 +4,8 @@
 			"Universal Omega"
 		]
 	},
-	"action-handle-import-dump-requests": "handle user import requests",
+	"action-handle-import-dump-interwiki": "handle import dump interwiki",
+	"action-handle-import-dump-requests": "handle user import dump requests",
 	"action-request-import-dump": "request import dumps",
 	"action-view-private-import-dump-requests": "view private import dump requests",
 	"echo-category-title-importdump-new-request": "New import dump request",
@@ -101,6 +102,7 @@
 	"logentry-importdumpprivate-request": "$1 requested an import dump for private wiki $4 in $5.",
 	"logentry-importdumpprivate-statusupdate": "$1 updated status of private import dump request $4 to '$5'.",
 	"requestimportdump": "Request Import Dump",
+	"right-handle-import-dump-interwiki": "Handle import dump interwiki",
 	"right-handle-import-dump-requests": "Handle user import dump requests",
 	"right-request-import-dump": "Request import dumps",
 	"right-view-private-import-dump-requests": "View private import dump requests"
