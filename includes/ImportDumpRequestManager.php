@@ -318,7 +318,7 @@ class ImportDumpRequestManager {
 			$this->getTarget()
 		)->getConnection( DB_REPLICA, [], $this->getTarget() );
 
-		$sourceHost = parse_url( $this->getSource() )['host'] ?? '';
+		$sourceHost = parse_url( $this->getSource(), PHP_URL_HOST );
 		if ( !$sourceHost ) {
 			return '';
 		}
@@ -365,7 +365,7 @@ class ImportDumpRequestManager {
 		}
 
 		if ( $this->options->get( 'ImportDumpInterwikiMap' ) ) {
-			$parsedSource = parse_url( $this->getSource() )['host'] ?? '';
+			$parsedSource = parse_url( $this->getSource(), PHP_URL_HOST ) ?: '';
 			$domain = explode( '.', $parsedSource )[1] ?? '';
 
 			if ( $domain ) {
