@@ -26,6 +26,7 @@
 		}
 	},
 	"AvailableRights": [
+		"handle-import-dump-interwiki",
 		"handle-import-dump-requests",
 		"request-import-dump",
 		"view-private-import-dump-requests"
@@ -48,6 +49,30 @@
 	],
 	"LogRestrictions": {
 		"importdumpprivate": "view-private-import-dump-requests"
+	},
+	"ActionFilteredLogs": {
+		"importdump": {
+			"interwiki": [
+				"interwiki"
+			],
+			"request": [
+				"request"
+			],
+			"statusupdate": [
+				"statusupdate"
+			]
+		},
+		"importdumpprivate": {
+			"interwiki": [
+				"interwiki"
+			],
+			"request": [
+				"request"
+			],
+			"statusupdate": [
+				"statusupdate"
+			]
+		}
 	},
 	"SpecialPages": {
 		"ImportDumpRequestQueue": {

@@ -8,6 +8,7 @@ use ExtensionRegistry;
 use GlobalVarConfig;
 use ManualLogEntry;
 use MediaWiki\Config\ServiceOptions;
+use MediaWiki\Interwiki\InterwikiLookup;
 use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManagerFactory;
@@ -47,6 +48,9 @@ class ImportDumpRequestManager {
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
 
+	/** @var InterwikiLookup */
+	private $interwikiLookup;
+
 	/** @var MessageLocalizer */
 	private $messageLocalizer;
 
@@ -68,6 +72,7 @@ class ImportDumpRequestManager {
 	/**
 	 * @param Config $config
 	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param InterwikiLookup $interwikiLookup
 	 * @param LinkRenderer $linkRenderer
 	 * @param MessageLocalizer $messageLocalizer
 	 * @param ServiceOptions $options
@@ -77,6 +82,7 @@ class ImportDumpRequestManager {
 	public function __construct(
 		Config $config,
 		ILBFactory $dbLoadBalancerFactory,
+		InterwikiLookup $interwikiLookup,
 		LinkRenderer $linkRenderer,
 		MessageLocalizer $messageLocalizer,
 		ServiceOptions $options,
@@ -87,6 +93,7 @@ class ImportDumpRequestManager {
 
 		$this->config = $config;
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
+		$this->interwikiLookup = $interwikiLookup;
 		$this->linkRenderer = $linkRenderer;
 		$this->messageLocalizer = $messageLocalizer;
 		$this->options = $options;
@@ -249,6 +256,61 @@ class ImportDumpRequestManager {
 	}
 
 	/**
+	 * @param string $prefix
+	 * @param string $url
+	 * @param User $user
+	 * @return bool
+	 */
+	public function insertInterwikiPrefix( string $prefix, string $url, User $user ): bool {
+		$dbw = $this->dbLoadBalancerFactory->getMainLB(
+			$this->getTarget()
+		)->getConnection( DB_PRIMARY, [], $this->getTarget() );
+
+		$dbw->insert(
+			'interwiki',
+			[
+				'iw_prefix' => $prefix,
+				'iw_url' => $url,
+				'iw_api' => '',
+				'iw_local' => 0,
+				'iw_trans' => 0,
+			],
+			__METHOD__,
+			[ 'IGNORE' ]
+		);
+
+		if ( $dbw->affectedRows() === 0 ) {
+			return false;
+		}
+
+		$this->interwikiLookup->invalidateCache( $prefix );
+
+		$requestQueueLink = SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', (string)$this->ID );
+		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
+
+		$logEntry = new ManualLogEntry(
+			$this->isPrivate() ? 'importdumpprivate' : 'importdump',
+			'interwiki'
+		);
+
+		$logEntry->setPerformer( $user );
+		$logEntry->setTarget( $requestQueueLink );
+
+		$logEntry->setParameters(
+			[
+				'4::prefix' => $prefix,
+				'5::target' => $this->getTarget(),
+				'6::requestLink' => Message::rawParam( $requestLink ),
+			]
+		);
+
+		$logID = $logEntry->insert( $this->dbw );
+		$logEntry->publish( $logID );
+
+		return true;
+	}
+
+	/**
 	 * @return string
 	 */
 	public function getInterwikiPrefix(): string {
@@ -256,7 +318,7 @@ class ImportDumpRequestManager {
 			$this->getTarget()
 		)->getConnection( DB_REPLICA, [], $this->getTarget() );
 
-		$sourceHost = parse_url( $this->getSource() )['host'] ?? '';
+		$sourceHost = parse_url( $this->getSource(), PHP_URL_HOST );
 		if ( !$sourceHost ) {
 			return '';
 		}
@@ -303,7 +365,7 @@ class ImportDumpRequestManager {
 		}
 
 		if ( $this->options->get( 'ImportDumpInterwikiMap' ) ) {
-			$parsedSource = parse_url( $this->getSource() )['host'] ?? '';
+			$parsedSource = parse_url( $this->getSource(), PHP_URL_HOST ) ?: '';
 			$domain = explode( '.', $parsedSource )[1] ?? '';
 
 			if ( $domain ) {

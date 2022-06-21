@@ -8,6 +8,7 @@ use HTMLForm;
 use IContextSource;
 use Linker;
 use MediaWiki\Permissions\PermissionManager;
+use Status;
 use User;
 use UserNotLoggedIn;
 use WikiMap;
@@ -281,7 +282,7 @@ class ImportDumpRequestViewer {
 				$info .= Html::errorBox(
 					$this->context->msg( 'importdump-info-no-interwiki-prefix',
 						$this->importDumpRequestManager->getTarget(),
-						$this->importDumpRequestManager->getSource()
+						parse_url( $this->importDumpRequestManager->getSource(), PHP_URL_HOST )
 					)->escaped()
 				);
 
@@ -313,6 +314,46 @@ class ImportDumpRequestViewer {
 						'label-message' => 'importdump-label-private',
 						'default' => $this->importDumpRequestManager->isPrivate(),
 						'disabled' => $this->importDumpRequestManager->isPrivate( true ),
+						'section' => 'handling',
+					],
+				];
+			}
+
+			if (
+				!$this->importDumpRequestManager->getInterwikiPrefix() &&
+				$this->permissionManager->userHasRight( $user, 'handle-import-dump-interwiki' )
+			) {
+				$source = $this->importDumpRequestManager->getSource();
+				$target = $this->importDumpRequestManager->getTarget();
+
+				$formDescriptor += [
+					'handle-interwiki-info' => [
+						'type' => 'info',
+						'default' => $this->context->msg( 'importdump-info-interwiki', $target )->text(),
+						'section' => 'handling',
+					],
+					'handle-interwiki-prefix' => [
+						'type' => 'text',
+						'label-message' => 'importdump-label-interwiki-prefix',
+						'default' => '',
+						'validation-callback' => [ $this, 'isValidInterwikiPrefix' ],
+						'section' => 'handling',
+					],
+					'handle-interwiki-url' => [
+						'type' => 'url',
+						'label-message' => [
+							'importdump-label-interwiki-url',
+							( parse_url( $source, PHP_URL_SCHEME ) ?: 'https' ) . '://' .
+							( parse_url( $source, PHP_URL_HOST ) ?: 'www.example.com' ) .
+							'/wiki/$1',
+						],
+						'default' => '',
+						'validation-callback' => [ $this, 'isValidInterwikiUrl' ],
+						'section' => 'handling',
+					],
+					'submit-interwiki' => [
+						'type' => 'submit',
+						'default' => $this->context->msg( 'htmlform-submit' )->text(),
 						'section' => 'handling',
 					],
 				];
@@ -357,7 +398,7 @@ class ImportDumpRequestViewer {
 	 */
 	public function isValidComment( ?string $comment, array $alldata ) {
 		if ( isset( $alldata['submit-comment'] ) && ( !$comment || ctype_space( $comment ) ) ) {
-			return $this->context->msg( 'htmlform-required' )->escaped();
+			return Status::newFatal( 'htmlform-required' )->getMessage();
 		}
 
 		return true;
@@ -369,7 +410,7 @@ class ImportDumpRequestViewer {
 	 */
 	public function isValidDatabase( ?string $target ) {
 		if ( !in_array( $target, $this->config->get( 'LocalDatabases' ) ) ) {
-			return $this->context->msg( 'importdump-invalid-target' )->escaped();
+			return Status::newFatal( 'importdump-invalid-target' )->getMessage();
 		}
 
 		return true;
@@ -381,7 +422,44 @@ class ImportDumpRequestViewer {
 	 */
 	public function isValidReason( ?string $reason ) {
 		if ( !$reason || ctype_space( $reason ) ) {
-			return $this->context->msg( 'htmlform-required' )->escaped();
+			return Status::newFatal( 'htmlform-required' )->getMessage();
+		}
+
+		return true;
+	}
+
+	/**
+	 * @param ?string $prefix
+	 * @param array $alldata
+	 * @return string|bool
+	 */
+	public function isValidInterwikiPrefix( ?string $prefix, array $alldata ) {
+		if ( isset( $alldata['submit-interwiki'] ) && ( !$prefix || ctype_space( $prefix ) ) ) {
+			return Status::newFatal( 'htmlform-required' )->getMessage();
+		}
+
+		return true;
+	}
+
+	/**
+	 * @param ?string $url
+	 * @param array $alldata
+	 * @return string|bool
+	 */
+	public function isValidInterwikiUrl( ?string $url, array $alldata ) {
+		if ( !isset( $alldata['submit-interwiki'] ) ) {
+			return true;
+		}
+
+		if ( !$url || ctype_space( $url ) ) {
+			return Status::newFatal( 'htmlform-required' )->getMessage();
+		}
+
+		if (
+			!parse_url( $url, PHP_URL_SCHEME ) ||
+			!parse_url( $url, PHP_URL_HOST )
+		) {
+			return Status::newFatal( 'importdump-invalid-interwiki-url' )->getMessage();
 		}
 
 		return true;
@@ -508,6 +586,30 @@ class ImportDumpRequestViewer {
 			$this->importDumpRequestManager->endAtomic( __METHOD__ );
 
 			$out->addHTML( Html::successBox( $this->context->msg( 'importdump-edit-success' )->escaped() ) );
+
+			return;
+		}
+
+		if ( isset( $formData['submit-interwiki'] ) ) {
+			if ( $this->importDumpRequestManager->insertInterwikiPrefix(
+				$formData['handle-interwiki-prefix'],
+				$formData['handle-interwiki-url'],
+				$user
+			) ) {
+				$out->addHTML( Html::successBox(
+					$this->context->msg( 'importdump-interwiki-success',
+						$this->importDumpRequestManager->getTarget()
+					)->escaped() )
+				);
+
+				return;
+			}
+
+			$out->addHTML( Html::errorBox(
+				$this->context->msg( 'importdump-interwiki-failed',
+					$this->importDumpRequestManager->getTarget()
+				)->escaped() )
+			);
 
 			return;
 		}

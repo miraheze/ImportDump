@@ -388,7 +388,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 */
 	public function isValidDatabase( ?string $target ) {
 		if ( !in_array( $target, $this->getConfig()->get( 'LocalDatabases' ) ) ) {
-			return $this->msg( 'importdump-invalid-target' )->escaped();
+			return Status::newFatal( 'importdump-invalid-target' )->getMessage();
 		}
 
 		return true;
@@ -400,7 +400,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 */
 	public function isValidReason( ?string $reason ) {
 		if ( !$reason || ctype_space( $reason ) ) {
-			return $this->msg( 'htmlform-required' )->escaped();
+			return Status::newFatal( 'htmlform-required' )->getMessage();
 		}
 
 		return true;
