@@ -266,17 +266,6 @@ class ImportDumpRequestManager {
 			$this->getTarget()
 		)->getConnection( DB_PRIMARY, [], $this->getTarget() );
 
-		if ( $prefix === '' || $url === '' ) {
-			return Status::newFatal( 'interwiki-submit-empty' );
-		}
-
-		if (
-			!parse_url( $url, PHP_URL_SCHEME ) ||
-			!parse_url( $url, PHP_URL_HOST )
-		) {
-			return Status::newFatal( 'interwiki-submit-invalidurl' );
-		}
-
 		$dbw->insert(
 			'interwiki',
 			[
