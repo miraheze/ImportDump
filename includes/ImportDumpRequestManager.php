@@ -415,6 +415,10 @@ class ImportDumpRequestManager {
 		$userName = $this->getRequester()->getName();
 		$userRightsProxy = UserRightsProxy::newFromName( $this->getTarget(), $userName );
 
+		if ( !$userRightsProxy ) {
+			return [];
+		}
+
 		return $this->userGroupManagerFactory
 			->getUserGroupManager( $this->getTarget() )
 			->getUserGroups( $userRightsProxy );
