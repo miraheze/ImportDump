@@ -99,6 +99,7 @@
 	"importdump-table-target": "Target",
 	"importdump-unknown": "Unknown request.",
 	"importdump-unknown-username-prefix": "unknown",
+	"importdump-usergroups-none": "none",
 	"importdumpprivate-log-header": "This is a log of all import dump requests and status updates for requests with targets that are private wikis.",
 	"importdumpprivate-log-name": "Import dump requests private log",
 	"importdumprequestqueue": "Import Dump Request Queue",
