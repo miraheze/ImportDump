@@ -416,7 +416,7 @@ class ImportDumpRequestManager {
 		$userRightsProxy = UserRightsProxy::newFromName( $this->getTarget(), $userName );
 
 		if ( !$userRightsProxy ) {
-			return [];
+			return [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
 		}
 
 		return $this->userGroupManagerFactory
