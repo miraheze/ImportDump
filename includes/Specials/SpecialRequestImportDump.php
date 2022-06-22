@@ -185,7 +185,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		}
 
 		if (
-			$this->getUser()->pingLimiter( 'requestimportdump' ) ||
+			$this->getUser()->pingLimiter( 'request-import-dump' ) ||
 			UploadBase::isThrottled( $this->getUser() )
 		) {
 			return Status::newFatal( 'actionthrottledtext' );
