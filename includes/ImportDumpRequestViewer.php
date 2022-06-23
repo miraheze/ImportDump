@@ -285,11 +285,6 @@ class ImportDumpRequestViewer {
 						parse_url( $this->importDumpRequestManager->getSource(), PHP_URL_HOST )
 					)->escaped()
 				);
-
-				$validRequest = false;
-				if ( $status === 'pending' || $status === 'inprogress' ) {
-					$status = 'declined';
-				}
 			}
 
 			$formDescriptor += [
