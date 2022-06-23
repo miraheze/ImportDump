@@ -393,7 +393,7 @@ class ImportDumpRequestManager {
 		$command = $this->options->get( 'ImportDumpScriptCommand' );
 
 		if ( !$this->getInterwikiPrefix() ) {
-			$command = str_replace( '--username-prefix=', '', $command );
+			$command = preg_replace( '/--username-prefix=?/', '', $command );
 		}
 
 		return str_replace( [
