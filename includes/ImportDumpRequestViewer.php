@@ -224,6 +224,11 @@ class ImportDumpRequestViewer {
 						$this->importDumpRequestManager->getFilePath()
 					)->escaped()
 				);
+
+				$validRequest = false;
+				if ( $status === 'pending' || $status === 'inprogress' ) {
+					$status = 'declined';
+				}
 			}
 
 			$info .= Html::noticeBox(
