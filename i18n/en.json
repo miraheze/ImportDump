@@ -31,7 +31,7 @@
 	"importdump-info-groups": "User groups that $1 has on $2: $3",
 	"importdump-info-interwiki": "Add an interwiki prefix to the local interwiki table of $1 with the below fields. Please ensure the values are correct before submitting.",
 	"importdump-info-no-file-found": "No file was found at $1. It may have already been deleted.",
-	"importdump-info-no-interwiki-prefix": "No interwiki prefix exists on the target wiki ($1), which is pointing to the source wiki ($2). It is recommended that you add one before continuing with this request.",
+	"importdump-info-no-interwiki-prefix": "No interwiki prefix exists on the target wiki ($1), which is pointing to the source wiki ($2). It is recommended that you add one before continuing.",
 	"importdump-info-request-private": "This request is marked as private. It is not publicly viewable.",
 	"importdump-info-requester-globally-blocked": "The requester ($1) has been globally blocked. This request should be declined.",
 	"importdump-info-requester-locally-blocked": "The requester ($1) has been locally blocked on this wiki ($2).",
