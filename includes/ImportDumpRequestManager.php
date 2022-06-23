@@ -392,8 +392,9 @@ class ImportDumpRequestManager {
 
 		$command = $this->options->get( 'ImportDumpScriptCommand' );
 
-		$userNamePrefix = $this->getInterwikiPrefix() ?:
-			$this->messageLocalizer->msg( 'importdump-unknown-username-prefix' )->text();
+		if ( !$this->getInterwikiPrefix() ) {
+			$command = str_replace( '--username-prefix=', '', $command );
+		}
 
 		return str_replace( [
 			'{IP}',
@@ -403,7 +404,7 @@ class ImportDumpRequestManager {
 		], [
 			$blankConfig->get( 'IP' ),
 			$this->getTarget(),
-			$userNamePrefix,
+			$this->getInterwikiPrefix(),
 			$this->getFilePath(),
 		], $command );
 	}
