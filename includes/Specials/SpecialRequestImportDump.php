@@ -290,7 +290,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		);
 
 		$requestID = (string)$dbw->insertId();
-		$requestQueueLink = SpecialPage::getTitleValueFor( 'ImportDumpRequestQueue', $requestID );
+		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', $requestID );
 
 		$requestLink = $this->getLinkRenderer()->makeLink( $requestQueueLink, "#{$requestID}" );
 
@@ -354,7 +354,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			)
 		);
 
-		$requestLink = SpecialPage::getTitleFor( 'ImportDumpRequestQueue', $requestID )->getFullURL();
+		$requestLink = SpecialPage::getTitleFor( 'RequestImportDumpQueue', $requestID )->getFullURL();
 
 		foreach ( $notifiedUsers as $receiver ) {
 			if (

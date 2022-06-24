@@ -11,7 +11,7 @@ use Miraheze\ImportDump\ImportDumpRequestViewer;
 use SpecialPage;
 use Wikimedia\Rdbms\ILBFactory;
 
-class SpecialImportDumpRequestQueue extends SpecialPage {
+class SpecialRequestImportDumpQueue extends SpecialPage {
 
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
@@ -37,7 +37,7 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 		PermissionManager $permissionManager,
 		UserFactory $userFactory
 	) {
-		parent::__construct( 'ImportDumpRequestQueue' );
+		parent::__construct( 'RequestImportDumpQueue' );
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->importDumpRequestManager = $importDumpRequestManager;
