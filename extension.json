@@ -75,21 +75,21 @@
 		}
 	},
 	"SpecialPages": {
-		"ImportDumpRequestQueue": {
-			"class": "Miraheze\\ImportDump\\Specials\\SpecialImportDumpRequestQueue",
-			"services": [
-				"DBLoadBalancerFactory",
-				"ImportDumpRequestManager",
-				"PermissionManager",
-				"UserFactory"
-			]
-		},
 		"RequestImportDump": {
 			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportDump",
 			"services": [
 				"DBLoadBalancerFactory",
 				"MimeAnalyzer",
 				"RepoGroup",
+				"UserFactory"
+			]
+		},
+		"RequestImportDumpQueue": {
+			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportDumpQueue",
+			"services": [
+				"DBLoadBalancerFactory",
+				"ImportDumpRequestManager",
+				"PermissionManager",
 				"UserFactory"
 			]
 		}
