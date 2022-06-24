@@ -60,7 +60,7 @@ class SpecialImportDumpRequestQueue extends SpecialPage {
 	}
 
 	private function doPagerStuff() {
-		$requester = $this->getRequest()->getText( 'requester' );
+		$requester = $this->getRequest()->getText( 'requester', $this->getUser() );
 		$status = $this->getRequest()->getText( 'status' );
 		$target = $this->getRequest()->getText( 'target' );
 
