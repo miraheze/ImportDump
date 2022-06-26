@@ -133,7 +133,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'UploadFile' => [
 					'type' => 'file',
 					'label-message' => 'importdump-label-upload-file',
-					'help-message' => 'importdump-help-upload',
+					'help-message' => 'importdump-help-upload-file',
 					'hide-if' => [ '!==', 'wpUploadSourceType', 'File' ],
 					'accept' => [ '.xml' ],
 					'required' => true,
@@ -141,7 +141,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'UploadFileURL' => [
 					'type' => 'url',
 					'label-message' => 'importdump-label-upload-file-url',
-					'help-message' => 'importdump-help-upload',
+					'help-message' => 'importdump-help-upload-file-url',
 					'hide-if' => [ '!==', 'wpUploadSourceType', 'Url' ],
 					'required' => true,
 				],
@@ -151,7 +151,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'UploadFile' => [
 					'type' => 'file',
 					'label-message' => 'importdump-label-upload-file',
-					'help-message' => 'importdump-help-upload',
+					'help-message' => 'importdump-help-upload-file',
 					'accept' => [ '.xml' ],
 					'required' => true,
 				],
