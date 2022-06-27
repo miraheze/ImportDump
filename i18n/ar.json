@@ -56,7 +56,6 @@
 	"importdump-table-status": "الحالة",
 	"importdump-table-target": "الهدف",
 	"importdump-unknown": "طلب غير معروف.",
-	"importdump-unknown-username-prefix": "غير معروف",
 	"importdumpprivate-log-header": "هذا سجل لجميع طلبات تفريغ الاستيراد وتحديثات الحالة للطلبات ذات الأهداف التي تمثل مواقع ويكى الخاصة.",
 	"ipb-action-request-import-dump": "طلب استيراد تفريغ",
 	"logentry-importdumpprivate-request": "طلب $1 تفريغ استيراد لـويكى الخاص $4 في $5.",
