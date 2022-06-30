@@ -58,6 +58,7 @@
 	"importdump-unknown": "طلب غير معروف.",
 	"importdumpprivate-log-header": "هذا سجل لجميع طلبات تفريغ الاستيراد وتحديثات الحالة للطلبات ذات الأهداف التي تمثل مواقع ويكى الخاصة.",
 	"ipb-action-request-import-dump": "طلب استيراد تفريغ",
+	"log-action-filter-importdumpprivate": "نوع الفعل:",
 	"logentry-importdumpprivate-request": "طلب $1 تفريغ استيراد لـويكى الخاص $4 في $5.",
 	"right-handle-import-dump-requests": "التعامل مع طلبات تفريغ استيراد المستخدم"
 }

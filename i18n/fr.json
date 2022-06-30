@@ -26,7 +26,7 @@
 	"importdump-help-reason": "Veuillez décrire en détail le motif pour lequel vous effectuez cette demande d’importation des données.",
 	"importdump-help-source": "Entrez l’URL complète du wiki source (d’où vous allez importer les données).",
 	"importdump-help-target": "Ce doit être un nom de base de données valide.",
-	"importdump-help-upload-file": "Seuls les fichiers XML sont autorisés. Si votre fichier XML est dans une archive compressée, veuillez l’extraire avant d’essayer de le télécharger.",
+	"importdump-help-upload-file": "Seuls les fichiers XML sont autorisés. Si votre fichier XML est dans une archive compressée, veuillez l’extraire avant d’essayer de le téléverser.",
 	"importdump-help-upload-file-url": "Seuls les fichiers XML non compressés sont autorisés.",
 	"importdump-info-command": "'''Commande pour cet import :''' <code>$1</code>",
 	"importdump-info-filesize": "'''Taille de fichier pour cet import :''' $1",
