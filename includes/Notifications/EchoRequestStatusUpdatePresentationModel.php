@@ -35,22 +35,13 @@ class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationMode
 	}
 
 	/**
-	 * @return bool
-	 */
-	public function getPrimaryLink() {
-		return false;
-	}
-
-	/**
 	 * @return array
 	 */
-	public function getSecondaryLinks() {
-		$visitLink = [
+	public function getPrimaryLink() {
+		return [
 			'url' => $this->event->getExtraParam( 'request-url', 0 ),
 			'label' => $this->msg( 'importdump-notification-visit-request' )->text(),
 			'prioritized' => true,
 		];
-
-		return [ $visitLink ];
 	}
 }
