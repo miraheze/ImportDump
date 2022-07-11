@@ -2,6 +2,7 @@
 	"@metadata": {
 		"authors": [
 			"Asma",
+			"Mohanad Kh",
 			"محمد أحمد عبد الفتاح"
 		]
 	},
@@ -56,6 +57,7 @@
 	"importdump-table-status": "الحالة",
 	"importdump-table-target": "الهدف",
 	"importdump-unknown": "طلب غير معروف.",
+	"importdump-usergroups-none": "لا شيء",
 	"importdumpprivate-log-header": "هذا سجل لجميع طلبات تفريغ الاستيراد وتحديثات الحالة للطلبات ذات الأهداف التي تمثل مواقع ويكى الخاصة.",
 	"ipb-action-request-import-dump": "طلب استيراد تفريغ",
 	"log-action-filter-importdumpprivate": "نوع الفعل:",
