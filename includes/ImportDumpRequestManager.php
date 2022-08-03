@@ -21,6 +21,7 @@ use User;
 use UserRightsProxy;
 use Wikimedia\Rdbms\DBConnRef;
 use Wikimedia\Rdbms\ILBFactory;
+use Wikimedia\Rdbms\SelectQueryBuilder;
 
 class ImportDumpRequestManager {
 
@@ -116,14 +117,12 @@ class ImportDumpRequestManager {
 			$this->dbw = $this->dbLoadBalancerFactory->getMainLB()->getConnection( DB_PRIMARY );
 		}
 
-		$this->row = $this->dbw->selectRow(
-			'importdump_requests',
-			'*',
-			[
-				'request_id' => $requestID,
-			],
-			__METHOD__
-		);
+		$this->row = $this->dbw->newSelectQueryBuilder()
+			->table( 'importdump_requests' )
+			->field( '*' )
+			->where( [ 'request_id' => $requestID ] )
+			->caller( __METHOD__ )
+			->fetchRow();
 	}
 
 	/**
@@ -218,17 +217,12 @@ class ImportDumpRequestManager {
 	 * @return array
 	 */
 	public function getComments(): array {
-		$res = $this->dbw->select(
-			'importdump_request_comments',
-			'*',
-			[
-				'request_id' => $this->ID,
-			],
-			__METHOD__,
-			[
-				'ORDER BY' => 'request_comment_timestamp DESC',
-			]
-		);
+		$res = $this->dbw->newSelectQueryBuilder()
+			->table( 'importdump_request_comments' )
+			->field( '*' )
+			->where( [ 'request_id' => $this->ID ] )
+			->orderBy( 'request_comment_timestamp', SelectQueryBuilder::SORT_DESC )
+			->caller( __METHOD__ );
 
 		if ( !$res ) {
 			return [];
@@ -325,16 +319,14 @@ class ImportDumpRequestManager {
 
 		$sourceHost = '://' . $sourceHost;
 
-		$row = $dbr->selectRow(
-			'interwiki',
-			[
-				'iw_prefix',
-			],
-			[
+		$row = $dbr->newSelectQueryBuilder()
+			->table( 'interwiki' )
+			->field( 'iw_prefix' )
+			->where( [
 				'iw_url' . $dbr->buildLike( $dbr->anyString(), $sourceHost, $dbr->anyString() ),
-			],
-			__METHOD__
-		);
+			] )
+			->caller( __METHOD__ )
+			->fetchRow();
 
 		if ( $row->iw_prefix ?? '' ) {
 			return $row->iw_prefix;
@@ -348,16 +340,14 @@ class ImportDumpRequestManager {
 				$this->config->get( 'InterwikiCentralDB' )
 			)->getConnection( DB_REPLICA, [], $this->config->get( 'InterwikiCentralDB' ) );
 
-			$row = $dbr->selectRow(
-				'interwiki',
-				[
-					'iw_prefix',
-				],
-				[
+			$row = $dbr->newSelectQueryBuilder()
+				->table( 'interwiki' )
+				->field( 'iw_prefix' )
+				->where( [
 					'iw_url' . $dbr->buildLike( $dbr->anyString(), $sourceHost, $dbr->anyString() ),
-				],
-				__METHOD__
-			);
+				] )
+				->caller( __METHOD__ )
+				->fetchRow();
 
 			if ( $row->iw_prefix ?? '' ) {
 				return $row->iw_prefix;
