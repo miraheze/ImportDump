@@ -222,7 +222,8 @@ class ImportDumpRequestManager {
 			->field( '*' )
 			->where( [ 'request_id' => $this->ID ] )
 			->orderBy( 'request_comment_timestamp', SelectQueryBuilder::SORT_DESC )
-			->caller( __METHOD__ );
+			->caller( __METHOD__ )
+			->fetchResultSet();
 
 		if ( !$res ) {
 			return [];
