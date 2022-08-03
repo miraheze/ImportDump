@@ -200,15 +200,15 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			$dbw = $this->dbLoadBalancerFactory->getMainLB()->getConnection( DB_PRIMARY );
 		}
 
-		$duplicate = $dbw->selectRow(
-			'importdump_requests',
-			'*',
-			[
+		$duplicate = $dbw->newSelectQueryBuilder()
+			->table( 'importdump_requests' )
+			->field( '*' )
+			->where( [
 				'request_reason' => $data['reason'],
 				'request_status' => 'pending',
-			],
-			__METHOD__
-		);
+			] )
+			->caller( __METHOD__ )
+			->fetchRow();
 
 		if ( (bool)$duplicate ) {
 			return Status::newFatal( 'importdump-duplicate-request' );
