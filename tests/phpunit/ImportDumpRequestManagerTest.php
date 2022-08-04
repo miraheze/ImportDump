@@ -57,6 +57,6 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 
 		$ID = $reflection->getValue( $this->mockImportDumpRequestManager() );
 
-		$this->assertEquals( $ID, 1 );
+		$this->assertSame( 1, $ID );
 	}
 }
