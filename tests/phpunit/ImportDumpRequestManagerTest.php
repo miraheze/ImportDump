@@ -2,9 +2,11 @@
 
 namespace Miraheze\ImportDump\Tests;
 
+use MediaWiki\Config\ServiceOptions;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use ReflectionClass;
+use RequestContext;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
@@ -39,7 +41,24 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 	}
 
 	private function mockImportDumpRequestManager() {
-		$mock = $this->getMockBuilder( ImportDumpRequestManager::class )->getMock();
+		$services = $this->getServiceContainer();
+
+		$mock = $this->getMockBuilder( ImportDumpRequestManager::class )
+			->setConstructorArgs( [
+				$services->getConfigFactory()->makeConfig( 'ImportDump' ),
+				$services->getDBLoadBalancerFactory(),
+				$services->getInterwikiLookup(),
+				$services->getLinkRenderer(),
+				RequestContext::getMain(),
+				new ServiceOptions(
+					ImportDumpRequestManager::CONSTRUCTOR_OPTIONS,
+					$services->getConfigFactory()->makeConfig( 'ImportDump' )
+				),
+				$services->getUserFactory(),
+				$services->getUserGroupManagerFactory()
+			] )
+			->getMock();
+
 		$mock->expects( $this->once() )->method( 'fromID' )->with( 1 );
 
 		$this->setService( 'ImportDumpRequestManager', $mock );
