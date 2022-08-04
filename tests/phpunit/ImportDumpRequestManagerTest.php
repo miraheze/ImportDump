@@ -39,7 +39,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 	}
 
 	private function mockImportDumpRequestManager() {
-		$mock = $this->createMock( ImportDumpRequestManager::class );
+		$mock = $this->getMockBuilder( ImportDumpRequestManager::class )->getMock();
 		$mock->expects( $this->once() )->method( 'fromID' )->with( 1 );
 
 		$this->setService( 'ImportDumpRequestManager', $mock );
