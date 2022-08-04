@@ -3,6 +3,7 @@
 namespace Miraheze\ImportDump\Tests;
 
 use MediaWikiIntegrationTestCase;
+use Miraheze\ImportDump\ImportDumpRequestManager;
 use ReflectionClass;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
@@ -19,7 +20,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->tablesUsed[] = 'importdump_requests';
 	}
 
-	public function addDBData() {
+	public function addDBDataOnce() {
 		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
 
 		$this->db->insert(
@@ -37,7 +38,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 		);
 	}
 
-	private function getImportDumpRequestManager() {
+	private function getImportDumpRequestManager(): ImportDumpRequestManager {
 		$services = $this->getServiceContainer();
 		$manager = $services->getService( 'ImportDumpRequestManager' );
 
