@@ -3,7 +3,6 @@
 namespace Miraheze\ImportDump\Tests;
 
 use MediaWikiIntegrationTestCase;
-use Miraheze\ImportDump\ImportDumpRequestManager;
 use ReflectionClass;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
