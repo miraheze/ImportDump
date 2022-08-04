@@ -48,6 +48,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
+	 * @covers ::__construct
 	 * @covers ::fromID
 	 */
 	public function testFromID() {
@@ -62,5 +63,14 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 		$ID = $reflection->getValue( $manager );
 
 		$this->assertSame( 1, $ID );
+	}
+
+	/**
+	 * @covers ::exists
+	 */
+	public function testExists() {
+		$this->assertTrue( 
+			$this->mockImportDumpRequestManager()->exists()
+		);
 	}
 }
