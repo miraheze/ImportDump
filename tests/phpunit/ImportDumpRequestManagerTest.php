@@ -26,28 +26,25 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->db->insert(
 			'importdump_requests',
 			[
-				[
-					'request_id' => 1,
-					'request_source' => 'https://importdumptest.com',
-					'request_target' => 'importdumptest',
-					'request_reason' => 'test',
-					'request_status' => 'pending',
-					'request_actor' => $this->getTestUser()->getUser()->getActorId(),
-					'request_timestamp' => $this->db->timestamp(),
-				]
+				'request_source' => 'https://importdumptest.com',
+				'request_target' => 'importdumptest',
+				'request_reason' => 'test',
+				'request_status' => 'pending',
+				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
+				'request_timestamp' => $this->db->timestamp(),
 			],
 			__METHOD__,
 			[ 'IGNORE' ]
 		);
 	}
 
-	private function mockImportDumpRequestManager() {
-		$mock = $this->createMock( ImportDumpRequestManager::class );
-		$mock->expects( $this->once() )->method( 'fromID' )->with( 1 );
+	private function getImportDumpRequestManager() {
+		$services = $this->getServiceContainer();
+		$manager = $services->getService( 'ImportDumpRequestManager' );
 
-		$this->setService( 'ImportDumpRequestManager', $mock );
+		$manager->fromID( 1 );
 
-		return $mock;
+		return $manager;
 	}
 
 	/**
@@ -55,9 +52,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::fromID
 	 */
 	public function testFromID() {
-		$services = $this->getServiceContainer();
-		$manager = $services->getService( 'ImportDumpRequestManager' );
-		$manager->fromID( 1 );
+		$manager = $this->getImportDumpRequestManager();
 
 		$reflectedClass = new ReflectionClass( $manager );
 		$reflection = $reflectedClass->getProperty( 'ID' );
@@ -72,8 +67,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::exists
 	 */
 	public function testExists() {
-		$manager = $this->mockImportDumpRequestManager();
-		$manager->fromID( 1 );
+		$manager = $this->getImportDumpRequestManager();
 
 		$this->assertTrue( $manager->exists() );
 	}
