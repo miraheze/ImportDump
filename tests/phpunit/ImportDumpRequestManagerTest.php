@@ -20,12 +20,13 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->tablesUsed[] = 'importdump_requests';
 	}
 
-	public function addDBData() {
+	public function addDBDataOnce() {
 		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
 
 		$this->db->insert(
 			'importdump_requests',
 			[
+				'request_id' => 1,
 				'request_source' => 'https://importdumptest.com',
 				'request_target' => 'importdumptest',
 				'request_reason' => 'test',
