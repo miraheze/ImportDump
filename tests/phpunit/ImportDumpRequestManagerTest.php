@@ -26,7 +26,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->db->insert(
 			'importdump_requests',
 			[
-				'request_source' => 'https://test-importdump.com,
+				'request_source' => 'https://importdumptest.com',
 				'request_target' => 'importdumptest',
 				'request_reason' => 'test',
 				'request_status' => 'pending',
