@@ -2,11 +2,9 @@
 
 namespace Miraheze\ImportDump\Tests;
 
-use MediaWiki\Config\ServiceOptions;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use ReflectionClass;
-use RequestContext;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
@@ -41,24 +39,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 	}
 
 	private function mockImportDumpRequestManager() {
-		$services = $this->getServiceContainer();
-
-		$mock = $this->getMockBuilder( ImportDumpRequestManager::class )
-			->setConstructorArgs( [
-				$services->getConfigFactory()->makeConfig( 'ImportDump' ),
-				$services->getDBLoadBalancerFactory(),
-				$services->getInterwikiLookup(),
-				$services->getLinkRenderer(),
-				RequestContext::getMain(),
-				new ServiceOptions(
-					ImportDumpRequestManager::CONSTRUCTOR_OPTIONS,
-					$services->getConfigFactory()->makeConfig( 'ImportDump' )
-				),
-				$services->getUserFactory(),
-				$services->getUserGroupManagerFactory()
-			] )
-			->getMock();
-
+		$mock = $this->createMock( ImportDumpRequestManager::class );
 		$mock->expects( $this->once() )->method( 'fromID' )->with( 1 );
 
 		$this->setService( 'ImportDumpRequestManager', $mock );
@@ -70,11 +51,15 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::fromID
 	 */
 	public function testFromID() {
-		$reflectedClass = new ReflectionClass( $this->mockImportDumpRequestManager() );
+		$services = $this->getServiceContainer();
+		$manager = $services->getService( 'ImportDumpRequestManager' );
+		$manager->fromID( 1 );
+
+		$reflectedClass = new ReflectionClass( $manager );
 		$reflection = $reflectedClass->getProperty( 'ID' );
 		$reflection->setAccessible( true );
 
-		$ID = $reflection->getValue( $this->mockImportDumpRequestManager() );
+		$ID = $reflection->getValue( $manager );
 
 		$this->assertSame( 1, $ID );
 	}
