@@ -52,7 +52,8 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::fromID
 	 */
 	public function testFromID() {
-		$manager = $this->mockImportDumpRequestManager();
+		$services = $this->getServiceContainer();
+		$manager = $services->getService( 'ImportDumpRequestManager' );
 		$manager->fromID( 1 );
 
 		$reflectedClass = new ReflectionClass( $manager );
@@ -68,8 +69,9 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::exists
 	 */
 	public function testExists() {
-		$this->assertTrue(
-			$this->mockImportDumpRequestManager()->exists()
-		);
+		$manager = $this->mockImportDumpRequestManager();
+		$manager->fromID( 1 );
+
+		$this->assertTrue( $manager->exists() );
 	}
 }
