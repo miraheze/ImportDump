@@ -52,8 +52,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::fromID
 	 */
 	public function testFromID() {
-		$services = $this->getServiceContainer();
-		$manager = $services->getService( 'ImportDumpRequestManager' );
+		$manager = $this->mockImportDumpRequestManager();
 		$manager->fromID( 1 );
 
 		$reflectedClass = new ReflectionClass( $manager );
