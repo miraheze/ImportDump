@@ -20,6 +20,9 @@
 	"AutoloadNamespaces": {
 		"Miraheze\\ImportDump\\": "includes/"
 	},
+	"TestAutoloadNamespaces": {
+		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/"
+	},
 	"GroupPermissions": {
 		"user": {
 			"request-import-dump": true
