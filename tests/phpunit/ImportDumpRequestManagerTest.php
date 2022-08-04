@@ -69,7 +69,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::exists
 	 */
 	public function testExists() {
-		$this->assertTrue( 
+		$this->assertTrue(
 			$this->mockImportDumpRequestManager()->exists()
 		);
 	}
