@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Mainframe98",
 			"McDutchie"
 		]
 	},
@@ -103,5 +104,6 @@
 	"importdumpprivate-log-header": "Dit is een logboek van alle importdumpaanvragen en statusupdates voor aanvragen met doelen die privéwiki's zijn.",
 	"importdumpprivate-log-name": "Privélogboek importdumpaanvragen",
 	"ipb-action-request-import-dump": "Importdumps aanvragen",
-	"log-action-filter-importdump": "Soort handeling:"
+	"log-action-filter-importdump": "Soort handeling:",
+	"log-action-filter-importdump-interwiki": "Interwiki-tabelaanpassingen"
 }
