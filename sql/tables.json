@@ -1,0 +1,144 @@
+[
+	{
+		"name": "importdump_requests",
+		"comment": "",
+		"columns": [
+			{
+				"name": "request_id",
+				"comment": "Unique auto-increment ID",
+				"type": "bigint",
+				"options": { "autoincrement": true, "notnull": true, "unsigned": true }
+			},
+			{
+				"name": "request_actor",
+				"comment": "",
+				"type": "bigint",
+				"options": { "notnull": true, "unsigned": true }
+			},
+			{
+				"name": "request_timestamp",
+				"comment": "",
+				"type": "mwtimestamp",
+				"options": { "notnull": true }
+			},
+			{
+				"name": "request_source",
+				"comment": "",
+				"type": "string",
+				"options": { "notnull": true }
+			},
+			{
+				"name": "request_target",
+				"comment": "",
+				"type": "string",
+				"options": { "notnull": true, "length": 64 }
+			},
+			{
+				"name": "request_reason",
+				"comment": "",
+				"type": "blob",
+				"options": { "notnull": true, "length": 65530 }
+			},
+			{
+				"name": "request_status",
+				"comment": "",
+				"type": "mwenum",
+				"options": { "notnull": true,
+					"CustomSchemaOptions": {
+						"enum_values": [ "complete", "declined", "inprogress", "pending" ]
+					}
+				}
+			},
+			{
+				"name": "request_locked",
+				"comment": "",
+				"type": "mwtinyint",
+				"options": { "notnull": true, "unsigned": true, "default": 0 }
+			},
+			{
+				"name": "request_private",
+				"comment": "",
+				"type": "mwtinyint",
+				"options": { "notnull": true, "unsigned": true, "default": 0 }
+			}
+		],
+		"indexes": [
+			{
+				"name": "request_actor_timestamp",
+				"comment": "",
+				"columns": [ "request_actor", "request_timestamp" ],
+				"unique": false
+			},
+			{
+				"name": "request_timestamp",
+				"comment": "",
+				"columns": [ "request_timestamp" ],
+				"unique": false
+			},
+			{
+				"name": "request_target",
+				"comment": "",
+				"columns": [ "request_target" ],
+				"unique": false
+			},
+			{
+				"name": "request_status",
+				"comment": "",
+				"columns": [ "request_status" ],
+				"unique": false
+			}
+		],
+		"pk": [ "request_id" ]
+	},
+	{
+		"name": "importdump_request_comments",
+		"comment": "",
+		"columns": [
+			{
+				"name": "request_comment_id",
+				"comment": "Unique auto-increment ID",
+				"type": "bigint",
+				"options": { "autoincrement": true, "notnull": true, "unsigned": true }
+			},
+			{
+				"name": "request_id",
+				"comment": "",
+				"type": "bigint",
+				"options": { "notnull": true, "unsigned": true }
+			},
+			{
+				"name": "request_comment_actor",
+				"comment": "",
+				"type": "bigint",
+				"options": { "notnull": true, "unsigned": true }
+			},
+			{
+				"name": "request_comment_timestamp",
+				"comment": "",
+				"type": "mwtimestamp",
+				"options": { "notnull": true }
+			},
+			{
+				"name": "request_comment_text",
+				"comment": "",
+				"type": "blob",
+				"options": { "notnull": true, "length": 65530 }
+			}
+		],
+		"indexes": [
+			{
+				"name": "request_id",
+				"comment": "",
+				"columns": [ "request_id" ],
+				"unique": false
+			},
+			{
+				"name": "request_comment_timestamp",
+				"comment": "",
+				"columns": [ "request_comment_timestamp" ],
+				"unique": false
+			}
+		],
+		"pk": [ "request_comment_id" ]
+	}
+]
