@@ -105,5 +105,11 @@
 	"importdumpprivate-log-name": "Privélogboek importdumpaanvragen",
 	"ipb-action-request-import-dump": "Importdumps aanvragen",
 	"log-action-filter-importdump": "Soort handeling:",
-	"log-action-filter-importdump-interwiki": "Interwiki-tabelaanpassingen"
+	"log-action-filter-importdump-interwiki": "Interwiki-tabelaanpassingen",
+	"log-action-filter-importdump-request": "Nieuwe verzoeken ingediend",
+	"log-action-filter-importdump-statusupdate": "Status bijgewerkt voor verzoeken",
+	"log-action-filter-importdumpprivate": "Soort handeling:",
+	"log-action-filter-importdumpprivate-interwiki": "Interwiki-tabelaanpassingen",
+	"log-action-filter-importdumpprivate-request": "Nieuwe verzoeken ingediend",
+	"log-action-filter-importdumpprivate-statusupdate": "Status bijgewerkt voor verzoeken"
 }
