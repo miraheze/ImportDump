@@ -430,9 +430,9 @@ class ImportDumpRequestManager {
 		$fileName = $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
 
 		$localRepo = $this->repoGroup->getLocalRepo();
-		$virtualUrl = $localRepo->getVirtualUrl( 'ImportDump/' );
+		$virtualUrl = $localRepo->getVirtualUrl( 'ImportDump' );
 
-		return $virtualUrl . $fileName;
+		return $virtualUrl . '/' . $fileName;
 	}
 
 	/**
