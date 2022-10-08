@@ -11,8 +11,8 @@ return [
 			$services->getDBLoadBalancerFactory(),
 			$services->getInterwikiLookup(),
 			$services->getLinkRenderer(),
-			RequestContext::getMain(),
 			$services->getRepoGroup(),
+			RequestContext::getMain(),
 			new ServiceOptions(
 				ImportDumpRequestManager::CONSTRUCTOR_OPTIONS,
 				$services->getConfigFactory()->makeConfig( 'ImportDump' )
