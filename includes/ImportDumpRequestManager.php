@@ -432,7 +432,7 @@ class ImportDumpRequestManager {
 		$localRepo = $this->repoGroup->getLocalRepo();
 		$virtualUrl = $localRepo->getVirtualUrl();
 
-		return $virtualUrl . $this->options->get( 'ImportDumpCentralWiki' ) . 'ImportDump/' . $fileName;
+		return $virtualUrl . '/' . $this->options->get( 'ImportDumpCentralWiki' ) . '/ImportDump/' . $fileName;
 	}
 
 	/**
