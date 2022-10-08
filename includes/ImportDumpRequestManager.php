@@ -5,6 +5,7 @@ namespace Miraheze\ImportDump;
 use Config;
 use EchoEvent;
 use ExtensionRegistry;
+use FileBackend;
 use GlobalVarConfig;
 use ManualLogEntry;
 use MediaWiki\Config\ServiceOptions;
@@ -402,7 +403,7 @@ class ImportDumpRequestManager {
 			$blankConfig->get( 'IP' ),
 			$this->getTarget(),
 			$this->getInterwikiPrefix(),
-			$this->getFilePath(),
+			FileBackend::splitStoragePath( $this->getFilePath() ),
 		], $command );
 	}
 
