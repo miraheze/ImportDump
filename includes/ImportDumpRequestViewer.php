@@ -198,7 +198,7 @@ class ImportDumpRequestViewer {
 			$validRequest = true;
 			$status = $this->importDumpRequestManager->getStatus();
 
-			if ( file_exists( $this->importDumpRequestManager->getFilePath() ) ) {
+			if ( $this->importDumpRequestManager->fileExists() ) {
 				$fileInfo = $this->context->msg( 'importdump-info-command' )->plaintextParams(
 					$this->importDumpRequestManager->getCommand()
 				)->parse();
