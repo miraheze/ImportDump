@@ -35,7 +35,6 @@ class ImportDumpRequestManager {
 		'ImportDumpCentralWiki',
 		'ImportDumpInterwikiMap',
 		'ImportDumpScriptCommand',
-		'UploadDirectory',
 	];
 
 	/** @var Config */
