@@ -437,7 +437,7 @@ class ImportDumpRequestManager {
 	}
 
 	/**
-	 * @return string
+	 * @return bool
 	 */
 	public function fileExists(): bool {
 		$localRepo = $this->repoGroup->getLocalRepo();
