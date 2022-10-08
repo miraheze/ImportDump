@@ -431,7 +431,7 @@ class ImportDumpRequestManager {
 
 		$localRepo = $this->repoGroup->getLocalRepo();
 		$zonePath = $localRepo->getZonePath( 'ImportDump' ) ??
-			$this->options->get( 'UploadDirectory' ) . '/ImportDump;
+			$this->options->get( 'UploadDirectory' ) . '/ImportDump';
 
 		return $zonePath . '/' . $fileName;
 	}
