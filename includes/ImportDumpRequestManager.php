@@ -427,11 +427,7 @@ class ImportDumpRequestManager {
 	 * @return string
 	 */
 	public function getFilePath(): string {
-		$fileName = $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
-
-		return $this->options->get( 'UploadDirectory' ) ?
-			$this->options->get( 'UploadDirectory' ) . '/ImportDump/' . $fileName :
-			$fileName;
+		return $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
 	}
 
 	/**
@@ -442,7 +438,7 @@ class ImportDumpRequestManager {
 		$backend = $localRepo->getBackend();
 
 		$virtualUrl = $localRepo->getVirtualUrl( 'ImportDump/' );
-		$src = $virtualUrl . $this->getFilePath;
+		$src = $virtualUrl . $this->getFilePath();
 
 		if ( !$backend->fileExists( [ 'src' => $src ] ) ) {
 			return 0;
