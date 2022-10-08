@@ -430,7 +430,8 @@ class ImportDumpRequestManager {
 		$fileName = $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
 
 		$localRepo = $this->repoGroup->getLocalRepo();
-		$zonePath = $localRepo->getZonePath( 'ImportDump' );
+		$zonePath = $localRepo->getZonePath( 'ImportDump' ) ??
+			$this->options->get( 'UploadDirectory' ) . '/ImportDump;
 
 		return $zonePath . '/' . $fileName;
 	}
