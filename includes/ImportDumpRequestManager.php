@@ -61,6 +61,9 @@ class ImportDumpRequestManager {
 	/** @var ServiceOptions */
 	private $options;
 
+	/** @var RepoGroup */
+	private $repoGroup;
+
 	/** @var stdClass|bool */
 	private $row;
 
@@ -76,6 +79,7 @@ class ImportDumpRequestManager {
 	 * @param InterwikiLookup $interwikiLookup
 	 * @param LinkRenderer $linkRenderer
 	 * @param MessageLocalizer $messageLocalizer
+	 * @param RepoGroup $repoGroup
 	 * @param ServiceOptions $options
 	 * @param UserFactory $userFactory
 	 * @param UserGroupManagerFactory $userGroupManagerFactory
@@ -86,6 +90,7 @@ class ImportDumpRequestManager {
 		InterwikiLookup $interwikiLookup,
 		LinkRenderer $linkRenderer,
 		MessageLocalizer $messageLocalizer,
+		RepoGroup $repoGroup,
 		ServiceOptions $options,
 		UserFactory $userFactory,
 		UserGroupManagerFactory $userGroupManagerFactory
@@ -98,6 +103,7 @@ class ImportDumpRequestManager {
 		$this->linkRenderer = $linkRenderer;
 		$this->messageLocalizer = $messageLocalizer;
 		$this->options = $options;
+		$this->repoGroup = $repoGroup;
 		$this->userFactory = $userFactory;
 		$this->userGroupManagerFactory = $userGroupManagerFactory;
 	}
@@ -422,18 +428,26 @@ class ImportDumpRequestManager {
 	public function getFilePath(): string {
 		$fileName = $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
 
-		return $this->options->get( 'UploadDirectory' ) . '/ImportDump/' . $fileName;
+		return $this->options->get( 'UploadDirectory' ) ?
+			$this->options->get( 'UploadDirectory' ) . '/ImportDump/' . $fileName :
+			$fileName;
 	}
 
 	/**
 	 * @return int
 	 */
 	public function getFileSize(): int {
-		if ( !file_exists( $this->getFilePath() ) ) {
+		$localRepo = $this->repoGroup->getLocalRepo();
+		$backend = $localRepo->getBackend();
+
+		$virtualUrl = $localRepo->getVirtualUrl( 'ImportDump/' );
+		$src = $virtualUrl . $this->getFilePath;
+
+		if ( !$backend->fileExists( [ 'src' => $src ] ) ) {
 			return 0;
 		}
 
-		return (int)filesize( $this->getFilePath() );
+		return (int)$backend->getFileSize( [ 'src' => $src ] );
 	}
 
 	/**
