@@ -78,8 +78,8 @@ class ImportDumpRequestManager {
 	 * @param ILBFactory $dbLoadBalancerFactory
 	 * @param InterwikiLookup $interwikiLookup
 	 * @param LinkRenderer $linkRenderer
-	 * @param MessageLocalizer $messageLocalizer
 	 * @param RepoGroup $repoGroup
+	 * @param MessageLocalizer $messageLocalizer
 	 * @param ServiceOptions $options
 	 * @param UserFactory $userFactory
 	 * @param UserGroupManagerFactory $userGroupManagerFactory
@@ -89,8 +89,8 @@ class ImportDumpRequestManager {
 		ILBFactory $dbLoadBalancerFactory,
 		InterwikiLookup $interwikiLookup,
 		LinkRenderer $linkRenderer,
-		MessageLocalizer $messageLocalizer,
 		RepoGroup $repoGroup,
+		MessageLocalizer $messageLocalizer,
 		ServiceOptions $options,
 		UserFactory $userFactory,
 		UserGroupManagerFactory $userGroupManagerFactory
