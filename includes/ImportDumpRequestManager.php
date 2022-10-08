@@ -431,6 +431,23 @@ class ImportDumpRequestManager {
 	}
 
 	/**
+	 * @return string
+	 */
+	public function fileExists(): bool {
+		$localRepo = $this->repoGroup->getLocalRepo();
+		$backend = $localRepo->getBackend();
+
+		$virtualUrl = $localRepo->getVirtualUrl( 'ImportDump/' );
+		$src = $virtualUrl . $this->getFilePath();
+
+		if ( $backend->fileExists( [ 'src' => $src ] ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * @return int
 	 */
 	public function getFileSize(): int {
@@ -440,7 +457,7 @@ class ImportDumpRequestManager {
 		$virtualUrl = $localRepo->getVirtualUrl( 'ImportDump/' );
 		$src = $virtualUrl . $this->getFilePath();
 
-		if ( !$backend->fileExists( [ 'src' => $src ] ) ) {
+		if ( !$this->fileExists() ) {
 			return 0;
 		}
 
