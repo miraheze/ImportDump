@@ -403,7 +403,7 @@ class ImportDumpRequestManager {
 			$blankConfig->get( 'IP' ),
 			$this->getTarget(),
 			$this->getInterwikiPrefix(),
-			FileBackend::splitStoragePath( $this->getFilePath() ),
+			FileBackend::splitStoragePath( $this->getFilePath() )[3],
 		], $command );
 	}
 
