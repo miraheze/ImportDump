@@ -427,7 +427,12 @@ class ImportDumpRequestManager {
 	 * @return string
 	 */
 	public function getFilePath(): string {
-		return $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
+		$fileName = $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
+
+		$localRepo = $this->repoGroup->getLocalRepo();
+		$virtualUrl = $localRepo->getVirtualUrl( 'ImportDump/' );
+
+		return $virtualUrl . $fileName;
 	}
 
 	/**
@@ -437,10 +442,7 @@ class ImportDumpRequestManager {
 		$localRepo = $this->repoGroup->getLocalRepo();
 		$backend = $localRepo->getBackend();
 
-		$virtualUrl = $localRepo->getVirtualUrl( 'ImportDump/' );
-		$src = $virtualUrl . $this->getFilePath();
-
-		if ( $backend->fileExists( [ 'src' => $src ] ) ) {
+		if ( $backend->fileExists( [ 'src' => $this->getFilePath() ] ) ) {
 			return true;
 		}
 
@@ -451,17 +453,11 @@ class ImportDumpRequestManager {
 	 * @return int
 	 */
 	public function getFileSize(): int {
-		$localRepo = $this->repoGroup->getLocalRepo();
-		$backend = $localRepo->getBackend();
-
-		$virtualUrl = $localRepo->getVirtualUrl( 'ImportDump/' );
-		$src = $virtualUrl . $this->getFilePath();
-
 		if ( !$this->fileExists() ) {
 			return 0;
 		}
 
-		return (int)$backend->getFileSize( [ 'src' => $src ] );
+		return (int)$backend->getFileSize( [ 'src' => $this->getFilePath() ] );
 	}
 
 	/**
