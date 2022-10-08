@@ -457,6 +457,9 @@ class ImportDumpRequestManager {
 			return 0;
 		}
 
+		$localRepo = $this->repoGroup->getLocalRepo();
+		$backend = $localRepo->getBackend();
+
 		return (int)$backend->getFileSize( [ 'src' => $this->getFilePath() ] );
 	}
 
