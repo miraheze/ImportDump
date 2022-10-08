@@ -15,6 +15,7 @@ use MediaWiki\User\UserGroupManagerFactory;
 use Message;
 use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
+use RepoGroup;
 use SpecialPage;
 use stdClass;
 use User;
