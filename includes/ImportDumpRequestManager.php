@@ -5,6 +5,7 @@ namespace Miraheze\ImportDump;
 use Config;
 use EchoEvent;
 use ExtensionRegistry;
+use FileBackend;
 use GlobalVarConfig;
 use ManualLogEntry;
 use MediaWiki\Config\ServiceOptions;
@@ -15,6 +16,7 @@ use MediaWiki\User\UserGroupManagerFactory;
 use Message;
 use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
+use RepoGroup;
 use SpecialPage;
 use stdClass;
 use User;
@@ -34,7 +36,6 @@ class ImportDumpRequestManager {
 		'ImportDumpCentralWiki',
 		'ImportDumpInterwikiMap',
 		'ImportDumpScriptCommand',
-		'UploadDirectory',
 	];
 
 	/** @var Config */
@@ -61,6 +62,9 @@ class ImportDumpRequestManager {
 	/** @var ServiceOptions */
 	private $options;
 
+	/** @var RepoGroup */
+	private $repoGroup;
+
 	/** @var stdClass|bool */
 	private $row;
 
@@ -75,6 +79,7 @@ class ImportDumpRequestManager {
 	 * @param ILBFactory $dbLoadBalancerFactory
 	 * @param InterwikiLookup $interwikiLookup
 	 * @param LinkRenderer $linkRenderer
+	 * @param RepoGroup $repoGroup
 	 * @param MessageLocalizer $messageLocalizer
 	 * @param ServiceOptions $options
 	 * @param UserFactory $userFactory
@@ -85,6 +90,7 @@ class ImportDumpRequestManager {
 		ILBFactory $dbLoadBalancerFactory,
 		InterwikiLookup $interwikiLookup,
 		LinkRenderer $linkRenderer,
+		RepoGroup $repoGroup,
 		MessageLocalizer $messageLocalizer,
 		ServiceOptions $options,
 		UserFactory $userFactory,
@@ -98,6 +104,7 @@ class ImportDumpRequestManager {
 		$this->linkRenderer = $linkRenderer;
 		$this->messageLocalizer = $messageLocalizer;
 		$this->options = $options;
+		$this->repoGroup = $repoGroup;
 		$this->userFactory = $userFactory;
 		$this->userGroupManagerFactory = $userGroupManagerFactory;
 	}
@@ -396,7 +403,7 @@ class ImportDumpRequestManager {
 			$blankConfig->get( 'IP' ),
 			$this->getTarget(),
 			$this->getInterwikiPrefix(),
-			$this->getFilePath(),
+			FileBackend::splitStoragePath( $this->getFilePath() )[2],
 		], $command );
 	}
 
@@ -422,18 +429,38 @@ class ImportDumpRequestManager {
 	public function getFilePath(): string {
 		$fileName = $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
 
-		return $this->options->get( 'UploadDirectory' ) . '/ImportDump/' . $fileName;
+		$localRepo = $this->repoGroup->getLocalRepo();
+		$zonePath = $localRepo->getZonePath( 'public' ) . '/ImportDump';
+
+		return $zonePath . '/' . $fileName;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function fileExists(): bool {
+		$localRepo = $this->repoGroup->getLocalRepo();
+		$backend = $localRepo->getBackend();
+
+		if ( $backend->fileExists( [ 'src' => $this->getFilePath() ] ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
 	 * @return int
 	 */
 	public function getFileSize(): int {
-		if ( !file_exists( $this->getFilePath() ) ) {
+		if ( !$this->fileExists() ) {
 			return 0;
 		}
 
-		return (int)filesize( $this->getFilePath() );
+		$localRepo = $this->repoGroup->getLocalRepo();
+		$backend = $localRepo->getBackend();
+
+		return (int)$backend->getFileSize( [ 'src' => $this->getFilePath() ] );
 	}
 
 	/**

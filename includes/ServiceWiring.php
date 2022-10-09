@@ -11,6 +11,7 @@ return [
 			$services->getDBLoadBalancerFactory(),
 			$services->getInterwikiLookup(),
 			$services->getLinkRenderer(),
+			$services->getRepoGroup(),
 			RequestContext::getMain(),
 			new ServiceOptions(
 				ImportDumpRequestManager::CONSTRUCTOR_OPTIONS,
