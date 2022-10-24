@@ -1,0 +1,42 @@
+{
+	"@metadata": {
+		"authors": [
+			"Vlad5250"
+		]
+	},
+	"action-handle-import-dump-interwiki": "obradu međuwikija za skladišne izvadke uvoza",
+	"action-handle-import-dump-requests": "obradu korisničkih zahtjeva za uvoze",
+	"action-request-import-dump": "zahtjev za skladišni izvadak uvoza",
+	"action-view-private-import-dump-requests": "gledanje privatnih zahtjeva za skladišne izvadke uvoza",
+	"echo-category-title-importdump-new-request": "Novi zahtjev za skladišni izvadak uvoza",
+	"echo-category-title-importdump-request-comment": "Dodan je komentar u zahtjev za skladišni izvadak uvoza",
+	"echo-category-title-importdump-request-status-update": "Promijenjen status zahtjeva za skladišni izvadak uvoza",
+	"echo-pref-tooltip-importdump-new-request": "Obavijesti me kada bude novih zahtjeva za skladišni izvadak uvoza.",
+	"echo-pref-tooltip-importdump-request-comment": "Obavijesti me kada se pojavi komentar na zahtjevu za skladišni izvadak uvoza u kojem sam sudjelovao.",
+	"echo-pref-tooltip-importdump-request-status-update": "Obavijesti me kada se promijeni status zahtjeva za skladišni izvadak uvoza u kojem sam sudjelovao.",
+	"importdump-desc": "Proširenje dizajnirano za automatizaciju korisničkih zahtjeva za uvoz.",
+	"importdump-duplicate-request": "Nije moguće poslati ovaj zahtjev. Previše je sličan već otvorenom zahtjevu.",
+	"importdump-label-add-comment": "Dodaj komentar",
+	"importdump-label-all": "Svi",
+	"importdump-label-comment": "Komentar:",
+	"importdump-label-complete": "Završeno",
+	"importdump-label-declined": "Odbijeno",
+	"importdump-label-edit-request": "Uredi zahtjev",
+	"importdump-label-inprogress": "U toku",
+	"importdump-label-requester": "Zatražitelj:",
+	"importdump-label-source": "URL izvora:",
+	"importdump-label-status": "Status:",
+	"importdump-label-upload-file": "Postavi datoteku:",
+	"importdump-label-upload-file-url": "URL izvora:",
+	"importdump-label-upload-source-file": "Postavi datoteku",
+	"importdump-log-header": "Ovo je evidencija o svim zahtjevima za skladišne izvadke uvoza i statusnim izmjenama.",
+	"importdump-notcentral": "Onemogućeno",
+	"importdumpprivate-log-header": "Ovo je evidencija o svim zahtjevima za skladišne izvadke uvoza i statusnim izmjenama zahtjeva s ciljevima koji su privatni wikiji.",
+	"log-action-filter-importdump": "Vrsta radnje:",
+	"log-action-filter-importdumpprivate": "Vrsta radnje:",
+	"requestimportdump": "Zahtjev za skladišni izvadak uvoza",
+	"right-handle-import-dump-interwiki": "Obrada međuwikija za skladišne izvadke uvoza",
+	"right-handle-import-dump-requests": "Obrada korisničkih zahtjeva za uvoze",
+	"right-request-import-dump": "Zahtjev za skladišni izvadak uvoza",
+	"right-view-private-import-dump-requests": "Pregled privatnih zahtjeva za skladišne izvadke uvoza"
+}
