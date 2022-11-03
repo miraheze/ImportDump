@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Justman10000",
 			"Nekky-chan",
 			"Sebastian Wallroth"
 		]
@@ -26,6 +27,8 @@
 	"importdump-help-reason": "Beschreibe bitte ausführlich den Grund, aus dem du diesen Antrag auf einen Import-Dump stellst.",
 	"importdump-help-source": "Gib die vollständige URL des Quell-Wikis ein (von dem du importierst).",
 	"importdump-help-target": "Dies muss ein gültiger Datenbankname sein.",
+	"importdump-help-upload-file": "Es sind nur XML-Dateien erlaubt. Wenn deine XML-Datei in einem komprimierten Archiv ist, entpacke sie bitte, bevor du versuchst, sie hochzuladen.",
+	"importdump-help-upload-file-url": "Es sind nur unkomprimierte XML-Dateien erlaubt.",
 	"importdump-info-command": "'''Befehl für diesen Import:''' <code>$1</code>",
 	"importdump-info-filesize": "'''Dateigröße für diesen Import:''' $1",
 	"importdump-info-groups": "Benutzergruppen, die $1 auf $2 hat: $3",
@@ -117,7 +120,7 @@
 	"logentry-importdumpprivate-request": "$1 beantragte ein Import-Dump für das private Wiki $4 in $5.",
 	"logentry-importdumpprivate-statusupdate": "$1 hat den Status der privaten Import-Dump-Anfrage $4 auf '$5' aktualisiert.",
 	"requestimportdump": "Import-Dump anfordern",
-	"requestimportdumpqueue": "Dump-Anfrage-Warteschlange importieren",
+	"requestimportdumpqueue": "Warteschlange für Dump-Anfragen importieren",
 	"right-handle-import-dump-interwiki": "Import-Dump interwiki bearbeiten",
 	"right-handle-import-dump-requests": "Bearbeitung von Benutzer-Import-Dump-Anfragen",
 	"right-request-import-dump": "Import-Dumps anfordern",

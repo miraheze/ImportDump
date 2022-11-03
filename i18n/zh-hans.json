@@ -1,0 +1,38 @@
+{
+	"@metadata": {
+		"authors": [
+			"Evesiesta",
+			"StarrySky"
+		]
+	},
+	"action-handle-import-dump-interwiki": "处理导入转储跨维基",
+	"action-handle-import-dump-requests": "处理用户导入转储请求",
+	"action-request-import-dump": "请求导入转储",
+	"action-view-private-import-dump-requests": "查看私有导入转储请求",
+	"echo-category-title-importdump-new-request": "新的导入转储请求",
+	"echo-category-title-importdump-request-comment": "添加到导入转储请求的注释",
+	"echo-category-title-importdump-request-status-update": "导入转储请求的状态已更新",
+	"echo-pref-tooltip-importdump-new-request": "当有任何新的导入转储请求时通知我。",
+	"echo-pref-tooltip-importdump-request-comment": "当有关于我参与的导入转储请求的评论时通知我。",
+	"echo-pref-tooltip-importdump-request-status-update": "当我参与的导入转储请求的状态更新时通知我。",
+	"importdump-button-copy": "（复制到剪贴板）",
+	"importdump-comment-given": "$1留下的评论：",
+	"importdump-comment-success": "评论已成功添加到此请求。",
+	"importdump-desc": "一个旨在自动化用户导入请求的扩展。",
+	"importdump-duplicate-request": "无法提交此请求。它与已经打开的请求过于相似。",
+	"importdump-extensionname": "导入转储",
+	"importdump-header-comment-withtimestamp": "由$1于$2留下的意见",
+	"importdump-help-reason": "请详细描述您提出此导入转储请求的原因。",
+	"importdump-help-target": "这必须是有效的数据库名称。",
+	"importdump-help-upload-file": "只允许使用XML文件。如果您的XML文件在压缩存档中，请在尝试上传之前将其解压缩。",
+	"importdump-help-upload-file-url": "只允许未压缩的XML文件。",
+	"importdump-info-filesize": "'''此导入文件的大小：''' $1",
+	"importdump-info-groups": "$1在$2上拥有的用户组： $3",
+	"importdump-info-interwiki": "使用以下字段将跨维基前缀添加到$1的本地跨维基表。提交前请确保值的正确。",
+	"importdump-info-no-file-found": "在$1处未找到文件。它可能已经被删除。",
+	"importdump-info-no-interwiki-prefix": "目标wiki($1) 上不存在跨wiki 前缀，它指向源wiki($2)。建议您在继续之前添加一个。",
+	"importdump-info-request-private": "此请求被标记为私有。它不公开可见。",
+	"importdump-info-requester-globally-blocked": "请求者 ($1) 已被全局封禁。这个请求应该被拒绝。",
+	"importdump-info-requester-locally-blocked": "请求者 ($1) 已在此wiki($2) 上被封禁。",
+	"importdump-label-add-comment": "添加评论"
+}
