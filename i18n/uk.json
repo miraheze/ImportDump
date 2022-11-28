@@ -42,5 +42,6 @@
 	"importdump-notcentral": "Вимкнено",
 	"importdump-notification-visit-request": "Заявка на відвідування",
 	"importdump-unknown": "Невідомий запит.",
+	"importdump-usergroups-none": "немає",
 	"log-action-filter-importdumpprivate": "Тип дії:"
 }
