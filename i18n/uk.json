@@ -24,6 +24,7 @@
 	"importdump-edit-success": "Запит успішно відредаговано.",
 	"importdump-extensionname": "ImportDump",
 	"importdump-header-comment-withtimestamp": "Коментар надано $1 о $2",
+	"importdump-help-reason": "Детально опишіть, чому ви робите цей запит на імпорт дампа.",
 	"importdump-info-filesize": "'''Розмір файлу для цього імпорту:''' $1",
 	"importdump-label-add-comment": "Додати Коментар",
 	"importdump-label-all": "Усі",

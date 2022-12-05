@@ -1,0 +1,41 @@
+{
+	"@metadata": {
+		"authors": [
+			"Funa-enpitu",
+			"MathXplore"
+		]
+	},
+	"action-handle-import-dump-interwiki": "インターウィキをハンドルインポートダンプする。",
+	"action-handle-import-dump-requests": "ユーザーインポートダンプ要求を処理する",
+	"action-request-import-dump": "ダンプのインポートを要求",
+	"echo-category-title-importdump-new-request": "新しくダンプインポートを要求",
+	"importdump-button-copy": "クリップボードにコピー",
+	"importdump-comment-given": "$1からのコメント:",
+	"importdump-comment-success": "このリクエストにコメントが正常に追加されました。",
+	"importdump-duplicate-request": "このリクエストを送信できません。すでに提出しているリクエストに似すぎています。",
+	"importdump-edit-success": "リクエストの編集が完了しました。",
+	"importdump-header-comment-withtimestamp": "$2での$1によるコメント",
+	"importdump-label-add-comment": "コメントを追加",
+	"importdump-label-all": "すべて",
+	"importdump-label-comment": "コメント:",
+	"importdump-label-complete": "完了",
+	"importdump-label-declined": "拒否",
+	"importdump-label-edit-request": "編集リクエスト",
+	"importdump-label-inprogress": "処理中",
+	"importdump-label-pending": "保留中",
+	"importdump-label-requester": "申請者:",
+	"importdump-label-status": "状態:",
+	"importdump-label-upload-file": "ファイルをアップロード",
+	"importdump-label-upload-source-file": "ファイルをアップロード",
+	"importdump-no-changes": "変更はありませんでした。",
+	"importdump-notcentral": "無効",
+	"importdump-section-comments": "コメントを求める",
+	"importdump-section-editing": "編集リクエスト",
+	"importdump-section-handling": "要求を処理",
+	"importdump-table-requester": "申請者",
+	"importdump-table-status": "状態",
+	"importdump-table-target": "対象",
+	"importdump-usergroups-none": "なし",
+	"log-action-filter-importdump": "操作の種類:",
+	"log-action-filter-importdumpprivate": "操作の種類:"
+}
