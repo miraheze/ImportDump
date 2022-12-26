@@ -3,6 +3,7 @@
 		"authors": [
 			"Buehl",
 			"Funa-enpitu",
+			"MagicAho",
 			"MathXplore"
 		]
 	},
@@ -30,19 +31,26 @@
 	"importdump-label-requested-date": "リクエストの日時",
 	"importdump-label-requester": "申請者:",
 	"importdump-label-status": "状態:",
-	"importdump-label-upload-file": "ファイルをアップロード",
+	"importdump-label-upload-file": "ファイルをアップロード:",
 	"importdump-label-upload-source-file": "ファイルをアップロード",
 	"importdump-no-changes": "変更はありませんでした。",
 	"importdump-notcentral": "無効",
+	"importdump-notification-visit-request": "申請を訪れる",
 	"importdump-section-comments": "コメントを求める",
 	"importdump-section-details": "リクエストの詳細",
 	"importdump-section-editing": "編集リクエスト",
 	"importdump-section-handling": "要求を処理",
+	"importdump-status-updated": "$1のリクエスト",
+	"importdump-table-requested-date": "リクエストの日時",
 	"importdump-table-requester": "申請者",
 	"importdump-table-status": "状態",
 	"importdump-table-target": "対象",
 	"importdump-usergroups-none": "なし",
 	"log-action-filter-importdump": "操作の種類:",
 	"log-action-filter-importdumpprivate": "操作の種類:",
+	"requestimportdump": "インポートダンブをリクエストする",
+	"right-handle-import-dump-interwiki": "インポート ダンプのインターウィキの処理",
+	"right-handle-import-dump-requests": "ユーザーによるインポートダンプリクエストを処理する",
+	"right-request-import-dump": "インポートダンプをリクエスト",
 	"right-view-private-import-dump-requests": "プライベートなインポートダンプリクエストを表示"
 }
