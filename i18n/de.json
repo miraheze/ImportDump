@@ -2,6 +2,7 @@
 	"@metadata": {
 		"authors": [
 			"Justman10000",
+			"McDutchie",
 			"Nekky-chan",
 			"Sebastian Wallroth"
 		]
@@ -85,8 +86,8 @@
 	"importdump-request-edited-target": "Ziel:\nVorheriger Wert: $1\nNeuer Wert: $2",
 	"importdump-request-locked": "Diese Anfrage wurde gesperrt. Er kann nicht bearbeitet werden, und es können keine Kommentare hinzugefügt werden.",
 	"importdump-request-reopened": "Antrag wiedereröffnet von $1.\n\n[Änderungen vorgenommen]$2",
-	"importdump-section-comments": "Kommentare anfordern",
-	"importdump-section-details": "Details anfordern",
+	"importdump-section-comments": "Kommentare zur Anfrage",
+	"importdump-section-details": "Details zur Anfrage",
 	"importdump-section-editing": "Anfrage bearbeiten",
 	"importdump-section-handling": "Anfrage verwalten",
 	"importdump-status-updated": "Antrag $1.",

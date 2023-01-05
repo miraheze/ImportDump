@@ -2,6 +2,7 @@
 	"@metadata": {
 		"authors": [
 			"Ajeje Brazorf",
+			"McDutchie",
 			"Universal Omega",
 			"Verdy p"
 		]
@@ -85,8 +86,8 @@
 	"importdump-request-edited-target": "Message displayed if the value of 'target' was edited. $1 is the previous value; $2 is the new value.",
 	"importdump-request-locked": "Message displayed above the form at Special:RequestImportDumpQueue if the request is locked.",
 	"importdump-request-reopened": "'Request reopened' message. $1 is the actor's username; $2 is the changes that were made.",
-	"importdump-section-comments": "'Request Comments' section label.",
-	"importdump-section-details": "'Request Details' section label.",
+	"importdump-section-comments": "'Request Comments' section label.\n{{doc-important|This means \"comments about the request\", not \"ask for comments\"}}",
+	"importdump-section-details": "'Request Details' section label.\n{{doc-important|This means \"details about the request\", not \"ask for details\"}}",
 	"importdump-section-editing": "'Edit Request' section label.",
 	"importdump-section-handling": "'Handle Request' section label.",
 	"importdump-status-updated": "Fixed comment given to requester when the status is updated. $1 is status.",

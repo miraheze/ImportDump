@@ -90,7 +90,7 @@
 	"importdump-section-handling": "Gérer la demande",
 	"importdump-status-updated": "Demande $1.",
 	"importdump-status-updated-success": "L’état de la demande a bien été mis à jour.",
-	"importdump-success": "Votre demande d’import ($1) a bien été soumise. Votre demande sera passée en revue par un administrateur système dès que possible.",
+	"importdump-success": "Votre demande d’import ($1) a bien été soumise. Votre demande sera passée en revue dès que possible.",
 	"importdump-success-locked": "Cette demande a déjà été verrouillée. Elle ne peut plus être modifiée et aucun commentaire ne peut y être ajouté.",
 	"importdump-success-private": "Cette demande a bien été marquée comme privée. Elle n’est plus consultable par le public.",
 	"importdump-success-public": "Cette demande a bien été marquée comme publique. Elle est maintenant consultable par le public.",
