@@ -90,7 +90,7 @@
 	"importdump-section-handling": "De aanvraag afhandelen",
 	"importdump-status-updated": "Aanvraag $1.",
 	"importdump-status-updated-success": "De status van deze aanvraag is bijgewerkt.",
-	"importdump-success": "Uw importdump-aanvraag ($1) is ingediend. Uw aanvraag wordt zo snel mogelijk beoordeeld door een systeembeheerder.",
+	"importdump-success": "Uw importdump-aanvraag ($1) is ingediend. Uw aanvraag wordt zo snel mogelijk beoordeeld.",
 	"importdump-success-locked": "Deze aanvraag is nu vergrendeld. Ze kan niet meer worden bewerkt en er kunnen geen opmerkingen aan worden toegevoegd.",
 	"importdump-success-private": "Deze aanvraag is nu gemarkeerd als privé. Ze is niet langer publiekelijk zichtbaar.",
 	"importdump-success-public": "Deze aanvraag is nu gemarkeerd als openbaar. Ze is nu voor iedereen te bekijken.",
@@ -111,5 +111,17 @@
 	"log-action-filter-importdumpprivate": "Soort handeling:",
 	"log-action-filter-importdumpprivate-interwiki": "Interwiki-tabelaanpassingen",
 	"log-action-filter-importdumpprivate-request": "Nieuwe verzoeken ingediend",
-	"log-action-filter-importdumpprivate-statusupdate": "Status bijgewerkt voor verzoeken"
+	"log-action-filter-importdumpprivate-statusupdate": "Status bijgewerkt voor verzoeken",
+	"logentry-importdump-interwiki": "$1 heeft de interwiki-prefix '$4' toegevoegd aan $5 voor het importdumpverzoek $6.",
+	"logentry-importdump-request": "$1 heeft om een importdump gevraagd voor $4 in $5.",
+	"logentry-importdump-statusupdate": "$1 heeft de status van het importdumpverzoek $4 bijgewerkt naar '$5'.",
+	"logentry-importdumpprivate-interwiki": "$1 heeft de interwiki-prefix '$4' toegevoegd aan $5 voor het privé-importdumpverzoek $6.",
+	"logentry-importdumpprivate-request": "$1 heeft een importdump aangevraagd voor privéwiki $4 in $5.",
+	"logentry-importdumpprivate-statusupdate": "$1 heeft de status van het privé-importdumpverzoek $4 bijgewerkt naar '$5'.",
+	"requestimportdump": "Importdump aanvragen",
+	"requestimportdumpqueue": "Wachtrij importdumpverzoeken",
+	"right-handle-import-dump-interwiki": "Importdumps tussen wiki's afhandelen",
+	"right-handle-import-dump-requests": "Aanvragen voor importdumps van gebruikers afhandelen",
+	"right-request-import-dump": "Importdumps aanvragen",
+	"right-view-private-import-dump-requests": "Privé-importdumpaanvragen bekijken"
 }

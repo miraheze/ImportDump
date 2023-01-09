@@ -89,7 +89,7 @@
 	"importdump-section-handling": "Tratar pedido",
 	"importdump-status-updated": "Pedido $1.",
 	"importdump-status-updated-success": "O estado deste pedido foi atualizado.",
-	"importdump-success": "O seu pedido de importação de uma cópia em ficheiro ($1) foi submetido. O pedido será revisto por um administrador do sistema logo que possível.",
+	"importdump-success": "O seu pedido de importação de uma cópia em ficheiro ($1) foi submetido. O pedido será revisto logo que possível.",
 	"importdump-success-locked": "Este pedido foi trancado. Ele já não pode ser editado e não lhe pode ser acrescentado nenhum comentário.",
 	"importdump-success-private": "Este pedido foi marcado como privado. Deixou de poder ser visto pelo público.",
 	"importdump-success-public": "Este pedido foi marcado como público. Agora pode ser visto pelo público.",
