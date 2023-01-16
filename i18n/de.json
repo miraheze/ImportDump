@@ -92,7 +92,7 @@
 	"importdump-section-handling": "Anfrage verwalten",
 	"importdump-status-updated": "Antrag $1.",
 	"importdump-status-updated-success": "Status für diesen Antrag erfolgreich aktualisiert.",
-	"importdump-success": "Deine Anfrage für einen Import-Dump ($1) wurde erfolgreich eingereicht. Deine Anfrage wird so bald wie möglich von einem Systemadministrator geprüft.",
+	"importdump-success": "Dein Antrag auf einen Importdump ($1) wurde erfolgreich eingereicht. Dein Antrag wird so schnell wie möglich geprüft.",
 	"importdump-success-locked": "Diese Anfrage wurde erfolgreich gesperrt. Er kann nicht mehr bearbeitet werden und es können keine Kommentare mehr hinzugefügt werden.",
 	"importdump-success-private": "Diese Anfrage wurde erfolgreich als privat markiert. Sie ist nicht mehr öffentlich einsehbar.",
 	"importdump-success-public": "Diese Anfrage wurde erfolgreich als öffentlich markiert. Sie ist nun öffentlich einsehbar.",
