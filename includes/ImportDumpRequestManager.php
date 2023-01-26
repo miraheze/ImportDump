@@ -6,7 +6,6 @@ use Config;
 use EchoEvent;
 use ExtensionRegistry;
 use FileBackend;
-use GlobalVarConfig;
 use ManualLogEntry;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Interwiki\InterwikiLookup;
@@ -386,8 +385,6 @@ class ImportDumpRequestManager {
 	 * @return string
 	 */
 	public function getCommand(): string {
-		$blankConfig = new GlobalVarConfig( '' );
-
 		$command = $this->options->get( 'ImportDumpScriptCommand' );
 
 		if ( !$this->getInterwikiPrefix() ) {
@@ -400,7 +397,7 @@ class ImportDumpRequestManager {
 			'{username-prefix}',
 			'{file}',
 		], [
-			$blankConfig->get( 'IP' ),
+			MW_INSTALL_PATH,
 			$this->getTarget(),
 			$this->getInterwikiPrefix(),
 			FileBackend::splitStoragePath( $this->getFilePath() )[2],
