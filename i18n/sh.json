@@ -89,7 +89,7 @@
 	"importdump-section-handling": "Obradi zahtjev",
 	"importdump-status-updated": "Zahtjev $1.",
 	"importdump-status-updated-success": "Status uspješno promijenjen za ovaj zahtjev.",
-	"importdump-success": "Vaš zahtjev za skladišni izvadak uvoza ($1) je uspješno poslan. Pregledati će administrator sustava što je prije moguće.",
+	"importdump-success": "Vaš zahtjev za skladišni izvadak uvoza ($1) je uspješno poslan. Vaš zahtjev će biti pregledan što je prije moguće.",
 	"importdump-success-locked": "Ovaj zahtjev uspješno je zaključan. Ne može se uređivati ​​niti komentirati.",
 	"importdump-success-private": "Ovaj zahtjev je uspješno označen kao privatan. Više nije javno vidljiv.",
 	"importdump-success-public": "Ovaj zahtjev je uspješno označen kao javan. Sada je javno vidljiv.",

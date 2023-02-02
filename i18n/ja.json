@@ -23,6 +23,7 @@
 	"importdump-extensionname": "インポートダンプ",
 	"importdump-header-comment-withtimestamp": "$2での$1によるコメント",
 	"importdump-help-target": "有効なデータベース名である必要があります。",
+	"importdump-info-filesize": "'''インポートするファイルのサイズ:''' $1",
 	"importdump-invalid-interwiki-url": "指定されたインターウィキのURLは無効です。",
 	"importdump-label-add-comment": "コメントを追加",
 	"importdump-label-all": "すべて",
