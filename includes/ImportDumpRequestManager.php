@@ -154,7 +154,10 @@ class ImportDumpRequestManager {
 			__METHOD__
 		);
 
-		if ( !in_array( $user->getName(), self::SYSTEM_USERS ) ) {
+		if (
+			ExtensionRegistry::getInstance()->isLoaded( 'Echo' ) &&
+			!in_array( $user->getName(), self::SYSTEM_USERS )
+		) {
 			$this->sendNotification( $comment, 'importdump-request-comment', $user );
 		}
 	}
