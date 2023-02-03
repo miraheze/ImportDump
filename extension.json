@@ -159,7 +159,7 @@
 		},
 		"ImportDumpUsersNotifiedOnAllRequests": {
 			"value": [],
-			"description": "Array of usernames to send email notifications to for all requests. Users listed here must have a verified email address on their account."
+			"description": "Array of usernames to send email notifications to for all requests. Users listed here must have a verified email address on their account. This doesn't do anything if the Echo extension is not installed."
 		}
 	},
 	"ConfigRegistry": {
