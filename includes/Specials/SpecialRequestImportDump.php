@@ -316,7 +316,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$logID = $logEntry->insert( $dbw );
 		$logEntry->publish( $logID );
 
-		if ( $this->getConfig()->get( 'ImportDumpUsersNotifiedOnAllRequests' ) ) {
+		if (
+			ExtensionRegistry::getInstance()->isLoaded( 'Echo' ) &&
+			$this->getConfig()->get( 'ImportDumpUsersNotifiedOnAllRequests' )
+		) {
 			$this->sendNotifications( $data['reason'], $this->getUser()->getName(), $requestID, $data['target'] );
 		}
 
