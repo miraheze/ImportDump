@@ -82,6 +82,7 @@
 			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportDump",
 			"services": [
 				"DBLoadBalancerFactory",
+				"ImportDumpHookRunner",
 				"MimeAnalyzer",
 				"RepoGroup",
 				"UserFactory"
