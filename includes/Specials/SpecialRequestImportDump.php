@@ -13,6 +13,7 @@ use MediaWiki\User\UserFactory;
 use Message;
 use MimeAnalyzer;
 use Miraheze\CreateWiki\RemoteWiki;
+use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
 use PermissionsError;
 use RepoGroup;
 use SpecialPage;
@@ -31,6 +32,9 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
 
+	/** @var ImportDumpHookRunner */
+	private $hookRunner;
+
 	/** @var MimeAnalyzer */
 	private $mimeAnalyzer;
 
@@ -42,12 +46,14 @@ class SpecialRequestImportDump extends FormSpecialPage {
 
 	/**
 	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param ImportDumpHookRunner $hookRunner
 	 * @param MimeAnalyzer $mimeAnalyzer
 	 * @param RepoGroup $repoGroup
 	 * @param UserFactory $userFactory
 	 */
 	public function __construct(
 		ILBFactory $dbLoadBalancerFactory,
+		ImportDumpHookRunner $hookRunner,
 		MimeAnalyzer $mimeAnalyzer,
 		RepoGroup $repoGroup,
 		UserFactory $userFactory
@@ -55,6 +61,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		parent::__construct( 'RequestImportDump', 'request-import-dump' );
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
+		$this->hookRunner = $hookRunner;
 		$this->mimeAnalyzer = $mimeAnalyzer;
 		$this->repoGroup = $repoGroup;
 		$this->userFactory = $userFactory;
@@ -168,6 +175,8 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'validation-callback' => [ $this, 'isValidReason' ],
 			],
 		];
+
+		$this->hookRunner->onSpecialRequestImportDumpModifyFormFields( $this->getUser(), $formDescriptor );
 
 		return $formDescriptor;
 	}
