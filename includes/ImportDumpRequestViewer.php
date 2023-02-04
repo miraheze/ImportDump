@@ -57,7 +57,7 @@ class ImportDumpRequestViewer {
 			!$this->permissionManager->userHasRight( $user, 'view-private-import-dump-requests' )
 		) {
 			$this->context->getOutput()->addHTML(
-				Html::errorBox( $this->context->msg( 'importdump-unknown' )->escaped() )
+				Html::errorBox( $this->context->msg( 'importdump-private' )->escaped() )
 			);
 
 			return [];
