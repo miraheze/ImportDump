@@ -21,7 +21,8 @@
 		"Miraheze\\ImportDump\\": "includes/"
 	},
 	"TestAutoloadNamespaces": {
-		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/"
+		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/",
+		"Miraheze\\ImportDump\\Tests\\Unit\\": "tests/phpunit/unit/"
 	},
 	"GroupPermissions": {
 		"user": {
