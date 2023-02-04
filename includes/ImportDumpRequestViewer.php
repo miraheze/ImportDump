@@ -53,7 +53,7 @@ class ImportDumpRequestViewer {
 
 		if (
 			$this->importDumpRequestManager->isPrivate() &&
-			$this->getUser()->getName() !== $this->importDumpRequestManager->getRequester->getName() &&
+			$this->getUser() !== $this->importDumpRequestManager->getRequester() &&
 			!$this->permissionManager->userHasRight( $user, 'view-private-import-dump-requests' )
 		) {
 			$this->context->getOutput()->addHTML(
