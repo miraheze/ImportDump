@@ -77,6 +77,7 @@
 	"importdump-notification-header-status-update": "Status updated for import dump request #$1",
 	"importdump-notification-visit-request": "Visit request",
 	"importdump-notloggedin": "Sorry, you need to <span class=\"plainlinks\">[$1 log in]</span> before you can request an import dump.",
+	"importdump-private-request": "You do not have permission to view this request as it is marked as private.",
 	"importdump-request-edited": "Request edited by $1.\n\n[Changes made]$2",
 	"importdump-request-edited-reason": "\nReason:\nPrevious value: $1\nNew value: $2",
 	"importdump-request-edited-source": "\nSource:\nPrevious value: $1\nNew value: $2",
