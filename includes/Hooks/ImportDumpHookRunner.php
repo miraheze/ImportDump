@@ -20,10 +20,10 @@ class ImportDumpHookRunner implements
 	}
 
 	/** @inheritDoc */
-	public function onSpecialRequestImportDumpModifyFormFields( $user, $formDescriptor ): void {
+	public function onSpecialRequestImportDumpModifyFormFields( $user, &$formDescriptor ): void {
 		$this->container->run(
 			'SpecialRequestImportDumpModifyFormFields',
-			[ $user, $formDescriptor ]
+			[ $user, &$formDescriptor ]
 		);
 	}
 }
