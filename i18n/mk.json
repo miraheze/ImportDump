@@ -78,6 +78,7 @@
 	"importdump-notification-header-status-update": "Изменета состојба на барање за складиштен извадок на увоз #$1",
 	"importdump-notification-visit-request": "Посети го барањето",
 	"importdump-notloggedin": "За жал, ќе треба да <span class=\"plainlinks\">[$1 се најавите]</span> пред да побарате складиштен извадок на увоз.",
+	"importdump-private": "Немате дозвола да го гледате ова барање бидејќи е означено како приватно.",
 	"importdump-request-edited": "Барањето е изменето од $1.\n\n[Направени промени]$2",
 	"importdump-request-edited-reason": "\nПричина:\nПретходна вредност: $1\nНова вредност: $2",
 	"importdump-request-edited-source": "\nИзвор:\nПретходна вредност: $1\nНова вредност: $2",

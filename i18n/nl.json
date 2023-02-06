@@ -78,6 +78,7 @@
 	"importdump-notification-header-status-update": "Status bijgewerkt voor importdumpaanvraag nummer $1",
 	"importdump-notification-visit-request": "De aanvraag inzien",
 	"importdump-notloggedin": "Sorry, u moet eerst <span class=\"plainlinks\">[$1 inloggen]</span> voordat u een importdump kunt aanvragen.",
+	"importdump-private": "U hebt geen toestemming om dit verzoek te bekijken omdat het als privé is gemarkeerd.",
 	"importdump-request-edited": "Aanvraag bewerkt door $1.\n\n[Wijzigingen aangebracht]$2",
 	"importdump-request-edited-reason": "\nReden:\nVorige waarde: $1 \nNieuwe waarde: $2",
 	"importdump-request-edited-source": "\nBron:\nVorige waarde: $1 \nNieuwe waarde: $2",

@@ -2,7 +2,8 @@
 	"@metadata": {
 		"authors": [
 			"Gomoko",
-			"Verdy p"
+			"Verdy p",
+			"Wladek92"
 		]
 	},
 	"action-handle-import-dump-interwiki": "gérer l’importation de données entre wikis",
@@ -78,6 +79,7 @@
 	"importdump-notification-header-status-update": "L’état de la demande d’import de données nº $1 a été mis à jour",
 	"importdump-notification-visit-request": "Consulter la demande",
 	"importdump-notloggedin": "Désolé, vous devez <span class=\"plainlinks\">[$1 vous connecter]</span> avant de pouvoir demander un import de données.",
+	"importdump-private": "Vous n'avez pas l'autorisation d'afficher cette requête marquée privée.",
 	"importdump-request-edited": "Demande modifiée par $1.\n\n[Changements réalisés]$2",
 	"importdump-request-edited-reason": "\nMotif :\nValeur précédente : $1\nNouvelle valeur : $2",
 	"importdump-request-edited-source": "\nSource :\nValeur précédente : $1\nNouvelle valeur : $2",

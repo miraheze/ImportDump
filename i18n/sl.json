@@ -77,6 +77,7 @@
 	"importdump-notification-header-status-update": "Stanje prošnje za uvoz izpisa št. $1 posodobljeno",
 	"importdump-notification-visit-request": "Obišči prošnjo",
 	"importdump-notloggedin": "Žal se morate <span class=\"plainlinks\">[$1 prijaviti]</span>, preden lahko zaprosite za uvoz izpisa.",
+	"importdump-private": "Nimate dovoljenja za ogled te prošnje, saj je označena kot zasebna.",
 	"importdump-request-edited": "Prošnjo uredil_a $1.\n\n[Opravljene spremembe]$2",
 	"importdump-request-edited-reason": "\nRazlog:\nPrejšnja vrednost: $1\nNova vrednost: $2",
 	"importdump-request-edited-source": "\nVir:\nPrejšnja vrednost: $1\nNova vrednost: $2",
