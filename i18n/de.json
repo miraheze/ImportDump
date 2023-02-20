@@ -80,6 +80,7 @@
 	"importdump-notification-header-status-update": "Status aktualisiert für Import-Dump-Anfrage #$1",
 	"importdump-notification-visit-request": "Anfrage ansehen",
 	"importdump-notloggedin": "Leider musst du dich erst <span class=\"plainlinks\">[$1 anmelden]</span>, bevor du einen Import-Dump anfordern kannst.",
+	"importdump-private": "Sie haben nicht die Erlaubnis, diese Anfrage zu sehen, da sie als privat gekennzeichnet ist.",
 	"importdump-request-edited": "Anfrage bearbeitet von $1.\n\n[Änderungen vorgenommen]$2",
 	"importdump-request-edited-reason": "Grund:\nVorheriger Wert: $1\nNeuer Wert: $2",
 	"importdump-request-edited-source": "Quelle:\nVorheriger Wert: $1\nNeuer Wert: $2",
