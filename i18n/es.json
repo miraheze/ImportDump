@@ -1,0 +1,43 @@
+{
+	"@metadata": {
+		"authors": [
+			"Danniel07",
+			"Fitoschido",
+			"MarcoAurelio",
+			"OriginReboot"
+		]
+	},
+	"action-handle-import-dump-interwiki": "manejar volcado de importación interwiki",
+	"action-handle-import-dump-requests": "manejar solicitudes de volcado de importación de usuarios",
+	"action-request-import-dump": "solicitar volcados de importación",
+	"action-view-private-import-dump-requests": "ver solicitudes de volcado de importación privadas",
+	"echo-category-title-importdump-new-request": "Nueva solicitud de volcado de importación",
+	"echo-category-title-importdump-request-comment": "Comentario añadido a una solicitud de volcado de importación",
+	"echo-category-title-importdump-request-status-update": "Estado actualizado para una solicitud de volcado de importación",
+	"importdump-button-copy": "(copiar al portapapeles)",
+	"importdump-comment-given": "Comentario hecho por $1:",
+	"importdump-comment-success": "Comentario añadido con éxito a esta solicitud.",
+	"importdump-desc": "Una extensión diseñada para automatizar las solicitudes de importación de usuarios.",
+	"importdump-duplicate-request": "No se puede enviar esta solicitud. Es demasiado similar a una solicitud ya abierta.",
+	"importdump-edit-success": "Solicitud editada con éxito.",
+	"importdump-extensionname": "ImportDump",
+	"importdump-header-comment-withtimestamp": "Comentario hecho por $1 el $2",
+	"importdump-help-reason": "Describa en detalle el motivo por el que realiza esta solicitud de volcado de importación.",
+	"importdump-help-source": "Ingresa la URL completa del wiki de origen (desde donde está importando).",
+	"importdump-help-target": "Debe ser un nombre de base de datos válido.",
+	"importdump-help-upload-file": "Solo se permiten archivos XML. Si tu archivo XML está en un archivo comprimido, extráelo antes de intentar cargarlo.",
+	"importdump-help-upload-file-url": "Solo se permiten archivos XML sin comprimir.",
+	"importdump-info-command": "'''Comando para esta importación:''' <code>$1</code>",
+	"importdump-info-filesize": "'''Tamaño de archivo para esta importación:''' $1",
+	"importdump-info-groups": "Grupos de usuario que $1 tiene en $2: $3",
+	"importdump-info-interwiki": "Agrega un prefijo interwiki a la tabla interwiki local de $1 con los campos siguientes. Asegúrate de que los valores sean correctos antes de enviarlos.",
+	"importdump-info-no-file-found": "No se encontró ningún archivo en $1. Es posible que ya se haya eliminado.",
+	"importdump-label-add-comment": "Añadir comentario",
+	"importdump-label-comment": "Comentario:",
+	"importdump-label-reason": "Motivo para la Petición:",
+	"importdump-label-upload-source-type": "Fuente de la carga:",
+	"importdump-notcentral": "Desactivado",
+	"importdump-table-requester": "Solicitante",
+	"log-action-filter-importdump": "Tipo de acción:",
+	"log-action-filter-importdumpprivate": "Tipo de acción:"
+}
