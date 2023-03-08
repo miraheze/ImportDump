@@ -566,7 +566,7 @@ class ImportDumpRequestViewer {
 				$this->importDumpRequestManager->setStatus( 'pending' );
 
 				$comment = $this->context->msg( 'importdump-request-reopened', $user->getName() )->rawParams(
-					implode( "\n", $changes )
+					implode( "\n\n", $changes )
 				)->inContentLanguage()->escaped();
 
 				$this->importDumpRequestManager->logStatusUpdate( $comment, 'pending', $user );
@@ -578,7 +578,7 @@ class ImportDumpRequestViewer {
 				);
 			} else {
 				$comment = $this->context->msg( 'importdump-request-edited', $user->getName() )->rawParams(
-					implode( "\n", $changes )
+					implode( "\n\n", $changes )
 				)->inContentLanguage()->escaped();
 
 				$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
