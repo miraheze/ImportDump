@@ -71,5 +71,6 @@
 	"log-action-filter-importdump": "סוג הפעולה:",
 	"log-action-filter-importdumpprivate": "סוג הפעולה:",
 	"log-action-filter-importdumpprivate-request": "הוגשו בקשות חדשות",
-	"log-action-filter-importdumpprivate-statusupdate": "עודכן מצב הבקשות"
+	"log-action-filter-importdumpprivate-statusupdate": "עודכן מצב הבקשות",
+	"requestimportdumpqueue": "תור בקשות יבוא היטלים"
 }
