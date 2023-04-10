@@ -37,6 +37,7 @@
 	"importdump-label-upload-source-file": "העלאת קובץ",
 	"importdump-label-upload-source-type": "מקור ההעלאה:",
 	"importdump-label-upload-source-url": "העלאה מכתובת",
+	"importdump-log-name": "יומן בקשות יבוא היטלים",
 	"importdump-no-changes": "לא נעשו שינויים.",
 	"importdump-notcentral": "כבוי",
 	"importdump-notification-header-new-request": "בקשת יבוא היטל חדשה מס׳ $1",
