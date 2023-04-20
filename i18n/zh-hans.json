@@ -2,6 +2,7 @@
 	"@metadata": {
 		"authors": [
 			"Evesiesta",
+			"Hehua",
 			"StarrySky"
 		]
 	},
@@ -20,6 +21,7 @@
 	"importdump-comment-success": "评论已成功添加到此请求。",
 	"importdump-desc": "一个旨在自动化用户导入请求的扩展。",
 	"importdump-duplicate-request": "无法提交此请求。它与已经打开的请求过于相似。",
+	"importdump-edit-success": "成功编辑请求。",
 	"importdump-extensionname": "导入转储",
 	"importdump-header-comment-withtimestamp": "由$1于$2留下的意见",
 	"importdump-help-reason": "请详细描述您提出此导入转储请求的原因。",
@@ -34,5 +36,11 @@
 	"importdump-info-request-private": "此请求被标记为私有。它不公开可见。",
 	"importdump-info-requester-globally-blocked": "请求者 ($1) 已被全局封禁。这个请求应该被拒绝。",
 	"importdump-info-requester-locally-blocked": "请求者 ($1) 已在此wiki($2) 上被封禁。",
-	"importdump-label-add-comment": "添加评论"
+	"importdump-label-add-comment": "添加评论",
+	"importdump-label-all": "全部",
+	"importdump-label-comment": "评论：",
+	"importdump-label-complete": "完成",
+	"importdump-label-declined": "已拒绝",
+	"importdump-label-edit-request": "编辑请求",
+	"importdump-label-inprogress": "进行中"
 }
