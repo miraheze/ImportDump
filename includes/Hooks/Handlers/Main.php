@@ -14,6 +14,7 @@ use WikiMap;
 
 class Main implements
 	GetAllBlockActionsHook,
+	LoginFormValidErrorMessagesHook,
 	UserGetReservedNamesHook
 {
 
@@ -49,6 +50,11 @@ class Main implements
 		$actions[ 'request-import-dump' ] = 200;
 	}
 
+	/** @param array &$messages */
+	public function onLoginFormValidErrorMessages( array &$messages ) {
+		$messages[] = 'importdump-notloggedin';
+	}
+		
 	/**
 	 * @param array &$notifications
 	 * @param array &$notificationCategories
