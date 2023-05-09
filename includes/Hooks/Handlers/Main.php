@@ -6,6 +6,7 @@ use Config;
 use ConfigFactory;
 use EchoAttributeManager;
 use MediaWiki\Block\Hook\GetAllBlockActionsHook;
+use MediaWiki\Hook\LoginFormValidErrorMessagesHook;
 use MediaWiki\User\Hook\UserGetReservedNamesHook;
 use Miraheze\ImportDump\Notifications\EchoNewRequestPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestCommentPresentationModel;
