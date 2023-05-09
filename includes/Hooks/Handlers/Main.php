@@ -6,6 +6,7 @@ use Config;
 use ConfigFactory;
 use EchoAttributeManager;
 use MediaWiki\Block\Hook\GetAllBlockActionsHook;
+use MediaWiki\Hook\LoginFormValidErrorMessagesHook;
 use MediaWiki\User\Hook\UserGetReservedNamesHook;
 use Miraheze\ImportDump\Notifications\EchoNewRequestPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestCommentPresentationModel;
@@ -14,6 +15,7 @@ use WikiMap;
 
 class Main implements
 	GetAllBlockActionsHook,
+	LoginFormValidErrorMessagesHook,
 	UserGetReservedNamesHook
 {
 
@@ -47,6 +49,11 @@ class Main implements
 		}
 
 		$actions[ 'request-import-dump' ] = 200;
+	}
+
+	/** @param array &$messages */
+	public function onLoginFormValidErrorMessages( array &$messages ) {
+		$messages[] = 'importdump-notloggedin';
 	}
 
 	/**
