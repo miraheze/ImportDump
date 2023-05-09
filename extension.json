@@ -107,6 +107,9 @@
 		"LoadExtensionSchemaUpdates": {
 			"handler": "Installer"
 		},
+		"LoginFormValidErrorMessages": {
+			"handler": "Main"
+		},
 		"UserGetReservedNames": {
 			"handler": "Main"
 		}
