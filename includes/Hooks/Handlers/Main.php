@@ -55,7 +55,7 @@ class Main implements
 	public function onLoginFormValidErrorMessages( array &$messages ) {
 		$messages[] = 'importdump-notloggedin';
 	}
-		
+
 	/**
 	 * @param array &$notifications
 	 * @param array &$notificationCategories
