@@ -52,6 +52,7 @@ class SpecialRequestImportDumpQueue extends SpecialPage {
 		$this->setHeaders();
 
 		if ( $par ) {
+			$this->getOutput()->addBacklinkSubtitle( $this->getPageTitle() );
 			$this->lookupRequest( $par );
 			return;
 		}
