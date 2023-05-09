@@ -51,7 +51,9 @@ class Main implements
 		$actions[ 'request-import-dump' ] = 200;
 	}
 
-	/** @param array &$messages */
+	/**
+	 * @param array &$messages
+	 */
 	public function onLoginFormValidErrorMessages( array &$messages ) {
 		$messages[] = 'importdump-notloggedin';
 	}
