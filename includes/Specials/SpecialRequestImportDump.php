@@ -64,6 +64,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 * @param string $par
 	 */
 	public function execute( $par ) {
+		$this->requireLogin( 'importdump-notloggedin' );
 		$this->setParameter( $par );
 		$this->setHeaders();
 
@@ -72,16 +73,6 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			!WikiMap::isCurrentWikiId( $this->getConfig()->get( 'ImportDumpCentralWiki' ) )
 		) {
 			throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
-		}
-
-		if ( !$this->getUser()->isRegistered() ) {
-			$loginURL = SpecialPage::getTitleFor( 'Userlogin' )
-				->getFullURL( [
-					'returnto' => $this->getPageTitle()->getPrefixedText(),
-				]
-			);
-
-			throw new UserNotLoggedIn( 'importdump-notloggedin', 'exception-nologin', [ $loginURL ] );
 		}
 
 		$this->checkPermissions();
