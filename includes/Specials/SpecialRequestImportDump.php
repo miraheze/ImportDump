@@ -22,7 +22,6 @@ use UploadFromUrl;
 use UploadStash;
 use User;
 use UserBlockedError;
-use UserNotLoggedIn;
 use WikiMap;
 use Wikimedia\Rdbms\ILBFactory;
 
