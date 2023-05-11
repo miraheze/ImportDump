@@ -2,19 +2,20 @@
 	"@metadata": {
 		"authors": [
 			"Evesiesta",
+			"GuoPC",
 			"Hehua",
 			"StarrySky"
 		]
 	},
 	"action-handle-import-dump-interwiki": "处理导入转储跨维基",
-	"action-handle-import-dump-requests": "处理用户导入转储请求",
-	"action-request-import-dump": "请求导入转储",
-	"action-view-private-import-dump-requests": "查看私有导入转储请求",
+	"action-handle-import-dump-requests": "处理用户导入请求",
+	"action-request-import-dump": "请求导入",
+	"action-view-private-import-dump-requests": "查看私有导入请求",
 	"echo-category-title-importdump-new-request": "新的导入转储请求",
 	"echo-category-title-importdump-request-comment": "添加到导入转储请求的注释",
 	"echo-category-title-importdump-request-status-update": "导入转储请求的状态已更新",
-	"echo-pref-tooltip-importdump-new-request": "当有任何新的导入转储请求时通知我。",
-	"echo-pref-tooltip-importdump-request-comment": "当有关于我参与的导入转储请求的评论时通知我。",
+	"echo-pref-tooltip-importdump-new-request": "当有任何新的导入请求时通知我。",
+	"echo-pref-tooltip-importdump-request-comment": "当有关于我参与的导入请求的评论时通知我。",
 	"echo-pref-tooltip-importdump-request-status-update": "当我参与的导入转储请求的状态更新时通知我。",
 	"importdump-button-copy": "（复制到剪贴板）",
 	"importdump-comment-given": "$1留下的评论：",

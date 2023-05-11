@@ -6,8 +6,8 @@
 			"Wladek92"
 		]
 	},
-	"action-handle-import-dump-interwiki": "gérer l’importation de données entre wikis",
-	"action-handle-import-dump-requests": "gérer les demandes d’importation de données des utilisateurs",
+	"action-handle-import-dump-interwiki": "gérer l’import de données entre wikis",
+	"action-handle-import-dump-requests": "gérer les demandes d’import de données des utilisateurs",
 	"action-request-import-dump": "demander des imports de données",
 	"action-view-private-import-dump-requests": "consulter les demandes privées d’import de données",
 	"echo-category-title-importdump-new-request": "Nouvelle demande d’import de données",
@@ -24,7 +24,7 @@
 	"importdump-edit-success": "La demande a bien été modifiée.",
 	"importdump-extensionname": "ImportDeDonnées",
 	"importdump-header-comment-withtimestamp": "Commentaire laissé par $1 à $2",
-	"importdump-help-reason": "Veuillez décrire en détail le motif pour lequel vous effectuez cette demande d’importation des données.",
+	"importdump-help-reason": "Veuillez décrire en détail le motif pour lequel vous effectuez cette demande d’importation de données.",
 	"importdump-help-source": "Entrez l’URL complète du wiki source (d’où vous allez importer les données).",
 	"importdump-help-target": "Ce doit être un nom de base de données valide.",
 	"importdump-help-upload-file": "Seuls les fichiers XML sont autorisés. Si votre fichier XML est dans une archive compressée, veuillez l’extraire avant d’essayer de le téléverser.",
@@ -78,7 +78,7 @@
 	"importdump-notification-header-new-request": "Nouvelle demande d’import de données nº $1",
 	"importdump-notification-header-status-update": "L’état de la demande d’import de données nº $1 a été mis à jour",
 	"importdump-notification-visit-request": "Consulter la demande",
-	"importdump-notloggedin": "Désolé, vous devez <span class=\"plainlinks\">[$1 vous connecter]</span> avant de pouvoir demander un import de données.",
+	"importdump-notloggedin": "Veuillez vous connecter pour demander un import de données.",
 	"importdump-private": "Vous n’avez pas l’autorisation d’afficher cette requête car elle est marquée comme privée.",
 	"importdump-request-edited": "Demande modifiée par $1.\n\n[Changements réalisés]$2",
 	"importdump-request-edited-reason": "\nMotif :\nValeur précédente : $1\nNouvelle valeur : $2",
