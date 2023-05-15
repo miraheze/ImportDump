@@ -5,6 +5,16 @@
 			"YaronSh"
 		]
 	},
+	"action-handle-import-dump-interwiki": "לטפל ביבוא היטל מוויקי אחר",
+	"action-handle-import-dump-requests": "לטפל בבקשות יבוא של משתמשים",
+	"action-request-import-dump": "לבקש פעולות יבוא",
+	"action-view-private-import-dump-requests": "לצפות בבקשות יבוא פרטיות",
+	"echo-category-title-importdump-new-request": "בקשת יבוא היטל חדשה",
+	"echo-category-title-importdump-request-comment": "נוספה הערה לבקשת יבוא היטל",
+	"echo-category-title-importdump-request-status-update": "עודכן מצב בקשת יבוא היטל",
+	"echo-pref-tooltip-importdump-new-request": "להודיע לי כשיש בקשות יבוא חדשות.",
+	"echo-pref-tooltip-importdump-request-comment": "להודיע לי כשיש הערה לבקשת יבוא שהשתתפתי בה.",
+	"echo-pref-tooltip-importdump-request-status-update": "להודיע לי כשמתעדכן מצב עבור בקשת יבוא היטל שהשתתפתי בה.",
 	"importdump-button-copy": "(העתקה ללוח)",
 	"importdump-comment-given": "ההערה הוגשה על־ידי $1:",
 	"importdump-comment-success": "נוספה הערה לבקשה הזאת.",
