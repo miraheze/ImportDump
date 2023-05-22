@@ -102,7 +102,7 @@
 	"requestimportdump": "取り込みをリクエストする",
 	"requestimportdumpqueue": "取り込みリクエストキュー",
 	"right-handle-import-dump-interwiki": "インポート ダンプのインターウィキの処理",
-	"right-handle-import-dump-requests": "ユーザーによるインポートダンプリクエストを処理する",
+	"right-handle-import-dump-requests": "利用者によるインポートダンプリクエストを処理",
 	"right-request-import-dump": "取り込みをリクエスト",
 	"right-view-private-import-dump-requests": "非公開の取り込みリクエストを閲覧"
 }
