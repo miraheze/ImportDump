@@ -5,6 +5,7 @@
 			"Danniel07",
 			"Fitoschido",
 			"MarcoAurelio",
+			"No se",
 			"OriginReboot"
 		]
 	},
@@ -38,6 +39,7 @@
 	"importdump-label-comment": "Comentario:",
 	"importdump-label-reason": "Motivo para la Petición:",
 	"importdump-label-upload-source-type": "Fuente de la carga:",
+	"importdump-log-name": "Registro de solicitudes de importación",
 	"importdump-notcentral": "Desactivado",
 	"importdump-notification-visit-request": "Ver solicitud",
 	"importdump-table-requested-date": "Fecha de solicitud",
