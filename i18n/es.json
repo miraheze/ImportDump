@@ -16,6 +16,7 @@
 	"echo-category-title-importdump-new-request": "Nueva solicitud de volcado de importación",
 	"echo-category-title-importdump-request-comment": "Comentario añadido a una solicitud de volcado de importación",
 	"echo-category-title-importdump-request-status-update": "Estado actualizado para una solicitud de volcado de importación",
+	"echo-pref-tooltip-importdump-new-request": "Notificarme cuando haya nuevas solicitudes de importación.",
 	"importdump-button-copy": "(copiar al portapapeles)",
 	"importdump-comment-given": "Comentario hecho por $1:",
 	"importdump-comment-success": "Comentario añadido con éxito a esta solicitud.",
