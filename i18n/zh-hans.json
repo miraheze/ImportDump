@@ -4,7 +4,8 @@
 			"Evesiesta",
 			"GuoPC",
 			"Hehua",
-			"StarrySky"
+			"StarrySky",
+			"铁桶"
 		]
 	},
 	"action-handle-import-dump-interwiki": "处理导入转储跨维基",
@@ -43,5 +44,11 @@
 	"importdump-label-complete": "完成",
 	"importdump-label-declined": "已拒绝",
 	"importdump-label-edit-request": "编辑请求",
-	"importdump-label-inprogress": "进行中"
+	"importdump-label-inprogress": "进行中",
+	"importdump-label-pending": "待处理",
+	"importdump-label-requester": "申请者：",
+	"importdump-label-status": "状态：",
+	"importdump-label-upload-file": "上传文件：",
+	"importdump-notcentral": "已禁用",
+	"right-request-import-dump": "申请导入"
 }
