@@ -56,5 +56,15 @@
 	"importdump-label-requested-date": "Жељени датум:",
 	"importdump-label-requester": "Подносилац захтјева:",
 	"importdump-label-source": "URL извора:",
-	"importdump-label-status": "Статус:"
+	"importdump-label-status": "Статус:",
+	"importdump-label-status-updated-comment": "Додатни коментар за захтјев:",
+	"importdump-label-target": "Име циљне базе података:",
+	"importdump-label-update-status": "Нови статус овог захтјева:",
+	"importdump-label-upload-file": "Отпреми датотеку:",
+	"importdump-label-upload-file-url": "URL извора:",
+	"importdump-label-upload-source-file": "Отпреми датотеку",
+	"importdump-label-upload-source-type": "Извор отпремања:",
+	"importdump-label-upload-source-url": "Отпреми са URL-а",
+	"importdump-log-header": "Ово је дневник свих захтјева за увоз и промјена статуса.",
+	"importdump-log-name": "Дневник захтјева за увоз"
 }
