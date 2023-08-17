@@ -66,5 +66,9 @@
 	"importdump-label-upload-source-type": "Извор отпремања:",
 	"importdump-label-upload-source-url": "Отпреми са URL-а",
 	"importdump-log-header": "Ово је дневник свих захтјева за увоз и промјена статуса.",
-	"importdump-log-name": "Дневник захтјева за увоз"
+	"importdump-log-name": "Дневник захтјева за увоз",
+	"importdump-no-changes": "Нема промјена.",
+	"importdump-notcentral": "Онемогућено",
+	"importdump-notcentral-text": "Захтјеви за складишни извадак увоза су онемогућени на овом викију. Молимо затражите са средишњег.",
+	"importdump-notification-body-new-request": "Примљен је нови захтјев за складишни извадак увоза.<br />Наведени разлог: $1<br />Подносилац захтјева: $2<br />Има циљне базе података: $3"
 }
