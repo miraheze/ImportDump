@@ -66,5 +66,12 @@
 	"importdump-section-editing": "编辑请求",
 	"importdump-section-handling": "处理请求",
 	"importdump-status-updated": "请求$1。",
+	"importdump-table-requested-date": "请求日期",
+	"importdump-table-requester": "请求者",
+	"importdump-table-status": "状态",
+	"importdump-table-target": "目标",
+	"importdump-unknown": "未知请求。",
+	"importdump-usergroups-none": "无",
+	"requestimportdump": "请求导入",
 	"right-request-import-dump": "申请导入"
 }
