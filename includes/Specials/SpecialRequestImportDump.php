@@ -418,9 +418,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			throw new UserBlockedError( $block );
 		}
 
-		$globalBlock = $user->getGlobalBlock();
-		if ( $globalBlock ) {
-			throw new UserBlockedError( $globalBlock );
+		// @phan-suppress-next-line PhanDeprecatedFunction Only for MW 1.39 or lower.
+		if ( $user->isBlockedGlobally() ) {
+			// @phan-suppress-next-line PhanDeprecatedFunction Only for MW 1.39 or lower.
+			$this->dieBlocked( $user->getGlobalBlock() );
 		}
 
 		$this->checkReadOnly();
