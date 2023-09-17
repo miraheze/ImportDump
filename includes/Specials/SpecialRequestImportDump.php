@@ -421,7 +421,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		// @phan-suppress-next-line PhanDeprecatedFunction Only for MW 1.39 or lower.
 		if ( $user->isBlockedGlobally() ) {
 			// @phan-suppress-next-line PhanDeprecatedFunction Only for MW 1.39 or lower.
-			$this->dieBlocked( $user->getGlobalBlock() );
+			throw new UserBlockedError( $user->getGlobalBlock() );
 		}
 
 		$this->checkReadOnly();
