@@ -135,7 +135,6 @@ class SpecialRequestImportDump extends FormSpecialPage {
 					'help-message' => 'importdump-help-upload-file-url',
 					'hide-if' => [ '!==', 'wpUploadSourceType', 'Url' ],
 					'required' => true,
-					'default' => 'File'
 				],
 			];
 		} else {
