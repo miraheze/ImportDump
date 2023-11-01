@@ -126,6 +126,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 					'help-message' => 'importdump-help-upload-file',
 					'hide-if' => [ '!==', 'wpUploadSourceType', 'File' ],
 					'accept' => [ '.xml' ],
+					'required' => true,
 				],
 				'UploadFileURL' => [
 					'type' => 'url',
@@ -142,6 +143,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 					'label-message' => 'importdump-label-upload-file',
 					'help-message' => 'importdump-help-upload-file',
 					'accept' => [ '.xml' ],
+					'required' => true,
 				],
 			];
 		}
@@ -219,8 +221,9 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return User::newFatalPermissionDeniedStatus( $permission );
 		}
 
-		if ( $uploadBase->isEmptyFile() ) {
-			return Status::newFatal( 'empty-file' );
+		$status = $uploadBase->fetchFile();
+		if ( !$status->isOK() ) {
+			return $status;
 		}
 
 		$virus = UploadBase::detectVirus( $uploadBase->getTempPath() );
