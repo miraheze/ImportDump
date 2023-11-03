@@ -258,6 +258,7 @@ class ImportDumpRequestViewer {
 				);
 			}
 
+			// @phan-suppress-next-line PhanDeprecatedFunction Only for MW 1.39 or lower.
 			if ( $this->importDumpRequestManager->getRequester()->getGlobalBlock() ) {
 				$info .= Html::errorBox(
 					$this->context->msg( 'importdump-info-requester-globally-blocked',
