@@ -6,7 +6,8 @@
 			"Hehua",
 			"StarrySky",
 			"沈澄心",
-			"铁桶"
+			"铁桶",
+			"阿南之人"
 		]
 	},
 	"action-handle-import-dump-interwiki": "处理导入转储跨维基",
@@ -38,7 +39,7 @@
 	"importdump-info-no-file-found": "在$1处未找到文件。它可能已经被删除。",
 	"importdump-info-no-interwiki-prefix": "目标wiki($1) 上不存在跨wiki 前缀，它指向源wiki($2)。建议您在继续之前添加一个。",
 	"importdump-info-request-private": "此请求被标记为私有。它不公开可见。",
-	"importdump-info-requester-globally-blocked": "请求者 ($1) 已被全局封禁。这个请求应该被拒绝。",
+	"importdump-info-requester-globally-blocked": "请求者 ($1) 已被全域封禁。这个请求应该被拒绝。",
 	"importdump-info-requester-locally-blocked": "申请者（$1）已在此wiki（$2）上被本地封禁。",
 	"importdump-label-add-comment": "添加评论",
 	"importdump-label-all": "全部",

@@ -1,7 +1,8 @@
 {
 	"@metadata": {
 		"authors": [
-			"Eleassar"
+			"Eleassar",
+			"Upwinxp"
 		]
 	},
 	"action-handle-import-dump-interwiki": "upravljanje uvoza izpisov med vikiji",
@@ -114,10 +115,10 @@
 	"log-action-filter-importdumpprivate-statusupdate": "Posodobitve stanja prošenj",
 	"logentry-importdump-interwiki": "$1 je v $5 dodal_a interviki predpono »$4« za prošnjo za uvoz izpisa $6.",
 	"logentry-importdump-request": "$1 je zaprosil_a za uvoz izpisa za $4 v $5.",
-	"logentry-importdump-statusupdate": "$1 je posodobil_a stanje prošnje $4 za uvoz izpisa v »$5«.",
+	"logentry-importdump-statusupdate": "$1 je posodobil/a stanje prošnje $4 za uvoz izpisa v »$5«.",
 	"logentry-importdumpprivate-interwiki": "$1 je $5 dodal_a interviki predpono »$4« za zasebno prošnjo $6 za uvoz izpisa.",
 	"logentry-importdumpprivate-request": "$1 je zaprosil_a za uvoz izpisa za zasebni viki $4 v $5.",
-	"logentry-importdumpprivate-statusupdate": "$1 je posodobil_a stanje zasebne prošnje $4 za uvoz izpisa $4 v »$5«.",
+	"logentry-importdumpprivate-statusupdate": "$1 je posodobil/a stanje zasebne prošnje $4 za uvoz izpisa $4 v »$5«.",
 	"requestimportdump": "Prošnja za uvoz",
 	"requestimportdumpqueue": "Čakalna vrsta prošenj za uvoz",
 	"right-handle-import-dump-interwiki": "Obravnava uvoza izpisa med vikiji",
