@@ -45,7 +45,6 @@ class ImportDumpLogFormatter extends LogFormatter {
 			}
 		} else {
 			$params[3] = str_replace( '#', '', $params[3] );
-			var_dump( $params[3] );
 
 			if ( !$this->plaintext ) {
 				$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$params[3] );
