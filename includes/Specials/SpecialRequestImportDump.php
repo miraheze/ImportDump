@@ -296,7 +296,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$logEntry->setParameters(
 			[
 				'4::requestTarget' => $data['target'],
-				'5::requestLink' => Message::rawParam( $requestLink ),
+				'5::requestLink' => '#' . $requestID,
 			]
 		);
 
