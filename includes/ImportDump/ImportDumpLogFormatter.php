@@ -21,8 +21,8 @@ class ImportDumpLogFormatter extends LogFormatter {
 		if ( $subtype === 'interwiki' ) {
 			$params[6] = str_replace( '#', '', $params[6] );
 			if ( !$this->plaintext ) {
-				// @phan-suppress-next-line SecurityCheck-DoubleEscaped
 				$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$params[6] );
+				// @phan-suppress-next-line SecurityCheck-DoubleEscaped
 				$requestLink = $linkRenderer->makeLink( $requestQueueLink, "#{$params[6]}" );
 				$params[6] = Message::rawParam( $requestLink );
 			} else {
@@ -34,8 +34,8 @@ class ImportDumpLogFormatter extends LogFormatter {
 			$params[5] = str_replace( '#', '', $params[5] );
 
 			if ( !$this->plaintext ) {
-				// @phan-suppress-next-line SecurityCheck-DoubleEscaped
 				$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', $params[5] );
+				// @phan-suppress-next-line SecurityCheck-DoubleEscaped
 				$requestLink = $linkRenderer->makeLink( $requestQueueLink, "#{$params[5]}" );
 				$params[5] = Message::rawParam( $requestLink );
 			} else {
@@ -49,8 +49,8 @@ class ImportDumpLogFormatter extends LogFormatter {
 
 			if ( !$this->plaintext ) {
 				$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$params[3] );
-				$requestLink = $linkRenderer->makeLink( $requestQueueLink, "#{$params[3]}" );
 				// @phan-suppress-next-line SecurityCheck-DoubleEscaped
+				$requestLink = $linkRenderer->makeLink( $requestQueueLink, "#{$params[3]}" );
 				$params[3] = Message::rawParam( $requestLink );
 			} else {
 				$params[3] = Message::rawParam(
