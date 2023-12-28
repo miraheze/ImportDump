@@ -35,8 +35,8 @@
 		"view-private-import-dump-requests"
 	],
 	"LogActionsHandlers": {
-		"importdump/*": "LogFormatter",
-		"importdumpprivate/*": "LogFormatter"
+		"importdump/*": "Miraheze\\ImportDump\\ImportDump\\ImportDumpLogFormatter",
+		"importdumpprivate/*": "Miraheze\\ImportDump\\ImportDump\\ImportDumpLogFormatter"
 	},
 	"LogHeaders": {
 		"importdump": "importdump-log-header",
