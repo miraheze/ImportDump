@@ -10,7 +10,6 @@ use FormSpecialPage;
 use Html;
 use ManualLogEntry;
 use MediaWiki\User\UserFactory;
-use Message;
 use MimeAnalyzer;
 use Miraheze\CreateWiki\RemoteWiki;
 use PermissionsError;

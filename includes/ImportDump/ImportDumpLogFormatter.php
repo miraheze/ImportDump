@@ -6,7 +6,6 @@ use LogFormatter;
 use MediaWiki\MediaWikiServices;
 use Message;
 use SpecialPage;
-use Title;
 
 class ImportDumpLogFormatter extends LogFormatter {
 
@@ -31,7 +30,7 @@ class ImportDumpLogFormatter extends LogFormatter {
 					'#' . $params[6]
 				);
 			}
-		} else if ( $subtype === 'request' ) {
+		} elseif ( $subtype === 'request' ) {
 			$params[5] = str_replace( '#', '', $params[5] );
 
 			if ( !$this->plaintext ) {
@@ -46,13 +45,13 @@ class ImportDumpLogFormatter extends LogFormatter {
 			}
 		} else {
 			$params[3] = str_replace( '#', '', $params[3] );
-			var_dump($params[3]);
+			var_dump( $params[3] );
 
 			if ( !$this->plaintext ) {
 				$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$params[3] );
 				$requestLink = $linkRenderer->makeLink( $requestQueueLink, "#{$params[3]}" );
 				// @phan-suppress-next-line SecurityCheck-DoubleEscaped
-				$params[3] = Message::rawParam( $requestLink);
+				$params[3] = Message::rawParam( $requestLink );
 			} else {
 				$params[3] = Message::rawParam(
 					'#' . $params[3]

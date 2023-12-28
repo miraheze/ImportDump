@@ -12,7 +12,6 @@ use MediaWiki\Interwiki\InterwikiLookup;
 use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManagerFactory;
-use Message;
 use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
 use RepoGroup;
