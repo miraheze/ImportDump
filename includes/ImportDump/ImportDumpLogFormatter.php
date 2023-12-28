@@ -19,28 +19,28 @@ class ImportDumpLogFormatter extends LogFormatter {
 		$linkRenderer = MediaWikiServices::getInstance()->getLinkRenderer();
 
 		if ( $subtype === 'interwiki' ) {
-			$params[6] = str_replace( '#', '', $params[6] );
-			if ( !$this->plaintext ) {
-				$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$params[6] );
-				// @phan-suppress-next-line SecurityCheck-DoubleEscaped
-				$requestLink = $linkRenderer->makeLink( $requestQueueLink, "#{$params[6]}" );
-				$params[6] = Message::rawParam( $requestLink );
-			} else {
-				$params[6] = Message::rawParam(
-					'#' . $params[6]
-				);
-			}
-		} elseif ( $subtype === 'request' ) {
 			$params[5] = str_replace( '#', '', $params[5] );
-
 			if ( !$this->plaintext ) {
-				$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', $params[5] );
+				$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$params[5] );
 				// @phan-suppress-next-line SecurityCheck-DoubleEscaped
-				$requestLink = $linkRenderer->makeLink( $requestQueueLink, "#{$params[5]}" );
+				$requestLink = $linkRenderer->makeLink( $requestQueueLink, '#' . $params[5] );
 				$params[5] = Message::rawParam( $requestLink );
 			} else {
 				$params[5] = Message::rawParam(
 					'#' . $params[5]
+				);
+			}
+		} elseif ( $subtype === 'request' ) {
+			$params[4] = str_replace( '#', '', $params[4] );
+
+			if ( !$this->plaintext ) {
+				$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', $params[4] );
+				// @phan-suppress-next-line SecurityCheck-DoubleEscaped
+				$requestLink = $linkRenderer->makeLink( $requestQueueLink, '#' . $params[4] );
+				$params[4] = Message::rawParam( $requestLink );
+			} else {
+				$params[4] = Message::rawParam(
+					'#' . $params[4]
 				);
 			}
 		} else {
@@ -49,7 +49,7 @@ class ImportDumpLogFormatter extends LogFormatter {
 			if ( !$this->plaintext ) {
 				$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$params[3] );
 				// @phan-suppress-next-line SecurityCheck-DoubleEscaped
-				$requestLink = $linkRenderer->makeLink( $requestQueueLink, "#{$params[3]}" );
+				$requestLink = $linkRenderer->makeLink( $requestQueueLink, '#' . $params[3] );
 				$params[3] = Message::rawParam( $requestLink );
 			} else {
 				$params[3] = Message::rawParam(
