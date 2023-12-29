@@ -22,11 +22,13 @@ class ImportDumpLogFormatter extends LogFormatter {
 			$params[5] = str_replace( '#', '', $params[5] );
 			if ( !$this->plaintext ) {
 				$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$params[5] );
-				// @phan-suppress-next-line SecurityCheck-XSS, SecurityCheck-DoubleEscaped
+				// @phan-suppress-next-line SecurityCheck-DoubleEscaped
 				$requestLink = $linkRenderer->makeLink( $requestQueueLink, '#' . $params[5] );
 				$params[5] = Message::rawParam( $requestLink );
 			} else {
+				// @phan-suppress-next-line SecurityCheck-XSS
 				$params[5] = Message::rawParam(
+					// @phan-suppress-next-line SecurityCheck-XSS
 					'#' . $params[5]
 				);
 			}
@@ -35,10 +37,11 @@ class ImportDumpLogFormatter extends LogFormatter {
 
 			if ( !$this->plaintext ) {
 				$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', $params[4] );
-				// @phan-suppress-next-line SecurityCheck-XSS, SecurityCheck-DoubleEscaped
+				// @phan-suppress-next-line SecurityCheck-DoubleEscaped
 				$requestLink = $linkRenderer->makeLink( $requestQueueLink, '#' . $params[4] );
 				$params[4] = Message::rawParam( $requestLink );
 			} else {
+				// @phan-suppress-next-line SecurityCheck-XSS
 				$params[4] = Message::rawParam(
 					'#' . $params[4]
 				);
@@ -48,10 +51,11 @@ class ImportDumpLogFormatter extends LogFormatter {
 
 			if ( !$this->plaintext ) {
 				$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$params[3] );
-				// @phan-suppress-next-line SecurityCheck-XSS, SecurityCheck-DoubleEscaped
+				// @phan-suppress-next-line SecurityCheck-DoubleEscaped
 				$requestLink = $linkRenderer->makeLink( $requestQueueLink, '#' . $params[3] );
 				$params[3] = Message::rawParam( $requestLink );
 			} else {
+				// @phan-suppress-next-line SecurityCheck-XSS
 				$params[3] = Message::rawParam(
 					'#' . $params[3]
 				);
