@@ -10,7 +10,6 @@ use FormSpecialPage;
 use Html;
 use ManualLogEntry;
 use MediaWiki\User\UserFactory;
-use Message;
 use MimeAnalyzer;
 use Miraheze\CreateWiki\RemoteWiki;
 use PermissionsError;
@@ -296,7 +295,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 		$logEntry->setParameters(
 			[
 				'4::requestTarget' => $data['target'],
-				'5::requestLink' => Message::rawParam( $requestLink ),
+				'5::requestLink' => '#' . $requestID,
 			]
 		);
 
