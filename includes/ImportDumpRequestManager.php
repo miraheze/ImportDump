@@ -20,6 +20,7 @@ use RepoGroup;
 use SpecialPage;
 use stdClass;
 use User;
+use UserRightsProxy;
 use Wikimedia\Rdbms\DBConnRef;
 use Wikimedia\Rdbms\ILBFactory;
 use Wikimedia\Rdbms\SelectQueryBuilder;
@@ -418,9 +419,13 @@ class ImportDumpRequestManager {
 	 */
 	public function getUserGroupsFromTarget() {
 		$userName = $this->getRequester()->getName();
-		$remoteUser = $this->actorStoreFactory
-			->getUserIdentityLookup( $this->getTarget() )
-			->getUserIdentityByName( $userName );
+		if ( version_compare( MW_VERSION, '1.41', '>=' ) ) {
+			$remoteUser = $this->actorStoreFactory
+				->getUserIdentityLookup( $this->getTarget() )
+				->getUserIdentityByName( $userName );
+		} else {
+			$remoteUser = UserRightsProxy::newFromName( $this->getTarget(), $userName );
+		}
 
 		if ( !$remoteUser ) {
 			return [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
