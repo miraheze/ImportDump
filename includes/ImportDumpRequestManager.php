@@ -12,6 +12,7 @@ use MediaWiki\Interwiki\InterwikiLookup;
 use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManagerFactory;
+use Message;
 use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
 use RepoGroup;
@@ -168,6 +169,7 @@ class ImportDumpRequestManager {
 	 */
 	public function logStatusUpdate( string $comment, string $newStatus, User $user ) {
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$this->ID );
+		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
 		$logEntry = new ManualLogEntry(
 			$this->isPrivate() ? 'importdumpprivate' : 'importdump',
@@ -183,7 +185,7 @@ class ImportDumpRequestManager {
 
 		$logEntry->setParameters(
 			[
-				'4::requestLink' => '#' . $this->ID,
+				'4::requestLink' => Message::rawParam( $requestLink ),
 				'5::requestStatus' => strtolower( $this->messageLocalizer->msg(
 					'importdump-label-' . $newStatus
 				)->inContentLanguage()->text() ),
@@ -288,6 +290,7 @@ class ImportDumpRequestManager {
 		$this->interwikiLookup->invalidateCache( $prefix );
 
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$this->ID );
+		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
 		$logEntry = new ManualLogEntry(
 			$this->isPrivate() ? 'importdumpprivate' : 'importdump',
@@ -301,7 +304,7 @@ class ImportDumpRequestManager {
 			[
 				'4::prefix' => $prefix,
 				'5::target' => $this->getTarget(),
-				'6::requestLink' => '#' . $this->ID,
+				'6::requestLink' => Message::rawParam( $requestLink ),
 			]
 		);
 
