@@ -126,7 +126,6 @@ class SpecialRequestImportDump extends FormSpecialPage {
 					'help-message' => 'importdump-help-upload-file',
 					'hide-if' => [ '!==', 'wpUploadSourceType', 'File' ],
 					'accept' => [ '.xml' ],
-					'required' => true,
 				],
 				'UploadFileURL' => [
 					'type' => 'url',
@@ -143,7 +142,6 @@ class SpecialRequestImportDump extends FormSpecialPage {
 					'label-message' => 'importdump-label-upload-file',
 					'help-message' => 'importdump-help-upload-file',
 					'accept' => [ '.xml' ],
-					'required' => true,
 				],
 			];
 		}
@@ -221,9 +219,8 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			return User::newFatalPermissionDeniedStatus( $permission );
 		}
 
-		$status = $uploadBase->fetchFile();
-		if ( !$status->isOK() ) {
-			return $status;
+		if ( $uploadBase->isEmptyFile() ) {
+			return Status::newFatal( 'empty-file' );
 		}
 
 		$virus = UploadBase::detectVirus( $uploadBase->getTempPath() );
@@ -418,9 +415,10 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			throw new UserBlockedError( $block );
 		}
 
-		$globalBlock = $user->getGlobalBlock();
-		if ( $globalBlock ) {
-			throw new UserBlockedError( $globalBlock );
+		// @phan-suppress-next-line PhanDeprecatedFunction Only for MW 1.39 or lower.
+		if ( $user->isBlockedGlobally() ) {
+			// @phan-suppress-next-line PhanDeprecatedFunction Only for MW 1.39 or lower.
+			throw new UserBlockedError( $user->getGlobalBlock() );
 		}
 
 		$this->checkReadOnly();

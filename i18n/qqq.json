@@ -2,6 +2,7 @@
 	"@metadata": {
 		"authors": [
 			"Ajeje Brazorf",
+			"Amire80",
 			"McDutchie",
 			"Universal Omega",
 			"Verdy p"
@@ -32,7 +33,7 @@
 	"importdump-help-upload-file-url": "Help for the 'Source URL' field.",
 	"importdump-info-command": "The generated command that is displayed on the 'handling' section of Special:RequestImportDumpQueue. $1 is the generated command.",
 	"importdump-info-filesize": "The file size for the uploaded XML file. $1 is the file size.",
-	"importdump-info-groups": "User groups that the requester has on the target wiki. Displayed on the 'handling' section of Special:RequestImportDumpQueue. $1 is the requester's username; $2 is the target wiki's database name; $3 is the comma separated list of user groups.",
+	"importdump-info-groups": "User groups that the requester has on the target wiki. Displayed on the 'handling' section of Special:RequestImportDumpQueue.\n* $1 is the requester's username\n* $2 is the target wiki's database name\n* $3 is the comma-separated list of user groups",
 	"importdump-info-interwiki": "The information displayed on the 'handling' section of Special:RequestImportDumpQueue, when there is no interwiki prefix present, and you have the necessary rights to insert a prefix. $1 is the target database name.",
 	"importdump-info-no-file-found": "Message displayed instead of generated command and file size, if the file for the request is not found. $1 is the full path to the file.",
 	"importdump-info-no-interwiki-prefix": "Message that is displayed on the 'handling' section of Special:RequestImportDumpQueue when no interwiki prefix is found on the target wiki, which is pointing to the source wiki. $1 is the target wiki; $2 is the source wiki's hostname.",
