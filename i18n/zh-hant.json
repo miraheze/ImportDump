@@ -4,10 +4,11 @@
 			"Kly",
 			"Willy1018",
 			"Winston Sung",
-			"捍粵者"
+			"捍粵者",
+			"铁桶"
 		]
 	},
-	"action-handle-import-dump-interwiki": "處理匯入傾印跨 wiki",
+	"action-handle-import-dump-interwiki": "處理跨 wiki 匯入傾印檔案",
 	"action-handle-import-dump-requests": "處理使用者匯入請求",
 	"action-request-import-dump": "請求匯入",
 	"action-view-private-import-dump-requests": "查看私有匯入請求",
@@ -123,7 +124,7 @@
 	"logentry-importdumpprivate-statusupdate": "$1將私有匯入傾印請求$4的狀態更新成「$5」。",
 	"requestimportdump": "請求匯入",
 	"requestimportdumpqueue": "匯入請求佇列",
-	"right-handle-import-dump-interwiki": "處理匯入傾印跨 wiki",
+	"right-handle-import-dump-interwiki": "處理跨 wiki 匯入傾印檔案",
 	"right-handle-import-dump-requests": "處理使用者匯入傾印請求",
 	"right-request-import-dump": "請求匯入",
 	"right-view-private-import-dump-requests": "查看私有匯入請求"

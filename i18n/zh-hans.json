@@ -10,7 +10,7 @@
 			"阿南之人"
 		]
 	},
-	"action-handle-import-dump-interwiki": "处理导入转储跨维基",
+	"action-handle-import-dump-interwiki": "处理跨wiki导入转储文件",
 	"action-handle-import-dump-requests": "处理用户导入申请",
 	"action-request-import-dump": "申请导入",
 	"action-view-private-import-dump-requests": "查看私有导入请求",
@@ -41,6 +41,7 @@
 	"importdump-info-request-private": "此请求被标记为私有。它不公开可见。",
 	"importdump-info-requester-globally-blocked": "请求者 ($1) 已被全域封禁。这个请求应该被拒绝。",
 	"importdump-info-requester-locally-blocked": "申请者（$1）已在此wiki（$2）上被本地封禁。",
+	"importdump-interwiki-success": "跨wiki前缀已成功添加到$1。",
 	"importdump-label-add-comment": "添加评论",
 	"importdump-label-all": "全部",
 	"importdump-label-comment": "评论：",
@@ -54,6 +55,7 @@
 	"importdump-label-requester": "申请者：",
 	"importdump-label-source": "来源URL：",
 	"importdump-label-status": "状态：",
+	"importdump-label-target": "目标数据库名称：",
 	"importdump-label-upload-file": "上传文件：",
 	"importdump-label-upload-file-url": "来源URL：",
 	"importdump-label-upload-source-file": "上传文件",
@@ -74,5 +76,6 @@
 	"importdump-unknown": "未知申请。",
 	"importdump-usergroups-none": "无",
 	"requestimportdump": "申请导入",
+	"right-handle-import-dump-interwiki": "处理跨wiki导入转储文件",
 	"right-request-import-dump": "申请导入"
 }
