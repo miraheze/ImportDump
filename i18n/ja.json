@@ -9,6 +9,7 @@
 			"MagicAho",
 			"MathXplore",
 			"Shirayuki",
+			"Waki285",
 			"背番号4のエース"
 		]
 	},
@@ -121,7 +122,7 @@
 	"log-action-filter-importdumpprivate-request": "新しいリクエストが送信されました。",
 	"log-action-filter-importdumpprivate-statusupdate": "リクエストが更新されました。",
 	"logentry-importdump-request": "$1が$5で$4のインポートダンプをリクエストしました。",
-	"logentry-importdump-statusupdate": "$1がインポートダンプリクエストのステータスを$4から$5に更新しました。",
+	"logentry-importdump-statusupdate": "$1がインポートダンプリクエスト $4 のステータスを$5に更新しました。",
 	"logentry-importdumpprivate-request": "$1が$5で$4のインポートダンプをリクエストしました。",
 	"requestimportdump": "取り込みをリクエストする",
 	"requestimportdumpqueue": "取り込みリクエストキュー",

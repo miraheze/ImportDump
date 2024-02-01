@@ -8,11 +8,11 @@
 			"铁桶"
 		]
 	},
-	"action-handle-import-dump-interwiki": "處理跨 wiki 匯入傾印檔案",
-	"action-handle-import-dump-requests": "處理使用者匯入請求",
+	"action-handle-import-dump-interwiki": "處理跨 wiki 匯入傾印",
+	"action-handle-import-dump-requests": "處理使用者匯入申請",
 	"action-request-import-dump": "請求匯入",
-	"action-view-private-import-dump-requests": "查看私有匯入請求",
-	"echo-category-title-importdump-new-request": "新的匯入傾印請求",
+	"action-view-private-import-dump-requests": "檢視非公開匯入申請",
+	"echo-category-title-importdump-new-request": "新的匯入傾印申請",
 	"echo-category-title-importdump-request-comment": "添加到匯入傾印請求的意見",
 	"echo-category-title-importdump-request-status-update": "匯入傾印請求的狀態更新",
 	"echo-pref-tooltip-importdump-new-request": "有新的匯入請求時通知我。",
