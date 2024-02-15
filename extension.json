@@ -157,7 +157,7 @@
 			"description": "A mapping of 'domain => interwiki prefix' for multi-level interwiki prefix generation for --username-prefix."
 		},
 		"ImportDumpScriptCommand": {
-			"value": "php {IP}/maintenance/importDump.php --wiki={wiki} --username-prefix=\"{username-prefix}\" {file}",
+			"value": "php {IP}/maintenance/importDump.php --wiki={wiki} --username-prefix=\"{username-prefix}\" {file-path}",
 			"description": "Generated maintenance script command to use."
 		},
 		"ImportDumpUsersNotifiedOnAllRequests": {
