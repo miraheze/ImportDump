@@ -48,7 +48,8 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 			$importer = $this->wikiImporterFactory()->getWikiImporter(
 				$importStreamSource->value, $this->authority
 			);
-		} else {;
+		} else {
+
 			$importer = $this->wikiImporterFactory()->getWikiImporter(
 				$importStreamSource->value
 			);
