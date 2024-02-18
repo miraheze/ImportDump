@@ -228,7 +228,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				);
 
 				$validRequest = false;
-				if ( $status === self::STATUS_PENDING || $status === self:STATUS_INPROGRESS ) {
+				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
 					$status = self::STATUS_DECLINED;
 				}
 			}
@@ -268,7 +268,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				);
 
 				$validRequest = false;
-				if ( $status === self::STATUS_PENDING || $status === self:STATUS_INPROGRESS ) {
+				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
 					$status = self::STATUS_DECLINED;
 				}
 			}
@@ -281,7 +281,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				);
 
 				$validRequest = false;
-				if ( $status === self::STATUS_PENDING || $status === self:STATUS_INPROGRESS ) {
+				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
 					$status = self::STATUS_DECLINED;
 				}
 			}
