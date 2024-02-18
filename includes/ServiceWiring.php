@@ -2,6 +2,7 @@
 
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\MediaWikiServices;
+use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 
 return [
@@ -21,5 +22,8 @@ return [
 			$services->getUserFactory(),
 			$services->getUserGroupManagerFactory()
 		);
+	},
+	'ImportDumpHookRunner' => static function ( MediaWikiServices $services ): ImportDumpHookRunner {
+		return new ImportDumpHookRunner( $services->getHookContainer() );
 	},
 ];
