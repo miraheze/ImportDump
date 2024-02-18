@@ -678,7 +678,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				$this->importDumpRequestManager->setPrivate( (int)$formData['handle-private'] );
 			}
 
-			if ( $this->importDumpRequestManager->getStatus() === $formData['handle-status'] ) {
+			if ( !isset( $formData['handle-status'] ) || $this->importDumpRequestManager->getStatus() === $formData['handle-status'] ) {
 				$this->importDumpRequestManager->endAtomic( __METHOD__ );
 
 				if ( !$changes ) {
@@ -711,10 +711,6 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				}
 
 				return;
-			}
-
-			if ( isset( $formData['submit-decline'] ) ) {
-				$formData['handle-status'] = self::STATUS_DECLINED;
 			}
 
 			if ( isset( $formData['handle-status'] ) ) {
@@ -755,12 +751,15 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 				return;
 			}
+		}
 
-			$this->importDumpRequestManager->endAtomic( __METHOD__ );
+		if ( isset( $formData['submit-decline'] ) ) {
+			$this->importDumpRequestManager->setStatus( self::STATUS_DECLINED );
+			return;
+		}
 
-			if ( isset( $formData['submit-start'] ) ) {
-				$this->importDumpRequestManager->executeJob();
-			}
+		if ( isset( $formData['submit-start'] ) ) {
+			$this->importDumpRequestManager->executeJob();
 		}
 	}
 }
