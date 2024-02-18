@@ -17,7 +17,7 @@ use MediaWiki\User\UserGroupManagerFactory;
 use Message;
 use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
-use Miraheze\ImportDump\Jobs\ImportDumpJob
+use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use RepoGroup;
 use SpecialPage;
 use stdClass;
