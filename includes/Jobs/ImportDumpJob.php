@@ -3,11 +3,18 @@
 namespace Miraheze\ImportDump\Jobs;
 
 use Exception;
+use FakeMaintenance;
 use GenericParameterJob;
 use ImportStreamSource;
 use Job;
+use MediaWiki\MainConfigNames;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Permissions\UltimateAuthority;
+use RebuildRecentchanges;
+use RebuildTextIndex;
+use RefreshLinks;
+use SiteStatsInit;
+use SiteStatsUpdate;
 use User;
 
 class ImportDumpJob extends Job implements GenericParameterJob {
@@ -31,6 +38,10 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 		$services = MediaWikiServices::getInstance();
 		$hookRunner = $services->get( 'ImportDumpHookRunner' );
 		$importDumpRequestManager = $services->get( 'ImportDumpRequestManager' );
+		$lbFactory = $services->getDBLoadBalancerFactory();
+		$mainConfig = $services->getMainConfig();
+
+		$dbw = $lbFactory->getMainLB()->getMaintenanceConnectionRef( DB_PRIMARY );
 
 		$importDumpRequestManager->fromID( $this->requestID );
 		$filePath = $importDumpRequestManager->getTarget() . '-' . $importDumpRequestManager->getTimestamp() . '.xml';
@@ -67,6 +78,24 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 
 		try {
 			$importer->doImport();
+
+			$siteStatsInit = new SiteStatsInit();
+			$siteStatsInit->refresh();
+
+			SiteStatsUpdate::cacheUpdate( $dbw );
+
+			$maintenance = new FakeMaintenance;
+
+			if ( !$mainConfig->get( MainConfigNames::DisableSearchUpdate ) ) {
+				$rebuildText = $maintenance->runChild( RebuildTextIndex::class, 'rebuildtextindex.php' );
+				$rebuildText->execute();
+			}
+
+			$rebuildRC = $maintenance->runChild( RebuildRecentchanges::class, 'rebuildrecentchanges.php' );
+			$rebuildRC->execute();
+
+			$rebuildLinks = $maintenance->runChild( RefreshLinks::class, 'refreshLinks.php' );
+			$rebuildLinks->execute();
 		} catch ( Exception $ex ) {
 			$importDumpRequestManager->setStatus( 'failed' );
 			$this->setLastError( 'Import failed' );
