@@ -2,6 +2,7 @@
 
 namespace Miraheze\ImportDump\Jobs;
 
+use Exception;
 use GenericParameterJob;
 use ImportStreamSource;
 use Job;
@@ -61,7 +62,13 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 			true
 		);
 
-		$importer->doImport();
+		try {
+			$importer->doImport();
+		} catch ( Exception $ex ) {
+			$this->markFailed();
+			$this->setLastError( 'Import failed' );
+			return false;
+		}
 
 		return true;
 	}
