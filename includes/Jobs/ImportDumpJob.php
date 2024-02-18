@@ -58,6 +58,7 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 		$user = User::newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
 
 		if ( version_compare( MW_VERSION, '1.42', '>=' ) ) {
+			// @phan-suppress-next-line PhanParamTooMany
 			$importer = $services->getWikiImporterFactory()->getWikiImporter(
 				$importStreamSource->value, new UltimateAuthority( $user )
 			);
