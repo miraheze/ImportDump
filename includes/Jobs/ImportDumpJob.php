@@ -56,7 +56,6 @@ class ImportDumpJob extends Job implements
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
 			$importDumpRequestManager->setStatus( self::STATUS_FAILED );
-			$importDumpRequestManager->addComment( $importStreamSource->value, User::newSystemUser( 'ImportDump Extension' ) );
 			$this->setLastError( "Import source for {$filePath} failed" );
 			return false;
 		}
@@ -92,7 +91,6 @@ class ImportDumpJob extends Job implements
 			SiteStatsUpdate::cacheUpdate( $dbw );
 
 			$maintenance = new FakeMaintenance;
-
 			if ( !$mainConfig->get( MainConfigNames::DisableSearchUpdate ) ) {
 				$rebuildText = $maintenance->runChild( RebuildTextIndex::class, 'rebuildtextindex.php' );
 				$rebuildText->execute();
@@ -105,7 +103,6 @@ class ImportDumpJob extends Job implements
 			$rebuildLinks->execute();
 		} catch ( Exception $ex ) {
 			$importDumpRequestManager->setStatus( self::STATUS_FAILED );
-			$importDumpRequestManager->addComment( $ex->getMessage(), User::newSystemUser( 'ImportDump Extension' ) );
 			$this->setLastError( 'Import failed' );
 			return false;
 		}
