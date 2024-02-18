@@ -52,7 +52,8 @@ class ImportDumpJob extends Job implements
 
 		$hookRunner->onImportDumpJobGetFile( $filePath );
 
-		$importStreamSource = ImportStreamSource::newFromFile( htmlspecialchars( $filePath ) );
+		// @phan-suppress-next-line SecurityCheck-LikelyFalsePositive
+		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
 			$importDumpRequestManager->setStatus( self::STATUS_FAILED );
 			$this->setLastError( "Import source for {$filePath} failed" );
