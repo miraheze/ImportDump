@@ -13,6 +13,7 @@ use MediaWiki\User\UserFactory;
 use Message;
 use MimeAnalyzer;
 use Miraheze\CreateWiki\RemoteWiki;
+use Miraheze\ImportDump\ImportDumpStatus;
 use PermissionsError;
 use RepoGroup;
 use SpecialPage;
@@ -25,7 +26,8 @@ use UserBlockedError;
 use WikiMap;
 use Wikimedia\Rdbms\ILBFactory;
 
-class SpecialRequestImportDump extends FormSpecialPage {
+class SpecialRequestImportDump extends FormSpecialPage
+	implements ImportDumpStatus {
 
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
@@ -193,7 +195,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			->field( '*' )
 			->where( [
 				'request_reason' => $data['reason'],
-				'request_status' => 'pending',
+				'request_status' => self::STATUS_PENDING,
 			] )
 			->caller( __METHOD__ )
 			->fetchRow();
@@ -268,7 +270,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'request_source' => $data['source'],
 				'request_target' => $data['target'],
 				'request_reason' => $data['reason'],
-				'request_status' => 'pending',
+				'request_status' => self::STATUS_PENDING,
 				'request_actor' => $this->getUser()->getActorId(),
 				'request_timestamp' => $timestamp,
 			],
