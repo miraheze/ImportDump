@@ -23,6 +23,9 @@
 	"TestAutoloadNamespaces": {
 		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/"
 	},
+	"JobClasses": {
+		"ImportDumpJob": "Miraheze\\ImportDump\\Jobs\\ImportDumpJob"
+	},
 	"GroupPermissions": {
 		"user": {
 			"request-import-dump": true
