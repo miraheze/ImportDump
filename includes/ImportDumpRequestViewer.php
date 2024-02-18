@@ -745,9 +745,10 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				return;
 			}
 
+			$this->importDumpRequestManager->endAtomic( __METHOD__ );
+
 			if ( isset( $formData['submit-start'] ) ) {
-				$this->importDumpRequestManager->executeImportJob();
-				$this->importDumpRequestManager->endAtomic( __METHOD__ );
+				$this->importDumpRequestManager->executeJob();
 			}
 		}
 	}
