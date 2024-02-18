@@ -410,7 +410,7 @@ class ImportDumpRequestManager {
 			MW_INSTALL_PATH,
 			$this->getTarget(),
 			$this->getInterwikiPrefix(),
-			$this->getTarget() . '-' . $this->getTimestamp() . '.xml',
+			$this->getFileName(),
 			FileBackend::splitStoragePath( $this->getFilePath() )[2],
 		], $command );
 	}
@@ -441,12 +441,19 @@ class ImportDumpRequestManager {
 	 * @return string
 	 */
 	public function getFilePath(): string {
-		$fileName = $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
+		$fileName = $this->getFileName();
 
 		$localRepo = $this->repoGroup->getLocalRepo();
 		$zonePath = $localRepo->getZonePath( 'public' ) . '/ImportDump';
 
 		return $zonePath . '/' . $fileName;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getFileName(): string {
+		return $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
 	}
 
 	/**
