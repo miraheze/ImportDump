@@ -44,7 +44,7 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 		$dbw = $lbFactory->getMainLB()->getMaintenanceConnectionRef( DB_PRIMARY );
 
 		$importDumpRequestManager->fromID( $this->requestID );
-		$filePath = $importDumpRequestManager->getTarget() . '-' . $importDumpRequestManager->getTimestamp() . '.xml';
+		$filePath = wfTempDir() . '/' . $importDumpRequestManager->getTarget() . '-' . $importDumpRequestManager->getTimestamp() . '.xml';
 
 		$hookRunner->onImportDumpJobGetFile( $filePath );
 
