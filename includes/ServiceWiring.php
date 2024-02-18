@@ -12,6 +12,7 @@ return [
 			$services->getActorStoreFactory(),
 			$services->getDBLoadBalancerFactory(),
 			$services->getInterwikiLookup(),
+			$services->getJobQueueGroupFactory(),
 			$services->getLinkRenderer(),
 			$services->getRepoGroup(),
 			RequestContext::getMain(),
