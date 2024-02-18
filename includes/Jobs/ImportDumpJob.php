@@ -63,6 +63,8 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 			true
 		);
 
+		$importDumpRequestManager->setStatus( 'inprogress' );
+
 		try {
 			$importer->doImport();
 		} catch ( Exception $ex ) {
@@ -70,6 +72,8 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 			$this->setLastError( 'Import failed' );
 			return false;
 		}
+
+		$importDumpRequestManager->setStatus( 'complete' );
 
 		return true;
 	}
