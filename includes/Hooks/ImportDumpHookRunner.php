@@ -19,10 +19,10 @@ class ImportDumpHookRunner implements ImportDumpJobGetFileHook {
 	}
 
 	/** @inheritDoc */
-	public function onImportDumpJobGetFile( &$filePath ): void {
+	public function onImportDumpJobGetFile( &$filePath, $importDumpRequestManager ): void {
 		$this->container->run(
 			'ImportDumpJobGetFile',
-			[ &$filePath ]
+			[ &$filePath, $importDumpRequestManager ]
 		);
 	}
 }
