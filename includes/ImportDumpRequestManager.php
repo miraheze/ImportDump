@@ -27,8 +27,9 @@ use Wikimedia\Rdbms\SelectQueryBuilder;
 
 class ImportDumpRequestManager {
 
-	private const IGNORED_USERS = [
+	private const SYSTEM_USERS = [
 		'ImportDump Extension',
+		'ImportDump Status Update',
 	];
 
 	public const CONSTRUCTOR_OPTIONS = [
@@ -162,7 +163,7 @@ class ImportDumpRequestManager {
 
 		if (
 			ExtensionRegistry::getInstance()->isLoaded( 'Echo' ) &&
-			!in_array( $user->getName(), self::IGNORED_USERS )
+			!in_array( $user->getName(), self::SYSTEM_USERS )
 		) {
 			$this->sendNotification( $comment, 'importdump-request-comment', $user );
 		}
