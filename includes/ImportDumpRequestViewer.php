@@ -321,7 +321,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					],
 				];
 			}
-			
+
 			if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
 				$formDescriptor += [
 					'submit-handle' => [
@@ -744,7 +744,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 				return;
 			}
-			
+
 			if ( isset( $formData['submit-start'] ) ) {
 				$this->importDumpRequestManager->executeImportJob();
 				$this->importDumpRequestManager->endAtomic( __METHOD__ );
