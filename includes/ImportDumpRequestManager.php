@@ -420,7 +420,7 @@ class ImportDumpRequestManager {
 			$this->getTarget(),
 			$this->getInterwikiPrefix(),
 			$this->getFileName(),
-			FileBackend::splitStoragePath( $this->getFilePath() )[2],
+			$this->getSplitFilePath(),
 		], $command );
 	}
 
@@ -456,6 +456,13 @@ class ImportDumpRequestManager {
 		$zonePath = $localRepo->getZonePath( 'public' ) . '/ImportDump';
 
 		return $zonePath . '/' . $fileName;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getSplitFilePath(): string {
+		return FileBackend::splitStoragePath( $this->getFilePath() )[2];
 	}
 
 	/**
