@@ -217,7 +217,10 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				}
 
 				if ( $this->importDumpRequestManager->getFileSize() > 0 ) {
-					$fileInfo .= Html::element( 'br' );
+					if ( !$this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
+						$fileInfo .= Html::element( 'br' );
+					}
+
 					$fileInfo .= $this->context->msg( 'importdump-info-filesize' )->sizeParams(
 						$this->importDumpRequestManager->getFileSize()
 					)->parse();
