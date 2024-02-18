@@ -8,6 +8,7 @@ use ImportStreamSource;
 use Job;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Permissions\UltimateAuthority;
+use User;
 
 class ImportDumpJob extends Job implements GenericParameterJob {
 
@@ -43,7 +44,7 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 			return false;
 		}
 
-		$user = $services->getUserFactory()->newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
+		$user = User::newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
 
 		if ( version_compare( MW_VERSION, '1.42', '>=' ) ) {
 			$importer = $services->getWikiImporterFactory()->getWikiImporter(
