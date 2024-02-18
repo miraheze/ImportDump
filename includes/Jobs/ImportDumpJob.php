@@ -5,16 +5,10 @@ namespace Miraheze\ImportDump\Jobs;
 use GenericParameterJob;
 use ImportStreamSource;
 use Job;
-use MediaWiki\Permissions\Authority;
-use Miraheze\ImportDump\ImportDumpRequestManager;
+use MediaWiki\MediaWikiServices;
+use MediaWiki\Permissions\UltimateAuthority;
 
 class ImportDumpJob extends Job implements GenericParameterJob {
-
-	/** @var Authority */
-	private $authority;
-
-	/** @var ImportDumpRequestManager */
-	private $importDumpRequestManager;
 
 	/** @var int */
 	private $requestID;
@@ -25,32 +19,37 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 	public function __construct( array $params ) {
 		parent::__construct( 'ImportDumpJob', $params );
 
-		$this->authority = $params['authority'];
 		$this->requestID = $params['requestid'];
-		$this->importDumpRequestManager = $params['manager'];
 	}
 
 	/**
 	 * @return bool
 	 */
 	public function run() {
-		$this->importDumpRequestManager->fromID( $this->requestID );
-		$file = $this->importDumpRequestManager->getTarget() . '-' . $this->importDumpRequestManager->getTimestamp() . '.xml',
+		$services = MediaWikiServices::getInstance();
+		$hookRunner = $services->get( 'ImportDumpHookRunner' );
+		$importDumpRequestManager = $services->get( 'ImportDumpRequestManager' );
+		
+		$importDumpRequestManager->fromID( $this->requestID );
+		$filePath = $importDumpRequestManager->getTarget() . '-' . $importDumpRequestManager->getTimestamp() . '.xml';
 
-		$importStreamSource = ImportStreamSource::newFromFile( $file );
+		$hookRunner->onImportDumpJobGetFile( $filePath );
+
+		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
 			$this->markFailed();
-			$this->setLastError( "Import source for {$file} failed" );
+			$this->setLastError( "Import source for {$filePath} failed" );
 			return false;
 		}
 
+		$user = $services->getUserFactory()->newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
+
 		if ( version_compare( MW_VERSION, '1.42', '>=' ) ) {
-			$importer = $this->wikiImporterFactory()->getWikiImporter(
-				$importStreamSource->value, $this->authority
+			$importer = $services->getWikiImporterFactory()->getWikiImporter(
+				$importStreamSource->value, new UltimateAuthority( $user )
 			);
 		} else {
-
-			$importer = $this->wikiImporterFactory()->getWikiImporter(
+			$importer = $services->getWikiImporterFactory()->getWikiImporter(
 				$importStreamSource->value
 			);
 		}
@@ -58,7 +57,7 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 		$importer->disableStatisticsUpdate();
 		$importer->setNoUpdates( true );
 		$importer->setUsernamePrefix(
-			$this->importDumpRequestManager->getInterwikiPrefix(),
+			$importDumpRequestManager->getInterwikiPrefix(),
 			true
 		);
 
