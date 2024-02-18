@@ -56,6 +56,7 @@ class ImportDumpJob extends Job implements
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
 			$importDumpRequestManager->setStatus( self::STATUS_FAILED );
+			$importDumpRequestManager->addComment( $importStreamSource->value, User::newSystemUser( 'ImportDump Extension' ) );
 			$this->setLastError( "Import source for {$filePath} failed" );
 			return false;
 		}
@@ -104,6 +105,7 @@ class ImportDumpJob extends Job implements
 			$rebuildLinks->execute();
 		} catch ( Exception $ex ) {
 			$importDumpRequestManager->setStatus( self::STATUS_FAILED );
+			$importDumpRequestManager->addComment( $ex->getMessage(), User::newSystemUser( 'ImportDump Extension' ) );
 			$this->setLastError( 'Import failed' );
 			return false;
 		}
