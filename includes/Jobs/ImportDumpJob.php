@@ -72,4 +72,9 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 
 		return true;
 	}
+
+	private function markFailed() {
+		// TODO
+		return;
+	}
 }
