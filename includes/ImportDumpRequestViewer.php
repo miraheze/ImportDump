@@ -7,13 +7,14 @@ use Html;
 use HTMLForm;
 use IContextSource;
 use Linker;
+use MediaWiki\MainConfigNames;
 use MediaWiki\Permissions\PermissionManager;
 use Status;
 use User;
 use UserNotLoggedIn;
 use WikiMap;
 
-class ImportDumpRequestViewer {
+class ImportDumpRequestViewer implements ImportDumpStatus {
 
 	/** @var Config */
 	private $config;
@@ -227,8 +228,8 @@ class ImportDumpRequestViewer {
 				);
 
 				$validRequest = false;
-				if ( $status === 'pending' || $status === 'inprogress' ) {
-					$status = 'declined';
+				if ( $status === self::STATUS_PENDING || $status === self:STATUS_INPROGRESS ) {
+					$status = self::STATUS_DECLINED;
 				}
 			}
 
@@ -267,8 +268,8 @@ class ImportDumpRequestViewer {
 				);
 
 				$validRequest = false;
-				if ( $status === 'pending' || $status === 'inprogress' ) {
-					$status = 'declined';
+				if ( $status === self::STATUS_PENDING || $status === self:STATUS_INPROGRESS ) {
+					$status = self::STATUS_DECLINED;
 				}
 			}
 
@@ -280,8 +281,8 @@ class ImportDumpRequestViewer {
 				);
 
 				$validRequest = false;
-				if ( $status === 'pending' || $status === 'inprogress' ) {
-					$status = 'declined';
+				if ( $status === self::STATUS_PENDING || $status === self:STATUS_INPROGRESS ) {
+					$status = self::STATUS_DECLINED;
 				}
 			}
 
@@ -411,7 +412,7 @@ class ImportDumpRequestViewer {
 	 * @return string|bool
 	 */
 	public function isValidDatabase( ?string $target ) {
-		if ( !in_array( $target, $this->config->get( 'LocalDatabases' ) ) ) {
+		if ( !in_array( $target, $this->config->get( MainConfigNames::LocalDatabases ) ) ) {
 			return Status::newFatal( 'importdump-invalid-target' )->getMessage();
 		}
 
@@ -563,14 +564,14 @@ class ImportDumpRequestViewer {
 				return;
 			}
 
-			if ( $this->importDumpRequestManager->getStatus() === 'declined' ) {
-				$this->importDumpRequestManager->setStatus( 'pending' );
+			if ( $this->importDumpRequestManager->getStatus() === self::STATUS_DECLINED ) {
+				$this->importDumpRequestManager->setStatus( self::STATUS_PENDING );
 
 				$comment = $this->context->msg( 'importdump-request-reopened', $user->getName() )->rawParams(
 					implode( "\n", $changes )
 				)->inContentLanguage()->escaped();
 
-				$this->importDumpRequestManager->logStatusUpdate( $comment, 'pending', $user );
+				$this->importDumpRequestManager->logStatusUpdate( $comment, self::STATUS_PENDING, $user );
 
 				$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
 
