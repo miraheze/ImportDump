@@ -29,7 +29,7 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 		$services = MediaWikiServices::getInstance();
 		$hookRunner = $services->get( 'ImportDumpHookRunner' );
 		$importDumpRequestManager = $services->get( 'ImportDumpRequestManager' );
-		
+
 		$importDumpRequestManager->fromID( $this->requestID );
 		$filePath = $importDumpRequestManager->getTarget() . '-' . $importDumpRequestManager->getTimestamp() . '.xml';
 
