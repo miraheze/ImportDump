@@ -10,7 +10,8 @@ use SpecialPage;
 use TablePager;
 use Wikimedia\Rdbms\ILBFactory;
 
-class ImportDumpRequestQueuePager extends TablePager {
+class ImportDumpRequestQueuePager extends TablePager
+	implements ImportDumpStatus {
 
 	/** @var LinkRenderer */
 	private $linkRenderer;
@@ -146,7 +147,7 @@ class ImportDumpRequestQueuePager extends TablePager {
 		if ( $this->status && $this->status != '*' ) {
 			$info['conds']['request_status'] = $this->status;
 		} elseif ( !$this->status ) {
-			$info['conds']['request_status'] = 'pending';
+			$info['conds']['request_status'] = self::STATUS_PENDING;
 		}
 
 		return $info;
