@@ -209,7 +209,8 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 					$fileInfo .= Html::element( 'button', [
 							'type' => 'button',
-							'onclick' => 'navigator.clipboard.writeText( $( \'.mw-message-box-notice code\' ).text() );',
+							'onclick' =>
+								   'navigator.clipboard.writeText( $( \'.mw-message-box-notice code\' ).text() );',
 						],
 						$this->context->msg( 'importdump-button-copy' )->text()
 					);
@@ -739,11 +740,15 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					$formData['handle-comment'], $formData['handle-status'], $user
 				);
 
-				$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $user );
+				$this->importDumpRequestManager->sendNotification(
+					$comment, 'importdump-request-status-update', $user
+				);
 
 				$this->importDumpRequestManager->endAtomic( __METHOD__ );
 
-				$out->addHTML( Html::successBox( $this->context->msg( 'importdump-status-updated-success' )->escaped() ) );
+				$out->addHTML( Html::successBox(
+					$this->context->msg( 'importdump-status-updated-success' )->escaped()
+				) );
 
 				return;
 			}
