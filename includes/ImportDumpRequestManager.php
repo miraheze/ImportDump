@@ -457,7 +457,7 @@ class ImportDumpRequestManager {
 
 		return $zonePath . '/' . $fileName;
 	}
-	
+
 	/**
 	 * @return string
 	 */
