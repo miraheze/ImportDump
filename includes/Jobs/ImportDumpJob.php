@@ -50,7 +50,7 @@ class ImportDumpJob extends Job implements
 		$importDumpRequestManager->fromID( $this->requestID );
 		$filePath = wfTempDir() . '/' . $importDumpRequestManager->getFileName();
 
-		$hookRunner->onImportDumpJobGetFile( $filePath );
+		$hookRunner->onImportDumpJobGetFile( $filePath, $importDumpRequestManager );
 
 		// @phan-suppress-next-line SecurityCheck-LikelyFalsePositive
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
