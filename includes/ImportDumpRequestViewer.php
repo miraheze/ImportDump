@@ -678,7 +678,10 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				$this->importDumpRequestManager->setPrivate( (int)$formData['handle-private'] );
 			}
 
-			if ( !isset( $formData['handle-status'] ) || $this->importDumpRequestManager->getStatus() === $formData['handle-status'] ) {
+			if (
+				!isset( $formData['handle-status'] ) ||
+				$this->importDumpRequestManager->getStatus() === $formData['handle-status']
+			) {
 				$this->importDumpRequestManager->endAtomic( __METHOD__ );
 
 				if ( !$changes ) {
