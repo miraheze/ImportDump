@@ -9,6 +9,7 @@ use FileBackend;
 use ManualLogEntry;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Interwiki\InterwikiLookup;
+use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\User\ActorStoreFactory;
 use MediaWiki\User\UserFactory;
@@ -16,6 +17,7 @@ use MediaWiki\User\UserGroupManagerFactory;
 use Message;
 use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
+use Miraheze\ImportDump\Jobs\ImportDumpJob
 use RepoGroup;
 use SpecialPage;
 use stdClass;
@@ -56,6 +58,9 @@ class ImportDumpRequestManager {
 	/** @var InterwikiLookup */
 	private $interwikiLookup;
 
+	/** @var JobQueueGroupFactory */
+	private $jobQueueGroupFactory;
+
 	/** @var MessageLocalizer */
 	private $messageLocalizer;
 
@@ -82,6 +87,7 @@ class ImportDumpRequestManager {
 	 * @param ActorStoreFactory $actorStoreFactory
 	 * @param ILBFactory $dbLoadBalancerFactory
 	 * @param InterwikiLookup $interwikiLookup
+	 * @param JobQueueGroupFactory $jobQueueGroupFactory
 	 * @param LinkRenderer $linkRenderer
 	 * @param RepoGroup $repoGroup
 	 * @param MessageLocalizer $messageLocalizer
@@ -94,6 +100,7 @@ class ImportDumpRequestManager {
 		ActorStoreFactory $actorStoreFactory,
 		ILBFactory $dbLoadBalancerFactory,
 		InterwikiLookup $interwikiLookup,
+		JobQueueGroupFactory $jobQueueGroupFactory,
 		LinkRenderer $linkRenderer,
 		RepoGroup $repoGroup,
 		MessageLocalizer $messageLocalizer,
@@ -107,6 +114,7 @@ class ImportDumpRequestManager {
 		$this->actorStoreFactory = $actorStoreFactory;
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->interwikiLookup = $interwikiLookup;
+		$this->jobQueueGroupFactory = $jobQueueGroupFactory;
 		$this->linkRenderer = $linkRenderer;
 		$this->messageLocalizer = $messageLocalizer;
 		$this->options = $options;
@@ -654,6 +662,12 @@ class ImportDumpRequestManager {
 				'request_id' => $this->ID,
 			],
 			__METHOD__
+		);
+	}
+
+	public function executeJob() {
+		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getTarget() )->push(
+			new ImportDumpJob( [ 'requestid' => $this->ID ] )
 		);
 	}
 
