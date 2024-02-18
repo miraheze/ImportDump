@@ -10,6 +10,7 @@ use Job;
 use MediaWiki\MainConfigNames;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Permissions\UltimateAuthority;
+use Miraheze\ImportDump\ImportDumpStatus;
 use RebuildRecentchanges;
 use RebuildTextIndex;
 use RefreshLinks;
@@ -17,7 +18,10 @@ use SiteStatsInit;
 use SiteStatsUpdate;
 use User;
 
-class ImportDumpJob extends Job implements GenericParameterJob {
+class ImportDumpJob extends Job implements
+	GenericParameterJob,
+	ImportDumpStatus
+{
 
 	/** @var int */
 	private $requestID;
@@ -50,7 +54,7 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
-			$importDumpRequestManager->setStatus( 'failed' );
+			$importDumpRequestManager->setStatus( self::STATUS_FAILED );
 			$this->setLastError( "Import source for {$filePath} failed" );
 			return false;
 		}
@@ -75,7 +79,7 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 			true
 		);
 
-		$importDumpRequestManager->setStatus( 'inprogress' );
+		$importDumpRequestManager->setStatus( self::STATUS_INPROGRESS );
 
 		try {
 			$importer->doImport();
@@ -98,12 +102,12 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 			$rebuildLinks = $maintenance->runChild( RefreshLinks::class, 'refreshLinks.php' );
 			$rebuildLinks->execute();
 		} catch ( Exception $ex ) {
-			$importDumpRequestManager->setStatus( 'failed' );
+			$importDumpRequestManager->setStatus( self::STATUS_FAILED );
 			$this->setLastError( 'Import failed' );
 			return false;
 		}
 
-		$importDumpRequestManager->setStatus( 'complete' );
+		$importDumpRequestManager->setStatus( self::STATUS_COMPLETE );
 
 		return true;
 	}
