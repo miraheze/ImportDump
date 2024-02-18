@@ -38,7 +38,7 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
-			$this->markFailed();
+			$importDumpRequestManager->setStatus( 'failed' );
 			$this->setLastError( "Import source for {$filePath} failed" );
 			return false;
 		}
@@ -65,16 +65,11 @@ class ImportDumpJob extends Job implements GenericParameterJob {
 		try {
 			$importer->doImport();
 		} catch ( Exception $ex ) {
-			$this->markFailed();
+			$importDumpRequestManager->setStatus( 'failed' );
 			$this->setLastError( 'Import failed' );
 			return false;
 		}
 
 		return true;
-	}
-
-	private function markFailed() {
-		// TODO
-		return;
 	}
 }
