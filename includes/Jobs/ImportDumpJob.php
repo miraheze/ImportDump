@@ -2,14 +2,15 @@
 
 namespace Miraheze\ImportDump\Jobs;
 
+use Config;
 use Exception;
 use FakeMaintenance;
-use GenericParameterJob;
 use ImportStreamSource;
 use Job;
 use MediaWiki\MainConfigNames;
-use MediaWiki\MediaWikiServices;
 use MediaWiki\Permissions\UltimateAuthority;
+use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
+use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
 use RebuildRecentchanges;
 use RebuildTextIndex;
@@ -17,45 +18,72 @@ use RefreshLinks;
 use SiteStatsInit;
 use SiteStatsUpdate;
 use User;
+use WikiImporterFactory;
+use Wikimedia\Rdbms\ILBFactory;
 
-class ImportDumpJob extends Job implements
-	GenericParameterJob,
-	ImportDumpStatus
-{
+class ImportDumpJob extends Job
+	implements ImportDumpStatus {
 
 	/** @var int */
 	private $requestID;
 
+	/** @var ILBFactory */
+	private $dbLoadBalancerFactory;
+
+	/** @var ImportDumpHookRunner */
+	private $importDumpHookRunner;
+
+	/** @var ImportDumpRequestManager */
+	private $importDumpRequestManager;
+
+	/** @var Config */
+	private $mainConfig;
+
+	/** @var WikiImporterFactory */
+	private $wikiImporterFactory;
+
 	/**
 	 * @param array $params
+	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param ImportDumpHookRunner $importDumpHookRunner
+	 * @param ImportDumpRequestManager $importDumpRequestManager
+	 * @param Config $mainConfig
+	 * @param WikiImporterFactory $wikiImporterFactory
 	 */
-	public function __construct( array $params ) {
+	public function __construct(
+		array $params,
+		ILBFactory $dbLoadBalancerFactory,
+		ImportDumpHookRunner $importDumpHookRunner,
+		ImportDumpRequestManager $importDumpRequestManager,
+		Config $mainConfig,
+		WikiImporterFactory $wikiImporterFactory
+	) {
 		parent::__construct( 'ImportDumpJob', $params );
 
 		$this->requestID = $params['requestid'];
+
+		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
+		$this->importDumpHookRunner = $importDumpHookRunner;
+		$this->importDumpRequestManager = $importDumpRequestManager;
+		$this->mainConfig = $mainConfig;
+		$this->wikiImporterFactory = $wikiImporterFactory;
 	}
 
 	/**
 	 * @return bool
 	 */
-	public function run() {
-		$services = MediaWikiServices::getInstance();
-		$hookRunner = $services->get( 'ImportDumpHookRunner' );
-		$importDumpRequestManager = $services->get( 'ImportDumpRequestManager' );
-		$lbFactory = $services->getDBLoadBalancerFactory();
-		$mainConfig = $services->getMainConfig();
+	public function run(): bool {
+		$dbw = $this->dbLoadBalancerFactory->getMainLB()->getMaintenanceConnectionRef( DB_PRIMARY );
 
-		$dbw = $lbFactory->getMainLB()->getMaintenanceConnectionRef( DB_PRIMARY );
+		$this->importDumpRequestManager->fromID( $this->requestID );
+		$filePath = wfTempDir() . '/' . $this->importDumpRequestManager->getFileName();
 
-		$importDumpRequestManager->fromID( $this->requestID );
-		$filePath = wfTempDir() . '/' . $importDumpRequestManager->getFileName();
-
-		$hookRunner->onImportDumpJobGetFile( $filePath, $importDumpRequestManager );
+		$this->importDumpHookRunner->onImportDumpJobGetFile( $filePath, $this->importDumpRequestManager );
 
 		// @phan-suppress-next-line SecurityCheck-LikelyFalsePositive
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
-			$importDumpRequestManager->setStatus( self::STATUS_FAILED );
+			$this->importDumpRequestManager->setStatus( self::STATUS_FAILED );
 			$this->setLastError( "Import source for {$filePath} failed" );
 			return false;
 		}
@@ -64,11 +92,11 @@ class ImportDumpJob extends Job implements
 
 		if ( version_compare( MW_VERSION, '1.42', '>=' ) ) {
 			// @phan-suppress-next-line PhanParamTooMany
-			$importer = $services->getWikiImporterFactory()->getWikiImporter(
+			$importer = $this->wikiImporterFactory->getWikiImporter(
 				$importStreamSource->value, new UltimateAuthority( $user )
 			);
 		} else {
-			$importer = $services->getWikiImporterFactory()->getWikiImporter(
+			$importer = $this->wikiImporterFactory->getWikiImporter(
 				$importStreamSource->value
 			);
 		}
@@ -76,11 +104,11 @@ class ImportDumpJob extends Job implements
 		$importer->disableStatisticsUpdate();
 		$importer->setNoUpdates( true );
 		$importer->setUsernamePrefix(
-			$importDumpRequestManager->getInterwikiPrefix(),
+			$this->importDumpRequestManager->getInterwikiPrefix(),
 			true
 		);
 
-		$importDumpRequestManager->setStatus( self::STATUS_INPROGRESS );
+		$this->importDumpRequestManager->setStatus( self::STATUS_INPROGRESS );
 
 		try {
 			$importer->doImport();
@@ -91,7 +119,7 @@ class ImportDumpJob extends Job implements
 			SiteStatsUpdate::cacheUpdate( $dbw );
 
 			$maintenance = new FakeMaintenance;
-			if ( !$mainConfig->get( MainConfigNames::DisableSearchUpdate ) ) {
+			if ( !$this->mainConfig->get( MainConfigNames::DisableSearchUpdate ) ) {
 				$rebuildText = $maintenance->runChild( RebuildTextIndex::class, 'rebuildtextindex.php' );
 				$rebuildText->execute();
 			}
@@ -102,12 +130,12 @@ class ImportDumpJob extends Job implements
 			$rebuildLinks = $maintenance->runChild( RefreshLinks::class, 'refreshLinks.php' );
 			$rebuildLinks->execute();
 		} catch ( Exception $ex ) {
-			$importDumpRequestManager->setStatus( self::STATUS_FAILED );
+			$this->importDumpRequestManager->setStatus( self::STATUS_FAILED );
 			$this->setLastError( 'Import failed' );
 			return false;
 		}
 
-		$importDumpRequestManager->setStatus( self::STATUS_COMPLETE );
+		$this->importDumpRequestManager->setStatus( self::STATUS_COMPLETE );
 
 		return true;
 	}
