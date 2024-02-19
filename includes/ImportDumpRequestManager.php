@@ -6,6 +6,7 @@ use Config;
 use EchoEvent;
 use ExtensionRegistry;
 use FileBackend;
+use JobSpecification;
 use ManualLogEntry;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Interwiki\InterwikiLookup;
@@ -674,7 +675,10 @@ class ImportDumpRequestManager {
 
 	public function executeJob() {
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getTarget() )->push(
-			new ImportDumpJob( [ 'requestid' => $this->ID ] )
+			new JobSpecification(
+				ImportDumpJob::JOB_NAME,
+				[ 'requestid' => $this->ID ]
+			)
 		);
 	}
 
