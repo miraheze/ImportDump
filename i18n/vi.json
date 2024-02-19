@@ -34,7 +34,7 @@
 	"importdump-info-no-interwiki-prefix": "Không có tiền tố liên wiki nào tồn tại trên wiki đích ($1), đang trỏ đến wiki nguồn ($2). Bạn nên thêm một cái trước khi tiếp tục.",
 	"importdump-info-request-private": "Yêu cầu này được đánh dấu là riêng tư. Nó không thể được xem công khai.",
 	"importdump-info-requester-globally-blocked": "Người yêu cầu ($1) đã bị chặn toàn cục. Yêu cầu này nên bị từ chối.",
-	"importdump-info-requester-locally-blocked": "Người yêu cầu ($1) đã bị chặn cục bộ trên wiki này ($2).",
+	"importdump-info-requester-blocked": "Người yêu cầu ($1) đã bị chặn cục bộ trên wiki này ($2).",
 	"importdump-info-requester-locked": "Người yêu cầu ($1) đã bị khóa. Yêu cầu này nên bị từ chối.",
 	"importdump-interwiki-failed": "Tiền tố Interwiki chưa được thêm vào $1. Nó có thể đã có sẵn hoặc đã xảy ra lỗi khác.",
 	"importdump-interwiki-success": "Tiền tố liên wiki được thêm thành công vào $1.",

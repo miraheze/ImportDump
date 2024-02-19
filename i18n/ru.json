@@ -37,7 +37,7 @@
 	"importdump-info-no-interwiki-prefix": "В целевой вики ($1), которая указывает на исходную вики ($2), не существует приписки interwiki. Рекомендуется добавить её перед продолжением работы.",
 	"importdump-info-request-private": "Этот запрос помечен как закрытый. Он не доступен для публичного просмотра.",
 	"importdump-info-requester-globally-blocked": "Запросивший ($1) был глобально заблокирован. Этот запрос должен быть отклонён.",
-	"importdump-info-requester-locally-blocked": "Запросивший ($1) был локально заблокирован в этой вики ($2).",
+	"importdump-info-requester-blocked": "Запросивший ($1) был локально заблокирован в этой вики ($2).",
 	"importdump-info-requester-locked": "Запросивший ($1) был заблокирован. Этот запрос должен быть отклонён.",
 	"importdump-interwiki-failed": "Приписка Interwiki не была добавлена к $1. Возможно, она уже присутствует, или произошла другая ошибка.",
 	"importdump-interwiki-success": "Приписка Interwiki успешно добавлена к $1.",

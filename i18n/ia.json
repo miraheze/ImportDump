@@ -35,7 +35,7 @@
 	"importdump-info-no-interwiki-prefix": "Necun prefixo interwiki existe sur le wiki de destination ($1), le qual puncta al wiki de origine ($2). Es recommendate que tu adde un ante de continuar.",
 	"importdump-info-request-private": "Iste requesta es marcate como private. Non es publicamente visibile.",
 	"importdump-info-requester-globally-blocked": "Le requestator ($1) ha essite blocate globalmente. Iste requesta deberea esser refusate.",
-	"importdump-info-requester-locally-blocked": "Le requestator ($1) ha essite blocate localmente sur iste wiki ($2).",
+	"importdump-info-requester-blocked": "Le requestator ($1) ha essite blocate localmente sur iste wiki ($2).",
 	"importdump-info-requester-locked": "Le requestator ($1) ha essite serrate. Iste requesta deberea esser refusate.",
 	"importdump-interwiki-failed": "Le prefixo interwiki non ha essite addite a $1. Illo pote esser ja presente, o un altere error pote haber occurrite.",
 	"importdump-interwiki-success": "Le prefixo interwiki ha essite addite a $1.",

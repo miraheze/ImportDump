@@ -35,7 +35,7 @@
 	"importdump-info-no-interwiki-prefix": "Não existe nenhum prefixo de interwikis na wiki de destino ($1) que esteja a apontar para a wiki de origem ($2). É recomendado que acrescente um antes de continuar.",
 	"importdump-info-request-private": "Este pedido está marcado como privado. Não pode ser visto pelo público.",
 	"importdump-info-requester-globally-blocked": "O autor do pedido ($1) foi bloqueado globalmente. Este pedido deve ser recusado.",
-	"importdump-info-requester-locally-blocked": "O autor do pedido ($1) foi bloqueado localmente nesta wiki ($2).",
+	"importdump-info-requester-blocked": "O autor do pedido ($1) foi bloqueado localmente nesta wiki ($2).",
 	"importdump-info-requester-locked": "O autor do pedido ($1) foi bloqueado. Este pedido deve ser recusado.",
 	"importdump-interwiki-failed": "O prefixo de interwikis não foi acrescentado a $1. Ele pode já estar presente ou ocorreu outro erro.",
 	"importdump-interwiki-success": "O prefixo de interwikis foi adicionado a $1.",

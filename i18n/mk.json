@@ -36,7 +36,7 @@
 	"importdump-info-no-interwiki-prefix": "На целното вики ($1) нема претставка која води до изворното вики ($2). Се препорачува да ја ставите пред да продолжите.",
 	"importdump-info-request-private": "Ова барање е означено како приватно. Не е јавно видливо.",
 	"importdump-info-requester-globally-blocked": "Барателот ($1) е глобално блокиран. Ова барање треба да се одбие.",
-	"importdump-info-requester-locally-blocked": "Барателот ($1) е меснјо блокиран на ова вики ($2).",
+	"importdump-info-requester-blocked": "Барателот ($1) е меснјо блокиран на ова вики ($2).",
 	"importdump-info-requester-locked": "Барателот ($1) е заклучен. Ова барање треба да се одбие.",
 	"importdump-interwiki-failed": "Меѓувики-претставката не е додадена во $1. Можеби веќе е присутна, или пак се појавила некоја грешка.",
 	"importdump-interwiki-success": "Успешно додадена меѓувики-претставка во $1.",

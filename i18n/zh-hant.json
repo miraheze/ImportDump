@@ -39,7 +39,7 @@
 	"importdump-info-no-interwiki-prefix": "目標 wiki（$1）上不存在指向來源 wiki（$2）的跨 wiki 前綴。建議您在繼續之前新增一個。",
 	"importdump-info-request-private": "此申請被標記為非公開。它不可公開可見。",
 	"importdump-info-requester-globally-blocked": "申請者（$1）已被全域封鎖。此申請應被拒絕。",
-	"importdump-info-requester-locally-blocked": "申請者（$1）已在此 wiki（$2）上被本地封鎖。",
+	"importdump-info-requester-blocked": "申請者（$1）已在此 wiki（$2）上被本地封鎖。",
 	"importdump-info-requester-locked": "申請者（$1）已被鎖定。此申請應被拒絕。",
 	"importdump-interwiki-failed": "未能新增跨 wiki 前綴到 $1。它可能已經存在，或者是發生了另一個錯誤。",
 	"importdump-interwiki-success": "已成功新增跨 wiki 前綴到 $1。",

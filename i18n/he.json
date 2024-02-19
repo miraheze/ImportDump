@@ -35,7 +35,7 @@
 	"importdump-info-no-interwiki-prefix": "אין שום תחילית בינוויקי בוויקי היעד ($1) שמצביע על וויקי המקור ($2). מומלץ להוסיף אחד לפני המשך.",
 	"importdump-info-request-private": "הבקשה הזאת מסומנת כפרטית. זה לא מוצג לציבור.",
 	"importdump-info-requester-globally-blocked": "המבקש ($1) חסום גלובלית. כדאי לדחות את הבקשה הזאת.",
-	"importdump-info-requester-locally-blocked": "המבקש ($1) חסום מקומית בוויקי הזה ($2).",
+	"importdump-info-requester-blocked": "המבקש ($1) חסום מקומית בוויקי הזה ($2).",
 	"importdump-info-requester-locked": "המבקש ($1) נעול. כדאי לדחות את הבקשה הזאת.",
 	"importdump-interwiki-failed": "תחילית הבינוויקי לא נוספה לאתר $1. ייתכן שהוא כבר קיים, או שאירעה שגיאה אחרת.",
 	"importdump-interwiki-success": "תחילית בינוויקי נוספה בהצלחה לאתר $1.",

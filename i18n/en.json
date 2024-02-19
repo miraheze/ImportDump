@@ -34,7 +34,7 @@
 	"importdump-info-no-file-found": "No file was found at $1. It may have already been deleted.",
 	"importdump-info-no-interwiki-prefix": "No interwiki prefix exists on the target wiki ($1), which is pointing to the source wiki ($2). It is recommended that you add one before continuing.",
 	"importdump-info-request-private": "This request is marked as private. It is not publicly viewable.",
-	"importdump-info-requester-locally-blocked": "The requester ($1) has been locally blocked on this wiki ($2).",
+	"importdump-info-requester-blocked": "The requester ($1) has been blocked on this wiki ($2).",
 	"importdump-info-requester-locked": "The requester ($1) has been locked. This request should be declined.",
 	"importdump-interwiki-failed": "Interwiki prefix was not added to $1. It might already be present, or another error occured.",
 	"importdump-interwiki-success": "Interwiki prefix successfully added to $1.",
