@@ -2,7 +2,7 @@
 
 namespace Miraheze\ImportDump\Notifications;
 
-use EchoEventPresentationModel;
+use MediaWiki\Extension\Notifications\Formatters\EchoEventPresentationModel;
 use Message;
 use RawMessage;
 
