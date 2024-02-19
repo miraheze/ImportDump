@@ -82,7 +82,7 @@ class ImportDumpJob extends Job
 
 		$this->importDumpHookRunner->onImportDumpJobGetFile( $filePath, $this->importDumpRequestManager );
 
-		// @phan-suppress-next-line SecurityCheck-LikelyFalsePositive
+		// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
 			$this->importDumpRequestManager->setStatus( self::STATUS_FAILED );
