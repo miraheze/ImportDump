@@ -259,25 +259,11 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 			if ( $this->importDumpRequestManager->getRequester()->getBlock() ) {
 				$info .= Html::warningBox(
-					$this->context->msg( 'importdump-info-requester-locally-blocked',
+					$this->context->msg( 'importdump-info-requester-blocked',
 						$this->importDumpRequestManager->getRequester()->getName(),
 						WikiMap::getCurrentWikiId()
 					)->escaped()
 				);
-			}
-
-			// @phan-suppress-next-line PhanDeprecatedFunction Only for MW 1.39 or lower.
-			if ( $this->importDumpRequestManager->getRequester()->getGlobalBlock() ) {
-				$info .= Html::errorBox(
-					$this->context->msg( 'importdump-info-requester-globally-blocked',
-						$this->importDumpRequestManager->getRequester()->getName()
-					)->escaped()
-				);
-
-				$validRequest = false;
-				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
-					$status = self::STATUS_DECLINED;
-				}
 			}
 
 			if ( $this->importDumpRequestManager->getRequester()->isLocked() ) {
