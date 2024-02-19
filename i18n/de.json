@@ -37,7 +37,6 @@
 	"importdump-info-no-file-found": "Es wurde keine Datei unter $1 gefunden. Möglicherweise wurde sie bereits gelöscht.",
 	"importdump-info-no-interwiki-prefix": "Im Ziel-Wiki ($1), das auf das Quell-Wiki ($2) verweist, existiert kein Interwiki-Präfix. Es wird empfohlen, ein solches hinzuzufügen, bevor du fortfährst.",
 	"importdump-info-request-private": "Diese Anfrage ist als privat gekennzeichnet. Sie ist nicht öffentlich einsehbar.",
-	"importdump-info-requester-globally-blocked": "Der Antragsteller ($1) wurde global blockiert. Diese Anfrage sollte abgelehnt werden.",
 	"importdump-info-requester-blocked": "Der Antragsteller ($1) wurde auf diesem Wiki ($2) lokal gesperrt.",
 	"importdump-info-requester-locked": "Der Antragsteller ($1) wurde blockiert. Dieser Antrag sollte abgelehnt werden.",
 	"importdump-interwiki-failed": "Interwiki-Präfix wurde nicht zu $1 hinzugefügt. Es könnte bereits vorhanden sein, oder es ist ein anderer Fehler aufgetreten.",

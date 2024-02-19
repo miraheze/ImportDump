@@ -44,7 +44,6 @@
 	"importdump-info-no-file-found": "$1でファイルを発見できませんでした。すでに削除された可能性があります。",
 	"importdump-info-no-interwiki-prefix": "ソースウィキ($2)を指しているターゲットウィキ ($1) にインターウィキプレフィックスが存在しません。続行する前に追加することをお勧めします。",
 	"importdump-info-request-private": "このリクエストは非公開としてマークされています。一般公開されていません。",
-	"importdump-info-requester-globally-blocked": "リクエスタ($1)はグローバルにブロックされています。この要求は拒否される必要があります。",
 	"importdump-info-requester-blocked": "リクエスタ($1) は、このウィキ ($2)でローカルにブロックされています。",
 	"importdump-info-requester-locked": "リクエスタ($1) はロックされています。この要求は拒否される必要があります。",
 	"importdump-interwiki-failed": "インターウィキプレフィックスが$1に追加されませんでした。すでに存在するか、別のエラーが発生した可能性があります。",

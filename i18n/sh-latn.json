@@ -35,7 +35,6 @@
 	"importdump-info-no-file-found": "Nije pronađena datoteka u $1. Možda je već izbrisana.",
 	"importdump-info-no-interwiki-prefix": "Na ciljnom vikiju ($1) ne postoji prefiks koji ukazuje na izvorni viki ($2). Preporučuje se da stavite jedan prije nego što nastavite.",
 	"importdump-info-request-private": "Ovaj zahtjev je označen kao privatan. Nije javno vidljiv.",
-	"importdump-info-requester-globally-blocked": "Podnosilac zahtjeva ($1) je globalno blokiran. Ovaj zahtjev treba odbiti.",
 	"importdump-info-requester-blocked": "Podnosilac zahtjeva ($1) je lokalnjo blokiran na ovom vikiju ($2).",
 	"importdump-info-requester-locked": "Podnosilac zahtjeva ($1) je zaključan. Ovaj zahtjev treba odbiti.",
 	"importdump-interwiki-failed": "Međuviki prefiks nije dodan u $1. Možda je već prisutan, ili je došlo do druge greške.",

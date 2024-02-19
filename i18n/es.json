@@ -35,7 +35,6 @@
 	"importdump-info-groups": "Grupos de usuario que $1 tiene en $2: $3",
 	"importdump-info-interwiki": "Agrega un prefijo interwiki a la tabla interwiki local de $1 con los campos siguientes. Asegúrate de que los valores sean correctos antes de enviarlos.",
 	"importdump-info-no-file-found": "No se encontró ningún archivo en $1. Es posible que ya se haya eliminado.",
-	"importdump-info-requester-globally-blocked": "El solicitante ($1) ha sido bloqueado globalmente. Esta solicitud debe ser rechazada.",
 	"importdump-label-add-comment": "Añadir comentario",
 	"importdump-label-comment": "Comentario:",
 	"importdump-label-reason": "Motivo para la Petición:",

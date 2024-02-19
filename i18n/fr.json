@@ -36,7 +36,6 @@
 	"importdump-info-no-file-found": "Fichier introuvable à $1. Il peut avoir déjà été supprimé.",
 	"importdump-info-no-interwiki-prefix": "Aucun préfixe interwiki n’existe encore sur le wiki cible ($1) pour pointer sur le wiki source ($2). Il est recommandé d’en ajouter un avant de continuer.",
 	"importdump-info-request-private": "Cette demande est marquée comme privée. Elle n’est pas consultable par le public.",
-	"importdump-info-requester-globally-blocked": "Le demandeur ($1) a été bloqué de façon globale. Cette demande devrait être refusée.",
 	"importdump-info-requester-blocked": "Le demandeur ($1) a été bloqué localement sur ce wiki ($2).",
 	"importdump-info-requester-locked": "Le demandeur ($1) a été verrouillé. Cette demande devrait être refusée.",
 	"importdump-interwiki-failed": "Le préfixe interwiki n’a pas été ajouté à $1. Il peut être déjà présent, ou bien une autre erreur s’est produite.",

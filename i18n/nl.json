@@ -35,7 +35,6 @@
 	"importdump-info-no-file-found": "Er is geen bestand gevonden voor $1. Mogelijk is het al verwijderd.",
 	"importdump-info-no-interwiki-prefix": "Op de doelwiki ($1), die verwijst naar de bronwiki ($2), bestaat geen interwiki-prefix. Het wordt aanbevolen dat u er een toevoegt voordat u doorgaat.",
 	"importdump-info-request-private": "Dit verzoek is gemarkeerd als privé. Het is niet publiekelijk zichtbaar.",
-	"importdump-info-requester-globally-blocked": "De aanvrager ($1) is wereldwijd geblokkeerd. Deze aanvraag dient te worden afgewezen.",
 	"importdump-info-requester-blocked": "De aanvrager ($1) is lokaal geblokkeerd op deze wiki ($2).",
 	"importdump-info-requester-locked": "De aanvrager ($1) is vergrendeld. Deze aanvraag dient te worden afgewezen.",
 	"importdump-interwiki-failed": "Het interwiki-voorvoegsel is niet aan $1 toegevoegd. Mogelijk is het al aanwezig of is er een andere fout opgetreden.",
