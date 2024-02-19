@@ -6,13 +6,13 @@ use Config;
 use Html;
 use HTMLForm;
 use IContextSource;
-use Linker;
+use MediaWiki\Linker\Linker;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Permissions\PermissionManager;
+use MediaWiki\WikiMap\WikiMap;
 use Status;
 use User;
 use UserNotLoggedIn;
-use WikiMap;
 
 class ImportDumpRequestViewer implements ImportDumpStatus {
 
