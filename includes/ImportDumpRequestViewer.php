@@ -201,23 +201,21 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			$status = $this->importDumpRequestManager->getStatus();
 
 			if ( $this->importDumpRequestManager->fileExists() ) {
-				$fileInfo = '';
-				if ( !$this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
-					$fileInfo = $this->context->msg( 'importdump-info-command' )->plaintextParams(
-						$this->importDumpRequestManager->getCommand()
-					)->parse();
+				$fileInfo = $this->context->msg( 'importdump-info-command' )->plaintextParams(
+					$this->importDumpRequestManager->getCommand()
+				)->parse();
 
-					$fileInfo .= Html::element( 'button', [
-							'type' => 'button',
-							'onclick' =>
-								   'navigator.clipboard.writeText( $( \'.mw-message-box-notice code\' ).text() );',
-						],
-						$this->context->msg( 'importdump-button-copy' )->text()
-					);
+				$fileInfo .= Html::element( 'button', [
+					'type' => 'button',
+					'onclick' => 'navigator.clipboard.writeText( $( \'.mw-message-box-notice code\' ).text() );',
+				], $this->context->msg( 'importdump-button-copy' )->text() );
+
+				if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) && $status !== self::STATUS_FAILED ) {
+					$fileInfo = '';
 				}
 
 				if ( $this->importDumpRequestManager->getFileSize() > 0 ) {
-					if ( !$this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
+					if ( $fileInfo ) {
 						$fileInfo .= Html::element( 'br' );
 					}
 
