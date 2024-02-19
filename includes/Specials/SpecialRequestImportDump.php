@@ -9,6 +9,7 @@ use FileRepo;
 use FormSpecialPage;
 use Html;
 use ManualLogEntry;
+use MediaWiki\MainConfigNames;
 use MediaWiki\User\UserFactory;
 use Message;
 use MimeAnalyzer;
@@ -379,7 +380,7 @@ class SpecialRequestImportDump extends FormSpecialPage
 	 * @return string|bool
 	 */
 	public function isValidDatabase( ?string $target ) {
-		if ( !in_array( $target, $this->getConfig()->get( 'LocalDatabases' ) ) ) {
+		if ( !in_array( $target, $this->getConfig()->get( MainConfigNames::LocalDatabases ) ) ) {
 			return Status::newFatal( 'importdump-invalid-target' )->getMessage();
 		}
 
