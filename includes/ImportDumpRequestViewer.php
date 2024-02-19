@@ -206,9 +206,11 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				)->parse();
 
 				$fileInfo .= Html::element( 'button', [
-					'type' => 'button',
-					'onclick' => 'navigator.clipboard.writeText( $( \'.mw-message-box-notice code\' ).text() );',
-				], $this->context->msg( 'importdump-button-copy' )->text() );
+						'type' => 'button',
+						'onclick' => 'navigator.clipboard.writeText( $( \'.mw-message-box-notice code\' ).text() );',
+					],
+					$this->context->msg( 'importdump-button-copy' )->text()
+				);
 
 				if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) && $status !== self::STATUS_FAILED ) {
 					$fileInfo = '';
