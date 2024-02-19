@@ -24,7 +24,16 @@
 		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/"
 	},
 	"JobClasses": {
-		"ImportDumpJob": "Miraheze\\ImportDump\\Jobs\\ImportDumpJob"
+		"ImportDumpJob": {
+			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpJob",
+			"services": [
+				"DBLoadBalancerFactory",
+				"ImportDumpHookRunner",
+				"ImportDumpRequestManager",
+				"MainConfig",
+				"WikiImporterFactory"
+			]
+		}
 	},
 	"GroupPermissions": {
 		"user": {
