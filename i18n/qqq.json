@@ -38,7 +38,6 @@
 	"importdump-info-no-file-found": "Message displayed instead of generated command and file size, if the file for the request is not found. $1 is the full path to the file.",
 	"importdump-info-no-interwiki-prefix": "Message that is displayed on the 'handling' section of Special:RequestImportDumpQueue when no interwiki prefix is found on the target wiki, which is pointing to the source wiki. $1 is the target wiki; $2 is the source wiki's hostname.",
 	"importdump-info-request-private": "Message that is displayed on the 'handling' section of Special:RequestImportDumpQueue when viewing a request that is private.",
-	"importdump-info-requester-globally-blocked": "Message that is displayed on the 'handling' section of Special:RequestImportDumpQueue when the requester has been globally blocked. $1 is the requester's username.",
 	"importdump-info-requester-locally-blocked": "Message that is displayed on the 'handling' section of Special:RequestImportDumpQueue when the requester has been locally blocked on the current wiki. $1 is the requester's username; $2 is the current wiki's ID.",
 	"importdump-info-requester-locked": "Message that is displayed on the 'handling' section of Special:RequestImportDumpQueue when the requester has been locked. $1 is the requester's username.",
 	"importdump-interwiki-failed": "Error message displayed when submitting the interwiki table changes fails. $1 is the target database name.",
