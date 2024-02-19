@@ -2,15 +2,16 @@
 
 namespace Miraheze\ImportDump\Specials;
 
-use EchoEvent;
 use ErrorPageError;
 use ExtensionRegistry;
 use FileRepo;
 use FormSpecialPage;
-use Html;
 use ManualLogEntry;
+use MediaWiki\Extension\Notifications\Model\Event;
+use MediaWiki\Html\Html;
 use MediaWiki\MainConfigNames;
 use MediaWiki\User\UserFactory;
+use MediaWiki\WikiMap\WikiMap;
 use Message;
 use MimeAnalyzer;
 use Miraheze\CreateWiki\RemoteWiki;
@@ -24,7 +25,6 @@ use UploadFromUrl;
 use UploadStash;
 use User;
 use UserBlockedError;
-use WikiMap;
 use Wikimedia\Rdbms\ILBFactory;
 
 class SpecialRequestImportDump extends FormSpecialPage
@@ -360,7 +360,7 @@ class SpecialRequestImportDump extends FormSpecialPage
 				continue;
 			}
 
-			EchoEvent::create( [
+			Event::create( [
 				'type' => 'importdump-new-request',
 				'extra' => [
 					'request-id' => $requestID,
