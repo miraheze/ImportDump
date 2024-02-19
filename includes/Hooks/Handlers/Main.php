@@ -8,11 +8,11 @@ use EchoAttributeManager;
 use MediaWiki\Block\Hook\GetAllBlockActionsHook;
 use MediaWiki\Hook\LoginFormValidErrorMessagesHook;
 use MediaWiki\User\Hook\UserGetReservedNamesHook;
+use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\Notifications\EchoImportFailedPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoNewRequestPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestCommentPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestStatusUpdatePresentationModel;
-use WikiMap;
 
 class Main implements
 	GetAllBlockActionsHook,
