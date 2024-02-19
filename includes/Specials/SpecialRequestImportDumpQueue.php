@@ -66,6 +66,10 @@ class SpecialRequestImportDumpQueue extends SpecialPage {
 		$target = $this->getRequest()->getText( 'target' );
 
 		$formDescriptor = [
+			'info' => [
+				'type' => 'info',
+				'default' => $this->msg( 'requestimportdumpqueue-header-info' )->text(),
+			],
 			'target' => [
 				'type' => 'text',
 				'name' => 'target',
@@ -95,7 +99,12 @@ class SpecialRequestImportDumpQueue extends SpecialPage {
 		];
 
 		$htmlForm = HTMLForm::factory( 'ooui', $formDescriptor, $this->getContext() );
-		$htmlForm->setMethod( 'get' )->prepareForm()->displayForm( false );
+		$htmlForm
+			->setMethod( 'get' )
+			->setWrapperLegendMsg( 'requestimportdump-header' )
+			->setSubmitTextMsg( 'search' )
+			->prepareForm()
+			->displayForm( false );
 
 		$pager = new ImportDumpRequestQueuePager(
 			$this->getConfig(),

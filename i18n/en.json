@@ -120,6 +120,8 @@
 	"logentry-importdumpprivate-statusupdate": "$1 {{GENDER:$2|updated}} status of private import dump request $4 to '$5'.",
 	"requestimportdump": "Request import",
 	"requestimportdumpqueue": "Import requests queue",
+	"requestimportdumpqueue-header": "Search import requests",
+	"requestimportdumpqueue-header-info": "You can use this form to search through import requests. Use the parameters below to refine your search.",
 	"right-handle-import-dump-interwiki": "Handle import dump interwiki",
 	"right-handle-import-dump-requests": "Handle user import dump requests",
 	"right-request-import-dump": "Request imports",
