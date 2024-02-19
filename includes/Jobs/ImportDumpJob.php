@@ -24,6 +24,8 @@ use Wikimedia\Rdbms\ILBFactory;
 class ImportDumpJob extends Job
 	implements ImportDumpStatus {
 
+	public const JOB_NAME = 'ImportDumpJob';
+
 	/** @var int */
 	private $requestID;
 
@@ -58,7 +60,7 @@ class ImportDumpJob extends Job
 		Config $mainConfig,
 		WikiImporterFactory $wikiImporterFactory
 	) {
-		parent::__construct( 'ImportDumpJob', $params );
+		parent::__construct( self::JOB_NAME, $params );
 
 		$this->requestID = $params['requestid'];
 
