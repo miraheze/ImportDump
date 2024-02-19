@@ -101,7 +101,7 @@ class SpecialRequestImportDumpQueue extends SpecialPage {
 		$htmlForm = HTMLForm::factory( 'ooui', $formDescriptor, $this->getContext() );
 		$htmlForm
 			->setMethod( 'get' )
-			->setWrapperLegendMsg( 'requestimportdump-header' )
+			->setWrapperLegendMsg( 'requestimportdumpqueue-header' )
 			->setSubmitTextMsg( 'search' )
 			->prepareForm()
 			->displayForm( false );
