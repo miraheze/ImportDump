@@ -126,6 +126,8 @@
 	"logentry-importdumpprivate-statusupdate": "{{logentry|[[Special:Log/importdumpprivate]]}}",
 	"requestimportdump": "{{doc-special}}",
 	"requestimportdumpqueue": "{{doc-special}}",
+	"requestimportdumpqueue-header": "Legend header for special page",
+	"requestimportdumpqueue-header-info": "Information under legend header.",
 	"right-handle-import-dump-interwiki": "{{doc-right|handle-import-dump-interwiki}}",
 	"right-handle-import-dump-requests": "{{doc-right|handle-import-dump-requests}}",
 	"right-request-import-dump": "{{doc-right|request-import-dump}}",

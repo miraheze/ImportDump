@@ -105,5 +105,22 @@
 	"ipb-action-request-import-dump": "Yêu cầu nhập",
 	"log-action-filter-importdump": "Kiểu tác vụ:",
 	"log-action-filter-importdump-interwiki": "Sửa đổi bảng liên wiki",
-	"log-action-filter-importdump-request": "Yêu cầu mới được gửi"
+	"log-action-filter-importdump-request": "Yêu cầu mới được gửi",
+	"log-action-filter-importdump-statusupdate": "Đã cập nhật trạng thái yêu cầu",
+	"log-action-filter-importdumpprivate": "Kiểu tác vụ:",
+	"log-action-filter-importdumpprivate-interwiki": "Sửa đổi bảng liên wiki",
+	"log-action-filter-importdumpprivate-request": "Yêu cầu mới được gửi",
+	"log-action-filter-importdumpprivate-statusupdate": "Đã cập nhật trạng thái yêu cầu",
+	"logentry-importdump-interwiki": "$1 đã thêm tiền tố liên wiki '$4' vào $5 cho yêu cầu $6.",
+	"logentry-importdump-request": "$1 đã yêu cầu nhập kết xuất với cho $4 trong $5 .",
+	"logentry-importdump-statusupdate": "$1 đã cập nhật trạng thái của yêu cầu nhập $4 thành '$5'.",
+	"logentry-importdumpprivate-interwiki": "$1 đã thêm tiền tố liên wiki '$4' vào $5 cho yêu cầu $6.",
+	"logentry-importdumpprivate-request": "$1 đã yêu cầu nhập kết xuất với cho $4 trong $5 .",
+	"logentry-importdumpprivate-statusupdate": "$1 đã cập nhật trạng thái của yêu cầu nhập riêng tư $4 thành '$5'.",
+	"requestimportdump": "Yêu cầu nhập kết xuất",
+	"requestimportdumpqueue": "Hàng đợi yêu cầu nhập",
+	"right-handle-import-dump-interwiki": "Xử lý liên kết liên wiki trong quá trình nhập kết xuất",
+	"right-handle-import-dump-requests": "Xử lý yêu cầu nhập kết xuất của người dùng",
+	"right-request-import-dump": "Yêu cầu nhập kết xuất",
+	"right-view-private-import-dump-requests": "Xem yêu cầu nhập riêng tư"
 }
