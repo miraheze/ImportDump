@@ -33,6 +33,7 @@
 	"importdump-help-target": "Help for the 'target' field.",
 	"importdump-help-upload-file": "Help for the 'Upload File' field.",
 	"importdump-help-upload-file-url": "Help for the 'Source URL' field.",
+	"importdump-import-started": "Message displayed when the import is successfully started.",
 	"importdump-info-command": "The generated command that is displayed on the 'handling' section of Special:RequestImportDumpQueue. $1 is the generated command.",
 	"importdump-info-filesize": "The file size for the uploaded XML file. $1 is the file size.",
 	"importdump-info-groups": "User groups that the requester has on the target wiki. Displayed on the 'handling' section of Special:RequestImportDumpQueue.\n* $1 is the requester's username\n* $2 is the target wiki's database name\n* $3 is the comma-separated list of user groups",
