@@ -707,7 +707,7 @@ class ImportDumpRequestManager {
 			new JobSpecification(
 				ImportDumpJob::JOB_NAME,
 				[
-					'requestid' => $actor,
+					'actor' => $actor,
 					'requestid' => $this->ID,
 				]
 			)
