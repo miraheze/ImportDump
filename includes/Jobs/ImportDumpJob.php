@@ -179,7 +179,7 @@ class ImportDumpJob extends Job
 			)
 		);
 
-		$requestLink = SpecialPage::getTitleFor( 'RequestImportDumpQueue', $this->requestID )->getFullURL();
+		$requestLink = SpecialPage::getTitleFor( 'RequestImportDumpQueue', (string)$this->requestID )->getFullURL();
 
 		foreach ( $notifiedUsers as $receiver ) {
 			if (
