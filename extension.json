@@ -68,9 +68,6 @@
 	},
 	"ActionFilteredLogs": {
 		"importdump": {
-			"declined": [
-				"declined"
-			],
 			"interwiki": [
 				"interwiki"
 			],
@@ -85,9 +82,6 @@
 			]
 		},
 		"importdumpprivate": {
-			"declined": [
-				"declined"
-			],
 			"interwiki": [
 				"interwiki"
 			],
