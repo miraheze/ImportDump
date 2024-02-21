@@ -703,52 +703,64 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			}
 
 			if ( isset( $formData['handle-status'] ) ) {
-				$this->importDumpRequestManager->setStatus( $formData['handle-status'] );
-
-				$statusMessage = $this->context->msg( 'importdump-label-' . $formData['handle-status'] )
-					->inContentLanguage()
-					->text();
-
-				$comment = $this->context->msg( 'importdump-status-updated', strtolower( $statusMessage ) )
-					->inContentLanguage()
-					->escaped();
-
-				if ( $formData['handle-comment'] ) {
-					$commentUser = User::newSystemUser( 'ImportDump Status Update' );
-
-					$comment .= "\n" . $this->context->msg( 'importdump-comment-given', $user->getName() )
-						->inContentLanguage()
-						->escaped();
-
-					$comment .= ' ' . $formData['handle-comment'];
-				}
-
-				$this->importDumpRequestManager->addComment( $comment, $commentUser ?? $user );
-				$this->importDumpRequestManager->logStatusUpdate(
-					$formData['handle-comment'], $formData['handle-status'], $user
-				);
-
-				$this->importDumpRequestManager->sendNotification(
-					$comment, 'importdump-request-status-update', $user
-				);
-
+				$this->handleStatusUpdate( $formData, $user );
 				$this->importDumpRequestManager->endAtomic( __METHOD__ );
-
-				$out->addHTML( Html::successBox(
-					$this->context->msg( 'importdump-status-updated-success' )->escaped()
-				) );
-
 				return;
 			}
 		}
 
 		if ( isset( $formData['submit-decline'] ) ) {
-			$this->importDumpRequestManager->setStatus( self::STATUS_DECLINED );
+			$formData['handle-status'] = self::STATUS_DECLINED;
+			$this->importDumpRequestManager->startAtomic( __METHOD__ );
+			$this->handleStatusUpdate( $formData, $user );
+			$this->importDumpRequestManager->endAtomic( __METHOD__ );
 			return;
 		}
 
 		if ( isset( $formData['submit-start'] ) ) {
 			$this->importDumpRequestManager->executeJob( $user );
+			$out->addHTML( Html::successBox(
+				$this->context->msg( 'importdump-import-started' )->escaped()
+			) );
 		}
+	}
+
+	/**
+	 * @param array $formData
+	 * @param User $user
+	 */
+	private function handleStatusUpdate( array $formData, User $user ) {
+		$this->importDumpRequestManager->setStatus( $formData['handle-status'] );
+
+		$statusMessage = $this->context->msg( 'importdump-label-' . $formData['handle-status'] )
+			->inContentLanguage()
+			->text();
+
+		$comment = $this->context->msg( 'importdump-status-updated', strtolower( $statusMessage ) )
+			->inContentLanguage()
+			->escaped();
+
+		if ( $formData['handle-comment'] ) {
+			$commentUser = User::newSystemUser( 'ImportDump Status Update' );
+
+			$comment .= "\n" . $this->context->msg( 'importdump-comment-given', $user->getName() )
+				->inContentLanguage()
+				->escaped();
+
+			$comment .= ' ' . $formData['handle-comment'];
+		}
+
+		$this->importDumpRequestManager->addComment( $comment, $commentUser ?? $user );
+		$this->importDumpRequestManager->logStatusUpdate(
+			$formData['handle-comment'], $formData['handle-status'], $user
+		);
+
+		$this->importDumpRequestManager->sendNotification(
+			$comment, 'importdump-request-status-update', $user
+		);
+
+		$out->addHTML( Html::successBox(
+			$this->context->msg( 'importdump-status-updated-success' )->escaped()
+		) );
 	}
 }
