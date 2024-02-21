@@ -213,6 +213,32 @@ class ImportDumpRequestManager {
 	}
 
 	/**
+	 * @param User $user
+	 */
+	public function logStarted( User $user ) {
+		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$this->ID );
+		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
+
+		$logEntry = new ManualLogEntry(
+			$this->isPrivate() ? 'importdumpprivate' : 'importdump',
+			'started'
+		);
+
+		$logEntry->setPerformer( $user );
+		$logEntry->setTarget( $requestQueueLink );
+
+		$logEntry->setParameters(
+			[
+				'4::requestTarget' => $this->getTarget(),
+				'5::requestLink' => Message::rawParam( $requestLink ),
+			]
+		);
+
+		$logID = $logEntry->insert( $this->dbw );
+		$logEntry->publish( $logID );
+	}
+
+	/**
 	 * @param string $comment
 	 * @param string $type
 	 * @param User $user
