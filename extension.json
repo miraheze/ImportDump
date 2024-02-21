@@ -68,22 +68,34 @@
 	},
 	"ActionFilteredLogs": {
 		"importdump": {
+			"declined": [
+				"declined"
+			],
 			"interwiki": [
 				"interwiki"
 			],
 			"request": [
 				"request"
+			],
+			"started": [
+				"started"
 			],
 			"statusupdate": [
 				"statusupdate"
 			]
 		},
 		"importdumpprivate": {
+			"declined": [
+				"declined"
+			],
 			"interwiki": [
 				"interwiki"
 			],
 			"request": [
 				"request"
+			],
+			"started": [
+				"started"
 			],
 			"statusupdate": [
 				"statusupdate"
