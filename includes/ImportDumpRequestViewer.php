@@ -759,7 +759,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			$comment, 'importdump-request-status-update', $user
 		);
 
-		$out->addHTML( Html::successBox(
+		$this->context->getOutput()->addHTML( Html::successBox(
 			$this->context->msg( 'importdump-status-updated-success' )->escaped()
 		) );
 	}
