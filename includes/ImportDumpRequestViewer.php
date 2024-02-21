@@ -748,7 +748,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		if ( isset( $formData['submit-start'] ) ) {
-			$this->importDumpRequestManager->executeJob();
+			$this->importDumpRequestManager->executeJob( $user );
 		}
 	}
 }
