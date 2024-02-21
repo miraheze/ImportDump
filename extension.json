@@ -27,10 +27,11 @@
 		"ImportDumpJob": {
 			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpJob",
 			"services": [
+				"ConfigFactory",
 				"DBLoadBalancerFactory",
 				"ImportDumpHookRunner",
 				"ImportDumpRequestManager",
-				"MainConfig",
+				"UserFactory",
 				"WikiImporterFactory"
 			]
 		}
