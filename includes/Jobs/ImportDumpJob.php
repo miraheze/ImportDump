@@ -6,6 +6,7 @@ use Config;
 use ConfigFactory;
 use ExtensionRegistry;
 use FakeMaintenance;
+use GenericParameterJob;
 use ImportStreamSource;
 use Job;
 use MediaWiki\Extension\Notifications\Model\Event;
@@ -28,8 +29,10 @@ use User;
 use WikiImporterFactory;
 use Wikimedia\Rdbms\ILBFactory;
 
-class ImportDumpJob extends Job
-	implements ImportDumpStatus {
+class ImportDumpJob extends Job implements
+	GenericParameterJob,
+	ImportDumpStatus
+{
 
 	public const JOB_NAME = 'ImportDumpJob';
 
