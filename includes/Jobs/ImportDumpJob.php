@@ -107,7 +107,7 @@ class ImportDumpJob extends Job
 			$this->importDumpRequestManager->setStatus( self::STATUS_FAILED );
 			$this->setLastError( "Import source for {$filePath} failed" );
 			$this->notifyFailed();
-			return false;
+			return true;
 		}
 
 		try {
@@ -153,7 +153,7 @@ class ImportDumpJob extends Job
 			$this->importDumpRequestManager->setStatus( self::STATUS_FAILED );
 			$this->setLastError( 'Import failed: ' . $e->getMessage() );
 			$this->notifyFailed();
-			return false;
+			return true;
 		}
 
 		$this->importDumpRequestManager->setStatus( self::STATUS_COMPLETE );
