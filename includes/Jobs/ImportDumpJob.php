@@ -162,7 +162,7 @@ class ImportDumpJob extends Job
 		}
 
 		$this->importDumpRequestManager->setStatus( self::STATUS_COMPLETE );
-		
+
 		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
 		$comment = $this->messageLocalizer->msg( 'importdump-import-completed-comment' )
 			->inContentLanguage()
