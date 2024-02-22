@@ -35,9 +35,6 @@ class ImportDumpJob extends Job
 	public const JOB_NAME = 'ImportDumpJob';
 
 	/** @var int */
-	private $actorID;
-
-	/** @var int */
 	private $requestID;
 
 	/** @var Config */
@@ -83,7 +80,6 @@ class ImportDumpJob extends Job
 	) {
 		parent::__construct( self::JOB_NAME, $params );
 
-		$this->actorID = $params['actorid'];
 		$this->requestID = $params['requestid'];
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
@@ -115,9 +111,6 @@ class ImportDumpJob extends Job
 			$this->notifyFailed();
 			return false;
 		}
-
-		$this->importDumpRequestManager->setStatus( self::STATUS_INPROGRESS );
-		$this->importDumpRequestManager->logStarted( $this->actorID );
 
 		try {
 			$user = User::newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
