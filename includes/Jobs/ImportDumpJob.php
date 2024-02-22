@@ -109,6 +109,7 @@ class ImportDumpJob extends Job
 		if ( !$importStreamSource->isGood() ) {
 			$this->importDumpRequestManager->setStatus( self::STATUS_FAILED );
 			$this->setLastError( "Import source for {$filePath} failed" );
+			$this->notifyFailed();
 			return false;
 		}
 
