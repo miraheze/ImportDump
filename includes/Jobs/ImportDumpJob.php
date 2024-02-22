@@ -8,10 +8,11 @@ use ExtensionRegistry;
 use FakeMaintenance;
 use ImportStreamSource;
 use Job;
+use JobSpecification;
 use MediaWiki\Extension\Notifications\Model\Event;
+use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Permissions\UltimateAuthority;
-use MediaWiki\User\UserFactory;
 use MessageLocalizer;
 use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
 use Miraheze\ImportDump\ImportDumpRequestManager;
@@ -43,6 +44,9 @@ class ImportDumpJob extends Job
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
 
+	/** @var JobQueueGroupFactory */
+	private $jobQueueGroupFactory;
+
 	/** @var ImportDumpHookRunner */
 	private $importDumpHookRunner;
 
@@ -52,9 +56,6 @@ class ImportDumpJob extends Job
 	/** @var MessageLocalizer */
 	private $messageLocalizer;
 
-	/** @var UserFactory */
-	private $userFactory;
-
 	/** @var WikiImporterFactory */
 	private $wikiImporterFactory;
 
@@ -63,9 +64,9 @@ class ImportDumpJob extends Job
 	 * @param array $params
 	 * @param ConfigFactory $configFactory
 	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param JobQueueGroupFactory $jobQueueGroupFactory
 	 * @param ImportDumpHookRunner $importDumpHookRunner
 	 * @param ImportDumpRequestManager $importDumpRequestManager
-	 * @param UserFactory $userFactory
 	 * @param WikiImporterFactory $wikiImporterFactory
 	 */
 	public function __construct(
@@ -73,9 +74,9 @@ class ImportDumpJob extends Job
 		array $params,
 		ConfigFactory $configFactory,
 		ILBFactory $dbLoadBalancerFactory,
+		JobQueueGroupFactory $jobQueueGroupFactory,
 		ImportDumpHookRunner $importDumpHookRunner,
 		ImportDumpRequestManager $importDumpRequestManager,
-		UserFactory $userFactory,
 		WikiImporterFactory $wikiImporterFactory
 	) {
 		parent::__construct( self::JOB_NAME, $params );
@@ -83,9 +84,9 @@ class ImportDumpJob extends Job
 		$this->requestID = $params['requestid'];
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
+		$this->jobQueueGroupFactory = $jobQueueGroupFactory;
 		$this->importDumpHookRunner = $importDumpHookRunner;
 		$this->importDumpRequestManager = $importDumpRequestManager;
-		$this->userFactory = $userFactory;
 		$this->wikiImporterFactory = $wikiImporterFactory;
 
 		$this->config = $configFactory->makeConfig( 'ImportDump' );
@@ -172,49 +173,14 @@ class ImportDumpJob extends Job
 	}
 
 	private function notifyFailed() {
-		if ( !ExtensionRegistry::getInstance()->isLoaded( 'Echo' ) ) {
-			return;
-		}
-
-		$notifiedUsers = array_filter(
-			array_map(
-				function ( string $userName ): ?User {
-					return $this->userFactory->newFromName( $userName );
-				}, $this->config->get( 'ImportDumpUsersNotifiedOnFailedImports' )
+		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->config->get( 'ImportDumpCentralWiki' ) )->push(
+			new JobSpecification(
+				ImportDumpNotifyJob::JOB_NAME,
+				[
+					'requestid' => $this->ID,
+					'type' => 'failed',
+				]
 			)
 		);
-
-		$requestLink = SpecialPage::getTitleFor( 'RequestImportDumpQueue', (string)$this->requestID )->getFullURL();
-
-		foreach ( $notifiedUsers as $receiver ) {
-			if (
-				!$receiver->isAllowed( 'handle-import-dump-requests' ) ||
-				(
-					$this->importDumpRequestManager->isPrivate() &&
-					!$receiver->isAllowed( 'view-private-import-dump-requests' )
-				)
-			) {
-				continue;
-			}
-
-			Event::create( [
-				'type' => 'importdump-import-failed',
-				'extra' => [
-					'request-id' => $this->requestID,
-					'request-url' => $requestLink,
-					'reason' => $this->getLastError(),
-					'notifyAgent' => true,
-				],
-				'agent' => $receiver,
-			] );
-		}
-
-		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
-		$comment = $this->messageLocalizer->msg( 'importdump-import-failed-comment' )
-			->inContentLanguage()
-			->escaped();
-
-		$this->importDumpRequestManager->addComment( $comment, $commentUser );
-		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-comment', $commentUser );
 	}
 }
