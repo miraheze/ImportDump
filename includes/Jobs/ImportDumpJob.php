@@ -35,6 +35,9 @@ class ImportDumpJob extends Job
 	/** @var int */
 	private $requestID;
 
+	/** @var string */
+	private $username;
+
 	/** @var Config */
 	private $config;
 
@@ -79,6 +82,7 @@ class ImportDumpJob extends Job
 		parent::__construct( self::JOB_NAME, $params );
 
 		$this->requestID = $params['requestid'];
+		$this->username = $params['username'];
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->jobQueueGroupFactory = $jobQueueGroupFactory;
@@ -109,6 +113,18 @@ class ImportDumpJob extends Job
 			$this->notifyFailed();
 			return true;
 		}
+
+		$this->importDumpRequestManager->setStatus( self::STATUS_INPROGRESS );
+		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
+			new JobSpecification(
+				ImportDumpNotifyJob::JOB_NAME,
+				[
+					'requestid' => $this->requestID,
+					'status' => self::STATUS_INPROGRESS,
+					'username' => $this->username,
+				]
+			)
+		);
 
 		try {
 			$user = User::newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
