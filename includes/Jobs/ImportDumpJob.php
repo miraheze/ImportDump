@@ -80,7 +80,6 @@ class ImportDumpJob extends Job
 	) {
 		parent::__construct( self::JOB_NAME, $params );
 
-		$this->actor = $params['actor'];
 		$this->requestID = $params['requestid'];
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
@@ -91,6 +90,8 @@ class ImportDumpJob extends Job
 
 		$this->config = $configFactory->makeConfig( 'ImportDump' );
 		$this->messageLocalizer = RequestContext::getMain();
+
+		$this->actor = $this->userFactory->newFromActorId( $params['actorid'] );
 	}
 
 	/**
