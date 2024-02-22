@@ -157,14 +157,15 @@ class ImportDumpJob extends Job
 		}
 
 		$this->importDumpRequestManager->setStatus( self::STATUS_COMPLETE );
-
-		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
-		$comment = $this->messageLocalizer->msg( 'importdump-import-completed-comment' )
-			->inContentLanguage()
-			->escaped();
-
-		$this->importDumpRequestManager->addComment( $comment, $commentUser );
-		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-comment', $commentUser );
+		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->config->get( 'ImportDumpCentralWiki' ) )->push(
+			new JobSpecification(
+				ImportDumpNotifyJob::JOB_NAME,
+				[
+					'requestid' => $this->ID,
+					'type' => 'complete',
+				]
+			)
+		);
 
 		return true;
 	}
