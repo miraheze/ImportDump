@@ -10,12 +10,14 @@ use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\User\UserFactory;
 use MessageLocalizer;
 use Miraheze\ImportDump\ImportDumpRequestManager;
+use Miraheze\ImportDump\ImportDumpStatus;
 use RequestContext;
 use SpecialPage;
 use Title;
 use User;
 
-class ImportDumpNotifyJob extends Job {
+class ImportDumpNotifyJob extends Job
+	implements ImportDumpStatus {
 
 	public const JOB_NAME = 'ImportDumpNotifyJob';
 
@@ -90,7 +92,7 @@ class ImportDumpNotifyJob extends Job {
 
 	private function notifyComplete() {
 		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
-		$comment = $this->messageLocalizer->msg( 'importdump-import-completed-comment' )
+		$comment = $this->messageLocalizer->msg( 'importdump-label-' . self::STATUS_COMPLETE )
 			->inContentLanguage()
 			->escaped();
 
