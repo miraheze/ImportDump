@@ -25,6 +25,9 @@ class ImportDumpNotifyJob extends Job
 	private $requestID;
 
 	/** @var string */
+	private $username;
+
+	/** @var string */
 	private $status;
 
 	/** @var string */
@@ -61,6 +64,7 @@ class ImportDumpNotifyJob extends Job
 		$this->requestID = $params['requestid'];
 		$this->status = $params['status'];
 		$this->lastError = $params['lasterror'] ?? '';
+		$this->username = $params['username'];
 
 		$this->importDumpRequestManager = $importDumpRequestManager;
 		$this->userFactory = $userFactory;
@@ -85,6 +89,10 @@ class ImportDumpNotifyJob extends Job
 
 		if ( $this->status === self::STATUS_FAILED ) {
 			$this->notifyFailed();
+		}
+
+		if ( $this->status === self::STATUS_INPROGRESS ) {
+			$this->notifyStarted();
 		}
 
 		return true;
@@ -146,5 +154,23 @@ class ImportDumpNotifyJob extends Job
 
 		$this->importDumpRequestManager->addComment( $comment, $commentUser );
 		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-comment', $commentUser );
+	}
+
+	private function notifyStarted() {
+		$user = $this->userFactory->newFromName( $this->username );
+		$this->importDumpRequestManager->logStarted( $user );
+
+		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
+
+		$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . self::STATUS_INPROGRESS )
+			->inContentLanguage()
+			->text();
+
+		$comment = $this->messageLocalizer->msg( 'importdump-status-updated', strtolower( $statusMessage ) )
+			->inContentLanguage()
+			->escaped();
+
+		$this->importDumpRequestManager->addComment( $comment, $commentUser );
+		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $user );
 	}
 }
