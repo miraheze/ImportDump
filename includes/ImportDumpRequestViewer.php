@@ -718,7 +718,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		if ( isset( $formData['submit-start'] ) ) {
-			$this->importDumpRequestManager->executeJob( $user );
+			$this->importDumpRequestManager->executeJob( $user->getActorId() );
 			$out->addHTML( Html::successBox(
 				$this->context->msg( 'importdump-import-started' )->escaped()
 			) );
