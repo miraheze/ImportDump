@@ -158,9 +158,12 @@ class ImportDumpNotifyJob extends Job
 
 	private function notifyStarted() {
 		$user = $this->userFactory->newFromName( $this->username );
-		$this->importDumpRequestManager->logStarted( $user );
+		if ( !( $user instanceof User ) ) {
+			$this->setLastError( '$user is not an instance of User' );
+			return;
+		}
 
-		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
+		$this->importDumpRequestManager->logStarted( $user );
 
 		$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . self::STATUS_INPROGRESS )
 			->inContentLanguage()
@@ -170,7 +173,7 @@ class ImportDumpNotifyJob extends Job
 			->inContentLanguage()
 			->escaped();
 
-		$this->importDumpRequestManager->addComment( $comment, $commentUser );
+		$this->importDumpRequestManager->addComment( $comment, $user );
 		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $user );
 	}
 }
