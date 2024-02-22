@@ -157,7 +157,7 @@ class ImportDumpJob extends Job
 		}
 
 		$this->importDumpRequestManager->setStatus( self::STATUS_COMPLETE );
-		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->config->get( 'ImportDumpCentralWiki' ) )->push(
+		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
@@ -171,7 +171,7 @@ class ImportDumpJob extends Job
 	}
 
 	private function notifyFailed() {
-		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->config->get( 'ImportDumpCentralWiki' ) )->push(
+		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
@@ -181,5 +181,13 @@ class ImportDumpJob extends Job
 				]
 			)
 		);
+	}
+
+	/**
+	 * @return string
+	 */
+	private function getLoggingWiki(): string {
+		return $this->config->get( 'ImportDumpCentralWiki' ) ?:
+			$this->config->get( MainConfigNames::DBname );
 	}
 }
