@@ -123,6 +123,8 @@
 	"logentry-importdumpprivate-statusupdate": "$1已將非公開傾印匯入申請$4的狀態{{GENDER:$2|更新}}為「$5」。",
 	"requestimportdump": "申請匯入",
 	"requestimportdumpqueue": "匯入申請佇列",
+	"requestimportdumpqueue-header": "搜尋匯入請求",
+	"requestimportdumpqueue-header-info": "您可以使用此表單來搜尋匯入請求。可使用以下參數來讓您的搜尋更精準。",
 	"right-handle-import-dump-interwiki": "處理跨 wiki 匯入傾印",
 	"right-handle-import-dump-requests": "處理使用者匯入傾印申請",
 	"right-request-import-dump": "申請匯入",
