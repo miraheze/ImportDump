@@ -25,7 +25,7 @@ class ImportDumpNotifyJob extends Job
 	private $requestID;
 
 	/** @var string */
-	private $type;
+	private $status;
 
 	/** @var string */
 	private $lastError;
@@ -59,7 +59,7 @@ class ImportDumpNotifyJob extends Job
 		parent::__construct( self::JOB_NAME, $params );
 
 		$this->requestID = $params['requestid'];
-		$this->type = $params['type'];
+		$this->status = $params['status'];
 		$this->lastError = $params['lasterror'] ?? '';
 
 		$this->importDumpRequestManager = $importDumpRequestManager;
@@ -79,11 +79,11 @@ class ImportDumpNotifyJob extends Job
 
 		$this->importDumpRequestManager->fromID( $this->requestID );
 
-		if ( $this->type === 'complete' ) {
+		if ( $this->status === self::STATUS_COMPLETE ) {
 			$this->notifyComplete();
 		}
 
-		if ( $this->type === 'failed' ) {
+		if ( $this->status === self::STATUS_FAILED ) {
 			$this->notifyFailed();
 		}
 
