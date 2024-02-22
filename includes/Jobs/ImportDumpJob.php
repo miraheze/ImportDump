@@ -35,10 +35,10 @@ class ImportDumpJob extends Job
 	public const JOB_NAME = 'ImportDumpJob';
 
 	/** @var int */
-	private $requestID;
+	private $actorID;
 
-	/** @var User */
-	private $actor;
+	/** @var int */
+	private $requestID;
 
 	/** @var Config */
 	private $config;
@@ -83,6 +83,7 @@ class ImportDumpJob extends Job
 	) {
 		parent::__construct( self::JOB_NAME, $params );
 
+		$this->actorID = $params['actorid'];
 		$this->requestID = $params['requestid'];
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
@@ -93,8 +94,6 @@ class ImportDumpJob extends Job
 
 		$this->config = $configFactory->makeConfig( 'ImportDump' );
 		$this->messageLocalizer = RequestContext::getMain();
-
-		$this->actor = $this->userFactory->newFromActorId( $params['actorid'] );
 	}
 
 	/**
@@ -108,8 +107,6 @@ class ImportDumpJob extends Job
 
 		$this->importDumpHookRunner->onImportDumpJobGetFile( $filePath, $this->importDumpRequestManager );
 
-		$this->importDumpRequestManager->startAtomic( __METHOD__ );
-
 		// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
@@ -119,8 +116,9 @@ class ImportDumpJob extends Job
 			return false;
 		}
 
+
 		$this->importDumpRequestManager->setStatus( self::STATUS_INPROGRESS );
-		$this->importDumpRequestManager->logStarted( $this->actor );
+		$this->importDumpRequestManager->logStarted( $this->actorID );
 
 		try {
 			$user = User::newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
