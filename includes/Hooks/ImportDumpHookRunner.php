@@ -4,7 +4,10 @@ namespace Miraheze\ImportDump\Hooks;
 
 use MediaWiki\HookContainer\HookContainer;
 
-class ImportDumpHookRunner implements ImportDumpJobGetFileHook {
+class ImportDumpHookRunner implements
+	ImportDumpJobGetFileHook,
+	ImportDumpJobAfterImportHook
+{
 
 	/**
 	 * @var HookContainer
@@ -23,6 +26,14 @@ class ImportDumpHookRunner implements ImportDumpJobGetFileHook {
 		$this->container->run(
 			'ImportDumpJobGetFile',
 			[ &$filePath, $importDumpRequestManager ]
+		);
+	}
+
+	/** @inheritDoc */
+	public function onImportDumpJobAfterImport( $filePath, $importDumpRequestManager ): void {
+		$this->container->run(
+			'ImportDumpJobAfterImport',
+			[ $filePath, $importDumpRequestManager ]
 		);
 	}
 }
