@@ -699,11 +699,17 @@ class ImportDumpRequestManager {
 		);
 	}
 
-	public function executeJob() {
+	/**
+	 * @param string $username
+	 */
+	public function executeJob( string $username ) {
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getTarget() )->push(
 			new JobSpecification(
 				ImportDumpJob::JOB_NAME,
-				[ 'requestid' => $this->ID ]
+				[
+					'requestid' => $this->ID,
+					'username' => $username,
+				]
 			)
 		);
 	}
