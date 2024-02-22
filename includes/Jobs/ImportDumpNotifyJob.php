@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump\Jobs;
 
 use Config;
 use ConfigFactory;
+use ExtensionRegistry;
 use Job;
 use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\User\UserFactory;
@@ -68,6 +69,10 @@ class ImportDumpNotifyJob extends Job
 	 * @return bool
 	 */
 	public function run(): bool {
+		if ( !ExtensionRegistry::getInstance()->isLoaded( 'Echo' ) ) {
+			return;
+		}
+
 		if ( $this->type === 'failed' ) {
 			$this->notifyFailed();
 		}
