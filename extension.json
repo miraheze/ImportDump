@@ -29,9 +29,9 @@
 			"services": [
 				"ConfigFactory",
 				"DBLoadBalancerFactory",
+				"JobQueueGroupFactory",
 				"ImportDumpHookRunner",
 				"ImportDumpRequestManager",
-				"UserFactory",
 				"WikiImporterFactory"
 			]
 		},
