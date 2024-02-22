@@ -213,9 +213,9 @@ class ImportDumpRequestManager {
 	}
 
 	/**
-	 * @param int $actorId
+	 * @param User $user
 	 */
-	public function logStarted( int $actorId ) {
+	public function logStarted( User $user ) {
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$this->ID );
 		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
@@ -223,8 +223,6 @@ class ImportDumpRequestManager {
 			$this->isPrivate() ? 'importdumpprivate' : 'importdump',
 			'started'
 		);
-
-		$user = $this->userFactory->newFromActorId( $actorId );
 
 		$logEntry->setPerformer( $user );
 		$logEntry->setTarget( $requestQueueLink );
@@ -708,10 +706,7 @@ class ImportDumpRequestManager {
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getTarget() )->push(
 			new JobSpecification(
 				ImportDumpJob::JOB_NAME,
-				[
-					'actorid' => $actorId,
-					'requestid' => $this->ID,
-				]
+				[ 'requestid' => $this->ID ]
 			)
 		);
 	}
