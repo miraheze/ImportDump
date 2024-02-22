@@ -4,30 +4,16 @@ namespace Miraheze\ImportDump\Jobs;
 
 use Config;
 use ConfigFactory;
-use ExtensionRegistry;
-use FakeMaintenance;
-use ImportStreamSource;
 use Job;
 use MediaWiki\Extension\Notifications\Model\Event;
-use MediaWiki\MainConfigNames;
-use MediaWiki\Permissions\UltimateAuthority;
 use MediaWiki\User\UserFactory;
 use MessageLocalizer;
-use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
-use RebuildRecentchanges;
-use RebuildTextIndex;
-use RefreshLinks;
 use RequestContext;
-use SiteStatsInit;
-use SiteStatsUpdate;
 use SpecialPage;
-use Throwable;
 use Title;
 use User;
-use WikiImporterFactory;
-use Wikimedia\Rdbms\ILBFactory;
 
 class ImportDumpNotifyJob extends Job
 	implements ImportDumpStatus {
