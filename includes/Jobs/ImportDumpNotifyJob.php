@@ -92,7 +92,12 @@ class ImportDumpNotifyJob extends Job
 
 	private function notifyComplete() {
 		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
-		$comment = $this->messageLocalizer->msg( 'importdump-label-' . self::STATUS_COMPLETE )
+
+		$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . self::STATUS_COMPLETE )
+			->inContentLanguage()
+			->text();
+
+		$comment = $this->messageLocalizer->msg( 'importdump-status-updated', strtolower( $statusMessage ) )
 			->inContentLanguage()
 			->escaped();
 
