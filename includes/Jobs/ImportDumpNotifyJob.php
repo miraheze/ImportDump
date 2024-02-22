@@ -27,6 +27,9 @@ class ImportDumpNotifyJob extends Job
 	/** @var string */
 	private $type;
 
+	/** @var string */
+	private $lastError;
+
 	/** @var Config */
 	private $config;
 
@@ -57,6 +60,7 @@ class ImportDumpNotifyJob extends Job
 
 		$this->requestID = $params['requestid'];
 		$this->type = $params['type'];
+		$this->lastError = $params['lasterror'] ?? '';
 
 		$this->importDumpRequestManager = $importDumpRequestManager;
 		$this->userFactory = $userFactory;
@@ -123,7 +127,7 @@ class ImportDumpNotifyJob extends Job
 				'extra' => [
 					'request-id' => $this->requestID,
 					'request-url' => $requestLink,
-					'reason' => $this->getLastError(),
+					'reason' => $this->lastError,
 					'notifyAgent' => true,
 				],
 				'agent' => $receiver,
