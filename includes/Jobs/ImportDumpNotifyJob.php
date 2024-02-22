@@ -73,6 +73,8 @@ class ImportDumpNotifyJob extends Job
 			return true;
 		}
 
+		$this->importDumpRequestManager->fromID( $this->requestID );
+
 		if ( $this->type === 'complete' ) {
 			$this->notifyComplete();
 		}
