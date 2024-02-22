@@ -73,11 +73,25 @@ class ImportDumpNotifyJob extends Job
 			return;
 		}
 
+		if ( $this->type === 'complete' ) {
+			$this->notifyComplete();
+		}
+
 		if ( $this->type === 'failed' ) {
 			$this->notifyFailed();
 		}
 
 		return true;
+	}
+
+	private function notifyComplete() {
+		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
+		$comment = $this->messageLocalizer->msg( 'importdump-import-completed-comment' )
+			->inContentLanguage()
+			->escaped();
+
+		$this->importDumpRequestManager->addComment( $comment, $commentUser );
+		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-comment', $commentUser );
 	}
 
 	private function notifyFailed() {
