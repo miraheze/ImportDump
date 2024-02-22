@@ -175,6 +175,7 @@ class ImportDumpJob extends Job
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
+					'lasterror' => $this->getLastError(),
 					'requestid' => $this->requestID,
 					'type' => 'failed',
 				]
