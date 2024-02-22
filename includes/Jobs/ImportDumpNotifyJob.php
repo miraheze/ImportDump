@@ -10,14 +10,12 @@ use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\User\UserFactory;
 use MessageLocalizer;
 use Miraheze\ImportDump\ImportDumpRequestManager;
-use Miraheze\ImportDump\ImportDumpStatus;
 use RequestContext;
 use SpecialPage;
 use Title;
 use User;
 
-class ImportDumpNotifyJob extends Job
-	implements ImportDumpStatus {
+class ImportDumpNotifyJob extends Job {
 
 	public const JOB_NAME = 'ImportDumpNotifyJob';
 
