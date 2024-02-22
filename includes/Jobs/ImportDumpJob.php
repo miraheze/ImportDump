@@ -161,7 +161,7 @@ class ImportDumpJob extends Job
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
-					'requestid' => $this->ID,
+					'requestid' => $this->requestID,
 					'type' => 'complete',
 				]
 			)
@@ -175,7 +175,7 @@ class ImportDumpJob extends Job
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
-					'requestid' => $this->ID,
+					'requestid' => $this->requestID,
 					'type' => 'failed',
 				]
 			)
