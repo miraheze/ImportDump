@@ -6,7 +6,6 @@ use Config;
 use ConfigFactory;
 use ExtensionRegistry;
 use FakeMaintenance;
-use GenericParameterJob;
 use ImportStreamSource;
 use Job;
 use MediaWiki\Extension\Notifications\Model\Event;
@@ -25,14 +24,13 @@ use SiteStatsInit;
 use SiteStatsUpdate;
 use SpecialPage;
 use Throwable;
+use Title;
 use User;
 use WikiImporterFactory;
 use Wikimedia\Rdbms\ILBFactory;
 
-class ImportDumpJob extends Job implements
-	GenericParameterJob,
-	ImportDumpStatus
-{
+class ImportDumpJob extends Job
+	implements ImportDumpStatus {
 
 	public const JOB_NAME = 'ImportDumpJob';
 
@@ -64,6 +62,7 @@ class ImportDumpJob extends Job implements
 	private $wikiImporterFactory;
 
 	/**
+	 * @param Title $title
 	 * @param array $params
 	 * @param ConfigFactory $configFactory
 	 * @param ILBFactory $dbLoadBalancerFactory
@@ -73,6 +72,7 @@ class ImportDumpJob extends Job implements
 	 * @param WikiImporterFactory $wikiImporterFactory
 	 */
 	public function __construct(
+		Title $title,
 		array $params,
 		ConfigFactory $configFactory,
 		ILBFactory $dbLoadBalancerFactory,
