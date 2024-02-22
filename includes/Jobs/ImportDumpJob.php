@@ -165,6 +165,8 @@ class ImportDumpJob extends Job
 
 			$rebuildLinks = $maintenance->runChild( RefreshLinks::class, 'refreshLinks.php' );
 			$rebuildLinks->execute();
+
+			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
 		} catch ( Throwable $e ) {
 			$this->importDumpRequestManager->setStatus( self::STATUS_FAILED );
 			$this->setLastError( 'Import failed: ' . $e->getMessage() );
