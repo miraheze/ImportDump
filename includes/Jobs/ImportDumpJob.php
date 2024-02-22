@@ -162,7 +162,7 @@ class ImportDumpJob extends Job
 				ImportDumpNotifyJob::JOB_NAME,
 				[
 					'requestid' => $this->requestID,
-					'type' => 'complete',
+					'status' => self::STATUS_COMPLETE,
 				]
 			)
 		);
@@ -177,7 +177,7 @@ class ImportDumpJob extends Job
 				[
 					'lasterror' => $this->getLastError(),
 					'requestid' => $this->requestID,
-					'type' => 'failed',
+					'status' => self::STATUS_FAILED,
 				]
 			)
 		);
