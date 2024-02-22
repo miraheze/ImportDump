@@ -110,7 +110,7 @@ class ImportDumpNotifyJob extends Job
 			->escaped();
 
 		$this->importDumpRequestManager->addComment( $comment, $commentUser );
-		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-comment', $commentUser );
+		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $commentUser );
 	}
 
 	private function notifyFailed() {
@@ -153,7 +153,7 @@ class ImportDumpNotifyJob extends Job
 			->escaped();
 
 		$this->importDumpRequestManager->addComment( $comment, $commentUser );
-		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-comment', $commentUser );
+		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $commentUser );
 	}
 
 	private function notifyStarted() {
