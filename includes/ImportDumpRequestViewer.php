@@ -718,9 +718,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		if ( isset( $formData['submit-start'] ) ) {
-			$this->importDumpRequestManager->executeJob();
-			$this->importDumpRequestManager->setStatus( self::STATUS_INPROGRESS );
-			$this->importDumpRequestManager->logStarted( $user );
+			$this->importDumpRequestManager->executeJob( $user->getName() );
 			$out->addHTML( Html::successBox(
 				$this->context->msg( 'importdump-import-started' )->escaped()
 			) );
