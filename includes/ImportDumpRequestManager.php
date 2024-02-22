@@ -700,14 +700,14 @@ class ImportDumpRequestManager {
 	}
 
 	/**
-	 * @param User $actor
+	 * @param int $actorId
 	 */
-	public function executeJob( User $actor ) {
+	public function executeJob( int $actorId ) {
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getTarget() )->push(
 			new JobSpecification(
 				ImportDumpJob::JOB_NAME,
 				[
-					'actor' => $actor,
+					'actorid' => $actorId,
 					'requestid' => $this->ID,
 				]
 			)
