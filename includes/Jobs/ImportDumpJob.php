@@ -179,6 +179,7 @@ class ImportDumpJob extends Job
 				[
 					'requestid' => $this->requestID,
 					'status' => self::STATUS_COMPLETE,
+					'username' => $this->username,
 				]
 			)
 		);
@@ -194,6 +195,7 @@ class ImportDumpJob extends Job
 					'lasterror' => $this->getLastError(),
 					'requestid' => $this->requestID,
 					'status' => self::STATUS_FAILED,
+					'username' => $this->username,
 				]
 			)
 		);
