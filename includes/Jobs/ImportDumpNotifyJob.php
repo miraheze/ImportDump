@@ -70,7 +70,7 @@ class ImportDumpNotifyJob extends Job
 	 */
 	public function run(): bool {
 		if ( !ExtensionRegistry::getInstance()->isLoaded( 'Echo' ) ) {
-			return;
+			return true;
 		}
 
 		if ( $this->type === 'complete' ) {
