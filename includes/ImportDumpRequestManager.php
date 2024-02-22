@@ -3,12 +3,12 @@
 namespace Miraheze\ImportDump;
 
 use Config;
-use EchoEvent;
 use ExtensionRegistry;
 use FileBackend;
 use JobSpecification;
 use ManualLogEntry;
 use MediaWiki\Config\ServiceOptions;
+use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\Interwiki\InterwikiLookup;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\Linker\LinkRenderer;
@@ -251,7 +251,7 @@ class ImportDumpRequestManager {
 		) );
 
 		foreach ( $involvedUsers as $receiver ) {
-			EchoEvent::create( [
+			Event::create( [
 				'type' => $type,
 				'extra' => [
 					'request-id' => $this->ID,
