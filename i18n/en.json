@@ -29,7 +29,7 @@
 	"importdump-help-target": "This must be a valid database name.",
 	"importdump-help-upload-file": "Only XML files are permitted. If your XML file is in a compressed archive, please extract it before attempting to upload.",
 	"importdump-help-upload-file-url": "Only uncompressed XML files are permitted.",
-	"importdump-import-failed-comment": "There was an error while importing the provided XML. System administrators have been notified.",
+	"importdump-import-failed-comment": "There was an error while importing the provided XML.",
 	"importdump-import-started": "Import successfully started.",
 	"importdump-info-command": "'''Command for this import:''' <code>$1</code>",
 	"importdump-info-filesize": "'''File size for this import:''' $1",
