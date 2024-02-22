@@ -116,7 +116,6 @@ class ImportDumpJob extends Job
 			return false;
 		}
 
-
 		$this->importDumpRequestManager->setStatus( self::STATUS_INPROGRESS );
 		$this->importDumpRequestManager->logStarted( $this->actorID );
 
