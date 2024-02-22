@@ -86,11 +86,13 @@ class Main implements
 
 		$notificationCategories['importdump-request-comment'] = [
 			'priority' => 3,
+			'no-dismiss' => [ 'email' ],
 			'tooltip' => 'echo-pref-tooltip-importdump-request-comment',
 		];
 
 		$notificationCategories['importdump-request-status-update'] = [
 			'priority' => 3,
+			'no-dismiss' => [ 'email' ],
 			'tooltip' => 'echo-pref-tooltip-importdump-request-status-update',
 		];
 
