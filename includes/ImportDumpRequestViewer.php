@@ -317,6 +317,18 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 			if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
 				$formDescriptor += [
+					'handle-status' => [
+						'type' => 'select',
+						'label-message' => 'importdump-label-update-status',
+						'options-messages' => [
+							'importdump-label-pending' => self::STATUS_PENDING,
+							'importdump-label-complete' => self::STATUS_COMPLETE,
+						],
+						'default' => $status,
+						'disabled' => !$validRequest,
+						'cssclass' => 'importdump-infuse',
+						'section' => 'handling',
+					],
 					'submit-handle' => [
 						'type' => 'submit',
 						'buttonlabel-message' => 'htmlform-submit',
@@ -359,7 +371,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					],
 					'submit-interwiki' => [
 						'type' => 'submit',
-						'default' => $this->context->msg( 'htmlform-submit' )->text(),
+						'buttonlabel-message' => 'htmlform-submit',
 						'section' => 'handling',
 					],
 				];
