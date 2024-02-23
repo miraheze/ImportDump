@@ -166,7 +166,7 @@ class ImportDumpJob extends Job
 
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
 		} catch ( Throwable $e ) {
-			$this->setLastError( 'Import failed: ' . $e->getMessage() );
+			$this->setLastError( $e->getMessage() );
 			$this->notifyFailed();
 			return true;
 		}
