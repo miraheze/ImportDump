@@ -111,6 +111,7 @@ class ImportDumpNotifyJob extends Job
 
 		$this->importDumpRequestManager->addComment( $comment, $commentUser );
 		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $commentUser );
+		$this->importDumpRequestManager->setStatus( self::STATUS_COMPLETE );
 	}
 
 	private function notifyFailed() {
@@ -154,6 +155,7 @@ class ImportDumpNotifyJob extends Job
 
 		$this->importDumpRequestManager->addComment( $comment, $commentUser );
 		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $commentUser );
+		$this->importDumpRequestManager->setStatus( self::STATUS_FAILED );
 	}
 
 	private function notifyStarted() {
@@ -175,5 +177,6 @@ class ImportDumpNotifyJob extends Job
 
 		$this->importDumpRequestManager->addComment( $comment, $user );
 		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $user );
+		$this->importDumpRequestManager->setStatus( self::STATUS_INPROGRESS );
 	}
 }
