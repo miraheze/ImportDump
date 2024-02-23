@@ -38,6 +38,9 @@ class ImportDumpJob extends Job
 	/** @var string */
 	private $username;
 
+	/** @var string */
+	private $lastError;
+
 	/** @var Config */
 	private $config;
 
@@ -83,6 +86,7 @@ class ImportDumpJob extends Job
 
 		$this->requestID = $params['requestid'];
 		$this->username = $params['username'];
+		$this->lastError = '';
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->jobQueueGroupFactory = $jobQueueGroupFactory;
@@ -108,7 +112,7 @@ class ImportDumpJob extends Job
 		// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
-			$this->setLastError( "Import source for {$filePath} failed" );
+			$this->lastError = "Import source for {$filePath} failed";
 			$this->notifyFailed();
 			return true;
 		}
@@ -166,7 +170,7 @@ class ImportDumpJob extends Job
 
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
 		} catch ( Throwable $e ) {
-			$this->setLastError( $e->getMessage() );
+			$this->lastError = $e->getMessage();
 			$this->notifyFailed();
 			return true;
 		}
@@ -190,7 +194,7 @@ class ImportDumpJob extends Job
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
-					'lasterror' => $this->getLastError(),
+					'lasterror' => $this->lastError,
 					'requestid' => $this->requestID,
 					'status' => self::STATUS_FAILED,
 					'username' => $this->username,
