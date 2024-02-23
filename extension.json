@@ -7,7 +7,7 @@
 	"license-name": "GPL-3.0-or-later",
 	"type": "specialpage",
 	"requires": {
-		"MediaWiki": ">= 1.39.0"
+		"MediaWiki": ">= 1.40.0"
 	},
 	"MessagesDirs": {
 		"ImportDump": [
@@ -22,6 +22,27 @@
 	},
 	"TestAutoloadNamespaces": {
 		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/"
+	},
+	"JobClasses": {
+		"ImportDumpJob": {
+			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpJob",
+			"services": [
+				"ConfigFactory",
+				"DBLoadBalancerFactory",
+				"JobQueueGroupFactory",
+				"ImportDumpHookRunner",
+				"ImportDumpRequestManager",
+				"WikiImporterFactory"
+			]
+		},
+		"ImportDumpNotifyJob": {
+			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpNotifyJob",
+			"services": [
+				"ConfigFactory",
+				"ImportDumpRequestManager",
+				"UserFactory"
+			]
+		}
 	},
 	"GroupPermissions": {
 		"user": {
@@ -61,6 +82,9 @@
 			"request": [
 				"request"
 			],
+			"started": [
+				"started"
+			],
 			"statusupdate": [
 				"statusupdate"
 			]
@@ -71,6 +95,9 @@
 			],
 			"request": [
 				"request"
+			],
+			"started": [
+				"started"
 			],
 			"statusupdate": [
 				"statusupdate"
@@ -148,6 +175,10 @@
 			"value": "",
 			"description": "If set, only allow users to request import dumps on this wiki."
 		},
+		"ImportDumpEnableAutomatedJob": {
+			"value": false,
+			"description": "Whether to enable a job where a reviewer just has to 'approve' an import and job handles everything else. You can use the ImportDumpJobGetFile hook to manipulate how the job gets the XML file."
+		},
 		"ImportDumpHelpUrl": {
 			"value": "",
 			"description": "Full URL. If set, adds a help URL to Special:RequestImportDump."
@@ -158,26 +189,34 @@
 		},
 		"ImportDumpScriptCommand": {
 			"value": "php {IP}/maintenance/importDump.php --wiki={wiki} --username-prefix=\"{username-prefix}\" {file-path}",
-			"description": "Generated maintenance script command to use."
+			"description": "Generated maintenance script command to use. If $wgImportDumpEnableAutomatedJob is enabled, this is not displayed unless the status is 'failed'."
 		},
 		"ImportDumpUsersNotifiedOnAllRequests": {
 			"value": [],
 			"description": "Array of usernames to send email notifications to for all requests. Users listed here must have a verified email address on their account. This doesn't do anything if the Echo extension is not installed."
+		},
+		"ImportDumpUsersNotifiedOnFailedImports": {
+			"value": [],
+			"description": "Array of usernames to send email notifications to for failed imports. Users listed here must have a verified email address on their account. This doesn't do anything if the Echo extension is not installed or if $wgImportDumpEnableAutomatedJob is not enabled."
 		}
 	},
 	"ConfigRegistry": {
 		"ImportDump": "GlobalVarConfig::newInstance"
 	},
 	"DefaultUserOptions": {
+		"echo-subscriptions-email-importdump-import-failed": true,
 		"echo-subscriptions-email-importdump-new-request": true,
 		"echo-subscriptions-email-importdump-request-comment": true,
 		"echo-subscriptions-email-importdump-request-status-update": true,
+		"echo-subscriptions-web-importdump-import-failed": false,
 		"echo-subscriptions-web-importdump-new-request": false,
 		"echo-subscriptions-web-importdump-request-comment": true,
 		"echo-subscriptions-web-importdump-request-status-update": true
 	},
 	"HiddenPrefs": [
+		"echo-subscriptions-email-importdump-import-failed",
 		"echo-subscriptions-email-importdump-new-request",
+		"echo-subscriptions-web-importdump-import-failed",
 		"echo-subscriptions-web-importdump-new-request"
 	],
 	"RateLimits": {

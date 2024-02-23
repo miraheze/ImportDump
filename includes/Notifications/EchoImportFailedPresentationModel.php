@@ -2,11 +2,11 @@
 
 namespace Miraheze\ImportDump\Notifications;
 
+use EchoDiscussionParser;
 use MediaWiki\Extension\Notifications\Formatters\EchoEventPresentationModel;
 use Message;
-use RawMessage;
 
-class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationModel {
+class EchoImportFailedPresentationModel extends EchoEventPresentationModel {
 
 	/**
 	 * @return string
@@ -20,7 +20,7 @@ class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationMode
 	 */
 	public function getHeaderMessage() {
 		return $this->msg(
-			'importdump-notification-header-status-update',
+			'importdump-notification-header-import-failed',
 			$this->event->getExtraParam( 'request-id' )
 		);
 	}
@@ -29,9 +29,14 @@ class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationMode
 	 * @return Message
 	 */
 	public function getBodyMessage() {
-		$comment = $this->event->getExtraParam( 'comment' );
+		$reason = EchoDiscussionParser::getTextSnippet(
+			$this->event->getExtraParam( 'reason' ),
+			$this->language
+		);
 
-		return new RawMessage( '$1', [ nl2br( htmlspecialchars( $comment ) ) ] );
+		return $this->msg( 'importdump-notification-body-import-failed',
+			$reason
+		);
 	}
 
 	/**

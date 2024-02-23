@@ -3,17 +3,18 @@
 namespace Miraheze\ImportDump;
 
 use Config;
-use Html;
 use HTMLForm;
 use IContextSource;
-use Linker;
+use MediaWiki\Html\Html;
+use MediaWiki\Linker\Linker;
+use MediaWiki\MainConfigNames;
 use MediaWiki\Permissions\PermissionManager;
+use MediaWiki\WikiMap\WikiMap;
 use Status;
 use User;
 use UserNotLoggedIn;
-use WikiMap;
 
-class ImportDumpRequestViewer {
+class ImportDumpRequestViewer implements ImportDumpStatus {
 
 	/** @var Config */
 	private $config;
@@ -211,8 +212,15 @@ class ImportDumpRequestViewer {
 					$this->context->msg( 'importdump-button-copy' )->text()
 				);
 
+				if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) && $status !== self::STATUS_FAILED ) {
+					$fileInfo = '';
+				}
+
 				if ( $this->importDumpRequestManager->getFileSize() > 0 ) {
-					$fileInfo .= Html::element( 'br' );
+					if ( $fileInfo ) {
+						$fileInfo .= Html::element( 'br' );
+					}
+
 					$fileInfo .= $this->context->msg( 'importdump-info-filesize' )->sizeParams(
 						$this->importDumpRequestManager->getFileSize()
 					)->parse();
@@ -227,8 +235,8 @@ class ImportDumpRequestViewer {
 				);
 
 				$validRequest = false;
-				if ( $status === 'pending' || $status === 'inprogress' ) {
-					$status = 'declined';
+				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
+					$status = self::STATUS_DECLINED;
 				}
 			}
 
@@ -251,25 +259,11 @@ class ImportDumpRequestViewer {
 
 			if ( $this->importDumpRequestManager->getRequester()->getBlock() ) {
 				$info .= Html::warningBox(
-					$this->context->msg( 'importdump-info-requester-locally-blocked',
+					$this->context->msg( 'importdump-info-requester-blocked',
 						$this->importDumpRequestManager->getRequester()->getName(),
 						WikiMap::getCurrentWikiId()
 					)->escaped()
 				);
-			}
-
-			// @phan-suppress-next-line PhanDeprecatedFunction Only for MW 1.39 or lower.
-			if ( $this->importDumpRequestManager->getRequester()->getGlobalBlock() ) {
-				$info .= Html::errorBox(
-					$this->context->msg( 'importdump-info-requester-globally-blocked',
-						$this->importDumpRequestManager->getRequester()->getName()
-					)->escaped()
-				);
-
-				$validRequest = false;
-				if ( $status === 'pending' || $status === 'inprogress' ) {
-					$status = 'declined';
-				}
 			}
 
 			if ( $this->importDumpRequestManager->getRequester()->isLocked() ) {
@@ -280,8 +274,8 @@ class ImportDumpRequestViewer {
 				);
 
 				$validRequest = false;
-				if ( $status === 'pending' || $status === 'inprogress' ) {
-					$status = 'declined';
+				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
+					$status = self::STATUS_DECLINED;
 				}
 			}
 
@@ -316,6 +310,16 @@ class ImportDumpRequestViewer {
 						'label-message' => 'importdump-label-private',
 						'default' => $this->importDumpRequestManager->isPrivate(),
 						'disabled' => $this->importDumpRequestManager->isPrivate( true ),
+						'section' => 'handling',
+					],
+				];
+			}
+
+			if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
+				$formDescriptor += [
+					'submit-handle' => [
+						'type' => 'submit',
+						'buttonlabel-message' => 'htmlform-submit',
 						'section' => 'handling',
 					],
 				];
@@ -361,33 +365,56 @@ class ImportDumpRequestViewer {
 				];
 			}
 
-			$formDescriptor += [
-				'handle-status' => [
-					'type' => 'select',
-					'label-message' => 'importdump-label-update-status',
-					'options-messages' => [
-						'importdump-label-pending' => 'pending',
-						'importdump-label-inprogress' => 'inprogress',
-						'importdump-label-complete' => 'complete',
-						'importdump-label-declined' => 'declined',
+			if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
+				$formDescriptor += [
+					'handle-comment' => [
+						'type' => 'textarea',
+						'rows' => 4,
+						'label-message' => 'importdump-label-status-updated-comment',
+						'section' => 'handling',
 					],
-					'default' => $status,
-					'disabled' => !$validRequest,
-					'cssclass' => 'importdump-infuse',
-					'section' => 'handling',
-				],
-				'handle-comment' => [
-					'type' => 'textarea',
-					'rows' => 4,
-					'label-message' => 'importdump-label-status-updated-comment',
-					'section' => 'handling',
-				],
-				'submit-handle' => [
-					'type' => 'submit',
-					'default' => $this->context->msg( 'htmlform-submit' )->text(),
-					'section' => 'handling',
-				],
-			];
+					'submit-start' => [
+						'type' => 'submit',
+						'buttonlabel-message' => 'importdump-label-start-import',
+						'disabled' => !$validRequest,
+						'section' => 'handling',
+					],
+					'submit-decline' => [
+						'type' => 'submit',
+						'flags' => [ 'destructive', 'primary' ],
+						'buttonlabel-message' => 'importdump-label-decline-import',
+						'section' => 'handling',
+					],
+				];
+			} else {
+				$formDescriptor += [
+					'handle-status' => [
+						'type' => 'select',
+						'label-message' => 'importdump-label-update-status',
+						'options-messages' => [
+							'importdump-label-pending' => self::STATUS_PENDING,
+							'importdump-label-inprogress' => self::STATUS_INPROGRESS,
+							'importdump-label-complete' => self::STATUS_COMPLETE,
+							'importdump-label-declined' => self::STATUS_DECLINED,
+						],
+						'default' => $status,
+						'disabled' => !$validRequest,
+						'cssclass' => 'importdump-infuse',
+						'section' => 'handling',
+					],
+					'handle-comment' => [
+						'type' => 'textarea',
+						'rows' => 4,
+						'label-message' => 'importdump-label-status-updated-comment',
+						'section' => 'handling',
+					],
+					'submit-handle' => [
+						'type' => 'submit',
+						'buttonlabel-message' => 'htmlform-submit',
+						'section' => 'handling',
+					],
+				];
+			}
 		}
 
 		return $formDescriptor;
@@ -411,7 +438,7 @@ class ImportDumpRequestViewer {
 	 * @return string|bool
 	 */
 	public function isValidDatabase( ?string $target ) {
-		if ( !in_array( $target, $this->config->get( 'LocalDatabases' ) ) ) {
+		if ( !in_array( $target, $this->config->get( MainConfigNames::LocalDatabases ) ) ) {
 			return Status::newFatal( 'importdump-invalid-target' )->getMessage();
 		}
 
@@ -563,14 +590,14 @@ class ImportDumpRequestViewer {
 				return;
 			}
 
-			if ( $this->importDumpRequestManager->getStatus() === 'declined' ) {
-				$this->importDumpRequestManager->setStatus( 'pending' );
+			if ( $this->importDumpRequestManager->getStatus() === self::STATUS_DECLINED ) {
+				$this->importDumpRequestManager->setStatus( self::STATUS_PENDING );
 
 				$comment = $this->context->msg( 'importdump-request-reopened', $user->getName() )->rawParams(
 					implode( "\n", $changes )
 				)->inContentLanguage()->escaped();
 
-				$this->importDumpRequestManager->logStatusUpdate( $comment, 'pending', $user );
+				$this->importDumpRequestManager->logStatusUpdate( $comment, self::STATUS_PENDING, $user );
 
 				$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
 
@@ -637,7 +664,10 @@ class ImportDumpRequestViewer {
 				$this->importDumpRequestManager->setPrivate( (int)$formData['handle-private'] );
 			}
 
-			if ( $this->importDumpRequestManager->getStatus() === $formData['handle-status'] ) {
+			if (
+				!isset( $formData['handle-status'] ) ||
+				$this->importDumpRequestManager->getStatus() === $formData['handle-status']
+			) {
 				$this->importDumpRequestManager->endAtomic( __METHOD__ );
 
 				if ( !$changes ) {
@@ -672,36 +702,65 @@ class ImportDumpRequestViewer {
 				return;
 			}
 
-			$this->importDumpRequestManager->setStatus( $formData['handle-status'] );
+			if ( isset( $formData['handle-status'] ) ) {
+				$this->handleStatusUpdate( $formData, $user );
+				$this->importDumpRequestManager->endAtomic( __METHOD__ );
+				return;
+			}
+		}
 
-			$statusMessage = $this->context->msg( 'importdump-label-' . $formData['handle-status'] )
-				->inContentLanguage()
-				->text();
+		if ( isset( $formData['submit-decline'] ) ) {
+			$formData['handle-status'] = self::STATUS_DECLINED;
+			$this->importDumpRequestManager->startAtomic( __METHOD__ );
+			$this->handleStatusUpdate( $formData, $user );
+			$this->importDumpRequestManager->endAtomic( __METHOD__ );
+			return;
+		}
 
-			$comment = $this->context->msg( 'importdump-status-updated', strtolower( $statusMessage ) )
+		if ( isset( $formData['submit-start'] ) ) {
+			$this->importDumpRequestManager->executeJob( $user->getName() );
+			$out->addHTML( Html::successBox(
+				$this->context->msg( 'importdump-import-started' )->escaped()
+			) );
+		}
+	}
+
+	/**
+	 * @param array $formData
+	 * @param User $user
+	 */
+	private function handleStatusUpdate( array $formData, User $user ) {
+		$this->importDumpRequestManager->setStatus( $formData['handle-status'] );
+
+		$statusMessage = $this->context->msg( 'importdump-label-' . $formData['handle-status'] )
+			->inContentLanguage()
+			->text();
+
+		$comment = $this->context->msg( 'importdump-status-updated', strtolower( $statusMessage ) )
+			->inContentLanguage()
+			->escaped();
+
+		if ( $formData['handle-comment'] ) {
+			$commentUser = User::newSystemUser( 'ImportDump Status Update' );
+
+			$comment .= "\n" . $this->context->msg( 'importdump-comment-given', $user->getName() )
 				->inContentLanguage()
 				->escaped();
 
-			if ( $formData['handle-comment'] ) {
-				$commentUser = User::newSystemUser( 'ImportDump Status Update' );
-
-				$comment .= "\n" . $this->context->msg( 'importdump-comment-given', $user->getName() )
-					->inContentLanguage()
-					->escaped();
-
-				$comment .= ' ' . $formData['handle-comment'];
-			}
-
-			$this->importDumpRequestManager->addComment( $comment, $commentUser ?? $user );
-			$this->importDumpRequestManager->logStatusUpdate(
-				$formData['handle-comment'], $formData['handle-status'], $user
-			);
-
-			$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $user );
-
-			$this->importDumpRequestManager->endAtomic( __METHOD__ );
-
-			$out->addHTML( Html::successBox( $this->context->msg( 'importdump-status-updated-success' )->escaped() ) );
+			$comment .= ' ' . $formData['handle-comment'];
 		}
+
+		$this->importDumpRequestManager->addComment( $comment, $commentUser ?? $user );
+		$this->importDumpRequestManager->logStatusUpdate(
+			$formData['handle-comment'], $formData['handle-status'], $user
+		);
+
+		$this->importDumpRequestManager->sendNotification(
+			$comment, 'importdump-request-status-update', $user
+		);
+
+		$this->context->getOutput()->addHTML( Html::successBox(
+			$this->context->msg( 'importdump-status-updated-success' )->escaped()
+		) );
 	}
 }

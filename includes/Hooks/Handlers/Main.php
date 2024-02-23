@@ -8,10 +8,11 @@ use EchoAttributeManager;
 use MediaWiki\Block\Hook\GetAllBlockActionsHook;
 use MediaWiki\Hook\LoginFormValidErrorMessagesHook;
 use MediaWiki\User\Hook\UserGetReservedNamesHook;
+use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\Notifications\EchoImportFailedPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoNewRequestPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestCommentPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestStatusUpdatePresentationModel;
-use WikiMap;
 
 class Main implements
 	GetAllBlockActionsHook,
@@ -71,19 +72,40 @@ class Main implements
 			return;
 		}
 
+		$notificationCategories['importdump-import-failed'] = [
+			'priority' => 3,
+			'no-dismiss' => [ 'email' ],
+			'tooltip' => 'echo-pref-tooltip-importdump-import-failed',
+		];
+
 		$notificationCategories['importdump-new-request'] = [
 			'priority' => 3,
+			'no-dismiss' => [ 'email' ],
 			'tooltip' => 'echo-pref-tooltip-importdump-new-request',
 		];
 
 		$notificationCategories['importdump-request-comment'] = [
 			'priority' => 3,
+			'no-dismiss' => [ 'email' ],
 			'tooltip' => 'echo-pref-tooltip-importdump-request-comment',
 		];
 
 		$notificationCategories['importdump-request-status-update'] = [
 			'priority' => 3,
+			'no-dismiss' => [ 'email' ],
 			'tooltip' => 'echo-pref-tooltip-importdump-request-status-update',
+		];
+
+		$notifications['importdump-import-failed'] = [
+			EchoAttributeManager::ATTR_LOCATORS => [
+				'EchoUserLocator::locateEventAgent'
+			],
+			'category' => 'importdump-import-failed',
+			'group' => 'positive',
+			'section' => 'alert',
+			'canNotifyAgent' => true,
+			'presentation-model' => EchoImportFailedPresentationModel::class,
+			'immediate' => true,
 		];
 
 		$notifications['importdump-new-request'] = [

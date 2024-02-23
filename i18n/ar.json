@@ -16,7 +16,6 @@
 	"importdump-help-source": "أدخل عنوان URL الكامل لموقع ويكى المصدر (من المكان الذي تقوم بالاستيراد منه).",
 	"importdump-info-groups": "مجموعات المستخدمين التي يمتلكها $1 على $2: $3",
 	"importdump-info-request-private": "تم وضع علامة على هذا الطلب كخاص. انها ليست للعرض العام.",
-	"importdump-info-requester-globally-blocked": "تم حظر الطالب ($1) عالميًا. يجب رفض هذا الطلب.",
 	"importdump-info-requester-locked": "تم قفل الطالب ($1). يجب رفض هذا الطلب.",
 	"importdump-label-add-comment": "أضف تعليق",
 	"importdump-label-all": "الكل",

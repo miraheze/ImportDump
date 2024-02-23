@@ -8,10 +8,12 @@ use MediaWiki\User\UserFactory;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpRequestQueuePager;
 use Miraheze\ImportDump\ImportDumpRequestViewer;
+use Miraheze\ImportDump\ImportDumpStatus;
 use SpecialPage;
 use Wikimedia\Rdbms\ILBFactory;
 
-class SpecialRequestImportDumpQueue extends SpecialPage {
+class SpecialRequestImportDumpQueue extends SpecialPage
+	implements ImportDumpStatus {
 
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
@@ -88,13 +90,14 @@ class SpecialRequestImportDumpQueue extends SpecialPage {
 				'name' => 'status',
 				'label-message' => 'importdump-label-status',
 				'options-messages' => [
-					'importdump-label-pending' => 'pending',
-					'importdump-label-inprogress' => 'inprogress',
-					'importdump-label-complete' => 'complete',
-					'importdump-label-declined' => 'declined',
+					'importdump-label-pending' => self::STATUS_PENDING,
+					'importdump-label-inprogress' => self::STATUS_INPROGRESS,
+					'importdump-label-complete' => self::STATUS_COMPLETE,
+					'importdump-label-declined' => self::STATUS_DECLINED,
+					'importdump-label-failed' => self::STATUS_FAILED,
 					'importdump-label-all' => '*',
 				],
-				'default' => $status ?: 'pending',
+				'default' => $status ?: self::STATUS_PENDING,
 			],
 		];
 

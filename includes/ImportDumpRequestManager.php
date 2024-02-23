@@ -3,12 +3,14 @@
 namespace Miraheze\ImportDump;
 
 use Config;
-use EchoEvent;
 use ExtensionRegistry;
 use FileBackend;
+use JobSpecification;
 use ManualLogEntry;
 use MediaWiki\Config\ServiceOptions;
+use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\Interwiki\InterwikiLookup;
+use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\User\ActorStoreFactory;
 use MediaWiki\User\UserFactory;
@@ -16,6 +18,7 @@ use MediaWiki\User\UserGroupManagerFactory;
 use Message;
 use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
+use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use RepoGroup;
 use SpecialPage;
 use stdClass;
@@ -27,8 +30,9 @@ use Wikimedia\Rdbms\SelectQueryBuilder;
 
 class ImportDumpRequestManager {
 
-	private const IGNORED_USERS = [
+	private const SYSTEM_USERS = [
 		'ImportDump Extension',
+		'ImportDump Status Update',
 	];
 
 	public const CONSTRUCTOR_OPTIONS = [
@@ -54,6 +58,9 @@ class ImportDumpRequestManager {
 
 	/** @var InterwikiLookup */
 	private $interwikiLookup;
+
+	/** @var JobQueueGroupFactory */
+	private $jobQueueGroupFactory;
 
 	/** @var MessageLocalizer */
 	private $messageLocalizer;
@@ -81,6 +88,7 @@ class ImportDumpRequestManager {
 	 * @param ActorStoreFactory $actorStoreFactory
 	 * @param ILBFactory $dbLoadBalancerFactory
 	 * @param InterwikiLookup $interwikiLookup
+	 * @param JobQueueGroupFactory $jobQueueGroupFactory
 	 * @param LinkRenderer $linkRenderer
 	 * @param RepoGroup $repoGroup
 	 * @param MessageLocalizer $messageLocalizer
@@ -93,6 +101,7 @@ class ImportDumpRequestManager {
 		ActorStoreFactory $actorStoreFactory,
 		ILBFactory $dbLoadBalancerFactory,
 		InterwikiLookup $interwikiLookup,
+		JobQueueGroupFactory $jobQueueGroupFactory,
 		LinkRenderer $linkRenderer,
 		RepoGroup $repoGroup,
 		MessageLocalizer $messageLocalizer,
@@ -106,6 +115,7 @@ class ImportDumpRequestManager {
 		$this->actorStoreFactory = $actorStoreFactory;
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->interwikiLookup = $interwikiLookup;
+		$this->jobQueueGroupFactory = $jobQueueGroupFactory;
 		$this->linkRenderer = $linkRenderer;
 		$this->messageLocalizer = $messageLocalizer;
 		$this->options = $options;
@@ -162,7 +172,7 @@ class ImportDumpRequestManager {
 
 		if (
 			ExtensionRegistry::getInstance()->isLoaded( 'Echo' ) &&
-			!in_array( $user->getName(), self::IGNORED_USERS )
+			!in_array( $user->getName(), self::SYSTEM_USERS )
 		) {
 			$this->sendNotification( $comment, 'importdump-request-comment', $user );
 		}
@@ -203,6 +213,32 @@ class ImportDumpRequestManager {
 	}
 
 	/**
+	 * @param User $user
+	 */
+	public function logStarted( User $user ) {
+		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$this->ID );
+		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
+
+		$logEntry = new ManualLogEntry(
+			$this->isPrivate() ? 'importdumpprivate' : 'importdump',
+			'started'
+		);
+
+		$logEntry->setPerformer( $user );
+		$logEntry->setTarget( $requestQueueLink );
+
+		$logEntry->setParameters(
+			[
+				'4::requestTarget' => $this->getTarget(),
+				'5::requestLink' => Message::rawParam( $requestLink ),
+			]
+		);
+
+		$logID = $logEntry->insert( $this->dbw );
+		$logEntry->publish( $logID );
+	}
+
+	/**
 	 * @param string $comment
 	 * @param string $type
 	 * @param User $user
@@ -215,7 +251,7 @@ class ImportDumpRequestManager {
 		) );
 
 		foreach ( $involvedUsers as $receiver ) {
-			EchoEvent::create( [
+			Event::create( [
 				'type' => $type,
 				'extra' => [
 					'request-id' => $this->ID,
@@ -410,8 +446,8 @@ class ImportDumpRequestManager {
 			MW_INSTALL_PATH,
 			$this->getTarget(),
 			$this->getInterwikiPrefix(),
-			$this->getTarget() . '-' . $this->getTimestamp() . '.xml',
-			FileBackend::splitStoragePath( $this->getFilePath() )[2],
+			$this->getFileName(),
+			$this->getSplitFilePath(),
 		], $command );
 	}
 
@@ -441,12 +477,26 @@ class ImportDumpRequestManager {
 	 * @return string
 	 */
 	public function getFilePath(): string {
-		$fileName = $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
+		$fileName = $this->getFileName();
 
 		$localRepo = $this->repoGroup->getLocalRepo();
 		$zonePath = $localRepo->getZonePath( 'public' ) . '/ImportDump';
 
 		return $zonePath . '/' . $fileName;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getSplitFilePath(): string {
+		return FileBackend::splitStoragePath( $this->getFilePath() )[2];
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getFileName(): string {
+		return $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
 	}
 
 	/**
@@ -646,6 +696,21 @@ class ImportDumpRequestManager {
 				'request_id' => $this->ID,
 			],
 			__METHOD__
+		);
+	}
+
+	/**
+	 * @param string $username
+	 */
+	public function executeJob( string $username ) {
+		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getTarget() )->push(
+			new JobSpecification(
+				ImportDumpJob::JOB_NAME,
+				[
+					'requestid' => $this->ID,
+					'username' => $username,
+				]
+			)
 		);
 	}
 

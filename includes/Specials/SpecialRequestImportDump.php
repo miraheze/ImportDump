@@ -2,17 +2,20 @@
 
 namespace Miraheze\ImportDump\Specials;
 
-use EchoEvent;
 use ErrorPageError;
 use ExtensionRegistry;
 use FileRepo;
 use FormSpecialPage;
-use Html;
 use ManualLogEntry;
+use MediaWiki\Extension\Notifications\Model\Event;
+use MediaWiki\Html\Html;
+use MediaWiki\MainConfigNames;
 use MediaWiki\User\UserFactory;
+use MediaWiki\WikiMap\WikiMap;
 use Message;
 use MimeAnalyzer;
 use Miraheze\CreateWiki\RemoteWiki;
+use Miraheze\ImportDump\ImportDumpStatus;
 use PermissionsError;
 use RepoGroup;
 use SpecialPage;
@@ -22,10 +25,10 @@ use UploadFromUrl;
 use UploadStash;
 use User;
 use UserBlockedError;
-use WikiMap;
 use Wikimedia\Rdbms\ILBFactory;
 
-class SpecialRequestImportDump extends FormSpecialPage {
+class SpecialRequestImportDump extends FormSpecialPage
+	implements ImportDumpStatus {
 
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
@@ -193,7 +196,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 			->field( '*' )
 			->where( [
 				'request_reason' => $data['reason'],
-				'request_status' => 'pending',
+				'request_status' => self::STATUS_PENDING,
 			] )
 			->caller( __METHOD__ )
 			->fetchRow();
@@ -268,7 +271,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				'request_source' => $data['source'],
 				'request_target' => $data['target'],
 				'request_reason' => $data['reason'],
-				'request_status' => 'pending',
+				'request_status' => self::STATUS_PENDING,
 				'request_actor' => $this->getUser()->getActorId(),
 				'request_timestamp' => $timestamp,
 			],
@@ -357,7 +360,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 				continue;
 			}
 
-			EchoEvent::create( [
+			Event::create( [
 				'type' => 'importdump-new-request',
 				'extra' => [
 					'request-id' => $requestID,
@@ -377,7 +380,7 @@ class SpecialRequestImportDump extends FormSpecialPage {
 	 * @return string|bool
 	 */
 	public function isValidDatabase( ?string $target ) {
-		if ( !in_array( $target, $this->getConfig()->get( 'LocalDatabases' ) ) ) {
+		if ( !in_array( $target, $this->getConfig()->get( MainConfigNames::LocalDatabases ) ) ) {
 			return Status::newFatal( 'importdump-invalid-target' )->getMessage();
 		}
 

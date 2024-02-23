@@ -3,7 +3,7 @@
 namespace Miraheze\ImportDump\Notifications;
 
 use EchoDiscussionParser;
-use EchoEventPresentationModel;
+use MediaWiki\Extension\Notifications\Formatters\EchoEventPresentationModel;
 use Message;
 
 class EchoNewRequestPresentationModel extends EchoEventPresentationModel {
