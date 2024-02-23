@@ -108,13 +108,11 @@ class ImportDumpJob extends Job
 		// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
-			$this->importDumpRequestManager->setStatus( self::STATUS_FAILED );
 			$this->setLastError( "Import source for {$filePath} failed" );
 			$this->notifyFailed();
 			return true;
 		}
 
-		$this->importDumpRequestManager->setStatus( self::STATUS_INPROGRESS );
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
@@ -168,13 +166,11 @@ class ImportDumpJob extends Job
 
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
 		} catch ( Throwable $e ) {
-			$this->importDumpRequestManager->setStatus( self::STATUS_FAILED );
 			$this->setLastError( 'Import failed: ' . $e->getMessage() );
 			$this->notifyFailed();
 			return true;
 		}
 
-		$this->importDumpRequestManager->setStatus( self::STATUS_COMPLETE );
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
