@@ -206,4 +206,11 @@ class ImportDumpJob extends Job
 		return $this->config->get( 'ImportDumpCentralWiki' ) ?:
 			$this->config->get( MainConfigNames::DBname );
 	}
+
+	/**
+	 * @return bool
+	 */
+	public function allowRetries(): bool {
+		return false;
+	}
 }
