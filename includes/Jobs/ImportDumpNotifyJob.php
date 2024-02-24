@@ -7,13 +7,13 @@ use ConfigFactory;
 use ExtensionRegistry;
 use Job;
 use MediaWiki\Extension\Notifications\Model\Event;
+use MediaWiki\Title\Title;
 use MediaWiki\User\UserFactory;
 use MessageLocalizer;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
 use RequestContext;
 use SpecialPage;
-use Title;
 use User;
 
 class ImportDumpNotifyJob extends Job
