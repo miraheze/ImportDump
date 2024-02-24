@@ -714,7 +714,11 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				return;
 			}
 
-			if ( isset( $formData['handle-status'] ) ) {
+			if ( isset( $formData['handle-status'] ) ) {	
+				if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
+					$formData['handle-comment'] = '';
+				}
+
 				$this->handleStatusUpdate( $formData, $user );
 				$this->importDumpRequestManager->endAtomic( __METHOD__ );
 				return;
