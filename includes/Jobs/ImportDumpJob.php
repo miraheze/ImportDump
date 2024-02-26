@@ -2,16 +2,18 @@
 
 namespace Miraheze\ImportDump\Jobs;
 
-use Config;
-use ConfigFactory;
 use FakeMaintenance;
 use ImportStreamSource;
 use Job;
 use JobSpecification;
+use MediaWiki\Config\Config;
+use MediaWiki\Config\ConfigFactory;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Permissions\UltimateAuthority;
+use MediaWiki\SiteStats\SiteStatsInit;
 use MediaWiki\Title\Title;
+use MediaWiki\User\User;
 use MessageLocalizer;
 use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
 use Miraheze\ImportDump\ImportDumpRequestManager;
@@ -20,10 +22,8 @@ use RebuildRecentchanges;
 use RebuildTextIndex;
 use RefreshLinks;
 use RequestContext;
-use SiteStatsInit;
 use SiteStatsUpdate;
 use Throwable;
-use User;
 use WikiImporterFactory;
 use Wikimedia\Rdbms\ILBFactory;
 
