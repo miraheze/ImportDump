@@ -110,6 +110,7 @@
 			"services": [
 				"DBLoadBalancerFactory",
 				"MimeAnalyzer",
+				"PermissionManager",
 				"RepoGroup",
 				"UserFactory"
 			]
