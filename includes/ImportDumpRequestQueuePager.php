@@ -2,12 +2,12 @@
 
 namespace Miraheze\ImportDump;
 
-use Config;
 use IContextSource;
+use MediaWiki\Config\Config;
 use MediaWiki\Linker\LinkRenderer;
+use MediaWiki\Pager\TablePager;
+use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
-use SpecialPage;
-use TablePager;
 use Wikimedia\Rdbms\ILBFactory;
 
 class ImportDumpRequestQueuePager extends TablePager
