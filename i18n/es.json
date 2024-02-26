@@ -23,7 +23,6 @@
 	"importdump-desc": "Una extensión diseñada para automatizar las solicitudes de importación de usuarios.",
 	"importdump-duplicate-request": "No se puede enviar esta solicitud. Es demasiado similar a una solicitud ya abierta.",
 	"importdump-edit-success": "Solicitud editada con éxito.",
-	"importdump-extensionname": "ImportDump",
 	"importdump-header-comment-withtimestamp": "Comentario hecho por $1 el $2",
 	"importdump-help-reason": "Describa en detalle el motivo por el que realiza esta solicitud de volcado de importación.",
 	"importdump-help-source": "Ingresa la URL completa del wiki de origen (desde donde está importando).",

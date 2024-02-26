@@ -23,7 +23,6 @@
 	"importdump-desc": "Eine Erweiterung zur Automatisierung von Benutzer-Importanfragen.",
 	"importdump-duplicate-request": "Diese Anfrage kann nicht eingereicht werden. Sie ist einer bereits offenen Anfrage zu ähnlich.",
 	"importdump-edit-success": "Anfrage erfolgreich bearbeitet.",
-	"importdump-extensionname": "ImportDump",
 	"importdump-header-comment-withtimestamp": "Kommentar von $1 zu $2",
 	"importdump-help-reason": "Beschreibe bitte ausführlich den Grund, aus dem du diesen Antrag auf einen Import-Dump stellst.",
 	"importdump-help-source": "Gib die vollständige URL des Quell-Wikis ein (von dem du importierst).",

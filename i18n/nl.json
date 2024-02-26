@@ -21,7 +21,6 @@
 	"importdump-desc": "Een extensie die is ontworpen om importaanvragen van gebruikers te automatiseren.",
 	"importdump-duplicate-request": "Deze aanvraag kan niet worden ingediend. Ze lijkt te veel op een al openstaande aanvraag.",
 	"importdump-edit-success": "De aanvraag is bewerkt.",
-	"importdump-extensionname": "ImportDump",
 	"importdump-header-comment-withtimestamp": "Opmerking geplaatst door $1 op $2",
 	"importdump-help-reason": "Beschrijf in detail de reden waarom u deze importdumpaanvraag indient.",
 	"importdump-help-source": "Voer de volledige URL in van de bronwiki (van waaruit u importeert).",

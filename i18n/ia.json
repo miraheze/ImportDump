@@ -20,7 +20,6 @@
 	"importdump-desc": "Un extension concipite pro automatisar le requestas de importation de usatores.",
 	"importdump-duplicate-request": "Impossibile submitter iste requesta. Es troppo similar a un requesta ja aperte.",
 	"importdump-edit-success": "Requesta modificate con successo.",
-	"importdump-extensionname": "ImportDump",
 	"importdump-header-comment-withtimestamp": "Commento lassate per $1 a $2",
 	"importdump-help-reason": "Per favor describe in detalio le ration proque tu face iste requesta de importation de datos.",
 	"importdump-help-source": "Insere le URL complete del wiki de origine (desde le qual tu vole importar).",
