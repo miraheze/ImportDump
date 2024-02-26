@@ -2,10 +2,11 @@
 
 namespace Miraheze\ImportDump\Hooks\Handlers;
 
-use Config;
-use ConfigFactory;
-use EchoAttributeManager;
 use MediaWiki\Block\Hook\GetAllBlockActionsHook;
+use MediaWiki\Config\Config;
+use MediaWiki\Config\ConfigFactory;
+use MediaWiki\Extension\Notifications\AttributeManager;
+use MediaWiki\Extension\Notifications\UserLocator;
 use MediaWiki\Hook\LoginFormValidErrorMessagesHook;
 use MediaWiki\User\Hook\UserGetReservedNamesHook;
 use MediaWiki\WikiMap\WikiMap;
@@ -97,8 +98,8 @@ class Main implements
 		];
 
 		$notifications['importdump-import-failed'] = [
-			EchoAttributeManager::ATTR_LOCATORS => [
-				'EchoUserLocator::locateEventAgent'
+			AttributeManager::ATTR_LOCATORS => [
+				[ [ UserLocator::class, 'locateEventAgent' ] ],
 			],
 			'category' => 'importdump-import-failed',
 			'group' => 'positive',
@@ -109,8 +110,8 @@ class Main implements
 		];
 
 		$notifications['importdump-new-request'] = [
-			EchoAttributeManager::ATTR_LOCATORS => [
-				'EchoUserLocator::locateEventAgent'
+			AttributeManager::ATTR_LOCATORS => [
+				[ [ UserLocator::class, 'locateEventAgent' ] ],
 			],
 			'category' => 'importdump-new-request',
 			'group' => 'positive',
@@ -121,8 +122,8 @@ class Main implements
 		];
 
 		$notifications['importdump-request-comment'] = [
-			EchoAttributeManager::ATTR_LOCATORS => [
-				'EchoUserLocator::locateEventAgent'
+			AttributeManager::ATTR_LOCATORS => [
+				[ [ UserLocator::class, 'locateEventAgent' ] ],
 			],
 			'category' => 'importdump-request-comment',
 			'group' => 'positive',
@@ -133,8 +134,8 @@ class Main implements
 		];
 
 		$notifications['importdump-request-status-update'] = [
-			EchoAttributeManager::ATTR_LOCATORS => [
-				'EchoUserLocator::locateEventAgent'
+			AttributeManager::ATTR_LOCATORS => [
+				[ [ UserLocator::class, 'locateEventAgent' ] ],
 			],
 			'category' => 'importdump-request-status-update',
 			'group' => 'positive',
