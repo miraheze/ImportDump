@@ -10,6 +10,7 @@ use ManualLogEntry;
 use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\Html\Html;
 use MediaWiki\MainConfigNames;
+use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
 use Message;
@@ -36,6 +37,9 @@ class SpecialRequestImportDump extends FormSpecialPage
 	/** @var MimeAnalyzer */
 	private $mimeAnalyzer;
 
+	/** @var PermissionManager */
+	private $permissionManager;
+
 	/** @var RepoGroup */
 	private $repoGroup;
 
@@ -45,12 +49,14 @@ class SpecialRequestImportDump extends FormSpecialPage
 	/**
 	 * @param ILBFactory $dbLoadBalancerFactory
 	 * @param MimeAnalyzer $mimeAnalyzer
+	 * @param PermissionManager $permissionManager
 	 * @param RepoGroup $repoGroup
 	 * @param UserFactory $userFactory
 	 */
 	public function __construct(
 		ILBFactory $dbLoadBalancerFactory,
 		MimeAnalyzer $mimeAnalyzer,
+		PermissionManager $permissionManager,
 		RepoGroup $repoGroup,
 		UserFactory $userFactory
 	) {
@@ -58,6 +64,7 @@ class SpecialRequestImportDump extends FormSpecialPage
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->mimeAnalyzer = $mimeAnalyzer;
+		$this->permissionManager = $permissionManager;
 		$this->repoGroup = $repoGroup;
 		$this->userFactory = $userFactory;
 	}
@@ -177,7 +184,7 @@ class SpecialRequestImportDump extends FormSpecialPage
 
 		if (
 			$this->getUser()->pingLimiter( 'request-import-dump' ) ||
-			UploadBase::isThrottled( $this->getUser() )
+			$this->getUser()->pingLimiter( 'upload' )
 		) {
 			return Status::newFatal( 'actionthrottledtext' );
 		}
@@ -219,7 +226,11 @@ class SpecialRequestImportDump extends FormSpecialPage
 
 		$permission = $uploadBase->isAllowed( $this->getUser() );
 		if ( $permission !== true ) {
-			return User::newFatalPermissionDeniedStatus( $permission );
+			return Status::wrap(
+				$this->permissionManager->newFatalPermissionDeniedStatus(
+					$permission, $this->getContext()
+				)
+			);
 		}
 
 		if ( $uploadBase->isEmptyFile() ) {
