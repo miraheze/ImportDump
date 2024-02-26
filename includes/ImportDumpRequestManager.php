@@ -2,17 +2,19 @@
 
 namespace Miraheze\ImportDump;
 
-use Config;
 use ExtensionRegistry;
 use FileBackend;
 use JobSpecification;
 use ManualLogEntry;
+use MediaWiki\Config\Config;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\Interwiki\InterwikiLookup;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\Linker\LinkRenderer;
+use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\ActorStoreFactory;
+use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManagerFactory;
 use Message;
@@ -20,9 +22,7 @@ use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use RepoGroup;
-use SpecialPage;
 use stdClass;
-use User;
 use Wikimedia\Rdbms\DBConnRef;
 use Wikimedia\Rdbms\ILBFactory;
 use Wikimedia\Rdbms\SelectQueryBuilder;
