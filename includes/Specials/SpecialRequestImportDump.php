@@ -24,7 +24,6 @@ use Status;
 use UploadBase;
 use UploadFromUrl;
 use UploadStash;
-use User;
 use UserBlockedError;
 use Wikimedia\Rdbms\ILBFactory;
 
@@ -427,12 +426,6 @@ class SpecialRequestImportDump extends FormSpecialPage
 			)
 		) {
 			throw new UserBlockedError( $block );
-		}
-
-		// @phan-suppress-next-line PhanDeprecatedFunction Only for MW 1.39 or lower.
-		if ( $user->isBlockedGlobally() ) {
-			// @phan-suppress-next-line PhanDeprecatedFunction Only for MW 1.39 or lower.
-			throw new UserBlockedError( $user->getGlobalBlock() );
 		}
 
 		$this->checkReadOnly();
