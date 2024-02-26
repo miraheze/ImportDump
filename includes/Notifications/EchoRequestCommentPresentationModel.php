@@ -2,7 +2,7 @@
 
 namespace Miraheze\ImportDump\Notifications;
 
-use EchoDiscussionParser;
+use MediaWiki\Extension\Notifications\DiscussionParser;
 use MediaWiki\Extension\Notifications\Formatters\EchoEventPresentationModel;
 use Message;
 use RawMessage;
@@ -31,7 +31,7 @@ class EchoRequestCommentPresentationModel extends EchoEventPresentationModel {
 	 */
 	public function getBodyMessage() {
 		$comment = $this->event->getExtraParam( 'comment' );
-		$text = EchoDiscussionParser::getTextSnippet( $comment, $this->language );
+		$text = DiscussionParser::getTextSnippet( $comment, $this->language );
 
 		return new RawMessage( '$1', [ $text ] );
 	}

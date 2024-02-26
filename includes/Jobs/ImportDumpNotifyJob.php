@@ -2,19 +2,19 @@
 
 namespace Miraheze\ImportDump\Jobs;
 
-use Config;
-use ConfigFactory;
 use ExtensionRegistry;
 use Job;
+use MediaWiki\Config\Config;
+use MediaWiki\Config\ConfigFactory;
 use MediaWiki\Extension\Notifications\Model\Event;
+use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Title\Title;
+use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MessageLocalizer;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
 use RequestContext;
-use SpecialPage;
-use User;
 
 class ImportDumpNotifyJob extends Job
 	implements ImportDumpStatus {

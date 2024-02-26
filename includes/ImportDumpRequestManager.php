@@ -2,17 +2,19 @@
 
 namespace Miraheze\ImportDump;
 
-use Config;
 use ExtensionRegistry;
 use FileBackend;
 use JobSpecification;
 use ManualLogEntry;
+use MediaWiki\Config\Config;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\Interwiki\InterwikiLookup;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\Linker\LinkRenderer;
+use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\ActorStoreFactory;
+use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManagerFactory;
 use Message;
@@ -20,10 +22,7 @@ use MessageLocalizer;
 use Miraheze\CreateWiki\RemoteWiki;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use RepoGroup;
-use SpecialPage;
 use stdClass;
-use User;
-use UserRightsProxy;
 use Wikimedia\Rdbms\DBConnRef;
 use Wikimedia\Rdbms\ILBFactory;
 use Wikimedia\Rdbms\SelectQueryBuilder;
@@ -456,13 +455,9 @@ class ImportDumpRequestManager {
 	 */
 	public function getUserGroupsFromTarget() {
 		$userName = $this->getRequester()->getName();
-		if ( version_compare( MW_VERSION, '1.41', '>=' ) ) {
-			$remoteUser = $this->actorStoreFactory
-				->getUserIdentityLookup( $this->getTarget() )
-				->getUserIdentityByName( $userName );
-		} else {
-			$remoteUser = UserRightsProxy::newFromName( $this->getTarget(), $userName );
-		}
+		$remoteUser = $this->actorStoreFactory
+			->getUserIdentityLookup( $this->getTarget() )
+			->getUserIdentityByName( $userName );
 
 		if ( !$remoteUser ) {
 			return [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];

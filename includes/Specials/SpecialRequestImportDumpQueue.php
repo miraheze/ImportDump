@@ -4,12 +4,12 @@ namespace Miraheze\ImportDump\Specials;
 
 use HTMLForm;
 use MediaWiki\Permissions\PermissionManager;
+use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpRequestQueuePager;
 use Miraheze\ImportDump\ImportDumpRequestViewer;
 use Miraheze\ImportDump\ImportDumpStatus;
-use SpecialPage;
 use Wikimedia\Rdbms\ILBFactory;
 
 class SpecialRequestImportDumpQueue extends SpecialPage

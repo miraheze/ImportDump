@@ -2,16 +2,16 @@
 
 namespace Miraheze\ImportDump;
 
-use Config;
 use HTMLForm;
 use IContextSource;
+use MediaWiki\Config\Config;
 use MediaWiki\Html\Html;
 use MediaWiki\Linker\Linker;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Permissions\PermissionManager;
+use MediaWiki\Status\Status;
+use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
-use Status;
-use User;
 use UserNotLoggedIn;
 
 class ImportDumpRequestViewer implements ImportDumpStatus {
