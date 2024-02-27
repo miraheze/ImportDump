@@ -10,7 +10,7 @@
 		}
 	],
 	"support": {
-		"issues": "https://phabricator.miraheze.org/tag/importdump/",
+		"issues": "https://issue-tracker.miraheze.org/tag/importdump/",
 		"wiki": "https://www.mediawiki.org/wiki/Extension:ImportDump"
 	},
 	"require": {
