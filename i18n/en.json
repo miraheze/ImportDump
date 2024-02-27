@@ -4,7 +4,7 @@
 			"Universal Omega"
 		]
 	},
-	"action-handle-import-dump-interwiki": "handle interwiki dump import",
+	"action-handle-import-dump-interwiki": "handle remote interwiki prefixes for import requests",
 	"action-handle-import-dump-requests": "handle user import requests",
 	"action-request-import-dump": "request imports",
 	"action-view-private-import-dump-requests": "view private import requests",
@@ -134,7 +134,7 @@
 	"requestimportdumpqueue": "Import requests queue",
 	"requestimportdumpqueue-header": "Search import requests",
 	"requestimportdumpqueue-header-info": "You can use this form to search through import requests. Use the parameters below to refine your search.",
-	"right-handle-import-dump-interwiki": "Handle interwiki dump import",
+	"right-handle-import-dump-interwiki": "Handle remote interwiki prefixes for import requests",
 	"right-handle-import-dump-requests": "Handle user requests to import a dump",
 	"right-request-import-dump": "Request imports",
 	"right-view-private-import-dump-requests": "View private import requests"
