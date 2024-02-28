@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump\Jobs;
 
 use FakeMaintenance;
 use ImportStreamSource;
+use InitEditCount;
 use Job;
 use JobSpecification;
 use MediaWiki\Config\Config;
@@ -163,6 +164,9 @@ class ImportDumpJob extends Job
 
 			$rebuildLinks = $maintenance->runChild( RefreshLinks::class, 'refreshLinks.php' );
 			$rebuildLinks->execute();
+
+			$initEditCount = $maintenance->runChild( InitEditCount::class, 'initEditCount.php' );
+			$initEditCount->execute();
 
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
 		} catch ( Throwable $e ) {
