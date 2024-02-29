@@ -18,6 +18,7 @@ use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
 use Message;
 use MimeAnalyzer;
+use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\CreateWiki\RemoteWiki;
 use Miraheze\ImportDump\ImportDumpStatus;
 use PermissionsError;
@@ -30,6 +31,9 @@ use Wikimedia\Rdbms\ILBFactory;
 
 class SpecialRequestImportDump extends FormSpecialPage
 	implements ImportDumpStatus {
+
+	/** @var CreateWikiHookRunner|null */
+	private $createWikiHookRunner;
 
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
@@ -52,16 +56,19 @@ class SpecialRequestImportDump extends FormSpecialPage
 	 * @param PermissionManager $permissionManager
 	 * @param RepoGroup $repoGroup
 	 * @param UserFactory $userFactory
+	 * @param ?CreateWikiHookRunner $createWikiHookRunner
 	 */
 	public function __construct(
 		ILBFactory $dbLoadBalancerFactory,
 		MimeAnalyzer $mimeAnalyzer,
 		PermissionManager $permissionManager,
 		RepoGroup $repoGroup,
-		UserFactory $userFactory
+		UserFactory $userFactory,
+		?CreateWikiHookRunner $createWikiHookRunner
 	) {
 		parent::__construct( 'RequestImportDump', 'request-import-dump' );
 
+		$this->createWikiHookRunner = $createWikiHookRunner;
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->mimeAnalyzer = $mimeAnalyzer;
 		$this->permissionManager = $permissionManager;
@@ -334,12 +341,13 @@ class SpecialRequestImportDump extends FormSpecialPage
 	public function getLogType( string $target ): string {
 		if (
 			!ExtensionRegistry::getInstance()->isLoaded( 'CreateWiki' ) ||
-			!$this->getConfig()->get( 'CreateWikiUsePrivateWikis' )
+			!$this->getConfig()->get( 'CreateWikiUsePrivateWikis' ) ||
+			!$this->createWikiHookRunner
 		) {
 			return 'importdump';
 		}
 
-		$remoteWiki = new RemoteWiki( $target );
+		$remoteWiki = new RemoteWiki( $target, $this->createWikiHookRunner );
 		return $remoteWiki->isPrivate() ? 'importdumpprivate' : 'importdump';
 	}
 
