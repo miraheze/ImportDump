@@ -1,7 +1,9 @@
 {
 	"@metadata": {
 		"authors": [
+			"Amire80",
 			"Gomoko",
+			"SleaY",
 			"Verdy p",
 			"Wladek92"
 		]
@@ -46,8 +48,10 @@
 	"importdump-label-all": "Tout",
 	"importdump-label-comment": "Commentaire :",
 	"importdump-label-complete": "Terminé",
+	"importdump-label-decline-import": "Refuser l'importation",
 	"importdump-label-declined": "Refusé",
 	"importdump-label-edit-request": "Modifier la demande",
+	"importdump-label-failed": "Échoué",
 	"importdump-label-inprogress": "En cours",
 	"importdump-label-interwiki-prefix": "Saisissez le préfixe à ajouter à la table interwiki locale du wiki :",
 	"importdump-label-interwiki-url": "Saisir l’URL à ajouter à la table interwiki locale du wiki (par ex. $1) :",
@@ -80,9 +84,9 @@
 	"importdump-notloggedin": "Veuillez vous connecter pour demander un import de données.",
 	"importdump-private": "Vous n’avez pas l’autorisation d’afficher cette requête car elle est marquée comme privée.",
 	"importdump-request-edited": "Demande modifiée par $1.\n\n[Changements réalisés]$2",
-	"importdump-request-edited-reason": "\nMotif :\nValeur précédente : $1\nNouvelle valeur : $2",
-	"importdump-request-edited-source": "\nSource :\nValeur précédente : $1\nNouvelle valeur : $2",
-	"importdump-request-edited-target": "\nCible :\nValeur précédente : $1\nNouvelle valeur : $2",
+	"importdump-request-edited-reason": "Motif :\nValeur précédente : $1\nNouvelle valeur : $2",
+	"importdump-request-edited-source": "Source :\nValeur précédente : $1\nNouvelle valeur : $2",
+	"importdump-request-edited-target": "Cible :\nValeur précédente : $1\nNouvelle valeur : $2",
 	"importdump-request-locked": "Cette demande a été verrouillée. Elle ne peut pas être modifiée et aucun commentaire ne peut y être ajouté.",
 	"importdump-request-reopened": "Demande rouverte par $1.\n\n[Changements réalisés]$2",
 	"importdump-section-comments": "Commentaires de la demande",

@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Amire80",
 			"Nokeoo"
 		]
 	},
@@ -58,9 +59,9 @@
 	"importdump-notloggedin": "Jei norite pateikti užklausą dėl importo, prisijunkite.",
 	"importdump-private": "Neturite leidimo peržiūrėti šios užklausos, nes ji pažymėta kaip privati.",
 	"importdump-request-edited": "Užklausą redagavo $1.\n\n[Atlikti pakeitimai]$2",
-	"importdump-request-edited-reason": "\nPriežastis:\nAnkstesnė reikšmė: $1 \nNauja reikšmė: $2",
-	"importdump-request-edited-source": "\nŠaltinis:\nAnkstesnė reikšmė: $1 \nNauja reikšmė: $2",
-	"importdump-request-edited-target": "\nTikslas:\nAnkstesnė reikšmė: $1 \nNauja reikšmė: $2",
+	"importdump-request-edited-reason": "Priežastis:\nAnkstesnė reikšmė: $1 \nNauja reikšmė: $2",
+	"importdump-request-edited-source": "Šaltinis:\nAnkstesnė reikšmė: $1 \nNauja reikšmė: $2",
+	"importdump-request-edited-target": "Tikslas:\nAnkstesnė reikšmė: $1 \nNauja reikšmė: $2",
 	"importdump-request-locked": "Ši užklausa užrakinta. Jos negalima redaguoti ir prie jos negalima pridėti jokių komentarų.",
 	"importdump-request-reopened": "Užklausą iš naujo atidarė $1.\n\n[Atlikti pakeitimai]$2",
 	"importdump-section-comments": "Užklausos komentarai",

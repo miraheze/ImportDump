@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Amire80",
 			"Eleassar",
 			"Upwinxp"
 		]
@@ -28,6 +29,8 @@
 	"importdump-help-target": "To mora biti veljavno ime podatkovne zbirke.",
 	"importdump-help-upload-file": "Dovoljene so samo datoteke XML. Če je vaša datoteka XML v stisnjenem arhivu, jo izvlecite, preden jo poskusite naložiti.",
 	"importdump-help-upload-file-url": "Dovoljene so samo nestisnjene datoteke XML.",
+	"importdump-import-failed-comment": "Pri uvozu predloženega XML-ja je prišlo do napake.",
+	"importdump-import-started": "Uvoz se je uspešno začel.",
 	"importdump-info-command": "'''Ukaz za ta uvoz:''' <code>$1</code>",
 	"importdump-info-filesize": "'''Velikost datoteke za ta uvoz:''' $1",
 	"importdump-info-groups": "Uporabniške skupine, ki jim $1 pripada v vikiju $2: $3",
@@ -35,7 +38,7 @@
 	"importdump-info-no-file-found": "Na $1 ni bila najdena nobena datoteka. Morda je že izbrisana.",
 	"importdump-info-no-interwiki-prefix": "V ciljnem vikiju ($1), ki kaže na izvorni viki ($2), ne obstaja nobena interviki predpona. Priporočamo, da jo dodate, preden nadaljujete.",
 	"importdump-info-request-private": "Ta prošnja je označena kot zasebna. Ni javno vidna.",
-	"importdump-info-requester-blocked": "Prosilec ($1) je bil v tem vikiju lokalno blokiran ($2).",
+	"importdump-info-requester-blocked": "Zahtevalec ($1) je v tem vikiju blokiran ($2).",
 	"importdump-info-requester-locked": "Prosilec ($1) je bil zaklenjen. To prošnjo je treba zavrniti.",
 	"importdump-interwiki-failed": "Interviki predpona ni bila dodana v $1. Morda je že prisotna ali pa je prišlo do druge napake.",
 	"importdump-interwiki-success": "Interviki predpona je bila uspešno dodana v $1.",
@@ -47,6 +50,7 @@
 	"importdump-label-complete": "Zaključen",
 	"importdump-label-declined": "Zavrnjen",
 	"importdump-label-edit-request": "Uredi prošnjo",
+	"importdump-label-failed": "Ni uspelo",
 	"importdump-label-inprogress": "V teku",
 	"importdump-label-interwiki-prefix": "Vnesite predpono, ki naj se doda v lokalno interviki tabelo vikija:",
 	"importdump-label-interwiki-url": "Vnesite URL, ki naj se doda v lokalno interviki tabelo vikija (npr. $1):",
@@ -73,14 +77,15 @@
 	"importdump-notcentral-text": "Prošnje za uvoz izpisa so v tem vikiju onemogočene. Prosimo, zaprosite za uvoz izpisa iz centralnega vikija.",
 	"importdump-notification-body-new-request": "Prejeta je bila nova prošnja za uvoz izpisa.<br />Predloženi razlog: $1<br />Prosilec: $2<br /> Ime ciljne podatkovne zbirke: $3",
 	"importdump-notification-header-comment": "Prošnja za uvoz izpisa št. $1 je prejela komentar.",
+	"importdump-notification-header-import-failed": "Zahtevek za uvoz izpisa # $1 ni uspel.",
 	"importdump-notification-header-new-request": "Nova prošnja za uvoz izpisa, št. $1",
 	"importdump-notification-header-status-update": "Stanje prošnje za uvoz izpisa št. $1 posodobljeno",
 	"importdump-notification-visit-request": "Obišči prošnjo",
 	"importdump-notloggedin": "Če želite zaprositi za uvoz, se prijavite.",
 	"importdump-private": "Nimate dovoljenja za ogled te prošnje, saj je označena kot zasebna.",
-	"importdump-request-edited": "Prošnjo uredil_a $1.\n\n[Opravljene spremembe]$2",
-	"importdump-request-edited-reason": "\nRazlog:\nPrejšnja vrednost: $1\nNova vrednost: $2",
-	"importdump-request-edited-source": "\nVir:\nPrejšnja vrednost: $1\nNova vrednost: $2",
+	"importdump-request-edited": "Prošnjo uredil_a $1.\n\n[Opravljene spremembe]\n\n$2",
+	"importdump-request-edited-reason": "Razlog:\nPrejšnja vrednost: $1\nNova vrednost: $2",
+	"importdump-request-edited-source": "Vir:\nPrejšnja vrednost: $1\nNova vrednost: $2",
 	"importdump-request-edited-target": "\nCilj:\nPrejšnja vrednost: $1\nNova vrednost: $2",
 	"importdump-request-locked": "Ta prošnja je bila zaklenjena. Ni je mogoče urejati in ni ji mogoče dodajati komentarjev.",
 	"importdump-request-reopened": "Prošnjo znova odprl_a $1.\n\n[Opravljene spremembe]$2",

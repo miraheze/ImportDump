@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Amire80",
 			"Bjankuloski06",
 			"Vlad5250"
 		]
@@ -87,10 +88,10 @@
 	"importdump-notification-visit-request": "Посети го барањето",
 	"importdump-notloggedin": "Најавете се за да побарате увоз.",
 	"importdump-private": "Немате дозвола да го гледате ова барање бидејќи е означено како приватно.",
-	"importdump-request-edited": "Барањето е изменето од $1.\n\n[Направени промени]$2",
-	"importdump-request-edited-reason": "\nПричина:\nПретходна вредност: $1\nНова вредност: $2",
-	"importdump-request-edited-source": "\nИзвор:\nПретходна вредност: $1\nНова вредност: $2",
-	"importdump-request-edited-target": "\nЦел:\nПретходна вредност: $1\nНова вредност: $2",
+	"importdump-request-edited": "Барањето е изменето од $1.\n\n[Направени промени]\n\n$2",
+	"importdump-request-edited-reason": "Причина:\nПретходна вредност: $1\nНова вредност: $2",
+	"importdump-request-edited-source": "Извор:\nПретходна вредност: $1\nНова вредност: $2",
+	"importdump-request-edited-target": "Цел:\nПретходна вредност: $1\nНова вредност: $2",
 	"importdump-request-locked": "Ова барање е заклучено. Не може да се уредува и коментира.",
 	"importdump-request-reopened": "Барањето е преотворено од $1.\n\n[Направени промени]$2",
 	"importdump-section-comments": "Коментари на барањето",

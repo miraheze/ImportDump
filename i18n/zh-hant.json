@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Amire80",
 			"Kly",
 			"Willy1018",
 			"Winston Sung",
@@ -91,9 +92,9 @@
 	"importdump-notloggedin": "請登入以申請匯入。",
 	"importdump-private": "您沒有權限來檢視此申請，因為它被標記為非公開。",
 	"importdump-request-edited": "由$1編輯的申請。\n\n[做出的變動]$2",
-	"importdump-request-edited-reason": "\n原因：\n之前的值：$1\n新的值：$2",
-	"importdump-request-edited-source": "\n來源：\n之前的值：$1\n新的值：$2",
-	"importdump-request-edited-target": "\n目標：\n之前的值：$1\n新的值：$2",
+	"importdump-request-edited-reason": "原因：\n之前的值：$1\n新的值：$2",
+	"importdump-request-edited-source": "來源：\n之前的值：$1\n新的值：$2",
+	"importdump-request-edited-target": "目標：\n之前的值：$1\n新的值：$2",
 	"importdump-request-locked": "此申請已鎖定。它已無法被編輯與新增意見。",
 	"importdump-request-reopened": "由$1重開的申請。\n\n[做出的變動]$2",
 	"importdump-section-comments": "申請意見",

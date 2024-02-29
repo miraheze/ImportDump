@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Amire80",
 			"AppData 174",
 			"BerryAVGN",
 			"Okras",
@@ -80,9 +81,9 @@
 	"importdump-notloggedin": "Пожалуйста, войдите, чтобы запросить импорт.",
 	"importdump-private": "У вас нет разрешения просматривать этот запрос, так как он помечен как закрытый.",
 	"importdump-request-edited": "Запрос отредактирован $1.\n\n[Изменений внесено]$2",
-	"importdump-request-edited-reason": "\nПричина:\nПредыдущее значение: $1\nНовое значение: $2",
-	"importdump-request-edited-source": "\nИсточник:\nПредыдущее значение: $1\nНовое значение: $2",
-	"importdump-request-edited-target": "\nЦель:\nПредыдущее значение: $1\nНовое значение: $2",
+	"importdump-request-edited-reason": "Причина:\nПредыдущее значение: $1\nНовое значение: $2",
+	"importdump-request-edited-source": "Источник:\nПредыдущее значение: $1\nНовое значение: $2",
+	"importdump-request-edited-target": "Цель:\nПредыдущее значение: $1\nНовое значение: $2",
 	"importdump-request-locked": "Этот запрос был заблокирован. Он не может быть отредактирован, и к нему не могут быть добавлены комментарии.",
 	"importdump-request-reopened": "Запрос повторно открыт $1.\n\n[Изменений внесено]$2",
 	"importdump-section-comments": "Запросить комментарии",

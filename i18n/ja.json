@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Amire80",
 			"Buehl",
 			"Chqaz",
 			"Funa-enpitu",
@@ -66,6 +67,7 @@
 	"importdump-label-requested-date": "リクエストの日時:",
 	"importdump-label-requester": "申請者:",
 	"importdump-label-source": "ソース URL:",
+	"importdump-label-start-import": "インポートの開始",
 	"importdump-label-status": "状態:",
 	"importdump-label-status-updated-comment": "このリクエストに追加するオプションの追加コメント:",
 	"importdump-label-target": "目的のデータベース名:",
@@ -88,7 +90,7 @@
 	"importdump-notloggedin": "ログインしてウィキを申請してください。",
 	"importdump-private": "このリクエストは非公開としてマークされているため、表示する権限がありません。",
 	"importdump-request-edited": "リクエストは$1で再オープンされました。\n\n[変更が行われました]$2",
-	"importdump-request-edited-reason": "ソース:\n前の値:$1 \n新しい値:$2",
+	"importdump-request-edited-reason": "ソース:\n前の値: $1\n新しい値: $2",
 	"importdump-request-edited-source": "ソース:\n前の値: $1 \n新しい値: $2",
 	"importdump-request-edited-target": "ターゲット:\n前の値: $1 \n新しい値: $2",
 	"importdump-request-locked": "このリクエストはロックされています。編集したり、コメントを追加したりすることはできません。",
@@ -116,10 +118,12 @@
 	"log-action-filter-importdump": "操作の種類:",
 	"log-action-filter-importdump-interwiki": "Interwiki テーブルの変更",
 	"log-action-filter-importdump-request": "新しいリクエストが送信されました。",
+	"log-action-filter-importdump-started": "インポートが開始されました",
 	"log-action-filter-importdump-statusupdate": "リクエストが更新されました",
 	"log-action-filter-importdumpprivate": "操作の種類:",
 	"log-action-filter-importdumpprivate-interwiki": "Interwiki テーブルの変更",
 	"log-action-filter-importdumpprivate-request": "新しいリクエストが送信されました。",
+	"log-action-filter-importdumpprivate-started": "インポートが開始されました",
 	"log-action-filter-importdumpprivate-statusupdate": "リクエストが更新されました。",
 	"logentry-importdump-interwiki": "$1さんはダンプリクエスト $6 取り込みのためウィキ間リンクの '$4' を$5に{{GENDER:$2|追加}}しました。",
 	"logentry-importdump-request": "$1が$5で$4のインポートダンプをリクエストしました。",

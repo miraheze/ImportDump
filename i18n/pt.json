@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Amire80",
 			"Hamilton Abreu"
 		]
 	},
@@ -78,9 +79,9 @@
 	"importdump-notloggedin": "Desculpe, tem de <span class=\"plainlinks\">[$1 iniciar sessão]</span> antes de fazer um pedido de importação de cópia em ficheiro.",
 	"importdump-private": "Não tem permissão para ver este pedido porque ele está marcado como privado.",
 	"importdump-request-edited": "Pedido editado por $1.\n\n[Alterações realizadas]$2",
-	"importdump-request-edited-reason": "\nMotivo:\nValor anterior: $1 \nNovo valor: $2",
-	"importdump-request-edited-source": "\nFonte:\nValor anterior: $1 \nNovo valor: $2",
-	"importdump-request-edited-target": "\nDestino:\nValor anterior: $1 \nNovo valor: $2",
+	"importdump-request-edited-reason": "Motivo:\nValor anterior: $1 \nNovo valor: $2",
+	"importdump-request-edited-source": "Fonte:\nValor anterior: $1 \nNovo valor: $2",
+	"importdump-request-edited-target": "Destino:\nValor anterior: $1 \nNovo valor: $2",
 	"importdump-request-locked": "Este pedido foi trancado. Ele não pode ser editado e não lhe pode ser acrescentado nenhum comentário.",
 	"importdump-request-reopened": "Pedido reaberto por $1.\n\n[Alterações realizadas]$2",
 	"importdump-section-comments": "Comentários do pedido",

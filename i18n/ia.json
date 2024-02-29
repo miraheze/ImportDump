@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Amire80",
 			"McDutchie"
 		]
 	},
@@ -77,9 +78,9 @@
 	"importdump-notloggedin": "Per favor aperi session pro requestar un importation.",
 	"importdump-private": "Tu non ha le permission de vider iste requesta perque illo es marcate como private.",
 	"importdump-request-edited": "Requesta modificate per $1.\n\n[Cambiamentos apportate]$2",
-	"importdump-request-edited-reason": "\nMotivo:\nPrevie valor: $1\nNove valor: $2",
-	"importdump-request-edited-source": "\nOrigine:\nPrevie valor: $1\nNove valor: $2",
-	"importdump-request-edited-target": "\nDestination:\nPrevie valor: $1\nNove valor: $2",
+	"importdump-request-edited-reason": "Motivo:\nPrevie valor: $1\nNove valor: $2",
+	"importdump-request-edited-source": "Origine:\nPrevie valor: $1\nNove valor: $2",
+	"importdump-request-edited-target": "Destination:\nPrevie valor: $1\nNove valor: $2",
 	"importdump-request-locked": "Iste requesta ha essite serrate. Illo non pote esser modificate, e non es possibile adder commentos a illo.",
 	"importdump-request-reopened": "Requesta reaperite per $1.\n\n[Cambiamentos apportate]$2",
 	"importdump-section-comments": "Commentos del requesta",

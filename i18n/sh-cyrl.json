@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Amire80",
 			"Vlad5250"
 		]
 	},
@@ -77,9 +78,9 @@
 	"importdump-notloggedin": "Молимо пријавите се да бисте затражили увоз.",
 	"importdump-private": "Немате допуштење да видите овај захтјев јер је означен као приватан.",
 	"importdump-request-edited": "$1 је уредио(ла) захтјев.\n\n[Направљене промјене]$2",
-	"importdump-request-edited-reason": "\nРазлог:\nПретходна вриједност: $1\nНова вриједност: $2",
-	"importdump-request-edited-source": "\nИзвор:\nПретходна вриједност: $1\nНова вриједност: $2",
-	"importdump-request-edited-target": "\nЦиљ:\nПретходна вриједност: $1\nНова вриједност: $2",
+	"importdump-request-edited-reason": "Разлог:\nПретходна вриједност: $1\nНова вриједност: $2",
+	"importdump-request-edited-source": "Извор:\nПретходна вриједност: $1\nНова вриједност: $2",
+	"importdump-request-edited-target": "Циљ:\nПретходна вриједност: $1\nНова вриједност: $2",
 	"importdump-request-locked": "Овај захтјев је закључан. Не може се уређивати, нити коментирати.",
 	"importdump-request-reopened": "$1 је поново отворио(ла) захтјев.\n\n[Направљене промјене]$2",
 	"importdump-section-comments": "Затражи коментаре",

@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Amire80",
 			"Vlad5250",
 			"Winston Sung"
 		]
@@ -79,9 +80,9 @@
 	"importdump-notloggedin": "Molimo prijavite se da biste zatražili uvoz.",
 	"importdump-private": "Nemate dozvolu za pregledanje ovog zahtjeva kao je označen kao privatan.",
 	"importdump-request-edited": "$1 je uredio(la) zahtjev.\n\n[Napravljene promjene]$2",
-	"importdump-request-edited-reason": "\nRazlog:\nPrethodna vrijednost: $1\nNova vrijednost: $2",
-	"importdump-request-edited-source": "\nIzvor:\nPrethodna vrijednost: $1\nNova vrijednost: $2",
-	"importdump-request-edited-target": "\nCilj:\nPrethodna vrijednost: $1\nNova vrijednost: $2",
+	"importdump-request-edited-reason": "Razlog:\nPrethodna vrijednost: $1\nNova vrijednost: $2",
+	"importdump-request-edited-source": "Izvor:\nPrethodna vrijednost: $1\nNova vrijednost: $2",
+	"importdump-request-edited-target": "Cilj:\nPrethodna vrijednost: $1\nNova vrijednost: $2",
 	"importdump-request-locked": "Ovaj zahtjev je zaključan. Ne može se uređivati, ​​niti komentirati.",
 	"importdump-request-reopened": "$1 je ponovo otvorio(la) zahtjev.\n\n[Napravljene promjene]$2",
 	"importdump-section-comments": "Komentari k zahtjevu",

@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Amire80",
 			"Evesiesta",
 			"GuoPC",
 			"Hehua",
@@ -85,9 +86,9 @@
 	"importdump-notloggedin": "请登录以申请导入。",
 	"importdump-private": "您没有权限查看此申请，因为它被标记为非公开。",
 	"importdump-request-edited": "由$1编辑的申请。\n\n[做出的更改]$2",
-	"importdump-request-edited-reason": "\n原因：\n之前的值：$1\n新的值：$2",
-	"importdump-request-edited-source": "\n来源：\n之前的值：$1 \n新的值：$2",
-	"importdump-request-edited-target": "\n目标：\n之前的值：$1\n新的值：$2",
+	"importdump-request-edited-reason": "原因：\n之前的值：$1\n新的值：$2",
+	"importdump-request-edited-source": "来源：\n之前的值：$1 \n新的值：$2",
+	"importdump-request-edited-target": "目标：\n之前的值：$1\n新的值：$2",
 	"importdump-request-locked": "此申请已锁定。它已无法被编辑和添加意见。",
 	"importdump-request-reopened": "由$1重开的申请。\n\n[做出的更改]$2",
 	"importdump-section-comments": "申请意见",
