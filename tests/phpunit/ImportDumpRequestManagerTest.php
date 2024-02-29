@@ -14,12 +14,6 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @coversDefaultClass \Miraheze\ImportDump\ImportDumpRequestManager
  */
 class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
-	protected function setUp(): void {
-		parent::setUp();
-
-		$this->tablesUsed[] = 'importdump_requests';
-	}
-
 	public function addDBData() {
 		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
 
