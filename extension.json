@@ -113,6 +113,9 @@
 				"PermissionManager",
 				"RepoGroup",
 				"UserFactory"
+			],
+			"optional_services": [
+				"CreateWikiHookRunner"
 			]
 		},
 		"RequestImportDumpQueue": {
