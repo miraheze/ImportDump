@@ -21,7 +21,9 @@ return [
 				$services->getConfigFactory()->makeConfig( 'ImportDump' )
 			),
 			$services->getUserFactory(),
-			$services->getUserGroupManagerFactory()
+			$services->getUserGroupManagerFactory(),
+			$services->has( 'CreateWikiHookRunner' ) ?
+				$services->get( 'CreateWikiHookRunner' ) : null
 		);
 	},
 	'ImportDumpHookRunner' => static function ( MediaWikiServices $services ): ImportDumpHookRunner {
