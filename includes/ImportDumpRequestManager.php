@@ -19,6 +19,7 @@ use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManagerFactory;
 use Message;
 use MessageLocalizer;
+use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\CreateWiki\RemoteWiki;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use RepoGroup;
@@ -51,6 +52,9 @@ class ImportDumpRequestManager {
 
 	/** @var ActorStoreFactory */
 	private $actorStoreFactory;
+
+	/** @var CreateWikiHookRunner|null */
+	private $createWikiHookRunner;
 
 	/** @var ILBFactory */
 	private $dbLoadBalancerFactory;
@@ -94,6 +98,7 @@ class ImportDumpRequestManager {
 	 * @param ServiceOptions $options
 	 * @param UserFactory $userFactory
 	 * @param UserGroupManagerFactory $userGroupManagerFactory
+	 * @param ?CreateWikiHookRunner $createWikiHookRunner
 	 */
 	public function __construct(
 		Config $config,
@@ -106,12 +111,14 @@ class ImportDumpRequestManager {
 		MessageLocalizer $messageLocalizer,
 		ServiceOptions $options,
 		UserFactory $userFactory,
-		UserGroupManagerFactory $userGroupManagerFactory
+		UserGroupManagerFactory $userGroupManagerFactory,
+		?CreateWikiHookRunner $createWikiHookRunner
 	) {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
 
 		$this->config = $config;
 		$this->actorStoreFactory = $actorStoreFactory;
+		$this->createWikiHookRunner = $createWikiHookRunner;
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->interwikiLookup = $interwikiLookup;
 		$this->jobQueueGroupFactory = $jobQueueGroupFactory;
@@ -582,12 +589,13 @@ class ImportDumpRequestManager {
 
 		if (
 			!ExtensionRegistry::getInstance()->isLoaded( 'CreateWiki' ) ||
-			!$this->config->get( 'CreateWikiUsePrivateWikis' )
+			!$this->config->get( 'CreateWikiUsePrivateWikis' ) ||
+			!$this->createWikiHookRunner
 		) {
 			return false;
 		}
 
-		$remoteWiki = new RemoteWiki( $this->getTarget() );
+		$remoteWiki = new RemoteWiki( $this->getTarget(), $this->createWikiHookRunner );
 		return (bool)$remoteWiki->isPrivate();
 	}
 
