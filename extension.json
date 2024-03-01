@@ -218,7 +218,7 @@
 		"echo-subscriptions-web-importdump-request-status-update": true
 	},
 	"RateLimits": {
-		"request-import-dump": {
+		"request-import": {
 			"user": [
 				5,
 				60
