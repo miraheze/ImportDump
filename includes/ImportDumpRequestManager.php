@@ -146,7 +146,7 @@ class ImportDumpRequestManager {
 		}
 
 		$this->row = $this->dbw->newSelectQueryBuilder()
-			->table( 'importdump_requests' )
+			->table( 'import_requests' )
 			->field( '*' )
 			->where( [ 'request_id' => $requestID ] )
 			->caller( __METHOD__ )
@@ -166,7 +166,7 @@ class ImportDumpRequestManager {
 	 */
 	public function addComment( string $comment, User $user ) {
 		$this->dbw->insert(
-			'importdump_request_comments',
+			'import_request_comments',
 			[
 				'request_id' => $this->ID,
 				'request_comment_text' => $comment,
@@ -275,7 +275,7 @@ class ImportDumpRequestManager {
 	 */
 	public function getComments(): array {
 		$res = $this->dbw->newSelectQueryBuilder()
-			->table( 'importdump_request_comments' )
+			->table( 'import_request_comments' )
 			->field( '*' )
 			->where( [ 'request_id' => $this->ID ] )
 			->orderBy( 'request_comment_timestamp', SelectQueryBuilder::SORT_DESC )
@@ -611,7 +611,7 @@ class ImportDumpRequestManager {
 	 */
 	public function setLocked( int $locked ) {
 		$this->dbw->update(
-			'importdump_requests',
+			'import_requests',
 			[
 				'request_locked' => $locked,
 			],
@@ -627,7 +627,7 @@ class ImportDumpRequestManager {
 	 */
 	public function setPrivate( int $private ) {
 		$this->dbw->update(
-			'importdump_requests',
+			'import_requests',
 			[
 				'request_private' => $private,
 			],
@@ -643,7 +643,7 @@ class ImportDumpRequestManager {
 	 */
 	public function setReason( string $reason ) {
 		$this->dbw->update(
-			'importdump_requests',
+			'import_requests',
 			[
 				'request_reason' => $reason,
 			],
@@ -659,7 +659,7 @@ class ImportDumpRequestManager {
 	 */
 	public function setSource( string $source ) {
 		$this->dbw->update(
-			'importdump_requests',
+			'import_requests',
 			[
 				'request_source' => $source,
 			],
@@ -675,7 +675,7 @@ class ImportDumpRequestManager {
 	 */
 	public function setStatus( string $status ) {
 		$this->dbw->update(
-			'importdump_requests',
+			'import_requests',
 			[
 				'request_status' => $status,
 			],
@@ -691,7 +691,7 @@ class ImportDumpRequestManager {
 	 */
 	public function setTarget( string $target ) {
 		$this->dbw->update(
-			'importdump_requests',
+			'import_requests',
 			[
 				'request_target' => $target,
 			],

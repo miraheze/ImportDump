@@ -18,7 +18,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
 
 		$this->db->insert(
-			'importdump_requests',
+			'import_requests',
 			[
 				'request_source' => 'https://importdumptest.com',
 				'request_target' => 'importdumptest',

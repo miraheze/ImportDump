@@ -122,7 +122,7 @@ class ImportDumpRequestQueuePager extends TablePager
 	public function getQueryInfo() {
 		$info = [
 			'tables' => [
-				'importdump_requests',
+				'import_requests',
 			],
 			'fields' => [
 				'request_actor',

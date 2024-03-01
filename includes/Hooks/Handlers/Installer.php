@@ -14,6 +14,6 @@ class Installer implements LoadExtensionSchemaUpdatesHook {
 		$dbType = $updater->getDB()->getType();
 		$dir = __DIR__ . '/../../../sql';
 
-		$updater->addExtensionTable( 'importdump_requests', "$dir/$dbType/tables-generated.sql" );
+		$updater->addExtensionTable( 'import_requests', "$dir/$dbType/tables-generated.sql" );
 	}
 }
