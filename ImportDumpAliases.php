@@ -3,6 +3,6 @@
 $specialPageAliases = [];
 
 $specialPageAliases['en'] = [
-	'RequestImportDump' => [ 'RequestImportDump' ],
-	'RequestImportDumpQueue' => [ 'RequestImportDumpQueue' ],
+	'RequestImportDump' => [ 'RequestImport', 'RequestImportDump' ],
+	'RequestImportDumpQueue' => [ 'RequestImportQueue', 'RequestImportDumpQueue' ],
 ];
