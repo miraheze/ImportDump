@@ -17,19 +17,19 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 	public function addDBData() {
 		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
 
-		$this->db->insert(
-			'importdump_requests',
-			[
+		$this->db->newInsertQueryBuilder()
+			->insertInto( 'importdump_requests' )
+			->ignore()
+			->rows( [
 				'request_source' => 'https://importdumptest.com',
 				'request_target' => 'importdumptest',
 				'request_reason' => 'test',
 				'request_status' => 'pending',
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
 				'request_timestamp' => $this->db->timestamp(),
-			],
-			__METHOD__,
-			[ 'IGNORE' ]
-		);
+			] )
+			->caller( __METHOD__ )
+			->execute();
 	}
 
 	private function getImportDumpRequestManager(): ImportDumpRequestManager {
