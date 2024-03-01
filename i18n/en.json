@@ -135,7 +135,7 @@
 	"requestimportdumpqueue-header": "Search import requests",
 	"requestimportdumpqueue-header-info": "You can use this form to search through import requests. Use the parameters below to refine your search.",
 	"right-handle-import-dump-interwiki": "Handle remote interwiki prefixes for import requests",
-	"right-handle-import-dump-requests": "Handle user requests to import a dump",
+	"right-handle-import-dump-requests": "Handle user import requests",
 	"right-request-import-dump": "Request imports",
 	"right-view-private-import-dump-requests": "View private import requests"
 }
