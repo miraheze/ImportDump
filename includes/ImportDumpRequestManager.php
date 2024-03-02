@@ -165,16 +165,16 @@ class ImportDumpRequestManager {
 	 * @param User $user
 	 */
 	public function addComment( string $comment, User $user ) {
-		$this->dbw->insert(
-			'importdump_request_comments',
-			[
+		$this->dbw->newInsertQueryBuilder()
+			->insertInto( 'importdump_request_comments' )
+			->rows( [
 				'request_id' => $this->ID,
 				'request_comment_text' => $comment,
 				'request_comment_timestamp' => $this->dbw->timestamp(),
 				'request_comment_actor' => $user->getActorId(),
-			],
-			__METHOD__
-		);
+			] )
+			->caller( __METHOD__ )
+			->execute();
 
 		if (
 			ExtensionRegistry::getInstance()->isLoaded( 'Echo' ) &&
@@ -318,18 +318,18 @@ class ImportDumpRequestManager {
 			$this->getTarget()
 		)->getConnection( DB_PRIMARY, [], $this->getTarget() );
 
-		$dbw->insert(
-			'interwiki',
-			[
+		$dbw->newInsertQueryBuilder()
+			->insertInto( 'interwiki' )
+			->ignore()
+			->rows( [
 				'iw_prefix' => $prefix,
 				'iw_url' => $url,
 				'iw_api' => '',
 				'iw_local' => 0,
 				'iw_trans' => 0,
-			],
-			__METHOD__,
-			[ 'IGNORE' ]
-		);
+			] )
+			->caller( __METHOD__ )
+			->execute();
 
 		if ( $dbw->affectedRows() === 0 ) {
 			return false;
