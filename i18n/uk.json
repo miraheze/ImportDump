@@ -8,7 +8,7 @@
 			"Пан Хаунд"
 		]
 	},
-	"action-handle-import-interwiki": "обробляти інтервікі дампу імпорту",
+	"action-handle-import-request-interwiki": "обробляти інтервікі дампу імпорту",
 	"action-handle-import-requests": "обробляти запити користувача на імпорт",
 	"action-request-import": "запит імпортів",
 	"action-view-private-import-requests": "перегляд приватних запитів на імпорт",

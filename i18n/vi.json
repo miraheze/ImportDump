@@ -4,7 +4,7 @@
 			"Pisceskaze"
 		]
 	},
-	"action-handle-import-interwiki": "xử lý liên kết liên wiki trong quá trình nhập",
+	"action-handle-import-request-interwiki": "xử lý liên kết liên wiki trong quá trình nhập",
 	"action-handle-import-requests": "xử lý yêu cầu nhập của người dùng",
 	"action-request-import": "yêu cầu nhập",
 	"action-view-private-import-requests": "xem yêu cầu nhập riêng tư",
@@ -133,7 +133,7 @@
 	"requestimportdumpqueue": "Hàng đợi yêu cầu nhập",
 	"requestimportdumpqueue-header": "Tìm yêu cầu nhập",
 	"requestimportdumpqueue-header-info": "Bạn có thể sử dụng biểu mẫu này để tìm kiếm các yêu cầu nhập kết xuất. Sử dụng các tham số dưới đây để tinh chỉnh tìm kiếm của bạn.",
-	"right-handle-import-interwiki": "Xử lý liên kết liên wiki trong quá trình nhập kết xuất",
+	"right-handle-import-request-interwiki": "Xử lý liên kết liên wiki trong quá trình nhập kết xuất",
 	"right-handle-import-requests": "Xử lý yêu cầu nhập kết xuất của người dùng",
 	"right-request-import": "Yêu cầu nhập kết xuất",
 	"right-view-private-import-requests": "Xem yêu cầu nhập riêng tư"

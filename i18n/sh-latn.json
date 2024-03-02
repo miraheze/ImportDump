@@ -6,7 +6,7 @@
 			"Winston Sung"
 		]
 	},
-	"action-handle-import-interwiki": "rukovate međuvikije za skladišne izvadke uvoza",
+	"action-handle-import-request-interwiki": "rukovate međuvikije za skladišne izvadke uvoza",
 	"action-handle-import-requests": "rukovate korisničke zahtjeve za uvoz",
 	"action-request-import": "zahtjevate uvoz",
 	"action-view-private-import-requests": "gledate privatne zahtjeve za uvoz",
@@ -121,7 +121,7 @@
 	"logentry-importdumpprivate-statusupdate": "$1 promijenio(-la) je status privatnog zahtjeva skladišnog izvadka uvoza $4 na '$5'.",
 	"requestimportdump": "Zahtjev za uvoz",
 	"requestimportdumpqueue": "Red zahtjeva za uvoz",
-	"right-handle-import-interwiki": "Rukovanje međuvikija za skladišne izvadke uvoza",
+	"right-handle-import-request-interwiki": "Rukovanje međuvikija za skladišne izvadke uvoza",
 	"right-handle-import-requests": "Rukovanje korisničkih zahtjeva za uvoze",
 	"right-request-import": "Zahtjev za uvoz",
 	"right-view-private-import-requests": "Pregledanje privatnih zahtjeva za uvoz"

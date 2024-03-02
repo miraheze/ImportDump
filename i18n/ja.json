@@ -15,7 +15,7 @@
 			"背番号4のエース"
 		]
 	},
-	"action-handle-import-interwiki": "インポートダンプのインターウィキの処理",
+	"action-handle-import-request-interwiki": "インポートダンプのインターウィキの処理",
 	"action-handle-import-requests": "利用者取り込みリクエストの処理",
 	"action-request-import": "取り込みのリクエスト",
 	"action-view-private-import-requests": "非公開の取り込みリクエストの閲覧",
@@ -133,7 +133,7 @@
 	"logentry-importdumpprivate-statusupdate": "$1 が非公開ダンプ取り込みリクエスト $4 のステータスを '$5' に{{GENDER:$2|更新}}しました。",
 	"requestimportdump": "取り込みをリクエストする",
 	"requestimportdumpqueue": "取り込みリクエストキュー",
-	"right-handle-import-interwiki": "インポート ダンプのインターウィキの処理",
+	"right-handle-import-request-interwiki": "インポート ダンプのインターウィキの処理",
 	"right-handle-import-requests": "利用者によるインポートダンプリクエストを処理",
 	"right-request-import": "取り込みをリクエスト",
 	"right-view-private-import-requests": "非公開の取り込みリクエストを閲覧"

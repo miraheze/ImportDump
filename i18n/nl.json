@@ -6,7 +6,7 @@
 			"McDutchie"
 		]
 	},
-	"action-handle-import-interwiki": "importdumps tussen wiki's af te handelen",
+	"action-handle-import-request-interwiki": "importdumps tussen wiki's af te handelen",
 	"action-handle-import-requests": "importaanvragen van gebruikers af te handelen",
 	"action-request-import": "importen aan te vragen",
 	"action-view-private-import-requests": "privé-importaanvragen te bekijken",
@@ -120,7 +120,7 @@
 	"logentry-importdumpprivate-statusupdate": "$1 heeft de status van het privé-importdumpverzoek $4 bijgewerkt naar '$5'.",
 	"requestimportdump": "Import aanvragen",
 	"requestimportdumpqueue": "Wachtrij importaanvragen",
-	"right-handle-import-interwiki": "Importdumps tussen wiki's afhandelen",
+	"right-handle-import-request-interwiki": "Importdumps tussen wiki's afhandelen",
 	"right-handle-import-requests": "Aanvragen voor importdumps van gebruikers afhandelen",
 	"right-request-import": "Importen aanvragen",
 	"right-view-private-import-requests": "Privé-importaanvragen bekijken"

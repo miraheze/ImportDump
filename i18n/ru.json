@@ -8,7 +8,7 @@
 			"Артём 13327"
 		]
 	},
-	"action-handle-import-interwiki": "обработать импорт дампа interwiki",
+	"action-handle-import-request-interwiki": "обработать импорт дампа interwiki",
 	"action-handle-import-requests": "обработать запрос на импорт пользователей",
 	"action-request-import": "запросы импорта",
 	"action-view-private-import-requests": "просмотр закрытых запросов на импорт",
@@ -122,7 +122,7 @@
 	"logentry-importdumpprivate-statusupdate": "$1 {{GENDER:$1|обновил|обновила}} состояние закрытого запроса импорта дампа $4 на '$5'.",
 	"requestimportdump": "Запрос на импорт",
 	"requestimportdumpqueue": "Очередь запросов на импорт",
-	"right-handle-import-interwiki": "Обработать импорт дампа interwiki",
+	"right-handle-import-request-interwiki": "Обработать импорт дампа interwiki",
 	"right-handle-import-requests": "Обработать запрос на импорт пользователей",
 	"right-request-import": "Запросы импорта",
 	"right-view-private-import-requests": "Просмотр закрытых запросов на импорт"

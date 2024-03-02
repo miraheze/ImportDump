@@ -5,7 +5,7 @@
 			"Vlad5250"
 		]
 	},
-	"action-handle-import-interwiki": "руковате међувикије за складишне извадке увоза",
+	"action-handle-import-request-interwiki": "руковате међувикије за складишне извадке увоза",
 	"action-handle-import-requests": "руковате корисничке захтјеве за увоз",
 	"action-request-import": "захтјевате увоз",
 	"action-view-private-import-requests": "гледате приватне захтјеве за увоз",
@@ -119,7 +119,7 @@
 	"logentry-importdumpprivate-statusupdate": "$1 је промијенио(ла) статус захтјева приватног складишног извадка увоза $4 за у „$5“.",
 	"requestimportdump": "Захтјев за увоз",
 	"requestimportdumpqueue": "Ред захтјева за увоз",
-	"right-handle-import-interwiki": "Руковање међувикија за складишне извадке увоза",
+	"right-handle-import-request-interwiki": "Руковање међувикија за складишне извадке увоза",
 	"right-handle-import-requests": "Руковање корисничких захтјева за увоз",
 	"right-request-import": "Захтјев за увоз",
 	"right-view-private-import-requests": "Прегледање приватних захтјева за увоз"

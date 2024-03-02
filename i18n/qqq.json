@@ -8,7 +8,7 @@
 			"Verdy p"
 		]
 	},
-	"action-handle-import-interwiki": "{{doc-action|handle-import-interwiki}}",
+	"action-handle-import-request-interwiki": "{{doc-action|handle-import-request-interwiki}}",
 	"action-handle-import-requests": "{{doc-action|handle-import-requests}}",
 	"action-request-import": "{{doc-action|request-import}}",
 	"action-view-private-import-requests": "{{doc-action|view-private-import-requests}}",
@@ -138,7 +138,7 @@
 	"requestimportdumpqueue": "{{doc-special}}",
 	"requestimportdumpqueue-header": "Legend header for special page",
 	"requestimportdumpqueue-header-info": "Information under legend header.",
-	"right-handle-import-interwiki": "{{doc-right|handle-import-interwiki}}",
+	"right-handle-import-request-interwiki": "{{doc-right|handle-import-request-interwiki}}",
 	"right-handle-import-requests": "{{doc-right|handle-import-requests}}",
 	"right-request-import": "{{doc-right|request-import}}",
 	"right-view-private-import-requests": "{{doc-right|view-private-import-requests}}"

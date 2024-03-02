@@ -51,7 +51,7 @@
 		}
 	},
 	"AvailableRights": [
-		"handle-import-interwiki",
+		"handle-import-request-interwiki",
 		"handle-import-requests",
 		"request-import",
 		"view-private-import-requests"

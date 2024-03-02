@@ -8,7 +8,7 @@
 			"Wladek92"
 		]
 	},
-	"action-handle-import-interwiki": "gérer l’import de données entre wikis",
+	"action-handle-import-request-interwiki": "gérer l’import de données entre wikis",
 	"action-handle-import-requests": "gérer les demandes d’import de données des utilisateurs",
 	"action-request-import": "demander des imports de données",
 	"action-view-private-import-requests": "consulter les demandes privées d’import de données",
@@ -125,7 +125,7 @@
 	"logentry-importdumpprivate-statusupdate": "$1 a mis à jour l’état de la demande privée d’import de données $4 à « $5 ».",
 	"requestimportdump": "Demander un import de données",
 	"requestimportdumpqueue": "File d’attente des demandes d’import",
-	"right-handle-import-interwiki": "Gérer l’importation de données entre wikis",
+	"right-handle-import-request-interwiki": "Gérer l’importation de données entre wikis",
 	"right-handle-import-requests": "Gérer les demandes d’import de données des utilisateurs",
 	"right-request-import": "Demander des imports de données",
 	"right-view-private-import-requests": "Consulter les demandes privées d’import de données"

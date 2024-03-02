@@ -9,7 +9,7 @@
 			"铁桶"
 		]
 	},
-	"action-handle-import-interwiki": "處理跨 wiki 匯入傾印",
+	"action-handle-import-request-interwiki": "處理跨 wiki 匯入傾印",
 	"action-handle-import-requests": "處理使用者匯入申請",
 	"action-request-import": "申請匯入",
 	"action-view-private-import-requests": "檢視非公開匯入申請",
@@ -139,7 +139,7 @@
 	"requestimportdumpqueue": "匯入申請佇列",
 	"requestimportdumpqueue-header": "搜尋匯入請求",
 	"requestimportdumpqueue-header-info": "您可以使用此表單來搜尋匯入請求。可使用以下參數來讓您的搜尋更精準。",
-	"right-handle-import-interwiki": "處理跨 wiki 匯入傾印",
+	"right-handle-import-request-interwiki": "處理跨 wiki 匯入傾印",
 	"right-handle-import-requests": "處理使用者匯入傾印申請",
 	"right-request-import": "申請匯入",
 	"right-view-private-import-requests": "查看非公開匯入申請"

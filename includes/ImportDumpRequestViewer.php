@@ -339,7 +339,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 			if (
 				!$this->importDumpRequestManager->getInterwikiPrefix() &&
-				$this->permissionManager->userHasRight( $user, 'handle-import-interwiki' )
+				$this->permissionManager->userHasRight( $user, 'handle-import-request-interwiki' )
 			) {
 				$source = $this->importDumpRequestManager->getSource();
 				$target = $this->importDumpRequestManager->getTarget();

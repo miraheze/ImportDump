@@ -5,7 +5,7 @@
 			"YaronSh"
 		]
 	},
-	"action-handle-import-interwiki": "לטפל בקידומות בינוויקי מרוחקות עבור בקשות יבוא",
+	"action-handle-import-request-interwiki": "לטפל בקידומות בינוויקי מרוחקות עבור בקשות יבוא",
 	"action-handle-import-requests": "לטפל בבקשות יבוא של משתמשים",
 	"action-request-import": "לבקש פעולות יבוא",
 	"action-view-private-import-requests": "לצפות בבקשות יבוא פרטיות",
@@ -134,7 +134,7 @@
 	"requestimportdumpqueue": "תור בקשות יבוא",
 	"requestimportdumpqueue-header": "חיפוש בקשות יבוא",
 	"requestimportdumpqueue-header-info": "אפשר להשתמש בטופס הזה כדי לחפש בקשות יבוא. הפרמטרים למטה מכווננים את החיפוש שלך.",
-	"right-handle-import-interwiki": "טיפול בקידומות בינוויקי מרוחקות עבור בקשות יבוא",
+	"right-handle-import-request-interwiki": "טיפול בקידומות בינוויקי מרוחקות עבור בקשות יבוא",
 	"right-handle-import-requests": "טיפול בבקשות יבוא של משתמשים",
 	"right-request-import": "לבקש יבוא",
 	"right-view-private-import-requests": "צפייה הבקשות יבוא פרטיות"

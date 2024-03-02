@@ -7,7 +7,7 @@
 			"Sebastian Wallroth"
 		]
 	},
-	"action-handle-import-interwiki": "Import-Dump-Interwiki bearbeiten",
+	"action-handle-import-request-interwiki": "Import-Dump-Interwiki bearbeiten",
 	"action-handle-import-requests": "Benutzerimportanfragen bearbeiten",
 	"action-request-import": "Importe anfordern",
 	"action-view-private-import-requests": "private Importanträge anzeigen",
@@ -121,7 +121,7 @@
 	"logentry-importdumpprivate-statusupdate": "$1 hat den Status der privaten Import-Dump-Anfrage $4 auf '$5' aktualisiert.",
 	"requestimportdump": "Import anfordern",
 	"requestimportdumpqueue": "Warteschlange für Importanträge",
-	"right-handle-import-interwiki": "Import-Dump interwiki bearbeiten",
+	"right-handle-import-request-interwiki": "Import-Dump interwiki bearbeiten",
 	"right-handle-import-requests": "Bearbeitung von Benutzer-Import-Dump-Anfragen",
 	"right-request-import": "Importe anfordern",
 	"right-view-private-import-requests": "Private Importanträge anzeigen"

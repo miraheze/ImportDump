@@ -5,7 +5,7 @@
 			"Hamilton Abreu"
 		]
 	},
-	"action-handle-import-interwiki": "tratar de importações de cópias em ficheiro entre wikis",
+	"action-handle-import-request-interwiki": "tratar de importações de cópias em ficheiro entre wikis",
 	"action-handle-import-requests": "tratar de pedidos dos utilizadores para importação de cópias em ficheiro",
 	"action-request-import": "pedir a importação de cópias em ficheiro",
 	"action-view-private-import-requests": "ver pedidos privados de importação de cópias em ficheiro",
@@ -120,7 +120,7 @@
 	"logentry-importdumpprivate-statusupdate": "$1 atualizou o estado do pedido privado de importação de cópia em ficheiro $4 para '$5'.",
 	"requestimportdump": "Pedir importação de cópia em ficheiro",
 	"requestimportdumpqueue": "Fila de espera de pedidos de importação de cópia em ficheiro",
-	"right-handle-import-interwiki": "Tratar de importações de cópias em ficheiro entre wikis",
+	"right-handle-import-request-interwiki": "Tratar de importações de cópias em ficheiro entre wikis",
 	"right-handle-import-requests": "Tratar de pedidos dos utilizadores para importação de cópias em ficheiro",
 	"right-request-import": "Pedir importação de cópias em ficheiro",
 	"right-view-private-import-requests": "Ver pedidos privados de importação de cópias em ficheiro"

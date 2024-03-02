@@ -12,7 +12,7 @@
 			"阿南之人"
 		]
 	},
-	"action-handle-import-interwiki": "处理跨wiki导入转储",
+	"action-handle-import-request-interwiki": "处理跨wiki导入转储",
 	"action-handle-import-requests": "处理用户导入申请",
 	"action-request-import": "申请导入",
 	"action-view-private-import-requests": "查看非公开导入申请",
@@ -127,7 +127,7 @@
 	"logentry-importdumpprivate-statusupdate": "$1将非公开导入转储申请$4的状态更新为“$5”。",
 	"requestimportdump": "申请导入",
 	"requestimportdumpqueue": "导入申请队列",
-	"right-handle-import-interwiki": "处理跨wiki导入转储",
+	"right-handle-import-request-interwiki": "处理跨wiki导入转储",
 	"right-handle-import-requests": "处理用户导入转储申请",
 	"right-request-import": "申请导入",
 	"right-view-private-import-requests": "查看非公开导入申请"

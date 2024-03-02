@@ -5,7 +5,7 @@
 			"McDutchie"
 		]
 	},
-	"action-handle-import-interwiki": "gerer importationes de datos inter wikis",
+	"action-handle-import-request-interwiki": "gerer importationes de datos inter wikis",
 	"action-handle-import-requests": "gerer requestas de usatores concernente le importation",
 	"action-request-import": "requestar importationes",
 	"action-view-private-import-requests": "vider requestas private de importation",
@@ -119,7 +119,7 @@
 	"logentry-importdumpprivate-statusupdate": "$1 ha cambiate le stato del requesta private de importation de datos $4 a '$5'.",
 	"requestimportdump": "Requestar importation",
 	"requestimportdumpqueue": "Cauda de requestas de importation",
-	"right-handle-import-interwiki": "Gerer importationes de datos inter wikis",
+	"right-handle-import-request-interwiki": "Gerer importationes de datos inter wikis",
 	"right-handle-import-requests": "Gerer requestas de usatores concernente le importation de datos",
 	"right-request-import": "Requestar importationes",
 	"right-view-private-import-requests": "Vider requestas private de importation"

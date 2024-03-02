@@ -6,7 +6,7 @@
 			"Upwinxp"
 		]
 	},
-	"action-handle-import-interwiki": "upravljanje uvoza izpisov med vikiji",
+	"action-handle-import-request-interwiki": "upravljanje uvoza izpisov med vikiji",
 	"action-handle-import-requests": "obravnavo prošenj uporabnikov za uvoz",
 	"action-request-import": "zaprositev za uvoz",
 	"action-view-private-import-requests": "ogledovanje zasebnih prošenj za uvoz",
@@ -125,7 +125,7 @@
 	"logentry-importdumpprivate-statusupdate": "$1 je posodobil_a stanje zasebne prošnje $4 za uvoz izpisa $4 v »$5«.",
 	"requestimportdump": "Prošnja za uvoz",
 	"requestimportdumpqueue": "Čakalna vrsta prošenj za uvoz",
-	"right-handle-import-interwiki": "Obravnava uvoza izpisa med vikiji",
+	"right-handle-import-request-interwiki": "Obravnava uvoza izpisa med vikiji",
 	"right-handle-import-requests": "Obravnava uporabniških prošenj za uvoz izpisa",
 	"right-request-import": "Zaprositev za uvoz",
 	"right-view-private-import-requests": "Ogledovanje zasebnih prošenj za uvoz"

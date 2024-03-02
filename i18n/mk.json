@@ -6,7 +6,7 @@
 			"Vlad5250"
 		]
 	},
-	"action-handle-import-interwiki": "работа со меѓувики за складишни извадоци на увози",
+	"action-handle-import-request-interwiki": "работа со меѓувики за складишни извадоци на увози",
 	"action-handle-import-requests": "работа со кориснички барања за увоз",
 	"action-request-import": "барање за увоз",
 	"action-view-private-import-requests": "гледање на приватни барања за увоз",
@@ -136,7 +136,7 @@
 	"requestimportdumpqueue": "Редица на барања за увоз",
 	"requestimportdumpqueue-header": "Пребарај барања за увоз",
 	"requestimportdumpqueue-header-info": "Со овој образец можете да увезувате барања. Послужете се со параметрите подолу за да го уточните пребарувањето.",
-	"right-handle-import-interwiki": "Работа со меѓувики за складишни извадоци на увози",
+	"right-handle-import-request-interwiki": "Работа со меѓувики за складишни извадоци на увози",
 	"right-handle-import-requests": "Работа со кориснички барања за складишни извадоци на увози",
 	"right-request-import": "Барање на увози",
 	"right-view-private-import-requests": "Преглед на приватни барања за увоз"

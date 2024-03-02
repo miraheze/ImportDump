@@ -9,7 +9,7 @@
 			"OriginReboot"
 		]
 	},
-	"action-handle-import-interwiki": "manejar volcado de importación interwiki",
+	"action-handle-import-request-interwiki": "manejar volcado de importación interwiki",
 	"action-handle-import-requests": "manejar solicitudes de volcado de importación de usuarios",
 	"action-request-import": "solicitar volcados de importación",
 	"action-view-private-import-requests": "ver solicitudes de volcado de importación privadas",
