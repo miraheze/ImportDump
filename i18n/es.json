@@ -9,10 +9,10 @@
 			"OriginReboot"
 		]
 	},
-	"action-handle-import-dump-interwiki": "manejar volcado de importación interwiki",
-	"action-handle-import-dump-requests": "manejar solicitudes de volcado de importación de usuarios",
-	"action-request-import-dump": "solicitar volcados de importación",
-	"action-view-private-import-dump-requests": "ver solicitudes de volcado de importación privadas",
+	"action-handle-import-interwiki": "manejar volcado de importación interwiki",
+	"action-handle-import-requests": "manejar solicitudes de volcado de importación de usuarios",
+	"action-request-import": "solicitar volcados de importación",
+	"action-view-private-import-requests": "ver solicitudes de volcado de importación privadas",
 	"echo-category-title-importdump-new-request": "Nueva solicitud de volcado de importación",
 	"echo-category-title-importdump-request-comment": "Comentario añadido a una solicitud de volcado de importación",
 	"echo-category-title-importdump-request-status-update": "Estado actualizado para una solicitud de volcado de importación",

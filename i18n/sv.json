@@ -4,9 +4,9 @@
 			"Sabelöga"
 		]
 	},
-	"action-handle-import-dump-requests": "hantera importeringsbegäran från användare",
-	"action-request-import-dump": "begära att importera dumpar",
-	"action-view-private-import-dump-requests": "visa begäran att importera dumpar",
+	"action-handle-import-requests": "hantera importeringsbegäran från användare",
+	"action-request-import": "begära att importera dumpar",
+	"action-view-private-import-requests": "visa begäran att importera dumpar",
 	"importdump-label-add-comment": "Lägg till kommentar",
 	"importdump-label-all": "Alla",
 	"importdump-label-comment": "Kommentera:",

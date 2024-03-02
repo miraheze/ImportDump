@@ -8,10 +8,10 @@
 			"Пан Хаунд"
 		]
 	},
-	"action-handle-import-dump-interwiki": "обробляти інтервікі дампу імпорту",
-	"action-handle-import-dump-requests": "обробляти запити користувача на імпорт",
-	"action-request-import-dump": "запит імпортів",
-	"action-view-private-import-dump-requests": "перегляд приватних запитів на імпорт",
+	"action-handle-import-interwiki": "обробляти інтервікі дампу імпорту",
+	"action-handle-import-requests": "обробляти запити користувача на імпорт",
+	"action-request-import": "запит імпортів",
+	"action-view-private-import-requests": "перегляд приватних запитів на імпорт",
 	"echo-category-title-importdump-new-request": "Новий запит на імпорт дампа",
 	"echo-category-title-importdump-request-comment": "Додано коментар до запиту імпорту дампа",
 	"echo-category-title-importdump-request-status-update": "Оновлено статус для запиту на імпорт дампа",

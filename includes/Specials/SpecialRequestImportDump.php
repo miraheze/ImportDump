@@ -66,7 +66,7 @@ class SpecialRequestImportDump extends FormSpecialPage
 		UserFactory $userFactory,
 		?CreateWikiHookRunner $createWikiHookRunner
 	) {
-		parent::__construct( 'RequestImportDump', 'request-import-dump' );
+		parent::__construct( 'RequestImportDump', 'request-import' );
 
 		$this->createWikiHookRunner = $createWikiHookRunner;
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
@@ -370,10 +370,10 @@ class SpecialRequestImportDump extends FormSpecialPage
 
 		foreach ( $notifiedUsers as $receiver ) {
 			if (
-				!$receiver->isAllowed( 'handle-import-dump-requests' ) ||
+				!$receiver->isAllowed( 'handle-import-requests' ) ||
 				(
 					$this->getLogType( $target ) === 'importdumpprivate' &&
-					!$receiver->isAllowed( 'view-private-import-dump-requests' )
+					!$receiver->isAllowed( 'view-private-import-requests' )
 				)
 			) {
 				continue;
@@ -431,7 +431,7 @@ class SpecialRequestImportDump extends FormSpecialPage
 		if (
 			$block && (
 				$user->isBlockedFromUpload() ||
-				$block->appliesToRight( 'request-import-dump' )
+				$block->appliesToRight( 'request-import' )
 			)
 		) {
 			throw new UserBlockedError( $block );

@@ -47,14 +47,14 @@
 	},
 	"GroupPermissions": {
 		"user": {
-			"request-import-dump": true
+			"request-import": true
 		}
 	},
 	"AvailableRights": [
-		"handle-import-dump-interwiki",
-		"handle-import-dump-requests",
-		"request-import-dump",
-		"view-private-import-dump-requests"
+		"handle-import-interwiki",
+		"handle-import-requests",
+		"request-import",
+		"view-private-import-requests"
 	],
 	"LogActionsHandlers": {
 		"importdump/*": "LogFormatter",
@@ -73,7 +73,7 @@
 		"importdumpprivate"
 	],
 	"LogRestrictions": {
-		"importdumpprivate": "view-private-import-dump-requests"
+		"importdumpprivate": "view-private-import-requests"
 	},
 	"ActionFilteredLogs": {
 		"importdump": {

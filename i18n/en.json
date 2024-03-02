@@ -4,10 +4,10 @@
 			"Universal Omega"
 		]
 	},
-	"action-handle-import-dump-interwiki": "handle remote interwiki prefixes for import requests",
-	"action-handle-import-dump-requests": "handle user import requests",
-	"action-request-import-dump": "request imports",
-	"action-view-private-import-dump-requests": "view private import requests",
+	"action-handle-import-interwiki": "handle remote interwiki prefixes for import requests",
+	"action-handle-import-requests": "handle user import requests",
+	"action-request-import": "request imports",
+	"action-view-private-import-requests": "view private import requests",
 	"echo-category-title-importdump-import-failed": "Import request failed",
 	"echo-category-title-importdump-new-request": "New import request",
 	"echo-category-title-importdump-request-comment": "Comment added to an import request",
@@ -111,7 +111,7 @@
 	"importdump-usergroups-none": "none",
 	"importdumpprivate-log-header": "This is a log of all import requests and status updates for requests with targets that are private wikis.",
 	"importdumpprivate-log-name": "Import requests private log",
-	"ipb-action-request-import-dump": "Requesting imports",
+	"ipb-action-request-import": "Requesting imports",
 	"log-action-filter-importdump": "Type of action:",
 	"log-action-filter-importdump-interwiki": "Interwiki table modifications",
 	"log-action-filter-importdump-request": "New requests submitted",
@@ -134,8 +134,8 @@
 	"requestimportdumpqueue": "Import requests queue",
 	"requestimportdumpqueue-header": "Search import requests",
 	"requestimportdumpqueue-header-info": "You can use this form to search through import requests. Use the parameters below to refine your search.",
-	"right-handle-import-dump-interwiki": "Handle remote interwiki prefixes for import requests",
-	"right-handle-import-dump-requests": "Handle user import requests",
-	"right-request-import-dump": "Request imports",
-	"right-view-private-import-dump-requests": "View private import requests"
+	"right-handle-import-interwiki": "Handle remote interwiki prefixes for import requests",
+	"right-handle-import-requests": "Handle user import requests",
+	"right-request-import": "Request imports",
+	"right-view-private-import-requests": "View private import requests"
 }

@@ -8,10 +8,10 @@
 			"Verdy p"
 		]
 	},
-	"action-handle-import-dump-interwiki": "{{doc-action|handle-import-dump-interwiki}}",
-	"action-handle-import-dump-requests": "{{doc-action|handle-import-dump-requests}}",
-	"action-request-import-dump": "{{doc-action|request-import-dump}}",
-	"action-view-private-import-dump-requests": "{{doc-action|view-private-import-dump-requests}}",
+	"action-handle-import-interwiki": "{{doc-action|handle-import-interwiki}}",
+	"action-handle-import-requests": "{{doc-action|handle-import-requests}}",
+	"action-request-import": "{{doc-action|request-import}}",
+	"action-view-private-import-requests": "{{doc-action|view-private-import-requests}}",
 	"echo-category-title-importdump-import-failed": "Echo category title for {{msg-mw|echo-category-title-importdump-import-failed}}.",
 	"echo-category-title-importdump-new-request": "Echo category title for {{msg-mw|echo-category-title-importdump-new-request}}.",
 	"echo-category-title-importdump-request-comment": "Echo category title for {{msg-mw|echo-category-title-importdump-request-comment}}.",
@@ -115,7 +115,7 @@
 	"importdump-usergroups-none": "Displayed value if the requester has no user groups on the target wiki.",
 	"importdumpprivate-log-header": "Header for the ImportDump private log.",
 	"importdumpprivate-log-name": "{{doc-logpage}}",
-	"ipb-action-request-import-dump": "The label for the action select option on [[Special:Block]] to block a user from requesting import dumps.",
+	"ipb-action-request-import": "The label for the action select option on [[Special:Block]] to block a user from requesting import dumps.",
 	"log-action-filter-importdump": "{{doc-log-action-filter-type|importdump}}\n{{identical|Type of action}}\n{{related|Log-action-filter}}",
 	"log-action-filter-importdump-interwiki": "{{doc-log-action-filter-action|importdump|interwiki}}",
 	"log-action-filter-importdump-request": "{{doc-log-action-filter-action|importdump|request}}",
@@ -138,8 +138,8 @@
 	"requestimportdumpqueue": "{{doc-special}}",
 	"requestimportdumpqueue-header": "Legend header for special page",
 	"requestimportdumpqueue-header-info": "Information under legend header.",
-	"right-handle-import-dump-interwiki": "{{doc-right|handle-import-dump-interwiki}}",
-	"right-handle-import-dump-requests": "{{doc-right|handle-import-dump-requests}}",
-	"right-request-import-dump": "{{doc-right|request-import-dump}}",
-	"right-view-private-import-dump-requests": "{{doc-right|view-private-import-dump-requests}}"
+	"right-handle-import-interwiki": "{{doc-right|handle-import-interwiki}}",
+	"right-handle-import-requests": "{{doc-right|handle-import-requests}}",
+	"right-request-import": "{{doc-right|request-import}}",
+	"right-view-private-import-requests": "{{doc-right|view-private-import-requests}}"
 }

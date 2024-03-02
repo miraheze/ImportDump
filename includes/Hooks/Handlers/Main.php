@@ -52,7 +52,7 @@ class Main implements
 			return;
 		}
 
-		$actions[ 'request-import-dump' ] = 200;
+		$actions[ 'request-import' ] = 200;
 	}
 
 	/**
