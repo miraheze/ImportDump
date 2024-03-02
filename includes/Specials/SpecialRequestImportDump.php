@@ -190,7 +190,7 @@ class SpecialRequestImportDump extends FormSpecialPage
 		}
 
 		if (
-			$this->getUser()->pingLimiter( 'request-import-dump' ) ||
+			$this->getUser()->pingLimiter( 'request-import' ) ||
 			$this->getUser()->pingLimiter( 'upload' )
 		) {
 			return Status::newFatal( 'actionthrottledtext' );
