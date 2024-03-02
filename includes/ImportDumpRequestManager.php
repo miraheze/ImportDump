@@ -610,96 +610,72 @@ class ImportDumpRequestManager {
 	 * @param int $locked
 	 */
 	public function setLocked( int $locked ) {
-		$this->dbw->update(
-			'importdump_requests',
-			[
-				'request_locked' => $locked,
-			],
-			[
-				'request_id' => $this->ID,
-			],
-			__METHOD__
-		);
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'importdump_requests' )
+			->set( [ 'request_locked' => $locked ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
 	}
 
 	/**
 	 * @param int $private
 	 */
 	public function setPrivate( int $private ) {
-		$this->dbw->update(
-			'importdump_requests',
-			[
-				'request_private' => $private,
-			],
-			[
-				'request_id' => $this->ID,
-			],
-			__METHOD__
-		);
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'importdump_requests' )
+			->set( [ 'request_private' => $private ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
 	}
 
 	/**
 	 * @param string $reason
 	 */
 	public function setReason( string $reason ) {
-		$this->dbw->update(
-			'importdump_requests',
-			[
-				'request_reason' => $reason,
-			],
-			[
-				'request_id' => $this->ID,
-			],
-			__METHOD__
-		);
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'importdump_requests' )
+			->set( [ 'request_reason' => $reason ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
 	}
 
 	/**
 	 * @param string $source
 	 */
 	public function setSource( string $source ) {
-		$this->dbw->update(
-			'importdump_requests',
-			[
-				'request_source' => $source,
-			],
-			[
-				'request_id' => $this->ID,
-			],
-			__METHOD__
-		);
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'importdump_requests' )
+			->set( [ 'request_source' => $source ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
 	}
 
 	/**
 	 * @param string $status
 	 */
 	public function setStatus( string $status ) {
-		$this->dbw->update(
-			'importdump_requests',
-			[
-				'request_status' => $status,
-			],
-			[
-				'request_id' => $this->ID,
-			],
-			__METHOD__
-		);
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'importdump_requests' )
+			->set( [ 'request_status' => $status ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
 	}
 
 	/**
 	 * @param string $target
 	 */
 	public function setTarget( string $target ) {
-		$this->dbw->update(
-			'importdump_requests',
-			[
-				'request_target' => $target,
-			],
-			[
-				'request_id' => $this->ID,
-			],
-			__METHOD__
-		);
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'importdump_requests' )
+			->set( [ 'request_target' => $target ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
 	}
 
 	/**
