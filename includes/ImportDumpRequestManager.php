@@ -33,6 +33,8 @@ class ImportDumpRequestManager {
 	private const SYSTEM_USERS = [
 		'ImportDump Extension',
 		'ImportDump Status Update',
+		'RequestImport Extension',
+		'RequestImport Status Update',
 	];
 
 	public const CONSTRUCTOR_OPTIONS = [
