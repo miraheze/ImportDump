@@ -283,19 +283,19 @@ class SpecialRequestImportDump extends FormSpecialPage
 			return $status;
 		}
 
-		$dbw->insert(
-			'import_requests',
-			[
+		$dbw->newInsertQueryBuilder()
+			->insertInto( 'import_requests' )
+			->ignore()
+			->rows( [
 				'request_source' => $data['source'],
 				'request_target' => $data['target'],
 				'request_reason' => $data['reason'],
 				'request_status' => self::STATUS_PENDING,
 				'request_actor' => $this->getUser()->getActorId(),
 				'request_timestamp' => $timestamp,
-			],
-			__METHOD__,
-			[ 'IGNORE' ]
-		);
+			] )
+			->caller( __METHOD__ )
+			->execute();
 
 		$requestID = (string)$dbw->insertId();
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', $requestID );
