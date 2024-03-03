@@ -155,9 +155,9 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				],
 				'submit-comment' => [
 					'type' => 'submit',
-					'default' => $this->context->msg( 'importdump-label-add-comment' )->text(),
-					'section' => 'comments',
+					'buttonlabel-message' => 'importdump-label-add-comment',
 					'disabled' => $this->importDumpRequestManager->isLocked(),
+					'section' => 'comments',
 				],
 				'edit-source' => [
 					'label-message' => 'importdump-label-source',
@@ -189,9 +189,9 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				],
 				'submit-edit' => [
 					'type' => 'submit',
-					'default' => $this->context->msg( 'importdump-label-edit-request' )->text(),
-					'section' => 'editing',
+					'buttonlabel-message' => 'importdump-label-edit-request',
 					'disabled' => $this->importDumpRequestManager->isLocked(),
+					'section' => 'editing',
 				],
 			];
 		}
