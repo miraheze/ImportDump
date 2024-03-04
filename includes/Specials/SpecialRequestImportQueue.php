@@ -70,7 +70,7 @@ class SpecialRequestImportQueue extends SpecialPage
 		$formDescriptor = [
 			'info' => [
 				'type' => 'info',
-				'default' => $this->msg( 'requestimportdumpqueue-header-info' )->text(),
+				'default' => $this->msg( 'requestimportqueue-header-info' )->text(),
 			],
 			'target' => [
 				'type' => 'text',
@@ -104,7 +104,7 @@ class SpecialRequestImportQueue extends SpecialPage
 		$htmlForm = HTMLForm::factory( 'ooui', $formDescriptor, $this->getContext() );
 		$htmlForm
 			->setMethod( 'get' )
-			->setWrapperLegendMsg( 'requestimportdumpqueue-header' )
+			->setWrapperLegendMsg( 'requestimportqueue-header' )
 			->setSubmitTextMsg( 'search' )
 			->prepareForm()
 			->displayForm( false );

@@ -186,7 +186,7 @@
 		},
 		"ImportDumpHelpUrl": {
 			"value": "",
-			"description": "Full URL. If set, adds a help URL to Special:RequestImportDump."
+			"description": "Full URL. If set, adds a help URL to Special:RequestImport."
 		},
 		"ImportDumpInterwikiMap": {
 			"value": [],

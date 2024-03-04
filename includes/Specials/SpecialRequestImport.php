@@ -298,7 +298,7 @@ class SpecialRequestImport extends FormSpecialPage
 			->execute();
 
 		$requestID = (string)$dbw->insertId();
-		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', $requestID );
+		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', $requestID );
 
 		$requestLink = $this->getLinkRenderer()->makeLink( $requestQueueLink, "#{$requestID}" );
 
@@ -366,7 +366,7 @@ class SpecialRequestImport extends FormSpecialPage
 			)
 		);
 
-		$requestLink = SpecialPage::getTitleFor( 'RequestImportDumpQueue', $requestID )->getFullURL();
+		$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', $requestID )->getFullURL();
 
 		foreach ( $notifiedUsers as $receiver ) {
 			if (

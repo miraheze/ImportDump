@@ -90,8 +90,8 @@
 	"log-action-filter-importdumpprivate": "Veiksmo tipas:",
 	"log-action-filter-importdumpprivate-request": "Pateikti nauji prašymai",
 	"log-action-filter-importdumpprivate-statusupdate": "Užklausų būsena atnaujinta",
-	"requestimportdump": "Prašyti importavimo",
-	"requestimportdumpqueue": "Importavimo užklausų eilė",
+	"requestimport": "Prašyti importavimo",
+	"requestimportqueue": "Importavimo užklausų eilė",
 	"right-request-import": "Prašyti importavimų",
 	"right-view-private-import-requests": "Peržiūrėti privačius importavimo prašymus"
 }
