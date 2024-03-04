@@ -106,8 +106,8 @@
 		}
 	},
 	"SpecialPages": {
-		"RequestImportDump": {
-			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportDump",
+		"RequestImport": {
+			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImport",
 			"services": [
 				"DBLoadBalancerFactory",
 				"MimeAnalyzer",
@@ -119,8 +119,8 @@
 				"CreateWikiHookRunner"
 			]
 		},
-		"RequestImportDumpQueue": {
-			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportDumpQueue",
+		"RequestImportQueue": {
+			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportQueue",
 			"services": [
 				"DBLoadBalancerFactory",
 				"ImportDumpRequestManager",
