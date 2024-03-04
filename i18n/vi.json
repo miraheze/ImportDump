@@ -4,10 +4,10 @@
 			"Pisceskaze"
 		]
 	},
-	"action-handle-import-dump-interwiki": "xử lý liên kết liên wiki trong quá trình nhập",
-	"action-handle-import-dump-requests": "xử lý yêu cầu nhập của người dùng",
-	"action-request-import-dump": "yêu cầu nhập",
-	"action-view-private-import-dump-requests": "xem yêu cầu nhập riêng tư",
+	"action-handle-import-request-interwiki": "xử lý liên kết liên wiki trong quá trình nhập",
+	"action-handle-import-requests": "xử lý yêu cầu nhập của người dùng",
+	"action-request-import": "yêu cầu nhập",
+	"action-view-private-import-requests": "xem yêu cầu nhập riêng tư",
 	"echo-category-title-importdump-import-failed": "Yêu cầu nhập kết xuất không thành công",
 	"echo-category-title-importdump-new-request": "Yêu cầu nhập mới",
 	"echo-category-title-importdump-request-comment": "Đã thêm nhận xét vào yêu cầu nhập",
@@ -110,7 +110,7 @@
 	"importdump-usergroups-none": "không có",
 	"importdumpprivate-log-header": "Đây là nhật ký của tất cả các yêu cầu nhập và cập nhật trạng thái cho các yêu cầu có mục tiêu là wiki riêng tư.",
 	"importdumpprivate-log-name": "Nhật ký yêu cầu nhập riêng tư",
-	"ipb-action-request-import-dump": "Yêu cầu nhập",
+	"ipb-action-request-import": "Yêu cầu nhập",
 	"log-action-filter-importdump": "Kiểu tác vụ:",
 	"log-action-filter-importdump-interwiki": "Sửa đổi bảng liên wiki",
 	"log-action-filter-importdump-request": "Yêu cầu mới được gửi",
@@ -133,8 +133,8 @@
 	"requestimportdumpqueue": "Hàng đợi yêu cầu nhập",
 	"requestimportdumpqueue-header": "Tìm yêu cầu nhập",
 	"requestimportdumpqueue-header-info": "Bạn có thể sử dụng biểu mẫu này để tìm kiếm các yêu cầu nhập kết xuất. Sử dụng các tham số dưới đây để tinh chỉnh tìm kiếm của bạn.",
-	"right-handle-import-dump-interwiki": "Xử lý liên kết liên wiki trong quá trình nhập kết xuất",
-	"right-handle-import-dump-requests": "Xử lý yêu cầu nhập kết xuất của người dùng",
-	"right-request-import-dump": "Yêu cầu nhập kết xuất",
-	"right-view-private-import-dump-requests": "Xem yêu cầu nhập riêng tư"
+	"right-handle-import-request-interwiki": "Xử lý liên kết liên wiki trong quá trình nhập kết xuất",
+	"right-handle-import-requests": "Xử lý yêu cầu nhập kết xuất của người dùng",
+	"right-request-import": "Yêu cầu nhập kết xuất",
+	"right-view-private-import-requests": "Xem yêu cầu nhập riêng tư"
 }

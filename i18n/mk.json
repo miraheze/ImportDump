@@ -6,10 +6,10 @@
 			"Vlad5250"
 		]
 	},
-	"action-handle-import-dump-interwiki": "работа со меѓувики за складишни извадоци на увози",
-	"action-handle-import-dump-requests": "работа со кориснички барања за увоз",
-	"action-request-import-dump": "барање за увоз",
-	"action-view-private-import-dump-requests": "гледање на приватни барања за увоз",
+	"action-handle-import-request-interwiki": "работа со меѓувики за складишни извадоци на увози",
+	"action-handle-import-requests": "работа со кориснички барања за увоз",
+	"action-request-import": "барање за увоз",
+	"action-view-private-import-requests": "гледање на приватни барања за увоз",
 	"echo-category-title-importdump-import-failed": "Барањето за увоз на резервниот склад не успеа",
 	"echo-category-title-importdump-new-request": "Ново барање за складиштен извадок на увози",
 	"echo-category-title-importdump-request-comment": "Додаден коментар во барање за складиштен извадок на увоз",
@@ -113,7 +113,7 @@
 	"importdump-usergroups-none": "нема",
 	"importdumpprivate-log-header": "Ова е дневник на сите барања за увоз и состојбени измени на барања со цели кои се приватни викија.",
 	"importdumpprivate-log-name": "Приватен дневник на барања за увоз",
-	"ipb-action-request-import-dump": "Барање за увози",
+	"ipb-action-request-import": "Барање за увози",
 	"log-action-filter-importdump": "Вид дејство:",
 	"log-action-filter-importdump-interwiki": "Измени во меѓувики-табела",
 	"log-action-filter-importdump-request": "Поднесено ново барање",
@@ -136,8 +136,8 @@
 	"requestimportdumpqueue": "Редица на барања за увоз",
 	"requestimportdumpqueue-header": "Пребарај барања за увоз",
 	"requestimportdumpqueue-header-info": "Со овој образец можете да увезувате барања. Послужете се со параметрите подолу за да го уточните пребарувањето.",
-	"right-handle-import-dump-interwiki": "Работа со меѓувики за складишни извадоци на увози",
-	"right-handle-import-dump-requests": "Работа со кориснички барања за складишни извадоци на увози",
-	"right-request-import-dump": "Барање на увози",
-	"right-view-private-import-dump-requests": "Преглед на приватни барања за увоз"
+	"right-handle-import-request-interwiki": "Работа со меѓувики за складишни извадоци на увози",
+	"right-handle-import-requests": "Работа со кориснички барања за складишни извадоци на увози",
+	"right-request-import": "Барање на увози",
+	"right-view-private-import-requests": "Преглед на приватни барања за увоз"
 }

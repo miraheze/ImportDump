@@ -55,7 +55,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		if (
 			$this->importDumpRequestManager->isPrivate() &&
 			$user->getName() !== $this->importDumpRequestManager->getRequester()->getName() &&
-			!$this->permissionManager->userHasRight( $user, 'view-private-import-dump-requests' )
+			!$this->permissionManager->userHasRight( $user, 'view-private-import-requests' )
 		) {
 			$this->context->getOutput()->addHTML(
 				Html::errorBox( $this->context->msg( 'importdump-private' )->escaped() )
@@ -141,7 +141,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		if (
-			$this->permissionManager->userHasRight( $user, 'handle-import-dump-requests' ) ||
+			$this->permissionManager->userHasRight( $user, 'handle-import-requests' ) ||
 			$user->getActorId() === $this->importDumpRequestManager->getRequester()->getActorId()
 		) {
 			$formDescriptor += [
@@ -196,7 +196,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			];
 		}
 
-		if ( $this->permissionManager->userHasRight( $user, 'handle-import-dump-requests' ) ) {
+		if ( $this->permissionManager->userHasRight( $user, 'handle-import-requests' ) ) {
 			$validRequest = true;
 			$status = $this->importDumpRequestManager->getStatus();
 
@@ -303,7 +303,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				],
 			];
 
-			if ( $this->permissionManager->userHasRight( $user, 'view-private-import-dump-requests' ) ) {
+			if ( $this->permissionManager->userHasRight( $user, 'view-private-import-requests' ) ) {
 				$formDescriptor += [
 					'handle-private' => [
 						'type' => 'check',
@@ -339,7 +339,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 			if (
 				!$this->importDumpRequestManager->getInterwikiPrefix() &&
-				$this->permissionManager->userHasRight( $user, 'handle-import-dump-interwiki' )
+				$this->permissionManager->userHasRight( $user, 'handle-import-request-interwiki' )
 			) {
 				$source = $this->importDumpRequestManager->getSource();
 				$target = $this->importDumpRequestManager->getTarget();

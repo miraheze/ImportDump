@@ -127,10 +127,10 @@ class ImportDumpNotifyJob extends Job
 
 		foreach ( $notifiedUsers as $receiver ) {
 			if (
-				!$receiver->isAllowed( 'handle-import-dump-requests' ) ||
+				!$receiver->isAllowed( 'handle-import-requests' ) ||
 				(
 					$this->importDumpRequestManager->isPrivate() &&
-					!$receiver->isAllowed( 'view-private-import-dump-requests' )
+					!$receiver->isAllowed( 'view-private-import-requests' )
 				)
 			) {
 				continue;

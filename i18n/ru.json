@@ -8,10 +8,10 @@
 			"Артём 13327"
 		]
 	},
-	"action-handle-import-dump-interwiki": "обработать импорт дампа interwiki",
-	"action-handle-import-dump-requests": "обработать запрос на импорт пользователей",
-	"action-request-import-dump": "запросы импорта",
-	"action-view-private-import-dump-requests": "просмотр закрытых запросов на импорт",
+	"action-handle-import-request-interwiki": "обработать импорт дампа interwiki",
+	"action-handle-import-requests": "обработать запрос на импорт пользователей",
+	"action-request-import": "запросы импорта",
+	"action-view-private-import-requests": "просмотр закрытых запросов на импорт",
 	"echo-category-title-importdump-new-request": "Новый запрос на импорт дампа",
 	"echo-category-title-importdump-request-comment": "Комментарий, добавленный к запросу на импорт дампа",
 	"echo-category-title-importdump-request-status-update": "Обновлено состояние запроса на импорт дампа",
@@ -105,7 +105,7 @@
 	"importdump-usergroups-none": "нет",
 	"importdumpprivate-log-header": "Это журнал всех запросов на импорт и обновления состояния для запросов, целью которых являются закрытые вики.",
 	"importdumpprivate-log-name": "Закрытый журнал импорта запросов",
-	"ipb-action-request-import-dump": "Запрос на импорт",
+	"ipb-action-request-import": "Запрос на импорт",
 	"log-action-filter-importdump": "Тип действия:",
 	"log-action-filter-importdump-interwiki": "Модификации таблиц интервики",
 	"log-action-filter-importdump-request": "Новые запросы поданы",
@@ -122,8 +122,8 @@
 	"logentry-importdumpprivate-statusupdate": "$1 {{GENDER:$1|обновил|обновила}} состояние закрытого запроса импорта дампа $4 на '$5'.",
 	"requestimportdump": "Запрос на импорт",
 	"requestimportdumpqueue": "Очередь запросов на импорт",
-	"right-handle-import-dump-interwiki": "Обработать импорт дампа interwiki",
-	"right-handle-import-dump-requests": "Обработать запрос на импорт пользователей",
-	"right-request-import-dump": "Запросы импорта",
-	"right-view-private-import-dump-requests": "Просмотр закрытых запросов на импорт"
+	"right-handle-import-request-interwiki": "Обработать импорт дампа interwiki",
+	"right-handle-import-requests": "Обработать запрос на импорт пользователей",
+	"right-request-import": "Запросы импорта",
+	"right-view-private-import-requests": "Просмотр закрытых запросов на импорт"
 }

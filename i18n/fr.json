@@ -8,10 +8,10 @@
 			"Wladek92"
 		]
 	},
-	"action-handle-import-dump-interwiki": "gérer l’import de données entre wikis",
-	"action-handle-import-dump-requests": "gérer les demandes d’import de données des utilisateurs",
-	"action-request-import-dump": "demander des imports de données",
-	"action-view-private-import-dump-requests": "consulter les demandes privées d’import de données",
+	"action-handle-import-request-interwiki": "gérer l’import de données entre wikis",
+	"action-handle-import-requests": "gérer les demandes d’import de données des utilisateurs",
+	"action-request-import": "demander des imports de données",
+	"action-view-private-import-requests": "consulter les demandes privées d’import de données",
 	"echo-category-title-importdump-new-request": "Nouvelle demande d’import de données",
 	"echo-category-title-importdump-request-comment": "Commentaire ajouté à une demande d’import de données",
 	"echo-category-title-importdump-request-status-update": "État mis à jour pour une demande d’import de données",
@@ -108,7 +108,7 @@
 	"importdump-usergroups-none": "néant",
 	"importdumpprivate-log-header": "Voici un journal de toutes les demandes d’import de données et des mises à jour de leur état, dont les cibles sont des wikis privés.",
 	"importdumpprivate-log-name": "Journal privé des demandes d’import de données",
-	"ipb-action-request-import-dump": "Demander des imports de données",
+	"ipb-action-request-import": "Demander des imports de données",
 	"log-action-filter-importdump": "Type d’action :",
 	"log-action-filter-importdump-interwiki": "Modifications de la table interwiki",
 	"log-action-filter-importdump-request": "Nouvelles demandes soumises",
@@ -125,8 +125,8 @@
 	"logentry-importdumpprivate-statusupdate": "$1 a mis à jour l’état de la demande privée d’import de données $4 à « $5 ».",
 	"requestimportdump": "Demander un import de données",
 	"requestimportdumpqueue": "File d’attente des demandes d’import",
-	"right-handle-import-dump-interwiki": "Gérer l’importation de données entre wikis",
-	"right-handle-import-dump-requests": "Gérer les demandes d’import de données des utilisateurs",
-	"right-request-import-dump": "Demander des imports de données",
-	"right-view-private-import-dump-requests": "Consulter les demandes privées d’import de données"
+	"right-handle-import-request-interwiki": "Gérer l’importation de données entre wikis",
+	"right-handle-import-requests": "Gérer les demandes d’import de données des utilisateurs",
+	"right-request-import": "Demander des imports de données",
+	"right-view-private-import-requests": "Consulter les demandes privées d’import de données"
 }

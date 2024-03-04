@@ -7,10 +7,10 @@
 			"Sebastian Wallroth"
 		]
 	},
-	"action-handle-import-dump-interwiki": "Import-Dump-Interwiki bearbeiten",
-	"action-handle-import-dump-requests": "Benutzerimportanfragen bearbeiten",
-	"action-request-import-dump": "Importe anfordern",
-	"action-view-private-import-dump-requests": "private Importanträge anzeigen",
+	"action-handle-import-request-interwiki": "Import-Dump-Interwiki bearbeiten",
+	"action-handle-import-requests": "Benutzerimportanfragen bearbeiten",
+	"action-request-import": "Importe anfordern",
+	"action-view-private-import-requests": "private Importanträge anzeigen",
 	"echo-category-title-importdump-new-request": "Neuer Antrag auf Import-Dump",
 	"echo-category-title-importdump-request-comment": "Kommentar zu einer Import-Dump-Anfrage hinzugefügt",
 	"echo-category-title-importdump-request-status-update": "Status für eine Import-Dump-Anfrage aktualisiert",
@@ -104,7 +104,7 @@
 	"importdump-usergroups-none": "keine",
 	"importdumpprivate-log-header": "Dies ist ein Protokoll aller Importanfragen und Statusaktualisierungen für Anfragen mit Zielen, die private Wikis sind.",
 	"importdumpprivate-log-name": "Anfragen importieren Privates Protokoll",
-	"ipb-action-request-import-dump": "Importe beantragen",
+	"ipb-action-request-import": "Importe beantragen",
 	"log-action-filter-importdump": "Typ der Aktion:",
 	"log-action-filter-importdump-interwiki": "Änderungen der Interwiki-Tabelle",
 	"log-action-filter-importdump-request": "Neue Anfragen eingereicht",
@@ -121,8 +121,8 @@
 	"logentry-importdumpprivate-statusupdate": "$1 hat den Status der privaten Import-Dump-Anfrage $4 auf '$5' aktualisiert.",
 	"requestimportdump": "Import anfordern",
 	"requestimportdumpqueue": "Warteschlange für Importanträge",
-	"right-handle-import-dump-interwiki": "Import-Dump interwiki bearbeiten",
-	"right-handle-import-dump-requests": "Bearbeitung von Benutzer-Import-Dump-Anfragen",
-	"right-request-import-dump": "Importe anfordern",
-	"right-view-private-import-dump-requests": "Private Importanträge anzeigen"
+	"right-handle-import-request-interwiki": "Import-Dump interwiki bearbeiten",
+	"right-handle-import-requests": "Bearbeitung von Benutzer-Import-Dump-Anfragen",
+	"right-request-import": "Importe anfordern",
+	"right-view-private-import-requests": "Private Importanträge anzeigen"
 }

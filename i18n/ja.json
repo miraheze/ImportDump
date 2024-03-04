@@ -15,10 +15,10 @@
 			"背番号4のエース"
 		]
 	},
-	"action-handle-import-dump-interwiki": "インポートダンプのインターウィキの処理",
-	"action-handle-import-dump-requests": "利用者取り込みリクエストの処理",
-	"action-request-import-dump": "取り込みのリクエスト",
-	"action-view-private-import-dump-requests": "非公開の取り込みリクエストの閲覧",
+	"action-handle-import-request-interwiki": "インポートダンプのインターウィキの処理",
+	"action-handle-import-requests": "利用者取り込みリクエストの処理",
+	"action-request-import": "取り込みのリクエスト",
+	"action-view-private-import-requests": "非公開の取り込みリクエストの閲覧",
 	"echo-category-title-importdump-new-request": "新しくダンプインポートを要求",
 	"echo-category-title-importdump-request-comment": "インポートダンプリクエストにコメントが追加されました",
 	"echo-category-title-importdump-request-status-update": "インポートダンプのリクエストが更新されました",
@@ -114,7 +114,7 @@
 	"importdump-usergroups-none": "なし",
 	"importdumpprivate-log-header": "これは、すべてのインポート リクエストと、プライベート Wiki をターゲットとするリクエストのステータス更新のログです。",
 	"importdumpprivate-log-name": "取り込みリクエスト非公開記録",
-	"ipb-action-request-import-dump": "取り込みをリクエスト",
+	"ipb-action-request-import": "取り込みをリクエスト",
 	"log-action-filter-importdump": "操作の種類:",
 	"log-action-filter-importdump-interwiki": "Interwiki テーブルの変更",
 	"log-action-filter-importdump-request": "新しいリクエストが送信されました。",
@@ -133,8 +133,8 @@
 	"logentry-importdumpprivate-statusupdate": "$1 が非公開ダンプ取り込みリクエスト $4 のステータスを '$5' に{{GENDER:$2|更新}}しました。",
 	"requestimportdump": "取り込みをリクエストする",
 	"requestimportdumpqueue": "取り込みリクエストキュー",
-	"right-handle-import-dump-interwiki": "インポート ダンプのインターウィキの処理",
-	"right-handle-import-dump-requests": "利用者によるインポートダンプリクエストを処理",
-	"right-request-import-dump": "取り込みをリクエスト",
-	"right-view-private-import-dump-requests": "非公開の取り込みリクエストを閲覧"
+	"right-handle-import-request-interwiki": "インポート ダンプのインターウィキの処理",
+	"right-handle-import-requests": "利用者によるインポートダンプリクエストを処理",
+	"right-request-import": "取り込みをリクエスト",
+	"right-view-private-import-requests": "非公開の取り込みリクエストを閲覧"
 }

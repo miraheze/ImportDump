@@ -6,10 +6,10 @@
 			"Winston Sung"
 		]
 	},
-	"action-handle-import-dump-interwiki": "rukovate međuvikije za skladišne izvadke uvoza",
-	"action-handle-import-dump-requests": "rukovate korisničke zahtjeve za uvoz",
-	"action-request-import-dump": "zahtjevate uvoz",
-	"action-view-private-import-dump-requests": "gledate privatne zahtjeve za uvoz",
+	"action-handle-import-request-interwiki": "rukovate međuvikije za skladišne izvadke uvoza",
+	"action-handle-import-requests": "rukovate korisničke zahtjeve za uvoz",
+	"action-request-import": "zahtjevate uvoz",
+	"action-view-private-import-requests": "gledate privatne zahtjeve za uvoz",
 	"echo-category-title-importdump-new-request": "Novi zahtjev za skladišni izvadak uvoza",
 	"echo-category-title-importdump-request-comment": "Dodan je komentar u zahtjev za skladišni izvadak uvoza",
 	"echo-category-title-importdump-request-status-update": "Promijenjen status zahtjeva za skladišni izvadak uvoza",
@@ -104,7 +104,7 @@
 	"importdump-usergroups-none": "ništa",
 	"importdumpprivate-log-header": "Ovo je dnevnik svih zahtjeva za uvoz i promjena statusa zahtjeva s ciljevima koji su privatni vikiji.",
 	"importdumpprivate-log-name": "Privatni dnevnik zahtjeva za uvoz",
-	"ipb-action-request-import-dump": "Zahtjevi za uvoz",
+	"ipb-action-request-import": "Zahtjevi za uvoz",
 	"log-action-filter-importdump": "Vrsta radnje:",
 	"log-action-filter-importdump-interwiki": "Promjene table međuvikija",
 	"log-action-filter-importdump-request": "Podnesen novi zahtjev",
@@ -121,8 +121,8 @@
 	"logentry-importdumpprivate-statusupdate": "$1 promijenio(-la) je status privatnog zahtjeva skladišnog izvadka uvoza $4 na '$5'.",
 	"requestimportdump": "Zahtjev za uvoz",
 	"requestimportdumpqueue": "Red zahtjeva za uvoz",
-	"right-handle-import-dump-interwiki": "Rukovanje međuvikija za skladišne izvadke uvoza",
-	"right-handle-import-dump-requests": "Rukovanje korisničkih zahtjeva za uvoze",
-	"right-request-import-dump": "Zahtjev za uvoz",
-	"right-view-private-import-dump-requests": "Pregledanje privatnih zahtjeva za uvoz"
+	"right-handle-import-request-interwiki": "Rukovanje međuvikija za skladišne izvadke uvoza",
+	"right-handle-import-requests": "Rukovanje korisničkih zahtjeva za uvoze",
+	"right-request-import": "Zahtjev za uvoz",
+	"right-view-private-import-requests": "Pregledanje privatnih zahtjeva za uvoz"
 }

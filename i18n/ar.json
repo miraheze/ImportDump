@@ -6,7 +6,7 @@
 			"محمد أحمد عبد الفتاح"
 		]
 	},
-	"action-view-private-import-dump-requests": "عرض طلبات التفريغ الخاصة بالاستيراد",
+	"action-view-private-import-requests": "عرض طلبات التفريغ الخاصة بالاستيراد",
 	"echo-category-title-importdump-new-request": "طلب تفريغ استيراد جديد",
 	"echo-category-title-importdump-request-comment": "تمت إضافة التعليق إلى طلب تفريغ الاستيراد",
 	"importdump-comment-given": "تم تقديم التعليق بواسطة $1:",
@@ -58,8 +58,8 @@
 	"importdump-unknown": "طلب غير معروف.",
 	"importdump-usergroups-none": "لا شيء",
 	"importdumpprivate-log-header": "هذا سجل لجميع طلبات تفريغ الاستيراد وتحديثات الحالة للطلبات ذات الأهداف التي تمثل مواقع ويكى الخاصة.",
-	"ipb-action-request-import-dump": "طلب استيراد تفريغ",
+	"ipb-action-request-import": "طلب استيراد تفريغ",
 	"log-action-filter-importdumpprivate": "نوع الفعل:",
 	"logentry-importdumpprivate-request": "طلب $1 تفريغ استيراد لـويكى الخاص $4 في $5.",
-	"right-handle-import-dump-requests": "التعامل مع طلبات تفريغ استيراد المستخدم"
+	"right-handle-import-requests": "التعامل مع طلبات تفريغ استيراد المستخدم"
 }
