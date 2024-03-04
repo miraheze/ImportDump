@@ -29,7 +29,7 @@ use UploadStash;
 use UserBlockedError;
 use Wikimedia\Rdbms\ILBFactory;
 
-class SpecialRequestImportDump extends FormSpecialPage
+class SpecialRequestImport extends FormSpecialPage
 	implements ImportDumpStatus {
 
 	/** @var CreateWikiHookRunner|null */
@@ -66,7 +66,7 @@ class SpecialRequestImportDump extends FormSpecialPage
 		UserFactory $userFactory,
 		?CreateWikiHookRunner $createWikiHookRunner
 	) {
-		parent::__construct( 'RequestImportDump', 'request-import' );
+		parent::__construct( 'RequestImport', 'request-import' );
 
 		$this->createWikiHookRunner = $createWikiHookRunner;
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
@@ -298,7 +298,7 @@ class SpecialRequestImportDump extends FormSpecialPage
 			->execute();
 
 		$requestID = (string)$dbw->insertId();
-		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', $requestID );
+		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', $requestID );
 
 		$requestLink = $this->getLinkRenderer()->makeLink( $requestQueueLink, "#{$requestID}" );
 
@@ -366,7 +366,7 @@ class SpecialRequestImportDump extends FormSpecialPage
 			)
 		);
 
-		$requestLink = SpecialPage::getTitleFor( 'RequestImportDumpQueue', $requestID )->getFullURL();
+		$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', $requestID )->getFullURL();
 
 		foreach ( $notifiedUsers as $receiver ) {
 			if (

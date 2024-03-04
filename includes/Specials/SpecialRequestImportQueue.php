@@ -12,7 +12,7 @@ use Miraheze\ImportDump\ImportDumpRequestViewer;
 use Miraheze\ImportDump\ImportDumpStatus;
 use Wikimedia\Rdbms\ILBFactory;
 
-class SpecialRequestImportDumpQueue extends SpecialPage
+class SpecialRequestImportQueue extends SpecialPage
 	implements ImportDumpStatus {
 
 	/** @var ILBFactory */
@@ -39,7 +39,7 @@ class SpecialRequestImportDumpQueue extends SpecialPage
 		PermissionManager $permissionManager,
 		UserFactory $userFactory
 	) {
-		parent::__construct( 'RequestImportDumpQueue' );
+		parent::__construct( 'RequestImportQueue' );
 
 		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->importDumpRequestManager = $importDumpRequestManager;
@@ -70,7 +70,7 @@ class SpecialRequestImportDumpQueue extends SpecialPage
 		$formDescriptor = [
 			'info' => [
 				'type' => 'info',
-				'default' => $this->msg( 'requestimportdumpqueue-header-info' )->text(),
+				'default' => $this->msg( 'requestimportqueue-header-info' )->text(),
 			],
 			'target' => [
 				'type' => 'text',
@@ -104,7 +104,7 @@ class SpecialRequestImportDumpQueue extends SpecialPage
 		$htmlForm = HTMLForm::factory( 'ooui', $formDescriptor, $this->getContext() );
 		$htmlForm
 			->setMethod( 'get' )
-			->setWrapperLegendMsg( 'requestimportdumpqueue-header' )
+			->setWrapperLegendMsg( 'requestimportqueue-header' )
 			->setSubmitTextMsg( 'search' )
 			->prepareForm()
 			->displayForm( false );
