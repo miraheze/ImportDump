@@ -690,6 +690,10 @@ class ImportDumpRequestManager {
 				[
 					'requestid' => $this->ID,
 					'username' => $username,
+				],
+				[
+					'removeDuplicates' => true,
+					'removeDuplicatesIgnoreParams' => [ 'username' ],
 				]
 			)
 		);
