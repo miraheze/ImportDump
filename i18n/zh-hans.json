@@ -12,10 +12,10 @@
 			"阿南之人"
 		]
 	},
-	"action-handle-import-dump-interwiki": "处理跨wiki导入转储",
-	"action-handle-import-dump-requests": "处理用户导入申请",
-	"action-request-import-dump": "申请导入",
-	"action-view-private-import-dump-requests": "查看非公开导入申请",
+	"action-handle-import-request-interwiki": "处理跨wiki导入转储",
+	"action-handle-import-requests": "处理用户导入申请",
+	"action-request-import": "申请导入",
+	"action-view-private-import-requests": "查看非公开导入申请",
 	"echo-category-title-importdump-new-request": "新的导入转储申请",
 	"echo-category-title-importdump-request-comment": "添加到导入转储申请的意见",
 	"echo-category-title-importdump-request-status-update": "导入转储申请的状态更新",
@@ -110,7 +110,7 @@
 	"importdump-usergroups-none": "无",
 	"importdumpprivate-log-header": "这是目标为非公开wiki的所有导入申请及状态更新的日志。",
 	"importdumpprivate-log-name": "导入申请非公开日志",
-	"ipb-action-request-import-dump": "申请导入",
+	"ipb-action-request-import": "申请导入",
 	"log-action-filter-importdump": "操作类型：",
 	"log-action-filter-importdump-interwiki": "跨wiki表修改",
 	"log-action-filter-importdump-request": "提交新的申请",
@@ -125,10 +125,10 @@
 	"logentry-importdumpprivate-interwiki": "$1为非公开导入转储申请$6添加了跨wiki前綴“$4”到$5。",
 	"logentry-importdumpprivate-request": "$1在$5申请了非公开wiki的$4的导入转储。",
 	"logentry-importdumpprivate-statusupdate": "$1将非公开导入转储申请$4的状态更新为“$5”。",
-	"requestimportdump": "申请导入",
-	"requestimportdumpqueue": "导入申请队列",
-	"right-handle-import-dump-interwiki": "处理跨wiki导入转储",
-	"right-handle-import-dump-requests": "处理用户导入转储申请",
-	"right-request-import-dump": "申请导入",
-	"right-view-private-import-dump-requests": "查看非公开导入申请"
+	"requestimport": "申请导入",
+	"requestimportqueue": "导入申请队列",
+	"right-handle-import-request-interwiki": "处理跨wiki导入转储",
+	"right-handle-import-requests": "处理用户导入转储申请",
+	"right-request-import": "申请导入",
+	"right-view-private-import-requests": "查看非公开导入申请"
 }

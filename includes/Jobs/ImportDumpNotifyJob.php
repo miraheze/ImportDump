@@ -123,14 +123,14 @@ class ImportDumpNotifyJob extends Job
 			)
 		);
 
-		$requestLink = SpecialPage::getTitleFor( 'RequestImportDumpQueue', (string)$this->requestID )->getFullURL();
+		$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', (string)$this->requestID )->getFullURL();
 
 		foreach ( $notifiedUsers as $receiver ) {
 			if (
-				!$receiver->isAllowed( 'handle-import-dump-requests' ) ||
+				!$receiver->isAllowed( 'handle-import-requests' ) ||
 				(
 					$this->importDumpRequestManager->isPrivate() &&
-					!$receiver->isAllowed( 'view-private-import-dump-requests' )
+					!$receiver->isAllowed( 'view-private-import-requests' )
 				)
 			) {
 				continue;

@@ -6,10 +6,10 @@
 			"Upwinxp"
 		]
 	},
-	"action-handle-import-dump-interwiki": "upravljanje uvoza izpisov med vikiji",
-	"action-handle-import-dump-requests": "obravnavo prošenj uporabnikov za uvoz",
-	"action-request-import-dump": "zaprositev za uvoz",
-	"action-view-private-import-dump-requests": "ogledovanje zasebnih prošenj za uvoz",
+	"action-handle-import-request-interwiki": "upravljanje uvoza izpisov med vikiji",
+	"action-handle-import-requests": "obravnavo prošenj uporabnikov za uvoz",
+	"action-request-import": "zaprositev za uvoz",
+	"action-view-private-import-requests": "ogledovanje zasebnih prošenj za uvoz",
 	"echo-category-title-importdump-new-request": "Nov zahtevek za uvoz izpisa",
 	"echo-category-title-importdump-request-comment": "K prošnji za uvoz izpisa je bil dodan komentar",
 	"echo-category-title-importdump-request-status-update": "Posodobitev stanja zahtevka za uvoz izpisa",
@@ -108,7 +108,7 @@
 	"importdump-usergroups-none": "nobena",
 	"importdumpprivate-log-header": "To je dnevnik vseh prošenj za uvoz in posodobitev stanja za prošnje s cilji, ki so zasebni vikiji.",
 	"importdumpprivate-log-name": "Dnevnik prošenj za uvoz",
-	"ipb-action-request-import-dump": "Zaprositev za uvoz",
+	"ipb-action-request-import": "Zaprositev za uvoz",
 	"log-action-filter-importdump": "Vrsta dejanja:",
 	"log-action-filter-importdump-interwiki": "Spremembe tabele intervikijev",
 	"log-action-filter-importdump-request": "Predložitev novih prošenj",
@@ -123,10 +123,10 @@
 	"logentry-importdumpprivate-interwiki": "$1 je $5 dodal_a interviki predpono »$4« za zasebno prošnjo $6 za uvoz izpisa.",
 	"logentry-importdumpprivate-request": "$1 je zaprosil_a za uvoz izpisa za zasebni viki $4 v $5.",
 	"logentry-importdumpprivate-statusupdate": "$1 je posodobil_a stanje zasebne prošnje $4 za uvoz izpisa $4 v »$5«.",
-	"requestimportdump": "Prošnja za uvoz",
-	"requestimportdumpqueue": "Čakalna vrsta prošenj za uvoz",
-	"right-handle-import-dump-interwiki": "Obravnava uvoza izpisa med vikiji",
-	"right-handle-import-dump-requests": "Obravnava uporabniških prošenj za uvoz izpisa",
-	"right-request-import-dump": "Zaprositev za uvoz",
-	"right-view-private-import-dump-requests": "Ogledovanje zasebnih prošenj za uvoz"
+	"requestimport": "Prošnja za uvoz",
+	"requestimportqueue": "Čakalna vrsta prošenj za uvoz",
+	"right-handle-import-request-interwiki": "Obravnava uvoza izpisa med vikiji",
+	"right-handle-import-requests": "Obravnava uporabniških prošenj za uvoz izpisa",
+	"right-request-import": "Zaprositev za uvoz",
+	"right-view-private-import-requests": "Ogledovanje zasebnih prošenj za uvoz"
 }

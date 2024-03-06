@@ -99,7 +99,7 @@ class ImportDumpRequestQueuePager extends TablePager
 				break;
 			case 'request_status':
 				$formatted = $this->linkRenderer->makeLink(
-					SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', $row->request_id ),
+					SpecialPage::getTitleValueFor( 'RequestImportQueue', $row->request_id ),
 					$this->msg( 'importdump-label-' . $row->request_status )->text()
 				);
 

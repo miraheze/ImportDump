@@ -21,7 +21,8 @@
 		"Miraheze\\ImportDump\\": "includes/"
 	},
 	"TestAutoloadNamespaces": {
-		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/"
+		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/",
+		"Miraheze\\ImportDump\\Tests\\Unit\\": "tests/phpunit/unit/"
 	},
 	"JobClasses": {
 		"ImportDumpJob": {
@@ -46,14 +47,14 @@
 	},
 	"GroupPermissions": {
 		"user": {
-			"request-import-dump": true
+			"request-import": true
 		}
 	},
 	"AvailableRights": [
-		"handle-import-dump-interwiki",
-		"handle-import-dump-requests",
-		"request-import-dump",
-		"view-private-import-dump-requests"
+		"handle-import-request-interwiki",
+		"handle-import-requests",
+		"request-import",
+		"view-private-import-requests"
 	],
 	"LogActionsHandlers": {
 		"importdump/*": "LogFormatter",
@@ -72,7 +73,7 @@
 		"importdumpprivate"
 	],
 	"LogRestrictions": {
-		"importdumpprivate": "view-private-import-dump-requests"
+		"importdumpprivate": "view-private-import-requests"
 	},
 	"ActionFilteredLogs": {
 		"importdump": {
@@ -105,8 +106,8 @@
 		}
 	},
 	"SpecialPages": {
-		"RequestImportDump": {
-			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportDump",
+		"RequestImport": {
+			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImport",
 			"services": [
 				"DBLoadBalancerFactory",
 				"MimeAnalyzer",
@@ -118,8 +119,8 @@
 				"CreateWikiHookRunner"
 			]
 		},
-		"RequestImportDumpQueue": {
-			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportDumpQueue",
+		"RequestImportQueue": {
+			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportQueue",
 			"services": [
 				"DBLoadBalancerFactory",
 				"ImportDumpRequestManager",
@@ -185,7 +186,7 @@
 		},
 		"ImportDumpHelpUrl": {
 			"value": "",
-			"description": "Full URL. If set, adds a help URL to Special:RequestImportDump."
+			"description": "Full URL. If set, adds a help URL to Special:RequestImport."
 		},
 		"ImportDumpInterwikiMap": {
 			"value": [],
@@ -218,7 +219,7 @@
 		"echo-subscriptions-web-importdump-request-status-update": true
 	},
 	"RateLimits": {
-		"request-import-dump": {
+		"request-import": {
 			"user": [
 				5,
 				60

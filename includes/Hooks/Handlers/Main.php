@@ -37,6 +37,8 @@ class Main implements
 	public function onUserGetReservedNames( &$reservedUsernames ) {
 		$reservedUsernames[] = 'ImportDump Extension';
 		$reservedUsernames[] = 'ImportDump Status Update';
+		$reservedUsernames[] = 'RequestImport Extension';
+		$reservedUsernames[] = 'RequestImport Status Update';
 	}
 
 	/**
@@ -50,7 +52,7 @@ class Main implements
 			return;
 		}
 
-		$actions[ 'request-import-dump' ] = 200;
+		$actions[ 'request-import' ] = 200;
 	}
 
 	/**

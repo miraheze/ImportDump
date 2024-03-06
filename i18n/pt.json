@@ -5,10 +5,10 @@
 			"Hamilton Abreu"
 		]
 	},
-	"action-handle-import-dump-interwiki": "tratar de importações de cópias em ficheiro entre wikis",
-	"action-handle-import-dump-requests": "tratar de pedidos dos utilizadores para importação de cópias em ficheiro",
-	"action-request-import-dump": "pedir a importação de cópias em ficheiro",
-	"action-view-private-import-dump-requests": "ver pedidos privados de importação de cópias em ficheiro",
+	"action-handle-import-request-interwiki": "tratar de importações de cópias em ficheiro entre wikis",
+	"action-handle-import-requests": "tratar de pedidos dos utilizadores para importação de cópias em ficheiro",
+	"action-request-import": "pedir a importação de cópias em ficheiro",
+	"action-view-private-import-requests": "ver pedidos privados de importação de cópias em ficheiro",
 	"echo-category-title-importdump-new-request": "Pedido novo de importação de uma cópia em ficheiro",
 	"echo-category-title-importdump-request-comment": "Foi adicionado um comentário a um pedido de importação de uma cópia em ficheiro",
 	"echo-category-title-importdump-request-status-update": "Foi atualizado o estado de um pedido de importação de cópia em ficheiro",
@@ -103,7 +103,7 @@
 	"importdump-usergroups-none": "nenhum",
 	"importdumpprivate-log-header": "Este registo é de todos os pedidos de importação de cópias em ficheiro e de atualizações dos respetivos estados, para pedidos com destinos que são wikis privadas.",
 	"importdumpprivate-log-name": "Registo de pedidos privados de importação de cópias em ficheiro",
-	"ipb-action-request-import-dump": "Pedir importação de cópias em ficheiro",
+	"ipb-action-request-import": "Pedir importação de cópias em ficheiro",
 	"log-action-filter-importdump": "Tipo de operação:",
 	"log-action-filter-importdump-interwiki": "Modificações da tabela de interwikis",
 	"log-action-filter-importdump-request": "Novos pedidos submetidos",
@@ -118,10 +118,10 @@
 	"logentry-importdumpprivate-interwiki": "$1 adicionou o prefixo de interwikis '$4' a $5 para o pedido privado de importação de cópia em ficheiro $6.",
 	"logentry-importdumpprivate-request": "$1 pediu uma importação de cópia em ficheiro para a wiki privada $4 em $5.",
 	"logentry-importdumpprivate-statusupdate": "$1 atualizou o estado do pedido privado de importação de cópia em ficheiro $4 para '$5'.",
-	"requestimportdump": "Pedir importação de cópia em ficheiro",
-	"requestimportdumpqueue": "Fila de espera de pedidos de importação de cópia em ficheiro",
-	"right-handle-import-dump-interwiki": "Tratar de importações de cópias em ficheiro entre wikis",
-	"right-handle-import-dump-requests": "Tratar de pedidos dos utilizadores para importação de cópias em ficheiro",
-	"right-request-import-dump": "Pedir importação de cópias em ficheiro",
-	"right-view-private-import-dump-requests": "Ver pedidos privados de importação de cópias em ficheiro"
+	"requestimport": "Pedir importação de cópia em ficheiro",
+	"requestimportqueue": "Fila de espera de pedidos de importação de cópia em ficheiro",
+	"right-handle-import-request-interwiki": "Tratar de importações de cópias em ficheiro entre wikis",
+	"right-handle-import-requests": "Tratar de pedidos dos utilizadores para importação de cópias em ficheiro",
+	"right-request-import": "Pedir importação de cópias em ficheiro",
+	"right-view-private-import-requests": "Ver pedidos privados de importação de cópias em ficheiro"
 }

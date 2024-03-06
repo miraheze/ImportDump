@@ -33,6 +33,8 @@ class ImportDumpRequestManager {
 	private const SYSTEM_USERS = [
 		'ImportDump Extension',
 		'ImportDump Status Update',
+		'RequestImport Extension',
+		'RequestImport Status Update',
 	];
 
 	public const CONSTRUCTOR_OPTIONS = [
@@ -190,7 +192,7 @@ class ImportDumpRequestManager {
 	 * @param User $user
 	 */
 	public function logStatusUpdate( string $comment, string $newStatus, User $user ) {
-		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$this->ID );
+		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
 		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
 		$logEntry = new ManualLogEntry(
@@ -222,7 +224,7 @@ class ImportDumpRequestManager {
 	 * @param User $user
 	 */
 	public function logStarted( User $user ) {
-		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$this->ID );
+		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
 		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
 		$logEntry = new ManualLogEntry(
@@ -250,7 +252,7 @@ class ImportDumpRequestManager {
 	 * @param User $user
 	 */
 	public function sendNotification( string $comment, string $type, User $user ) {
-		$requestLink = SpecialPage::getTitleFor( 'RequestImportDumpQueue', (string)$this->ID )->getFullURL();
+		$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', (string)$this->ID )->getFullURL();
 
 		$involvedUsers = array_values( array_filter(
 			array_diff( $this->getInvolvedUsers(), [ $user ] )
@@ -337,7 +339,7 @@ class ImportDumpRequestManager {
 
 		$this->interwikiLookup->invalidateCache( $prefix );
 
-		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportDumpQueue', (string)$this->ID );
+		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
 		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
 		$logEntry = new ManualLogEntry(

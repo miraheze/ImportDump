@@ -5,8 +5,8 @@
 			"Nokeoo"
 		]
 	},
-	"action-request-import-dump": "prašyti importavimų",
-	"action-view-private-import-dump-requests": "peržiūrėti privačius importavimo prašymus",
+	"action-request-import": "prašyti importavimų",
+	"action-view-private-import-requests": "peržiūrėti privačius importavimo prašymus",
 	"echo-pref-tooltip-importdump-new-request": "Pranešti man, kai yra naujų importo užklausų.",
 	"echo-pref-tooltip-importdump-request-comment": "Pranešti man, kai yra importo užklausos, kurioje dalyvavau, komentaras.",
 	"importdump-button-copy": "(Kopijuoti į iškarpinę)",
@@ -83,15 +83,15 @@
 	"importdump-usergroups-none": "nėra",
 	"importdumpprivate-log-header": "Tai visų importavimo užklausų ir užklausų su tikslais, kurie yra privatūs viki, būsenos atnaujinimų žurnalas.",
 	"importdumpprivate-log-name": "Importavimo užklausų privatus žurnalas",
-	"ipb-action-request-import-dump": "Prašyti importavimo",
+	"ipb-action-request-import": "Prašyti importavimo",
 	"log-action-filter-importdump": "Veiklos tipas:",
 	"log-action-filter-importdump-request": "Pateikti nauji prašymai",
 	"log-action-filter-importdump-statusupdate": "Užklausų būsena atnaujinta",
 	"log-action-filter-importdumpprivate": "Veiksmo tipas:",
 	"log-action-filter-importdumpprivate-request": "Pateikti nauji prašymai",
 	"log-action-filter-importdumpprivate-statusupdate": "Užklausų būsena atnaujinta",
-	"requestimportdump": "Prašyti importavimo",
-	"requestimportdumpqueue": "Importavimo užklausų eilė",
-	"right-request-import-dump": "Prašyti importavimų",
-	"right-view-private-import-dump-requests": "Peržiūrėti privačius importavimo prašymus"
+	"requestimport": "Prašyti importavimo",
+	"requestimportqueue": "Importavimo užklausų eilė",
+	"right-request-import": "Prašyti importavimų",
+	"right-view-private-import-requests": "Peržiūrėti privačius importavimo prašymus"
 }

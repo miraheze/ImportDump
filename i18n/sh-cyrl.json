@@ -5,10 +5,10 @@
 			"Vlad5250"
 		]
 	},
-	"action-handle-import-dump-interwiki": "руковате међувикије за складишне извадке увоза",
-	"action-handle-import-dump-requests": "руковате корисничке захтјеве за увоз",
-	"action-request-import-dump": "захтјевате увоз",
-	"action-view-private-import-dump-requests": "гледате приватне захтјеве за увоз",
+	"action-handle-import-request-interwiki": "руковате међувикије за складишне извадке увоза",
+	"action-handle-import-requests": "руковате корисничке захтјеве за увоз",
+	"action-request-import": "захтјевате увоз",
+	"action-view-private-import-requests": "гледате приватне захтјеве за увоз",
 	"echo-category-title-importdump-new-request": "Нови захтјев за складишни извадак увоза",
 	"echo-category-title-importdump-request-comment": "Додан је коментар у захтјев за складишни извадак увоза",
 	"echo-category-title-importdump-request-status-update": "Промијењен статус захтјева за складишни извадак увоза",
@@ -102,7 +102,7 @@
 	"importdump-usergroups-none": "ништа",
 	"importdumpprivate-log-header": "Ово је дневник свих захтјева за увоз и промјена статуса захтјева с циљевима који су приватни викији.",
 	"importdumpprivate-log-name": "Приватни дневник захтјева за увоз",
-	"ipb-action-request-import-dump": "Захтјеви за увоз",
+	"ipb-action-request-import": "Захтјеви за увоз",
 	"log-action-filter-importdump": "Врста радње:",
 	"log-action-filter-importdump-interwiki": "Промјене табле међувикија",
 	"log-action-filter-importdump-request": "Поднесен нови захтјев",
@@ -117,10 +117,10 @@
 	"logentry-importdumpprivate-interwiki": "$1 је додао(ла) међувики префикс „$4“ на $5 за приватни захтјев складишног извадка увоза $6.",
 	"logentry-importdumpprivate-request": "$1 је затражио(ла) складишни извадак увоза за приватни вики $4 у $5.",
 	"logentry-importdumpprivate-statusupdate": "$1 је промијенио(ла) статус захтјева приватног складишног извадка увоза $4 за у „$5“.",
-	"requestimportdump": "Захтјев за увоз",
-	"requestimportdumpqueue": "Ред захтјева за увоз",
-	"right-handle-import-dump-interwiki": "Руковање међувикија за складишне извадке увоза",
-	"right-handle-import-dump-requests": "Руковање корисничких захтјева за увоз",
-	"right-request-import-dump": "Захтјев за увоз",
-	"right-view-private-import-dump-requests": "Прегледање приватних захтјева за увоз"
+	"requestimport": "Захтјев за увоз",
+	"requestimportqueue": "Ред захтјева за увоз",
+	"right-handle-import-request-interwiki": "Руковање међувикија за складишне извадке увоза",
+	"right-handle-import-requests": "Руковање корисничких захтјева за увоз",
+	"right-request-import": "Захтјев за увоз",
+	"right-view-private-import-requests": "Прегледање приватних захтјева за увоз"
 }
