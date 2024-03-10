@@ -31,7 +31,8 @@ class EchoImportFailedPresentationModel extends EchoEventPresentationModel {
 	public function getBodyMessage() {
 		$reason = DiscussionParser::getTextSnippet(
 			$this->event->getExtraParam( 'reason' ),
-			$this->language
+			$this->language,
+			1000
 		);
 
 		return $this->msg( 'importdump-notification-body-import-failed',
