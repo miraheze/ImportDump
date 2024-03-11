@@ -128,7 +128,7 @@
 	"requestimport": "申请导入",
 	"requestimportqueue": "导入申请队列",
 	"right-handle-import-request-interwiki": "处理跨wiki导入转储",
-	"right-handle-import-requests": "处理用户导入转储申请",
+	"right-handle-import-requests": "处理用户导入申请",
 	"right-request-import": "申请导入",
 	"right-view-private-import-requests": "查看非公开导入申请"
 }
