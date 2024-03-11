@@ -206,7 +206,7 @@ class SpecialRequestImport extends FormSpecialPage
 		}
 
 		$duplicate = $dbw->newSelectQueryBuilder()
-			->table( 'importdump_requests' )
+			->table( 'import_requests' )
 			->field( '*' )
 			->where( [
 				'request_reason' => $data['reason'],
@@ -284,7 +284,7 @@ class SpecialRequestImport extends FormSpecialPage
 		}
 
 		$dbw->newInsertQueryBuilder()
-			->insertInto( 'importdump_requests' )
+			->insertInto( 'import_requests' )
 			->ignore()
 			->rows( [
 				'request_source' => $data['source'],
