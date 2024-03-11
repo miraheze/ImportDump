@@ -1,13 +1,13 @@
 <?php
 
-namespace Miraheze\ImportDump\Tests\Unit;
+namespace Miraheze\RequestImport\Tests\Unit;
 
 use Generator;
 use MediaWiki\Tests\HookContainer\HookRunnerTestBase;
-use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
+use Miraheze\RequestImport\Hooks\ImportDumpHookRunner;
 
 /**
- * @covers \Miraheze\ImportDump\Hooks\ImportDumpHookRunner
+ * @covers \Miraheze\RequestImport\Hooks\ImportDumpHookRunner
  */
 class ImportDumpHookRunnerTest extends HookRunnerTestBase {
 

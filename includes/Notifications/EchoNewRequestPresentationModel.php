@@ -1,6 +1,6 @@
 <?php
 
-namespace Miraheze\ImportDump\Notifications;
+namespace Miraheze\RequestImport\Notifications;
 
 use MediaWiki\Extension\Notifications\DiscussionParser;
 use MediaWiki\Extension\Notifications\Formatters\EchoEventPresentationModel;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Miraheze\ImportDump\Jobs;
+namespace Miraheze\RequestImport\Jobs;
 
 use FakeMaintenance;
 use ImportStreamSource;
@@ -16,9 +16,9 @@ use MediaWiki\SiteStats\SiteStatsInit;
 use MediaWiki\Title\Title;
 use MediaWiki\User\User;
 use MessageLocalizer;
-use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
-use Miraheze\ImportDump\ImportDumpRequestManager;
-use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\RequestImport\Hooks\ImportDumpHookRunner;
+use Miraheze\RequestImport\ImportDumpRequestManager;
+use Miraheze\RequestImport\ImportDumpStatus;
 use RebuildRecentchanges;
 use RebuildTextIndex;
 use RefreshLinks;

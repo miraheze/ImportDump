@@ -18,15 +18,15 @@
 		"ImportDumpAliases": "ImportDumpAliases.php"
 	},
 	"AutoloadNamespaces": {
-		"Miraheze\\ImportDump\\": "includes/"
+		"Miraheze\\RequestImport\\": "includes/"
 	},
 	"TestAutoloadNamespaces": {
-		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/",
-		"Miraheze\\ImportDump\\Tests\\Unit\\": "tests/phpunit/unit/"
+		"Miraheze\\RequestImport\\Tests\\": "tests/phpunit/",
+		"Miraheze\\RequestImport\\Tests\\Unit\\": "tests/phpunit/unit/"
 	},
 	"JobClasses": {
 		"ImportDumpJob": {
-			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpJob",
+			"class": "Miraheze\\RequestImport\\Jobs\\ImportDumpJob",
 			"services": [
 				"ConfigFactory",
 				"DBLoadBalancerFactory",
@@ -37,7 +37,7 @@
 			]
 		},
 		"ImportDumpNotifyJob": {
-			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpNotifyJob",
+			"class": "Miraheze\\RequestImport\\Jobs\\ImportDumpNotifyJob",
 			"services": [
 				"ConfigFactory",
 				"ImportDumpRequestManager",
@@ -107,7 +107,7 @@
 	},
 	"SpecialPages": {
 		"RequestImport": {
-			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImport",
+			"class": "Miraheze\\RequestImport\\Specials\\SpecialRequestImport",
 			"services": [
 				"DBLoadBalancerFactory",
 				"MimeAnalyzer",
@@ -120,7 +120,7 @@
 			]
 		},
 		"RequestImportQueue": {
-			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportQueue",
+			"class": "Miraheze\\RequestImport\\Specials\\SpecialRequestImportQueue",
 			"services": [
 				"DBLoadBalancerFactory",
 				"ImportDumpRequestManager",
@@ -148,10 +148,10 @@
 	},
 	"HookHandlers": {
 		"Installer": {
-			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Installer"
+			"class": "Miraheze\\RequestImport\\Hooks\\Handlers\\Installer"
 		},
 		"Main": {
-			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Main",
+			"class": "Miraheze\\RequestImport\\Hooks\\Handlers\\Main",
 			"services": [
 				"ConfigFactory"
 			]

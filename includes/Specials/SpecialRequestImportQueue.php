@@ -1,15 +1,15 @@
 <?php
 
-namespace Miraheze\ImportDump\Specials;
+namespace Miraheze\RequestImport\Specials;
 
 use HTMLForm;
 use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
-use Miraheze\ImportDump\ImportDumpRequestManager;
-use Miraheze\ImportDump\ImportDumpRequestQueuePager;
-use Miraheze\ImportDump\ImportDumpRequestViewer;
-use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\RequestImport\ImportDumpRequestManager;
+use Miraheze\RequestImport\ImportDumpRequestQueuePager;
+use Miraheze\RequestImport\ImportDumpRequestViewer;
+use Miraheze\RequestImport\ImportDumpStatus;
 use Wikimedia\Rdbms\ILBFactory;
 
 class SpecialRequestImportQueue extends SpecialPage

@@ -1,6 +1,6 @@
 <?php
 
-namespace Miraheze\ImportDump\Hooks;
+namespace Miraheze\RequestImport\Hooks;
 
 use MediaWiki\HookContainer\HookContainer;
 

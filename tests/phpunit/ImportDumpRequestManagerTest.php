@@ -1,9 +1,9 @@
 <?php
 
-namespace Miraheze\ImportDump\Tests;
+namespace Miraheze\RequestImport\Tests;
 
 use MediaWikiIntegrationTestCase;
-use Miraheze\ImportDump\ImportDumpRequestManager;
+use Miraheze\RequestImport\ImportDumpRequestManager;
 use ReflectionClass;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
@@ -11,7 +11,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group ImportDump
  * @group Database
  * @group Medium
- * @coversDefaultClass \Miraheze\ImportDump\ImportDumpRequestManager
+ * @coversDefaultClass \Miraheze\RequestImport\ImportDumpRequestManager
  */
 class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 	public function addDBData() {

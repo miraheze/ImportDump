@@ -1,6 +1,6 @@
 <?php
 
-namespace Miraheze\ImportDump\Jobs;
+namespace Miraheze\RequestImport\Jobs;
 
 use ExtensionRegistry;
 use Job;
@@ -12,8 +12,8 @@ use MediaWiki\Title\Title;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MessageLocalizer;
-use Miraheze\ImportDump\ImportDumpRequestManager;
-use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\RequestImport\ImportDumpRequestManager;
+use Miraheze\RequestImport\ImportDumpStatus;
 use RequestContext;
 
 class ImportDumpNotifyJob extends Job

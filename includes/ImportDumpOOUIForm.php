@@ -1,6 +1,6 @@
 <?php
 
-namespace Miraheze\ImportDump;
+namespace Miraheze\RequestImport;
 
 use OOUI\FieldsetLayout;
 use OOUI\HtmlSnippet;

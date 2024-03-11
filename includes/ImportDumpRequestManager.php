@@ -1,6 +1,6 @@
 <?php
 
-namespace Miraheze\ImportDump;
+namespace Miraheze\RequestImport;
 
 use ExtensionRegistry;
 use FileBackend;
@@ -21,7 +21,7 @@ use Message;
 use MessageLocalizer;
 use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\CreateWiki\RemoteWiki;
-use Miraheze\ImportDump\Jobs\ImportDumpJob;
+use Miraheze\RequestImport\Jobs\ImportDumpJob;
 use RepoGroup;
 use stdClass;
 use Wikimedia\Rdbms\DBConnRef;

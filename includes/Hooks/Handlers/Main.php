@@ -1,6 +1,6 @@
 <?php
 
-namespace Miraheze\ImportDump\Hooks\Handlers;
+namespace Miraheze\RequestImport\Hooks\Handlers;
 
 use MediaWiki\Block\Hook\GetAllBlockActionsHook;
 use MediaWiki\Config\Config;
@@ -10,10 +10,10 @@ use MediaWiki\Extension\Notifications\UserLocator;
 use MediaWiki\Hook\LoginFormValidErrorMessagesHook;
 use MediaWiki\User\Hook\UserGetReservedNamesHook;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\ImportDump\Notifications\EchoImportFailedPresentationModel;
-use Miraheze\ImportDump\Notifications\EchoNewRequestPresentationModel;
-use Miraheze\ImportDump\Notifications\EchoRequestCommentPresentationModel;
-use Miraheze\ImportDump\Notifications\EchoRequestStatusUpdatePresentationModel;
+use Miraheze\RequestImport\Notifications\EchoImportFailedPresentationModel;
+use Miraheze\RequestImport\Notifications\EchoNewRequestPresentationModel;
+use Miraheze\RequestImport\Notifications\EchoRequestCommentPresentationModel;
+use Miraheze\RequestImport\Notifications\EchoRequestStatusUpdatePresentationModel;
 
 class Main implements
 	GetAllBlockActionsHook,

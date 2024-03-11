@@ -1,6 +1,6 @@
 <?php
 
-namespace Miraheze\ImportDump\Specials;
+namespace Miraheze\RequestImport\Specials;
 
 use ErrorPageError;
 use ExtensionRegistry;
@@ -20,7 +20,7 @@ use Message;
 use MimeAnalyzer;
 use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\CreateWiki\RemoteWiki;
-use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\RequestImport\ImportDumpStatus;
 use PermissionsError;
 use RepoGroup;
 use UploadBase;

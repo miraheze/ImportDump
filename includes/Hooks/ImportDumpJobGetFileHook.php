@@ -1,8 +1,8 @@
 <?php
 
-namespace Miraheze\ImportDump\Hooks;
+namespace Miraheze\RequestImport\Hooks;
 
-use Miraheze\ImportDump\ImportDumpRequestManager;
+use Miraheze\RequestImport\ImportDumpRequestManager;
 
 interface ImportDumpJobGetFileHook {
 	/**
