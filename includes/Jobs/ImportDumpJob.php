@@ -170,7 +170,7 @@ class ImportDumpJob extends Job
 
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
 		} catch ( Throwable $e ) {
-			$this->setLastError( $e->getMessage() );
+			$this->setLastError( '[' . $e->getCode() . '] ' . get_class( $e ) . ': ' . $e->getMessage() );
 			$this->notifyFailed();
 			return true;
 		}
