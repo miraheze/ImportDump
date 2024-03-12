@@ -19,6 +19,7 @@ use MessageLocalizer;
 use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
+use MWExceptionHandler;
 use RebuildRecentchanges;
 use RebuildTextIndex;
 use RefreshLinks;
@@ -170,7 +171,8 @@ class ImportDumpJob extends Job
 
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
 		} catch ( Throwable $e ) {
-			$this->setLastError( $e->getMessage() );
+			MWExceptionHandler::logException( $e );
+			$this->setLastError( MWExceptionHandler::getLogMessage( $e ) );
 			$this->notifyFailed();
 			return true;
 		}
