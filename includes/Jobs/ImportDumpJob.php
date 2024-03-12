@@ -171,6 +171,7 @@ class ImportDumpJob extends Job
 
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
 		} catch ( Throwable $e ) {
+			MWExceptionHandler::logException( $e );
 			$this->setLastError( MWExceptionHandler::getLogMessage( $e ) );
 			$this->notifyFailed();
 			return true;
