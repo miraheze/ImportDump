@@ -12,6 +12,7 @@ use MediaWiki\Config\ConfigFactory;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Permissions\UltimateAuthority;
+use MediaWiki\Request\WebRequest;
 use MediaWiki\SiteStats\SiteStatsInit;
 use MediaWiki\Title\Title;
 use MediaWiki\User\User;
@@ -172,7 +173,7 @@ class ImportDumpJob extends Job
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
 		} catch ( Throwable $e ) {
 			MWExceptionHandler::logException( $e );
-			$this->setLastError( MWExceptionHandler::getLogMessage( $e ) );
+			$this->setLastError( $this->getLogMessage( $e ) );
 			$this->notifyFailed();
 			return true;
 		}
@@ -203,6 +204,18 @@ class ImportDumpJob extends Job
 				]
 			)
 		);
+	}
+
+	/**
+	 * @param Throwable $e
+	 * @return string
+	 */
+	private function getLogMessage( Throwable $e ): string {
+		$id = WebRequest::getRequestId();
+		$type = get_class( $e );
+		$message = $e->getMessage();
+
+		return "[$id]   $type: $message";
 	}
 
 	/**
