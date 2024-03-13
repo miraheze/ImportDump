@@ -211,8 +211,7 @@ class ImportDumpJob extends Job
 	 * @return string
 	 */
 	private function getLogMessage( Throwable $e ): string {
-		$telemetry = Telemetry::getInstance();
-		$id = $telemetry->getRequestId();
+		$id = Telemetry::getInstance()->getRequestId();
 		$type = get_class( $e );
 		$message = $e->getMessage();
 
