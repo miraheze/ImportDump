@@ -9,6 +9,7 @@ use Job;
 use JobSpecification;
 use MediaWiki\Config\Config;
 use MediaWiki\Config\ConfigFactory;
+use MediaWiki\Http\Telemetry;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Permissions\UltimateAuthority;
@@ -171,8 +172,8 @@ class ImportDumpJob extends Job
 
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
 		} catch ( Throwable $e ) {
-			MWExceptionHandler::logException( $e );
-			$this->setLastError( MWExceptionHandler::getLogMessage( $e ) );
+			MWExceptionHandler::rollbackPrimaryChangesAndLog( $e );
+			$this->setLastError( $this->getLogMessage( $e ) );
 			$this->notifyFailed();
 			return true;
 		}
@@ -203,6 +204,18 @@ class ImportDumpJob extends Job
 				]
 			)
 		);
+	}
+
+	/**
+	 * @param Throwable $e
+	 * @return string
+	 */
+	private function getLogMessage( Throwable $e ): string {
+		$id = Telemetry::getInstance()->getRequestId();
+		$type = get_class( $e );
+		$message = $e->getMessage();
+
+		return "[$id]   $type: $message";
 	}
 
 	/**
