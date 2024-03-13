@@ -9,10 +9,10 @@ use Job;
 use JobSpecification;
 use MediaWiki\Config\Config;
 use MediaWiki\Config\ConfigFactory;
+use MediaWiki\Http\Telemetry;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Permissions\UltimateAuthority;
-use MediaWiki\Request\WebRequest;
 use MediaWiki\SiteStats\SiteStatsInit;
 use MediaWiki\Title\Title;
 use MediaWiki\User\User;
@@ -211,7 +211,8 @@ class ImportDumpJob extends Job
 	 * @return string
 	 */
 	private function getLogMessage( Throwable $e ): string {
-		$id = WebRequest::getRequestId();
+		$telemetry = Telemetry::getInstance();
+		$id = $telemetry->getRequestId();
 		$type = get_class( $e );
 		$message = $e->getMessage();
 
