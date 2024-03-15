@@ -45,7 +45,7 @@
 				"type": "mwenum",
 				"options": { "notnull": true,
 					"CustomSchemaOptions": {
-						"enum_values": [ "complete", "declined", "failed", "inprogress", "pending" ]
+						"enum_values": [ "complete", "declined", "failed", "inprogress", "pending", "starting" ]
 					}
 				}
 			},
