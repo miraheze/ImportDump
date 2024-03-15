@@ -13,4 +13,6 @@ interface ImportDumpStatus {
 	public const STATUS_INPROGRESS = 'inprogress';
 
 	public const STATUS_PENDING = 'pending';
+
+	public const STATUS_STARTING = 'starting';
 }
