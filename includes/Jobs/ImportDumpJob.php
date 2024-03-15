@@ -14,7 +14,6 @@ use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Permissions\UltimateAuthority;
 use MediaWiki\SiteStats\SiteStatsInit;
-use MediaWiki\Title\Title;
 use MediaWiki\User\User;
 use MessageLocalizer;
 use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
@@ -63,7 +62,6 @@ class ImportDumpJob extends Job
 	private $wikiImporterFactory;
 
 	/**
-	 * @param Title $title
 	 * @param array $params
 	 * @param ConfigFactory $configFactory
 	 * @param ILBFactory $dbLoadBalancerFactory
@@ -73,7 +71,6 @@ class ImportDumpJob extends Job
 	 * @param WikiImporterFactory $wikiImporterFactory
 	 */
 	public function __construct(
-		Title $title,
 		array $params,
 		ConfigFactory $configFactory,
 		ILBFactory $dbLoadBalancerFactory,

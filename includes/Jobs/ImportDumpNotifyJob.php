@@ -8,7 +8,6 @@ use MediaWiki\Config\Config;
 use MediaWiki\Config\ConfigFactory;
 use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\SpecialPage\SpecialPage;
-use MediaWiki\Title\Title;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MessageLocalizer;
@@ -46,14 +45,12 @@ class ImportDumpNotifyJob extends Job
 	private $userFactory;
 
 	/**
-	 * @param Title $title
 	 * @param array $params
 	 * @param ConfigFactory $configFactory
 	 * @param ImportDumpRequestManager $importDumpRequestManager
 	 * @param UserFactory $userFactory
 	 */
 	public function __construct(
-		Title $title,
 		array $params,
 		ConfigFactory $configFactory,
 		ImportDumpRequestManager $importDumpRequestManager,
