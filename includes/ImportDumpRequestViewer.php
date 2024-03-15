@@ -736,7 +736,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			}
 		}
 
-		if ( 
+		if (
 			$this->importDumpRequestManager->getStatus() === self::STATUS_COMPLETE ||
 			$this->importDumpRequestManager->getStatus() === self::STATUS_INPROGRESS ||
 			$this->importDumpRequestManager->getStatus() === self::STATUS_STARTING
