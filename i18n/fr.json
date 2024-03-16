@@ -16,7 +16,6 @@
 	"echo-category-title-importdump-new-request": "Nouvelle demande d’import de données",
 	"echo-category-title-importdump-request-comment": "Commentaire ajouté à une demande d’import",
 	"echo-category-title-importdump-request-status-update": "État mis à jour pour une demande d’import de données",
-	"echo-pref-tooltip-importdump-new-request": "Me notifier quand il y a de nouvelle demandes d’import de données.",
 	"echo-pref-tooltip-importdump-request-comment": "Me notifier quand il y a un commentaire sur une demande d’import de données à laquelle j’ai participé.",
 	"echo-pref-tooltip-importdump-request-status-update": "Me notifier quand l’état est mis à jour sur une demande d’import à laquelle j’ai participé.",
 	"importdump-button-copy": "(Copier dans le presse-papiers)",

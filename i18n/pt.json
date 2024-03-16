@@ -12,7 +12,6 @@
 	"echo-category-title-importdump-new-request": "Pedido novo de importação de uma cópia em ficheiro",
 	"echo-category-title-importdump-request-comment": "Foi adicionado um comentário a um pedido de importação de uma cópia em ficheiro",
 	"echo-category-title-importdump-request-status-update": "Foi atualizado o estado de um pedido de importação de cópia em ficheiro",
-	"echo-pref-tooltip-importdump-new-request": "Notificar-me quando houverem pedidos de importação de cópias em ficheiro",
 	"echo-pref-tooltip-importdump-request-comment": "Notificar-me quando for comentado um pedido de importação de cópia em ficheiro no qual eu tenha participado.",
 	"echo-pref-tooltip-importdump-request-status-update": "Notificar-me quando for atualizado o estado de um pedido de importação de cópia em ficheiro no qual eu tenha participado.",
 	"importdump-button-copy": "(Copiar para a área de transferência)",

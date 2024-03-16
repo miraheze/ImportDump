@@ -14,7 +14,6 @@
 	"echo-category-title-importdump-new-request": "Nieuw importverzoek",
 	"echo-category-title-importdump-request-comment": "Opmerking toegevoegd aan een importaanvraag",
 	"echo-category-title-importdump-request-status-update": "Status bijgewerkt voor een importaanvraag",
-	"echo-pref-tooltip-importdump-new-request": "Mij op de hoogte stellen als er nieuwe importaanvragen zijn.",
 	"echo-pref-tooltip-importdump-request-comment": "Mij op de hoogte stellen als er een reactie is op een importaanvraag waaraan ik heb deelgenomen.",
 	"echo-pref-tooltip-importdump-request-status-update": "Laat me weten wanneer de status is bijgewerkt voor een importaanvraag waaraan ik heb deelgenomen.",
 	"importdump-button-copy": "(Naar klembord kopiëren)",

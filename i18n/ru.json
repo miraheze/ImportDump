@@ -15,7 +15,6 @@
 	"echo-category-title-importdump-new-request": "Новый запрос на импорт дампа",
 	"echo-category-title-importdump-request-comment": "Комментарий, добавленный к запросу на импорт дампа",
 	"echo-category-title-importdump-request-status-update": "Обновлено состояние запроса на импорт дампа",
-	"echo-pref-tooltip-importdump-new-request": "Уведомлять меня о новых запросах на импорт.",
 	"echo-pref-tooltip-importdump-request-comment": "Уведомлять меня о появлении комментариев к запросу на импорт, в котором я участвую.",
 	"echo-pref-tooltip-importdump-request-status-update": "Уведомлять меня об обновлении состояния запроса на импорт дампа, в котором я участвую.",
 	"importdump-button-copy": "(Скопировать в буфер обмена)",

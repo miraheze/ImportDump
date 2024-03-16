@@ -14,8 +14,6 @@
 	"echo-category-title-importdump-new-request": "Ново барање за увоз",
 	"echo-category-title-importdump-request-comment": "Додаден коментар во барање за увоз",
 	"echo-category-title-importdump-request-status-update": "Изменета состоба на барање за увоз",
-	"echo-pref-tooltip-importdump-import-failed": "Извести ме кога ќе има неуспешни увози.",
-	"echo-pref-tooltip-importdump-new-request": "Извести ме кога има нови барања за увоз.",
 	"echo-pref-tooltip-importdump-request-comment": "Извести ме кога има коментар на барање за увоз во кој имам учествувано.",
 	"echo-pref-tooltip-importdump-request-status-update": "Извести ме кога ќе се измени состојбата на барање за увоз во кој имам учествувано.",
 	"importdump-button-copy": "(Копирај во меѓускладот)",

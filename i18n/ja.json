@@ -22,7 +22,6 @@
 	"echo-category-title-importdump-new-request": "新しくダンプインポートを要求",
 	"echo-category-title-importdump-request-comment": "インポートダンプリクエストにコメントが追加されました",
 	"echo-category-title-importdump-request-status-update": "インポートダンプのリクエストが更新されました",
-	"echo-pref-tooltip-importdump-new-request": "新しい取り込みリクエストがあった時に通知する。",
 	"echo-pref-tooltip-importdump-request-comment": "参加している取り込みリクエストにコメントが来た時に通知する。",
 	"echo-pref-tooltip-importdump-request-status-update": "ダンプのリクエストが更新された際に通知する",
 	"importdump-button-copy": "クリップボードにコピー",
