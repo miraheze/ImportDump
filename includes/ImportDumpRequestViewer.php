@@ -405,7 +405,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 						'type' => 'submit',
 						'flags' => [ 'destructive', 'primary' ],
 						'buttonlabel-message' => 'importdump-label-decline-import',
-						'disabled' => !$validStatus,
+						'disabled' => !$validStatus || $status === self::STATUS_DECLINED,
 						'section' => 'handling',
 					],
 				];
