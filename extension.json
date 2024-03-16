@@ -34,7 +34,8 @@
 				"ImportDumpHookRunner",
 				"ImportDumpRequestManager",
 				"WikiImporterFactory"
-			]
+			],
+			"needsPage": false
 		},
 		"ImportDumpNotifyJob": {
 			"class": "Miraheze\\RequestImport\\Jobs\\ImportDumpNotifyJob",
@@ -42,7 +43,8 @@
 				"ConfigFactory",
 				"ImportDumpRequestManager",
 				"UserFactory"
-			]
+			],
+			"needsPage": false
 		}
 	},
 	"GroupPermissions": {
@@ -159,7 +161,6 @@
 	},
 	"ResourceModules": {
 		"ext.importdump.oouiform": {
-			"targets": [ "desktop", "mobile" ],
 			"scripts": "ext.importdump.oouiform.ooui.js",
 			"dependencies": [
 				"mediawiki.storage",
@@ -167,7 +168,6 @@
 			]
 		},
 		"ext.importdump.oouiform.styles": {
-			"targets": [ "desktop", "mobile" ],
 			"styles": "ext.importdump.oouiform.ooui.less"
 		}
 	},

@@ -1,6 +1,6 @@
 [
 	{
-		"name": "importdump_requests",
+		"name": "import_requests",
 		"comment": "",
 		"columns": [
 			{
@@ -45,7 +45,7 @@
 				"type": "mwenum",
 				"options": { "notnull": true,
 					"CustomSchemaOptions": {
-						"enum_values": [ "complete", "declined", "failed", "inprogress", "pending" ]
+						"enum_values": [ "complete", "declined", "failed", "inprogress", "pending", "starting" ]
 					}
 				}
 			},
@@ -91,7 +91,7 @@
 		"pk": [ "request_id" ]
 	},
 	{
-		"name": "importdump_request_comments",
+		"name": "import_request_comments",
 		"comment": "",
 		"columns": [
 			{

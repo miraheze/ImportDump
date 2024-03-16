@@ -9,16 +9,17 @@ use Job;
 use JobSpecification;
 use MediaWiki\Config\Config;
 use MediaWiki\Config\ConfigFactory;
+use MediaWiki\Http\Telemetry;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Permissions\UltimateAuthority;
 use MediaWiki\SiteStats\SiteStatsInit;
-use MediaWiki\Title\Title;
 use MediaWiki\User\User;
 use MessageLocalizer;
 use Miraheze\RequestImport\Hooks\ImportDumpHookRunner;
 use Miraheze\RequestImport\ImportDumpRequestManager;
 use Miraheze\RequestImport\ImportDumpStatus;
+use MWExceptionHandler;
 use RebuildRecentchanges;
 use RebuildTextIndex;
 use RefreshLinks;
@@ -61,7 +62,6 @@ class ImportDumpJob extends Job
 	private $wikiImporterFactory;
 
 	/**
-	 * @param Title $title
 	 * @param array $params
 	 * @param ConfigFactory $configFactory
 	 * @param ILBFactory $dbLoadBalancerFactory
@@ -71,7 +71,6 @@ class ImportDumpJob extends Job
 	 * @param WikiImporterFactory $wikiImporterFactory
 	 */
 	public function __construct(
-		Title $title,
 		array $params,
 		ConfigFactory $configFactory,
 		ILBFactory $dbLoadBalancerFactory,
@@ -170,7 +169,8 @@ class ImportDumpJob extends Job
 
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
 		} catch ( Throwable $e ) {
-			$this->setLastError( $e->getMessage() );
+			MWExceptionHandler::rollbackPrimaryChangesAndLog( $e );
+			$this->setLastError( $this->getLogMessage( $e ) );
 			$this->notifyFailed();
 			return true;
 		}
@@ -201,6 +201,18 @@ class ImportDumpJob extends Job
 				]
 			)
 		);
+	}
+
+	/**
+	 * @param Throwable $e
+	 * @return string
+	 */
+	private function getLogMessage( Throwable $e ): string {
+		$id = Telemetry::getInstance()->getRequestId();
+		$type = get_class( $e );
+		$message = $e->getMessage();
+
+		return "[$id]   $type: $message";
 	}
 
 	/**

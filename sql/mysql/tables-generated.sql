@@ -2,7 +2,7 @@
 -- Source: sql/tables.json
 -- Do not modify this file directly.
 -- See https://www.mediawiki.org/wiki/Manual:Schema_changes
-CREATE TABLE /*_*/importdump_requests (
+CREATE TABLE /*_*/import_requests (
   request_id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
   request_actor BIGINT UNSIGNED NOT NULL,
   request_timestamp BINARY(14) NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE /*_*/importdump_requests (
   request_reason BLOB NOT NULL,
   request_status ENUM(
     'complete', 'declined', 'failed',
-    'inprogress', 'pending'
+    'inprogress', 'pending', 'starting'
   ) NOT NULL,
   request_locked TINYINT UNSIGNED DEFAULT 0 NOT NULL,
   request_private TINYINT UNSIGNED DEFAULT 0 NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE /*_*/importdump_requests (
 ) /*$wgDBTableOptions*/;
 
 
-CREATE TABLE /*_*/importdump_request_comments (
+CREATE TABLE /*_*/import_request_comments (
   request_comment_id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
   request_id BIGINT UNSIGNED NOT NULL,
   request_comment_actor BIGINT UNSIGNED NOT NULL,

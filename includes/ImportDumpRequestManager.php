@@ -148,7 +148,7 @@ class ImportDumpRequestManager {
 		}
 
 		$this->row = $this->dbw->newSelectQueryBuilder()
-			->table( 'importdump_requests' )
+			->table( 'import_requests' )
 			->field( '*' )
 			->where( [ 'request_id' => $requestID ] )
 			->caller( __METHOD__ )
@@ -168,7 +168,7 @@ class ImportDumpRequestManager {
 	 */
 	public function addComment( string $comment, User $user ) {
 		$this->dbw->newInsertQueryBuilder()
-			->insertInto( 'importdump_request_comments' )
+			->insertInto( 'import_request_comments' )
 			->rows( [
 				'request_id' => $this->ID,
 				'request_comment_text' => $comment,
@@ -277,7 +277,7 @@ class ImportDumpRequestManager {
 	 */
 	public function getComments(): array {
 		$res = $this->dbw->newSelectQueryBuilder()
-			->table( 'importdump_request_comments' )
+			->table( 'import_request_comments' )
 			->field( '*' )
 			->where( [ 'request_id' => $this->ID ] )
 			->orderBy( 'request_comment_timestamp', SelectQueryBuilder::SORT_DESC )
@@ -613,7 +613,7 @@ class ImportDumpRequestManager {
 	 */
 	public function setLocked( int $locked ) {
 		$this->dbw->newUpdateQueryBuilder()
-			->update( 'importdump_requests' )
+			->update( 'import_requests' )
 			->set( [ 'request_locked' => $locked ] )
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
@@ -625,7 +625,7 @@ class ImportDumpRequestManager {
 	 */
 	public function setPrivate( int $private ) {
 		$this->dbw->newUpdateQueryBuilder()
-			->update( 'importdump_requests' )
+			->update( 'import_requests' )
 			->set( [ 'request_private' => $private ] )
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
@@ -637,7 +637,7 @@ class ImportDumpRequestManager {
 	 */
 	public function setReason( string $reason ) {
 		$this->dbw->newUpdateQueryBuilder()
-			->update( 'importdump_requests' )
+			->update( 'import_requests' )
 			->set( [ 'request_reason' => $reason ] )
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
@@ -649,7 +649,7 @@ class ImportDumpRequestManager {
 	 */
 	public function setSource( string $source ) {
 		$this->dbw->newUpdateQueryBuilder()
-			->update( 'importdump_requests' )
+			->update( 'import_requests' )
 			->set( [ 'request_source' => $source ] )
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
@@ -661,7 +661,7 @@ class ImportDumpRequestManager {
 	 */
 	public function setStatus( string $status ) {
 		$this->dbw->newUpdateQueryBuilder()
-			->update( 'importdump_requests' )
+			->update( 'import_requests' )
 			->set( [ 'request_status' => $status ] )
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
@@ -673,7 +673,7 @@ class ImportDumpRequestManager {
 	 */
 	public function setTarget( string $target ) {
 		$this->dbw->newUpdateQueryBuilder()
-			->update( 'importdump_requests' )
+			->update( 'import_requests' )
 			->set( [ 'request_target' => $target ] )
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )

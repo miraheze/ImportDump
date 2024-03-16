@@ -2,7 +2,7 @@
 -- Source: sql/tables.json
 -- Do not modify this file directly.
 -- See https://www.mediawiki.org/wiki/Manual:Schema_changes
-CREATE TABLE importdump_requests (
+CREATE TABLE import_requests (
   request_id BIGSERIAL NOT NULL,
   request_actor BIGINT NOT NULL,
   request_timestamp TIMESTAMPTZ NOT NULL,
@@ -15,18 +15,18 @@ CREATE TABLE importdump_requests (
   PRIMARY KEY(request_id)
 );
 
-CREATE INDEX request_actor_timestamp ON importdump_requests (
+CREATE INDEX request_actor_timestamp ON import_requests (
   request_actor, request_timestamp
 );
 
-CREATE INDEX request_timestamp ON importdump_requests (request_timestamp);
+CREATE INDEX request_timestamp ON import_requests (request_timestamp);
 
-CREATE INDEX request_target ON importdump_requests (request_target);
+CREATE INDEX request_target ON import_requests (request_target);
 
-CREATE INDEX request_status ON importdump_requests (request_status);
+CREATE INDEX request_status ON import_requests (request_status);
 
 
-CREATE TABLE importdump_request_comments (
+CREATE TABLE import_request_comments (
   request_comment_id BIGSERIAL NOT NULL,
   request_id BIGINT NOT NULL,
   request_comment_actor BIGINT NOT NULL,
@@ -35,6 +35,6 @@ CREATE TABLE importdump_request_comments (
   PRIMARY KEY(request_comment_id)
 );
 
-CREATE INDEX request_id ON importdump_request_comments (request_id);
+CREATE INDEX request_id ON import_request_comments (request_id);
 
-CREATE INDEX request_comment_timestamp ON importdump_request_comments (request_comment_timestamp);
+CREATE INDEX request_comment_timestamp ON import_request_comments (request_comment_timestamp);
