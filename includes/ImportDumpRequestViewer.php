@@ -320,12 +320,13 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					'handle-status' => [
 						'type' => 'select',
 						'label-message' => 'importdump-label-update-status',
-						'options-messages' => [
+						'options-messages' => array_unique( [
+							'importdump-label-' . $status => $status,
 							'importdump-label-pending' => self::STATUS_PENDING,
 							'importdump-label-complete' => self::STATUS_COMPLETE,
-						],
+						] ),
 						'default' => $status,
-						'disabled' => !$validRequest,
+						'disabled' => !$validRequest || $status === self::STATUS_COMPLETE,
 						'cssclass' => 'importdump-infuse',
 						'section' => 'handling',
 					],
@@ -378,6 +379,15 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			}
 
 			if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
+				$validStatus = true;
+				if (
+					$status === self::STATUS_COMPLETE ||
+					$status === self::STATUS_INPROGRESS ||
+					$status === self::STATUS_STARTING
+				) {
+					$validStatus = false;
+				}
+
 				$formDescriptor += [
 					'handle-comment' => [
 						'type' => 'textarea',
@@ -388,13 +398,14 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					'submit-start' => [
 						'type' => 'submit',
 						'buttonlabel-message' => 'importdump-label-start-import',
-						'disabled' => !$validRequest,
+						'disabled' => !$validRequest || !$validStatus,
 						'section' => 'handling',
 					],
 					'submit-decline' => [
 						'type' => 'submit',
 						'flags' => [ 'destructive', 'primary' ],
 						'buttonlabel-message' => 'importdump-label-decline-import',
+						'disabled' => !$validStatus,
 						'section' => 'handling',
 					],
 				];
@@ -725,6 +736,18 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			}
 		}
 
+		if (
+			$this->importDumpRequestManager->getStatus() === self::STATUS_COMPLETE ||
+			$this->importDumpRequestManager->getStatus() === self::STATUS_INPROGRESS ||
+			$this->importDumpRequestManager->getStatus() === self::STATUS_STARTING
+		) {
+			$out->addHTML( Html::errorBox(
+				$this->context->msg( 'importdump-status-conflict' )->escaped()
+			) );
+
+			return;
+		}
+
 		if ( isset( $formData['submit-decline'] ) ) {
 			$formData['handle-status'] = self::STATUS_DECLINED;
 			$this->importDumpRequestManager->startAtomic( __METHOD__ );
@@ -734,6 +757,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		if ( isset( $formData['submit-start'] ) ) {
+			$this->importDumpRequestManager->setStatus( self::STATUS_STARTING );
 			$this->importDumpRequestManager->executeJob( $user->getName() );
 			$out->addHTML( Html::successBox(
 				$this->context->msg( 'importdump-import-started' )->escaped()

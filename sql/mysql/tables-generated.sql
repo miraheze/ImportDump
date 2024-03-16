@@ -11,7 +11,7 @@ CREATE TABLE /*_*/import_requests (
   request_reason BLOB NOT NULL,
   request_status ENUM(
     'complete', 'declined', 'failed',
-    'inprogress', 'pending'
+    'inprogress', 'pending', 'starting'
   ) NOT NULL,
   request_locked TINYINT UNSIGNED DEFAULT 0 NOT NULL,
   request_private TINYINT UNSIGNED DEFAULT 0 NOT NULL,
