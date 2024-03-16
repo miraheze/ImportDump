@@ -13,7 +13,6 @@
 	"echo-category-title-importdump-new-request": "Novi zahtjev za skladišni izvadak uvoza",
 	"echo-category-title-importdump-request-comment": "Dodan je komentar u zahtjev za skladišni izvadak uvoza",
 	"echo-category-title-importdump-request-status-update": "Promijenjen status zahtjeva za skladišni izvadak uvoza",
-	"echo-pref-tooltip-importdump-new-request": "Obavijesti me kada bude novih zahtjeva za uvoz.",
 	"echo-pref-tooltip-importdump-request-comment": "Obavijesti me kada postoji komentar na zahtjev za uvoz u kojem sam učestvovao.",
 	"echo-pref-tooltip-importdump-request-status-update": "Obavijesti me kada se promijeni status zahtjeva za skladišni izvadak uvoza u kojem sam učestvovao.",
 	"importdump-button-copy": "(Kopiraj u međuspremnik)",

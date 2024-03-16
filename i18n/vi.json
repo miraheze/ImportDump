@@ -12,8 +12,6 @@
 	"echo-category-title-importdump-new-request": "Yêu cầu nhập mới",
 	"echo-category-title-importdump-request-comment": "Đã thêm nhận xét vào yêu cầu nhập",
 	"echo-category-title-importdump-request-status-update": "Đã cập nhật trạng thái cho yêu cầu nhập",
-	"echo-pref-tooltip-importdump-import-failed": "Thông báo cho tôi khi có bất kỳ lần nhập không thành công nào.",
-	"echo-pref-tooltip-importdump-new-request": "Thông báo cho tôi khi có bất kỳ yêu cầu nhập mới nào.",
 	"echo-pref-tooltip-importdump-request-comment": "Thông báo cho tôi khi có nhận xét về yêu cầu nhập mà tôi đã tham gia.",
 	"echo-pref-tooltip-importdump-request-status-update": "Thông báo cho tôi khi trạng thái được cập nhật cho yêu cầu nhập mà tôi đã tham gia.",
 	"importdump-button-copy": "(Chép vào bảng tạm)",

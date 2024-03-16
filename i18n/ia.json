@@ -12,7 +12,6 @@
 	"echo-category-title-importdump-new-request": "Nove requesta de importation",
 	"echo-category-title-importdump-request-comment": "Commento addite a un requesta de importation",
 	"echo-category-title-importdump-request-status-update": "Stato actualisate pro un requesta de importation",
-	"echo-pref-tooltip-importdump-new-request": "Notificar me quando il ha nove requestas de importation.",
 	"echo-pref-tooltip-importdump-request-comment": "Notificar me si il ha un commento sur un requesta de importation al qual io ha participate.",
 	"echo-pref-tooltip-importdump-request-status-update": "Notificar me quando le stato es actualisate pro un requesta de importation al qual io ha participate.",
 	"importdump-button-copy": "(Copiar al area de transferentia)",

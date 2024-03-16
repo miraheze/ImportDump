@@ -7,7 +7,6 @@
 	},
 	"action-request-import": "prašyti importavimų",
 	"action-view-private-import-requests": "peržiūrėti privačius importavimo prašymus",
-	"echo-pref-tooltip-importdump-new-request": "Pranešti man, kai yra naujų importo užklausų.",
 	"echo-pref-tooltip-importdump-request-comment": "Pranešti man, kai yra importo užklausos, kurioje dalyvavau, komentaras.",
 	"importdump-button-copy": "(Kopijuoti į iškarpinę)",
 	"importdump-comment-given": "$1 komentaras:",

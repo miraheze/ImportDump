@@ -14,7 +14,6 @@
 	"echo-category-title-importdump-new-request": "Neuer Antrag auf Import-Dump",
 	"echo-category-title-importdump-request-comment": "Kommentar zu einer Import-Dump-Anfrage hinzugefügt",
 	"echo-category-title-importdump-request-status-update": "Status für eine Import-Dump-Anfrage aktualisiert",
-	"echo-pref-tooltip-importdump-new-request": "Benachrichtige mich, wenn neue Importanträge existieren.",
 	"echo-pref-tooltip-importdump-request-comment": "Benachrichtige mich, wenn ein Kommentar zu einer Importanfrage existiert, an der ich teilgenommen habe.",
 	"echo-pref-tooltip-importdump-request-status-update": "Benachrichtige mich, wenn der Status eines Import-Dump-Antrags, an dem ich beteiligt war, aktualisiert wird.",
 	"importdump-button-copy": "(In die Zwischenablage kopieren)",

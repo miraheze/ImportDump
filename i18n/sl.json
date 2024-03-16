@@ -14,7 +14,6 @@
 	"echo-category-title-importdump-new-request": "Nov zahtevek za uvoz",
 	"echo-category-title-importdump-request-comment": "K zahtevku za uvoz je bil dodan komentar",
 	"echo-category-title-importdump-request-status-update": "Posodobitev statusa zahtevka za uvoz",
-	"echo-pref-tooltip-importdump-new-request": "Obvesti me, ko se pojavijo nove prošnje za uvoz.",
 	"echo-pref-tooltip-importdump-request-comment": "Obvesti me, ko se pri prošnji za uvoz, pri kateri sem sodeloval_a, pojavi komentar.",
 	"echo-pref-tooltip-importdump-request-status-update": "Obvesti me, ko se pri zahtevku za uvoz, pri katerem sem sodeloval, posodobi stanje.",
 	"importdump-button-copy": "(Kopiraj v odložišče)",

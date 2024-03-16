@@ -16,8 +16,6 @@
 	"echo-category-title-importdump-new-request": "Echo category title for {{msg-mw|echo-category-title-importdump-new-request}}.",
 	"echo-category-title-importdump-request-comment": "Echo category title for {{msg-mw|echo-category-title-importdump-request-comment}}.",
 	"echo-category-title-importdump-request-status-update": "Echo category title for {{msg-mw|echo-category-title-importdump-request-status-update}}.",
-	"echo-pref-tooltip-importdump-import-failed": "Echo preference tooltip for {{msg-mw|echo-category-title-importdump-import-failed}}.",
-	"echo-pref-tooltip-importdump-new-request": "Echo preference tooltip for {{msg-mw|echo-category-title-importdump-new-request}}.",
 	"echo-pref-tooltip-importdump-request-comment": "Echo preference tooltip for {{msg-mw|echo-category-title-importdump-request-comment}}.",
 	"echo-pref-tooltip-importdump-request-status-update": "Echo preference tooltip for {{msg-mw|echo-category-title-importdump-request-status-update}}.",
 	"importdump-button-copy": "Text for the 'Copy to Clipboard' button.",

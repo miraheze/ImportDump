@@ -17,8 +17,6 @@
 	"echo-category-title-importdump-new-request": "新的匯入傾印申請",
 	"echo-category-title-importdump-request-comment": "新增到匯入傾印申請的意見",
 	"echo-category-title-importdump-request-status-update": "匯入傾印申請的狀態更新",
-	"echo-pref-tooltip-importdump-import-failed": "當匯入失敗時通知我。",
-	"echo-pref-tooltip-importdump-new-request": "當有新的匯入申請時通知我。",
 	"echo-pref-tooltip-importdump-request-comment": "當我參與的匯入申請有意見時通知我。",
 	"echo-pref-tooltip-importdump-request-status-update": "當我參與的匯入傾印申請的狀態更新時通知我。",
 	"importdump-button-copy": "（複製到剪貼簿）",
