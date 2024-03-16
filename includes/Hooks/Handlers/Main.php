@@ -76,15 +76,13 @@ class Main implements
 		}
 
 		$notificationCategories['importdump-import-failed'] = [
-			'priority' => 3,
-			'no-dismiss' => [ 'email' ],
-			'tooltip' => 'echo-pref-tooltip-importdump-import-failed',
+			'priority' => 1,
+			'no-dismiss' => [ 'all' ],
 		];
 
 		$notificationCategories['importdump-new-request'] = [
-			'priority' => 3,
-			'no-dismiss' => [ 'email' ],
-			'tooltip' => 'echo-pref-tooltip-importdump-new-request',
+			'priority' => 2,
+			'no-dismiss' => [ 'all' ],
 		];
 
 		$notificationCategories['importdump-request-comment'] = [
