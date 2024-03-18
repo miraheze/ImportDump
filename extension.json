@@ -209,6 +209,8 @@
 		"ImportDump": "GlobalVarConfig::newInstance"
 	},
 	"DefaultUserOptions": {
+		"echo-subscriptions-email-importdump-import-failed": true,
+		"echo-subscriptions-email-importdump-new-request": true,
 		"echo-subscriptions-email-importdump-request-comment": true,
 		"echo-subscriptions-email-importdump-request-status-update": true,
 		"echo-subscriptions-web-importdump-request-comment": true,
