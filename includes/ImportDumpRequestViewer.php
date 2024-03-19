@@ -326,7 +326,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 							'importdump-label-complete' => self::STATUS_COMPLETE,
 						] ),
 						'default' => $status,
-						'disabled' => !$validRequest || $status === self::STATUS_COMPLETE,
+						'disabled' => !$validRequest,
 						'cssclass' => 'importdump-infuse',
 						'section' => 'handling',
 					],
