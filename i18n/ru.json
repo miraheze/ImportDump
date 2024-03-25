@@ -4,6 +4,7 @@
 			"Amire80",
 			"AppData 174",
 			"BerryAVGN",
+			"Dirruw'o",
 			"Okras",
 			"Артём 13327"
 		]
@@ -58,6 +59,7 @@
 	"importdump-label-requested-date": "Дата запроса:",
 	"importdump-label-requester": "Запросивший:",
 	"importdump-label-source": "URL-адрес источника:",
+	"importdump-label-starting": "Запуск",
 	"importdump-label-status": "Состояние:",
 	"importdump-label-status-updated-comment": "Необязательный дополнительный комментарий к данному запросу:",
 	"importdump-label-target": "Имя целевой базы данных:",
@@ -89,6 +91,7 @@
 	"importdump-section-details": "Запросить описание",
 	"importdump-section-editing": "Редактирование запроса",
 	"importdump-section-handling": "Обработка запроса",
+	"importdump-status-conflict": "Не удалось обновить статус этого запроса на импорт, поскольку обнаружен конфликт. Возможно, оно уже начато или уже завершено.",
 	"importdump-status-updated": "Запрос: $1.",
 	"importdump-status-updated-success": "Состояние успешно обновлено для данного запроса.",
 	"importdump-success": "Ваш запрос на импорт ($1) был успешно отправлен. Ваш запрос будет рассмотрен в кратчайшие сроки.",
