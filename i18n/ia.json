@@ -5,7 +5,7 @@
 			"McDutchie"
 		]
 	},
-	"action-handle-import-request-interwiki": "gerer importationes de datos inter wikis",
+	"action-handle-import-request-interwiki": "gerer prefixos interwiki distante pro requestas de importation",
 	"action-handle-import-requests": "gerer requestas de usatores concernente le importation",
 	"action-request-import": "requestar importationes",
 	"action-view-private-import-requests": "vider requestas private de importation",
@@ -134,7 +134,7 @@
 	"requestimportqueue": "Cauda de requestas de importation",
 	"requestimportqueue-header": "Cercar requestas de importation",
 	"requestimportqueue-header-info": "Iste formulario permitte cercar in le requestas de importation. Usa le parametros sequente pro affinar tu recerca.",
-	"right-handle-import-request-interwiki": "Gerer importationes de datos inter wikis",
+	"right-handle-import-request-interwiki": "Gerer prefixos interwiki distante pro requestas de importation",
 	"right-handle-import-requests": "Gerer requestas de usatores concernente le importation de datos",
 	"right-request-import": "Requestar importationes",
 	"right-view-private-import-requests": "Vider requestas private de importation"
