@@ -15,6 +15,7 @@ use MediaWiki\MainConfigNames;
 use MediaWiki\Permissions\UltimateAuthority;
 use MediaWiki\SiteStats\SiteStatsInit;
 use MediaWiki\User\User;
+use MediaWiki\WikiMap\WikiMap;
 use MessageLocalizer;
 use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
 use Miraheze\ImportDump\ImportDumpRequestManager;
@@ -220,7 +221,7 @@ class ImportDumpJob extends Job
 	 */
 	private function getLoggingWiki(): string {
 		return $this->config->get( 'ImportDumpCentralWiki' ) ?:
-			$this->config->get( MainConfigNames::DBname );
+			WikiMap::getCurrentWikiId();
 	}
 
 	/**
