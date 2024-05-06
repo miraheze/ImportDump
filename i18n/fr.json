@@ -77,7 +77,7 @@
 	"importdump-no-changes": "Aucun changement n’a été effectué.",
 	"importdump-notcentral": "Désactivé",
 	"importdump-notcentral-text": "Les demandes d’import sont désactivées sur ce wiki. Veuillez demander un import depuis le wiki central.",
-	"importdump-notification-body-new-request": "Une nouvelle demande d’importation a été reçue.<br />Motif donné : $1<br />{{GENDER:$2|Demandeur|Demandeuse}} : $2<br />Nom de la base de données cible : $3",
+	"importdump-notification-body-new-request": "Une nouvelle demande d’importation a été reçue.<br />Motif invoqué : $1<br />{{GENDER:$2|Demandeur|Demandeuse}} : $2<br />Nom de la base de données cible : $3",
 	"importdump-notification-header-comment": "La demande d’importation n<sup>o</sup> $1 a reçu un commentaire.",
 	"importdump-notification-header-new-request": "Nouvelle demande d’import n°$1",
 	"importdump-notification-header-status-update": "L’état de la demande d’importation n<sup>o</sup> $1 a été mis à jour",
