@@ -24,8 +24,8 @@ use Miraheze\CreateWiki\RemoteWiki;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use RepoGroup;
 use stdClass;
+use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\IDatabase;
-use Wikimedia\Rdbms\ILBFactory;
 use Wikimedia\Rdbms\SelectQueryBuilder;
 
 class ImportDumpRequestManager {
@@ -55,7 +55,7 @@ class ImportDumpRequestManager {
 	/** @var ActorStoreFactory */
 	private $actorStoreFactory;
 
-	/** @var ILBFactory */
+	/** @var IConnectionProvider */
 	private $connectionProvider;
 
 	/** @var CreateWikiHookRunner|null */
@@ -91,7 +91,7 @@ class ImportDumpRequestManager {
 	/**
 	 * @param Config $config
 	 * @param ActorStoreFactory $actorStoreFactory
-	 * @param ILBFactory $connectionProvider
+	 * @param IConnectionProvider $connectionProvider
 	 * @param InterwikiLookup $interwikiLookup
 	 * @param JobQueueGroupFactory $jobQueueGroupFactory
 	 * @param LinkRenderer $linkRenderer
@@ -105,7 +105,7 @@ class ImportDumpRequestManager {
 	public function __construct(
 		Config $config,
 		ActorStoreFactory $actorStoreFactory,
-		ILBFactory $connectionProvider,
+		IConnectionProvider $connectionProvider,
 		InterwikiLookup $interwikiLookup,
 		JobQueueGroupFactory $jobQueueGroupFactory,
 		LinkRenderer $linkRenderer,
