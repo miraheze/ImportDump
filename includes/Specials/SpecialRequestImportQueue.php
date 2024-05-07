@@ -16,7 +16,7 @@ class SpecialRequestImportQueue extends SpecialPage
 	implements ImportDumpStatus {
 
 	/** @var ILBFactory */
-	private $dbLoadBalancerFactory;
+	private $connectionProvider;
 
 	/** @var ImportDumpRequestManager */
 	private $importDumpRequestManager;
@@ -28,20 +28,20 @@ class SpecialRequestImportQueue extends SpecialPage
 	private $userFactory;
 
 	/**
-	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param ILBFactory $connectionProvider
 	 * @param ImportDumpRequestManager $importDumpRequestManager
 	 * @param PermissionManager $permissionManager
 	 * @param UserFactory $userFactory
 	 */
 	public function __construct(
-		ILBFactory $dbLoadBalancerFactory,
+		ILBFactory $connectionProvider,
 		ImportDumpRequestManager $importDumpRequestManager,
 		PermissionManager $permissionManager,
 		UserFactory $userFactory
 	) {
 		parent::__construct( 'RequestImportQueue' );
 
-		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
+		$this->connectionProvider = $connectionProvider;
 		$this->importDumpRequestManager = $importDumpRequestManager;
 		$this->permissionManager = $permissionManager;
 		$this->userFactory = $userFactory;
@@ -113,7 +113,7 @@ class SpecialRequestImportQueue extends SpecialPage
 		$pager = new ImportDumpRequestQueuePager(
 			$this->getConfig(),
 			$this->getContext(),
-			$this->dbLoadBalancerFactory,
+			$this->connectionProvider,
 			$this->getLinkRenderer(),
 			$this->userFactory,
 			$requester,
