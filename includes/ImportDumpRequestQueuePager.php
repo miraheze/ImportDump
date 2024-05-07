@@ -31,7 +31,7 @@ class ImportDumpRequestQueuePager extends TablePager
 	/**
 	 * @param Config $config
 	 * @param IContextSource $context
-	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param ILBFactory $connectionProvider
 	 * @param LinkRenderer $linkRenderer
 	 * @param UserFactory $userFactory
 	 * @param string $requester
@@ -41,7 +41,7 @@ class ImportDumpRequestQueuePager extends TablePager
 	public function __construct(
 		Config $config,
 		IContextSource $context,
-		ILBFactory $dbLoadBalancerFactory,
+		ILBFactory $connectionProvider,
 		LinkRenderer $linkRenderer,
 		UserFactory $userFactory,
 		string $requester,
@@ -51,13 +51,9 @@ class ImportDumpRequestQueuePager extends TablePager
 		parent::__construct( $context, $linkRenderer );
 
 		$centralWiki = $config->get( 'ImportDumpCentralWiki' );
-		if ( $centralWiki ) {
-			$this->mDb = $dbLoadBalancerFactory->getMainLB(
-				$centralWiki
-			)->getConnection( DB_REPLICA, [], $centralWiki );
-		} else {
-			$this->mDb = $dbLoadBalancerFactory->getMainLB()->getConnection( DB_REPLICA );
-		}
+		$this->mDb = $connectionProvider->getReplicaDatabase(
+			$centralWiki ?: false
+		);
 
 		$this->linkRenderer = $linkRenderer;
 		$this->userFactory = $userFactory;
