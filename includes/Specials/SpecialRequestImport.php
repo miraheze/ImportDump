@@ -31,7 +31,7 @@ use Wikimedia\Rdbms\ILBFactory;
 
 class SpecialRequestImport extends FormSpecialPage
 	implements ImportDumpStatus {
-		
+
 	/** @var ILBFactory */
 	private $connectionProvider;
 
