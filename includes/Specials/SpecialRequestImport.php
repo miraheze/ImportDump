@@ -31,12 +31,12 @@ use Wikimedia\Rdbms\ILBFactory;
 
 class SpecialRequestImport extends FormSpecialPage
 	implements ImportDumpStatus {
+		
+	/** @var ILBFactory */
+	private $connectionProvider;
 
 	/** @var CreateWikiHookRunner|null */
 	private $createWikiHookRunner;
-
-	/** @var ILBFactory */
-	private $dbLoadBalancerFactory;
 
 	/** @var MimeAnalyzer */
 	private $mimeAnalyzer;
@@ -51,7 +51,7 @@ class SpecialRequestImport extends FormSpecialPage
 	private $userFactory;
 
 	/**
-	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param ILBFactory $connectionProvider
 	 * @param MimeAnalyzer $mimeAnalyzer
 	 * @param PermissionManager $permissionManager
 	 * @param RepoGroup $repoGroup
@@ -59,7 +59,7 @@ class SpecialRequestImport extends FormSpecialPage
 	 * @param ?CreateWikiHookRunner $createWikiHookRunner
 	 */
 	public function __construct(
-		ILBFactory $dbLoadBalancerFactory,
+		ILBFactory $connectionProvider,
 		MimeAnalyzer $mimeAnalyzer,
 		PermissionManager $permissionManager,
 		RepoGroup $repoGroup,
@@ -68,8 +68,8 @@ class SpecialRequestImport extends FormSpecialPage
 	) {
 		parent::__construct( 'RequestImport', 'request-import' );
 
+		$this->connectionProvider = $connectionProvider;
 		$this->createWikiHookRunner = $createWikiHookRunner;
-		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->mimeAnalyzer = $mimeAnalyzer;
 		$this->permissionManager = $permissionManager;
 		$this->repoGroup = $repoGroup;
@@ -197,13 +197,9 @@ class SpecialRequestImport extends FormSpecialPage
 		}
 
 		$centralWiki = $this->getConfig()->get( 'ImportDumpCentralWiki' );
-		if ( $centralWiki ) {
-			$dbw = $this->dbLoadBalancerFactory->getMainLB(
-				$centralWiki
-			)->getConnection( DB_PRIMARY, [], $centralWiki );
-		} else {
-			$dbw = $this->dbLoadBalancerFactory->getMainLB()->getConnection( DB_PRIMARY );
-		}
+		$dbw = $this->dbLoadBalancerFactory->getPrimaryDatabase(
+			$centralWiki ?: false
+		);
 
 		$duplicate = $dbw->newSelectQueryBuilder()
 			->table( 'import_requests' )
