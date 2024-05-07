@@ -28,7 +28,7 @@ use RequestContext;
 use SiteStatsUpdate;
 use Throwable;
 use WikiImporterFactory;
-use Wikimedia\Rdbms\ILBFactory;
+use Wikimedia\Rdbms\IConnectionProvider;
 
 class ImportDumpJob extends Job
 	implements ImportDumpStatus {
