@@ -27,12 +27,12 @@ use UploadBase;
 use UploadFromUrl;
 use UploadStash;
 use UserBlockedError;
-use Wikimedia\Rdbms\ILBFactory;
+use Wikimedia\Rdbms\IConnectionProvider;
 
 class SpecialRequestImport extends FormSpecialPage
 	implements ImportDumpStatus {
 
-	/** @var ILBFactory */
+	/** @var IConnectionProvider */
 	private $connectionProvider;
 
 	/** @var CreateWikiHookRunner|null */
@@ -51,7 +51,7 @@ class SpecialRequestImport extends FormSpecialPage
 	private $userFactory;
 
 	/**
-	 * @param ILBFactory $connectionProvider
+	 * @param IConnectionProvider $connectionProvider
 	 * @param MimeAnalyzer $mimeAnalyzer
 	 * @param PermissionManager $permissionManager
 	 * @param RepoGroup $repoGroup
@@ -59,7 +59,7 @@ class SpecialRequestImport extends FormSpecialPage
 	 * @param ?CreateWikiHookRunner $createWikiHookRunner
 	 */
 	public function __construct(
-		ILBFactory $connectionProvider,
+		IConnectionProvider $connectionProvider,
 		MimeAnalyzer $mimeAnalyzer,
 		PermissionManager $permissionManager,
 		RepoGroup $repoGroup,
