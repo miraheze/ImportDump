@@ -10,12 +10,12 @@ use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpRequestQueuePager;
 use Miraheze\ImportDump\ImportDumpRequestViewer;
 use Miraheze\ImportDump\ImportDumpStatus;
-use Wikimedia\Rdbms\ILBFactory;
+use Wikimedia\Rdbms\IConnectionProvider;
 
 class SpecialRequestImportQueue extends SpecialPage
 	implements ImportDumpStatus {
 
-	/** @var ILBFactory */
+	/** @var IConnectionProvider */
 	private $connectionProvider;
 
 	/** @var ImportDumpRequestManager */
@@ -28,13 +28,13 @@ class SpecialRequestImportQueue extends SpecialPage
 	private $userFactory;
 
 	/**
-	 * @param ILBFactory $connectionProvider
+	 * @param IConnectionProvider $connectionProvider
 	 * @param ImportDumpRequestManager $importDumpRequestManager
 	 * @param PermissionManager $permissionManager
 	 * @param UserFactory $userFactory
 	 */
 	public function __construct(
-		ILBFactory $connectionProvider,
+		IConnectionProvider $connectionProvider,
 		ImportDumpRequestManager $importDumpRequestManager,
 		PermissionManager $permissionManager,
 		UserFactory $userFactory
