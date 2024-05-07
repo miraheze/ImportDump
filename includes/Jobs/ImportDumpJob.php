@@ -44,7 +44,7 @@ class ImportDumpJob extends Job
 	/** @var Config */
 	private $config;
 
-	/** @var ILBFactory */
+	/** @var IConnectionProvider */
 	private $connectionProvider;
 
 	/** @var JobQueueGroupFactory */
@@ -65,7 +65,7 @@ class ImportDumpJob extends Job
 	/**
 	 * @param array $params
 	 * @param ConfigFactory $configFactory
-	 * @param ILBFactory $connectionProvider
+	 * @param IConnectionProvider $connectionProvider
 	 * @param JobQueueGroupFactory $jobQueueGroupFactory
 	 * @param ImportDumpHookRunner $importDumpHookRunner
 	 * @param ImportDumpRequestManager $importDumpRequestManager
@@ -74,7 +74,7 @@ class ImportDumpJob extends Job
 	public function __construct(
 		array $params,
 		ConfigFactory $configFactory,
-		ILBFactory $connectionProvider,
+		IConnectionProvider $connectionProvider,
 		JobQueueGroupFactory $jobQueueGroupFactory,
 		ImportDumpHookRunner $importDumpHookRunner,
 		ImportDumpRequestManager $importDumpRequestManager,
