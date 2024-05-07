@@ -197,7 +197,7 @@ class SpecialRequestImport extends FormSpecialPage
 		}
 
 		$centralWiki = $this->getConfig()->get( 'ImportDumpCentralWiki' );
-		$dbw = $this->dbLoadBalancerFactory->getPrimaryDatabase(
+		$dbw = $this->connectionProvider->getPrimaryDatabase(
 			$centralWiki ?: false
 		);
 
