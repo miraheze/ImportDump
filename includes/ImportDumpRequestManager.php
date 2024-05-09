@@ -280,7 +280,7 @@ class ImportDumpRequestManager {
 			->caller( __METHOD__ )
 			->fetchResultSet();
 
-		if ( !$res ) {
+		if ( !$res->numRows() ) {
 			return [];
 		}
 
