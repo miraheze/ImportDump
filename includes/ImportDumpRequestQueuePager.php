@@ -8,7 +8,7 @@ use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\Pager\TablePager;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
-use Wikimedia\Rdbms\ILBFactory;
+use Wikimedia\Rdbms\IConnectionProvider;
 
 class ImportDumpRequestQueuePager extends TablePager
 	implements ImportDumpStatus {
@@ -31,7 +31,7 @@ class ImportDumpRequestQueuePager extends TablePager
 	/**
 	 * @param Config $config
 	 * @param IContextSource $context
-	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param IConnectionProvider $connectionProvider
 	 * @param LinkRenderer $linkRenderer
 	 * @param UserFactory $userFactory
 	 * @param string $requester
@@ -41,7 +41,7 @@ class ImportDumpRequestQueuePager extends TablePager
 	public function __construct(
 		Config $config,
 		IContextSource $context,
-		ILBFactory $dbLoadBalancerFactory,
+		IConnectionProvider $connectionProvider,
 		LinkRenderer $linkRenderer,
 		UserFactory $userFactory,
 		string $requester,
@@ -51,13 +51,9 @@ class ImportDumpRequestQueuePager extends TablePager
 		parent::__construct( $context, $linkRenderer );
 
 		$centralWiki = $config->get( 'ImportDumpCentralWiki' );
-		if ( $centralWiki ) {
-			$this->mDb = $dbLoadBalancerFactory->getMainLB(
-				$centralWiki
-			)->getConnection( DB_REPLICA, [], $centralWiki );
-		} else {
-			$this->mDb = $dbLoadBalancerFactory->getMainLB()->getConnection( DB_REPLICA );
-		}
+		$this->mDb = $connectionProvider->getReplicaDatabase(
+			$centralWiki ?: false
+		);
 
 		$this->linkRenderer = $linkRenderer;
 		$this->userFactory = $userFactory;

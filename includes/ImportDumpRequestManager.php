@@ -24,8 +24,8 @@ use Miraheze\CreateWiki\RemoteWiki;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use RepoGroup;
 use stdClass;
-use Wikimedia\Rdbms\DBConnRef;
-use Wikimedia\Rdbms\ILBFactory;
+use Wikimedia\Rdbms\IConnectionProvider;
+use Wikimedia\Rdbms\IDatabase;
 use Wikimedia\Rdbms\SelectQueryBuilder;
 
 class ImportDumpRequestManager {
@@ -46,7 +46,7 @@ class ImportDumpRequestManager {
 	/** @var Config */
 	private $config;
 
-	/** @var DBConnRef */
+	/** @var IDatabase */
 	private $dbw;
 
 	/** @var int */
@@ -55,11 +55,11 @@ class ImportDumpRequestManager {
 	/** @var ActorStoreFactory */
 	private $actorStoreFactory;
 
+	/** @var IConnectionProvider */
+	private $connectionProvider;
+
 	/** @var CreateWikiHookRunner|null */
 	private $createWikiHookRunner;
-
-	/** @var ILBFactory */
-	private $dbLoadBalancerFactory;
 
 	/** @var InterwikiLookup */
 	private $interwikiLookup;
@@ -91,7 +91,7 @@ class ImportDumpRequestManager {
 	/**
 	 * @param Config $config
 	 * @param ActorStoreFactory $actorStoreFactory
-	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param IConnectionProvider $connectionProvider
 	 * @param InterwikiLookup $interwikiLookup
 	 * @param JobQueueGroupFactory $jobQueueGroupFactory
 	 * @param LinkRenderer $linkRenderer
@@ -105,7 +105,7 @@ class ImportDumpRequestManager {
 	public function __construct(
 		Config $config,
 		ActorStoreFactory $actorStoreFactory,
-		ILBFactory $dbLoadBalancerFactory,
+		IConnectionProvider $connectionProvider,
 		InterwikiLookup $interwikiLookup,
 		JobQueueGroupFactory $jobQueueGroupFactory,
 		LinkRenderer $linkRenderer,
@@ -120,8 +120,8 @@ class ImportDumpRequestManager {
 
 		$this->config = $config;
 		$this->actorStoreFactory = $actorStoreFactory;
+		$this->connectionProvider = $connectionProvider;
 		$this->createWikiHookRunner = $createWikiHookRunner;
-		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
 		$this->interwikiLookup = $interwikiLookup;
 		$this->jobQueueGroupFactory = $jobQueueGroupFactory;
 		$this->linkRenderer = $linkRenderer;
@@ -139,13 +139,9 @@ class ImportDumpRequestManager {
 		$this->ID = $requestID;
 
 		$centralWiki = $this->options->get( 'ImportDumpCentralWiki' );
-		if ( $centralWiki ) {
-			$this->dbw = $this->dbLoadBalancerFactory->getMainLB(
-				$centralWiki
-			)->getConnection( DB_PRIMARY, [], $centralWiki );
-		} else {
-			$this->dbw = $this->dbLoadBalancerFactory->getMainLB()->getConnection( DB_PRIMARY );
-		}
+		$this->dbw = $this->connectionProvider->getPrimaryDatabase(
+			$centralWiki ?: false
+		);
 
 		$this->row = $this->dbw->newSelectQueryBuilder()
 			->table( 'import_requests' )
@@ -316,9 +312,9 @@ class ImportDumpRequestManager {
 	 * @return bool
 	 */
 	public function insertInterwikiPrefix( string $prefix, string $url, User $user ): bool {
-		$dbw = $this->dbLoadBalancerFactory->getMainLB(
+		$dbw = $this->connectionProvider->getPrimaryDatabase(
 			$this->getTarget()
-		)->getConnection( DB_PRIMARY, [], $this->getTarget() );
+		);
 
 		$dbw->newInsertQueryBuilder()
 			->insertInto( 'interwiki' )
@@ -368,9 +364,9 @@ class ImportDumpRequestManager {
 	 * @return string
 	 */
 	public function getInterwikiPrefix(): string {
-		$dbr = $this->dbLoadBalancerFactory->getMainLB(
+		$dbr = $this->connectionProvider->getReplicaDatabase(
 			$this->getTarget()
-		)->getConnection( DB_REPLICA, [], $this->getTarget() );
+		);
 
 		$sourceHost = parse_url( $this->getSource(), PHP_URL_HOST );
 		if ( !$sourceHost ) {
@@ -396,9 +392,9 @@ class ImportDumpRequestManager {
 			ExtensionRegistry::getInstance()->isLoaded( 'Interwiki' ) &&
 			$this->config->get( 'InterwikiCentralDB' )
 		) {
-			$dbr = $this->dbLoadBalancerFactory->getMainLB(
+			$dbr = $this->connectionProvider->getReplicaDatabase(
 				$this->config->get( 'InterwikiCentralDB' )
-			)->getConnection( DB_REPLICA, [], $this->config->get( 'InterwikiCentralDB' ) );
+			);
 
 			$row = $dbr->newSelectQueryBuilder()
 				->table( 'interwiki' )

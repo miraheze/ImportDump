@@ -10,13 +10,13 @@ use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpRequestQueuePager;
 use Miraheze\ImportDump\ImportDumpRequestViewer;
 use Miraheze\ImportDump\ImportDumpStatus;
-use Wikimedia\Rdbms\ILBFactory;
+use Wikimedia\Rdbms\IConnectionProvider;
 
 class SpecialRequestImportQueue extends SpecialPage
 	implements ImportDumpStatus {
 
-	/** @var ILBFactory */
-	private $dbLoadBalancerFactory;
+	/** @var IConnectionProvider */
+	private $connectionProvider;
 
 	/** @var ImportDumpRequestManager */
 	private $importDumpRequestManager;
@@ -28,20 +28,20 @@ class SpecialRequestImportQueue extends SpecialPage
 	private $userFactory;
 
 	/**
-	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param IConnectionProvider $connectionProvider
 	 * @param ImportDumpRequestManager $importDumpRequestManager
 	 * @param PermissionManager $permissionManager
 	 * @param UserFactory $userFactory
 	 */
 	public function __construct(
-		ILBFactory $dbLoadBalancerFactory,
+		IConnectionProvider $connectionProvider,
 		ImportDumpRequestManager $importDumpRequestManager,
 		PermissionManager $permissionManager,
 		UserFactory $userFactory
 	) {
 		parent::__construct( 'RequestImportQueue' );
 
-		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
+		$this->connectionProvider = $connectionProvider;
 		$this->importDumpRequestManager = $importDumpRequestManager;
 		$this->permissionManager = $permissionManager;
 		$this->userFactory = $userFactory;
@@ -113,7 +113,7 @@ class SpecialRequestImportQueue extends SpecialPage
 		$pager = new ImportDumpRequestQueuePager(
 			$this->getConfig(),
 			$this->getContext(),
-			$this->dbLoadBalancerFactory,
+			$this->connectionProvider,
 			$this->getLinkRenderer(),
 			$this->userFactory,
 			$requester,

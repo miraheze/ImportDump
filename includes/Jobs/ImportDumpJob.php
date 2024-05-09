@@ -28,7 +28,7 @@ use RequestContext;
 use SiteStatsUpdate;
 use Throwable;
 use WikiImporterFactory;
-use Wikimedia\Rdbms\ILBFactory;
+use Wikimedia\Rdbms\IConnectionProvider;
 
 class ImportDumpJob extends Job
 	implements ImportDumpStatus {
@@ -44,8 +44,8 @@ class ImportDumpJob extends Job
 	/** @var Config */
 	private $config;
 
-	/** @var ILBFactory */
-	private $dbLoadBalancerFactory;
+	/** @var IConnectionProvider */
+	private $connectionProvider;
 
 	/** @var JobQueueGroupFactory */
 	private $jobQueueGroupFactory;
@@ -65,7 +65,7 @@ class ImportDumpJob extends Job
 	/**
 	 * @param array $params
 	 * @param ConfigFactory $configFactory
-	 * @param ILBFactory $dbLoadBalancerFactory
+	 * @param IConnectionProvider $connectionProvider
 	 * @param JobQueueGroupFactory $jobQueueGroupFactory
 	 * @param ImportDumpHookRunner $importDumpHookRunner
 	 * @param ImportDumpRequestManager $importDumpRequestManager
@@ -74,7 +74,7 @@ class ImportDumpJob extends Job
 	public function __construct(
 		array $params,
 		ConfigFactory $configFactory,
-		ILBFactory $dbLoadBalancerFactory,
+		IConnectionProvider $connectionProvider,
 		JobQueueGroupFactory $jobQueueGroupFactory,
 		ImportDumpHookRunner $importDumpHookRunner,
 		ImportDumpRequestManager $importDumpRequestManager,
@@ -85,7 +85,7 @@ class ImportDumpJob extends Job
 		$this->requestID = $params['requestid'];
 		$this->username = $params['username'];
 
-		$this->dbLoadBalancerFactory = $dbLoadBalancerFactory;
+		$this->connectionProvider = $connectionProvider;
 		$this->jobQueueGroupFactory = $jobQueueGroupFactory;
 		$this->importDumpHookRunner = $importDumpHookRunner;
 		$this->importDumpRequestManager = $importDumpRequestManager;
@@ -99,7 +99,7 @@ class ImportDumpJob extends Job
 	 * @return bool
 	 */
 	public function run(): bool {
-		$dbw = $this->dbLoadBalancerFactory->getMainLB()->getMaintenanceConnectionRef( DB_PRIMARY );
+		$dbw = $this->connectionProvider->getPrimaryDatabase();
 
 		$this->importDumpRequestManager->fromID( $this->requestID );
 		$filePath = wfTempDir() . '/' . $this->importDumpRequestManager->getFileName();
