@@ -282,7 +282,7 @@ class SpecialRequestImport extends FormSpecialPage
 		$dbw->newInsertQueryBuilder()
 			->insertInto( 'import_requests' )
 			->ignore()
-			->rows( [
+			->row( [
 				'request_source' => $data['source'],
 				'request_target' => $data['target'],
 				'request_reason' => $data['reason'],

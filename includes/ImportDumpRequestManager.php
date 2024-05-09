@@ -165,7 +165,7 @@ class ImportDumpRequestManager {
 	public function addComment( string $comment, User $user ) {
 		$this->dbw->newInsertQueryBuilder()
 			->insertInto( 'import_request_comments' )
-			->rows( [
+			->row( [
 				'request_id' => $this->ID,
 				'request_comment_text' => $comment,
 				'request_comment_timestamp' => $this->dbw->timestamp(),
@@ -280,7 +280,7 @@ class ImportDumpRequestManager {
 			->caller( __METHOD__ )
 			->fetchResultSet();
 
-		if ( !$res ) {
+		if ( !$res->numRows() ) {
 			return [];
 		}
 
@@ -319,7 +319,7 @@ class ImportDumpRequestManager {
 		$dbw->newInsertQueryBuilder()
 			->insertInto( 'interwiki' )
 			->ignore()
-			->rows( [
+			->row( [
 				'iw_prefix' => $prefix,
 				'iw_url' => $url,
 				'iw_api' => '',

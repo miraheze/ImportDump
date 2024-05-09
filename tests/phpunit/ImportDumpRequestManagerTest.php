@@ -20,7 +20,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->db->newInsertQueryBuilder()
 			->insertInto( 'import_requests' )
 			->ignore()
-			->rows( [
+			->row( [
 				'request_source' => 'https://importdumptest.com',
 				'request_target' => 'importdumptest',
 				'request_reason' => 'test',
