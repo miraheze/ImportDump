@@ -206,7 +206,7 @@
 		}
 	},
 	"ConfigRegistry": {
-		"ImportDump": "GlobalVarConfig::newInstance"
+		"ImportDump": "MediaWiki\\Config\\GlobalVarConfig::newInstance"
 	},
 	"DefaultUserOptions": {
 		"echo-subscriptions-email-importdump-import-failed": true,
