@@ -23,6 +23,7 @@ use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\CreateWiki\RemoteWiki;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use RepoGroup;
+use StatusValue;
 use stdClass;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\IDatabase;
@@ -161,8 +162,24 @@ class ImportDumpRequestManager {
 	/**
 	 * @param string $comment
 	 * @param User $user
+	 * @return StatusValue
 	 */
-	public function addComment( string $comment, User $user ) {
+	public function addComment( string $comment, User $user ): StatusValue {
+		$duplicate = $this->dbw->newSelectQueryBuilder()
+			->table( 'import_request_comments' )
+			->field( '*' )
+			->where( [
+				'request_id' => $this->ID,
+				'request_comment_text' => $comment,
+				'request_comment_actor' => $user->getActorId(),
+			] )
+			->caller( __METHOD__ )
+			->fetchRow();
+
+		if ( (bool)$duplicate ) {
+			return StatusValue::newFatal( 'importdump-duplicate-comment' );
+		}
+
 		$this->dbw->newInsertQueryBuilder()
 			->insertInto( 'import_request_comments' )
 			->row( [
@@ -180,6 +197,8 @@ class ImportDumpRequestManager {
 		) {
 			$this->sendNotification( $comment, 'importdump-request-comment', $user );
 		}
+
+		return StatusValue::newGood();
 	}
 
 	/**
