@@ -47,8 +47,6 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		$this->context = $context;
 		$this->importDumpRequestManager = $importDumpRequestManager;
 		$this->permissionManager = $permissionManager;
-
-		$this->formId = bin2hex( random_bytes( 16 ) );
 	}
 
 	/**
@@ -532,6 +530,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 	 */
 	public function getForm( int $requestID ): ?ImportDumpOOUIForm {
 		$this->importDumpRequestManager->fromID( $requestID );
+		$this->formId = bin2hex( random_bytes( 16 ) );
 		$out = $this->context->getOutput();
 
 		if ( $requestID === 0 || !$this->importDumpRequestManager->exists() ) {
