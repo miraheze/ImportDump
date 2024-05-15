@@ -28,6 +28,9 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 	/** @var PermissionManager */
 	private $permissionManager;
 
+	/** @var string */
+	private $formId;
+
 	/**
 	 * @param Config $config
 	 * @param IContextSource $context
@@ -44,6 +47,8 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		$this->context = $context;
 		$this->importDumpRequestManager = $importDumpRequestManager;
 		$this->permissionManager = $permissionManager;
+
+		$this->formId = bin2hex( random_bytes( 16 ) );
 	}
 
 	/**
@@ -145,6 +150,10 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			$user->getActorId() === $this->importDumpRequestManager->getRequester()->getActorId()
 		) {
 			$formDescriptor += [
+				'form-id' => [
+					'type' => 'hidden',
+					'default' => $this->formId,
+				],
 				'comment' => [
 					'type' => 'textarea',
 					'rows' => 4,
@@ -565,21 +574,9 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		$out = $form->getContext()->getOutput();
-		$request = $form->getRequest();
-		$session = $request->getSession();
-
-		$token = $request->getVal( 'wpEditToken' );
-		$userToken = $form->getContext()->getCsrfTokenSet();
-
-		if ( !$userToken->matchToken( $token ) ) {
-			$out->addHTML( Html::errorBox( 'TODO' ) );
-			return;
-		}
 
 		if ( isset( $formData['submit-comment'] ) ) {
-			$session->set( 'alreadysubmitted', false );
-			if ( $request->wasPosted() && $session->get( 'alreadysubmitted' ) === false ) {
-				$session->set( 'alreadysubmitted', true );
+			if ( $formData['form-id'] === $this->formId ) {
 				$this->importDumpRequestManager->addComment( $formData['comment'], $user );
 				$out->addHTML( Html::successBox( $this->context->msg( 'importdump-comment-success' )->escaped() ) );
 				return;
