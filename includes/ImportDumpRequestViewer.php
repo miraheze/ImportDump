@@ -568,6 +568,14 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		$request = $form->getRequest();
 		$session = $request->getSession();
 
+		$token = $request->getVal( 'wpEditToken' );
+		$userToken = $form->getContext()->getCsrfTokenSet();
+
+		if ( !$userToken->matchToken( $token ) ) {
+			$out->addHTML( Html::errorBox( 'TODO' ) );
+			return;
+		}
+
 		if ( isset( $formData['submit-comment'] ) ) {
 			if ( $request->wasPosted() && !$session->get( 'alreadysubmitted' ) ) {
 				$session->set( 'alreadysubmitted', true );
