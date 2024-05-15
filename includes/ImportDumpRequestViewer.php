@@ -575,7 +575,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				return;
 			}
 
-			$out->addHTML( Html::errorBox( 'TODO' ) );
+			$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-duplicate-comment' )->escaped() ) );
 			return;
 		}
 
