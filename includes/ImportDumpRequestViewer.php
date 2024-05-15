@@ -579,6 +579,8 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			return;
 		}
 
+		$session->remove( 'submittedcomment' );
+
 		if ( isset( $formData['submit-edit'] ) ) {
 			$this->importDumpRequestManager->startAtomic( __METHOD__ );
 
