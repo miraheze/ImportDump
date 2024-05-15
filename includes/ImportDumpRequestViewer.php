@@ -28,9 +28,6 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 	/** @var PermissionManager */
 	private $permissionManager;
 
-	/** @var string */
-	private $formId;
-
 	/**
 	 * @param Config $config
 	 * @param IContextSource $context
@@ -54,7 +51,6 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 	 */
 	public function getFormDescriptor(): array {
 		$user = $this->context->getUser();
-		$this->formId = bin2hex( random_bytes( 16 ) );
 
 		if (
 			$this->importDumpRequestManager->isPrivate() &&
@@ -575,13 +571,9 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		$out = $form->getContext()->getOutput();
 
 		if ( isset( $formData['submit-comment'] ) ) {
-			if ( $formData['form-id'] === $this->formId ) {
-				$this->importDumpRequestManager->addComment( $formData['comment'], $user );
-				$out->addHTML( Html::successBox( $this->context->msg( 'importdump-comment-success' )->escaped() ) );
-				return;
-			}
-
-			$out->addHTML( Html::errorBox( 'TODO' ) );
+			$this->importDumpRequestManager->addComment( $formData['comment'], $user );
+			$out->addHTML( Html::successBox( $this->context->msg( 'importdump-comment-success' )->escaped() ) );
+			unset( $_POST );
 			return;
 		}
 
