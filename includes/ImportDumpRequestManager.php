@@ -13,7 +13,6 @@ use MediaWiki\Interwiki\InterwikiLookup;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\SpecialPage\SpecialPage;
-use MediaWiki\Status\Status;
 use MediaWiki\User\ActorStoreFactory;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
@@ -162,24 +161,8 @@ class ImportDumpRequestManager {
 	/**
 	 * @param string $comment
 	 * @param User $user
-	 * @return Status
 	 */
-	public function addComment( string $comment, User $user ): Status {
-		$duplicate = $this->dbw->newSelectQueryBuilder()
-			->table( 'import_request_comments' )
-			->field( '*' )
-			->where( [
-				'request_id' => $this->ID,
-				'request_comment_text' => $comment,
-				'request_comment_actor' => $user->getActorId(),
-			] )
-			->caller( __METHOD__ )
-			->fetchRow();
-
-		if ( (bool)$duplicate ) {
-			return Status::newFatal( 'importdump-duplicate-comment' );
-		}
-
+	public function addComment( string $comment, User $user ) {
 		$this->dbw->newInsertQueryBuilder()
 			->insertInto( 'import_request_comments' )
 			->row( [
@@ -197,8 +180,6 @@ class ImportDumpRequestManager {
 		) {
 			$this->sendNotification( $comment, 'importdump-request-comment', $user );
 		}
-
-		return Status::newGood();
 	}
 
 	/**
