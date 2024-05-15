@@ -13,6 +13,7 @@ use MediaWiki\Interwiki\InterwikiLookup;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\SpecialPage\SpecialPage;
+use MediaWiki\Status\Status;
 use MediaWiki\User\ActorStoreFactory;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
@@ -23,7 +24,6 @@ use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\CreateWiki\RemoteWiki;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use RepoGroup;
-use StatusValue;
 use stdClass;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\IDatabase;
@@ -162,9 +162,9 @@ class ImportDumpRequestManager {
 	/**
 	 * @param string $comment
 	 * @param User $user
-	 * @return StatusValue
+	 * @return Status
 	 */
-	public function addComment( string $comment, User $user ): StatusValue {
+	public function addComment( string $comment, User $user ): Status {
 		$duplicate = $this->dbw->newSelectQueryBuilder()
 			->table( 'import_request_comments' )
 			->field( '*' )
@@ -177,7 +177,7 @@ class ImportDumpRequestManager {
 			->fetchRow();
 
 		if ( (bool)$duplicate ) {
-			return StatusValue::newFatal( 'importdump-duplicate-comment' );
+			return Status::newFatal( 'importdump-duplicate-comment' );
 		}
 
 		$this->dbw->newInsertQueryBuilder()
@@ -198,7 +198,7 @@ class ImportDumpRequestManager {
 			$this->sendNotification( $comment, 'importdump-request-comment', $user );
 		}
 
-		return StatusValue::newGood();
+		return Status::newGood();
 	}
 
 	/**
