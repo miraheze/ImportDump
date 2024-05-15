@@ -567,9 +567,13 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		$out = $form->getContext()->getOutput();
 
 		if ( isset( $formData['submit-comment'] ) ) {
-			$this->importDumpRequestManager->addComment( $formData['comment'], $user );
-			$out->addHTML( Html::successBox( $this->context->msg( 'importdump-comment-success' )->escaped() ) );
+			$status = $this->importDumpRequestManager->addComment( $formData['comment'], $user );
+			if ( $status->isGood() ) {
+				$out->addHTML( Html::successBox( $this->context->msg( 'importdump-comment-success' )->escaped() ) );
+				return;
+			}
 
+			$out->addHTML( Html::errorBox( $status->getMessage() ) );
 			return;
 		}
 
