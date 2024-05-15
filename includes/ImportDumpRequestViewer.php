@@ -145,10 +145,6 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			$user->getActorId() === $this->importDumpRequestManager->getRequester()->getActorId()
 		) {
 			$formDescriptor += [
-				'form-id' => [
-					'type' => 'hidden',
-					'default' => $this->formId,
-				],
 				'comment' => [
 					'type' => 'textarea',
 					'rows' => 4,
