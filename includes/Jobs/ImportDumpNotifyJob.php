@@ -6,6 +6,7 @@ use ExtensionRegistry;
 use Job;
 use MediaWiki\Config\Config;
 use MediaWiki\Config\ConfigFactory;
+use MediaWiki\Context\RequestContext;
 use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\User;
@@ -13,7 +14,6 @@ use MediaWiki\User\UserFactory;
 use MessageLocalizer;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
-use RequestContext;
 
 class ImportDumpNotifyJob extends Job
 	implements ImportDumpStatus {

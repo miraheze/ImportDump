@@ -2,7 +2,7 @@
 
 namespace Miraheze\ImportDump\Specials;
 
-use HTMLForm;
+use MediaWiki\HTMLForm\HTMLForm;
 use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
@@ -111,7 +111,6 @@ class SpecialRequestImportQueue extends SpecialPage
 			->displayForm( false );
 
 		$pager = new ImportDumpRequestQueuePager(
-			$this->getConfig(),
 			$this->getContext(),
 			$this->connectionProvider,
 			$this->getLinkRenderer(),
