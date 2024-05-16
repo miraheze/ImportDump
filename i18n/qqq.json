@@ -22,7 +22,7 @@
 	"importdump-comment-given": "Displayed if a custom comment is given. $1 is the handler's username.",
 	"importdump-comment-success": "Message displayed when a comment is successfully added to the request.",
 	"importdump-desc": "{{desc|name=ImportDump|url=https://github.com/miraheze/ImportDump}}",
-	"importdump-duplicate-comment": "Message displayed when the user attempts to submit the same comment as previous request again.",
+	"importdump-duplicate-comment": "Message displayed when the user attempts to resubmit the same comment as previous request.",
 	"importdump-duplicate-request": "Message displayed when user attempts to submit a request that is to similar to an existing open request.",
 	"importdump-edit-success": "Message displayed when the request is successfully edited.",
 	"importdump-extensionname": "{{name}}",
