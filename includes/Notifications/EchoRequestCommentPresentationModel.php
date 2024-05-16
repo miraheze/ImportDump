@@ -5,7 +5,7 @@ namespace Miraheze\ImportDump\Notifications;
 use MediaWiki\Extension\Notifications\DiscussionParser;
 use MediaWiki\Extension\Notifications\Formatters\EchoEventPresentationModel;
 use MediaWiki\Language\RawMessage;
-use Message;
+use MediaWiki\Message\Message;
 
 class EchoRequestCommentPresentationModel extends EchoEventPresentationModel {
 

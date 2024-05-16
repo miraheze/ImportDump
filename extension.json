@@ -7,7 +7,7 @@
 	"license-name": "GPL-3.0-or-later",
 	"type": "specialpage",
 	"requires": {
-		"MediaWiki": ">= 1.41.0"
+		"MediaWiki": ">= 1.42.0"
 	},
 	"MessagesDirs": {
 		"ImportDump": [
@@ -29,7 +29,7 @@
 			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpJob",
 			"services": [
 				"ConfigFactory",
-				"DBLoadBalancerFactory",
+				"ConnectionProvider",
 				"JobQueueGroupFactory",
 				"ImportDumpHookRunner",
 				"ImportDumpRequestManager",
@@ -111,7 +111,7 @@
 		"RequestImport": {
 			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImport",
 			"services": [
-				"DBLoadBalancerFactory",
+				"ConnectionProvider",
 				"MimeAnalyzer",
 				"PermissionManager",
 				"RepoGroup",
@@ -155,7 +155,7 @@
 		"Main": {
 			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Main",
 			"services": [
-				"ConfigFactory"
+				"ConnectionProvider"
 			]
 		}
 	},
@@ -176,10 +176,6 @@
 		"remoteExtPath": "ImportDump/modules"
 	},
 	"config": {
-		"ImportDumpCentralWiki": {
-			"value": "",
-			"description": "If set, only allow users to request import dumps on this wiki."
-		},
 		"ImportDumpEnableAutomatedJob": {
 			"value": false,
 			"description": "Whether to enable a job where a reviewer just has to 'approve' an import and job handles everything else. You can use the ImportDumpJobGetFile hook to manipulate how the job gets the XML file."
@@ -226,6 +222,9 @@
 	},
 	"ServiceWiringFiles": [
 		"includes/ServiceWiring.php"
+	],
+	"DatabaseVirtualDomains": [
+		"virtual-importdump"
 	],
 	"manifest_version": 2
 }
