@@ -18,7 +18,7 @@
 	"importdump-comment-given": "Comment given by $1:",
 	"importdump-comment-success": "Comment successfully added to this request.",
 	"importdump-desc": "An extension designed to automate user import requests.",
-	"importdump-duplicate-comment": "Unable to submit the same comment as your previous request again.",
+	"importdump-duplicate-comment": "Unable to submit the same comment as your previous request.",
 	"importdump-duplicate-request": "Unable to submit this request. It is too similar to an already open request.",
 	"importdump-edit-success": "Request successfully edited.",
 	"importdump-extensionname": "ImportDump",
