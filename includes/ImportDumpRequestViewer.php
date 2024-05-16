@@ -568,8 +568,8 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		$session = $form->getRequest()->getSession();
 
 		if ( isset( $formData['submit-comment'] ) ) {
-			if ( $session->get( 'last_posted_comment' ) !== $formData['comment'] ) {
-				$session->set( 'last_posted_comment', $formData['comment'] );
+			if ( $session->get( 'previous_posted_comment' ) !== $formData['comment'] ) {
+				$session->set( 'previous_posted_comment', $formData['comment'] );
 				$this->importDumpRequestManager->addComment( $formData['comment'], $user );
 				$out->addHTML( Html::successBox( $this->context->msg( 'importdump-comment-success' )->escaped() ) );
 				return;
@@ -579,7 +579,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			return;
 		}
 
-		$session->remove( 'last_posted_comment' );
+		$session->remove( 'previous_posted_comment' );
 
 		if ( isset( $formData['submit-edit'] ) ) {
 			$this->importDumpRequestManager->startAtomic( __METHOD__ );
