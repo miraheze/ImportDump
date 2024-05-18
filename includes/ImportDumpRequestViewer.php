@@ -115,7 +115,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			],
 			'reason' => [
 				'type' => 'textarea',
-				'rows' => 4,
+				'rows' => 6,
 				'readonly' => true,
 				'label-message' => 'importdump-label-reason',
 				'default' => $this->importDumpRequestManager->getReason(),
@@ -130,7 +130,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				'type' => 'textarea',
 				'readonly' => true,
 				'section' => 'comments',
-				'rows' => 4,
+				'rows' => 6,
 				'label-message' => [
 					'importdump-header-comment-withtimestamp',
 					$comment['user']->getName(),
@@ -147,7 +147,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			$formDescriptor += [
 				'comment' => [
 					'type' => 'textarea',
-					'rows' => 4,
+					'rows' => 6,
 					'label-message' => 'importdump-label-comment',
 					'section' => 'comments',
 					'validation-callback' => [ $this, 'isValidComment' ],
@@ -178,7 +178,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				],
 				'edit-reason' => [
 					'type' => 'textarea',
-					'rows' => 4,
+					'rows' => 6,
 					'label-message' => 'importdump-label-reason',
 					'section' => 'editing',
 					'required' => true,
@@ -391,7 +391,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				$formDescriptor += [
 					'handle-comment' => [
 						'type' => 'textarea',
-						'rows' => 4,
+						'rows' => 6,
 						'label-message' => 'importdump-label-status-updated-comment',
 						'section' => 'handling',
 					],
@@ -427,7 +427,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					],
 					'handle-comment' => [
 						'type' => 'textarea',
-						'rows' => 4,
+						'rows' => 6,
 						'label-message' => 'importdump-label-status-updated-comment',
 						'section' => 'handling',
 					],
