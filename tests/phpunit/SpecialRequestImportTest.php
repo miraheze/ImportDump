@@ -2,6 +2,7 @@
 
 namespace Miraheze\ImportDump\Tests;
 
+use Generator;
 use MediaWiki\Context\DerivativeContext;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Request\FauxRequest;
@@ -15,6 +16,7 @@ use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
 use UserNotLoggedIn;
 use Wikimedia\TestingAccessWrapper;
+use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
  * @group ImportDump
@@ -87,31 +89,34 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	 * @dataProvider onSubmitDataProvider
 	 * @covers ::onSubmit
 	 */
-	public function testOnSubmit( array $data, bool $expectedSuccess ) {
-		if ( $data['UploadFile'] ) {
+	public function testOnSubmit( array $formData, array $extraData, ?string $expectedError ) {
+		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
+
+		if ( $formData['UploadFile'] ) {
 			// Create a test file
-			file_put_contents( $data['UploadFile'], '<test>content</test>' );
+			file_put_contents( $formData['UploadFile'], $extraData['testfile'] ?? '<test>content</test>' );
 		}
 
 		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
 		$user = $this->getMutableTestUser()->getUser();
 
 		$context->setUser( $user );
-		$this->setSessionUser( $user, $user->getRequest() );
+
+		if ( $extraData['session'] ) {
+			$this->setSessionUser( $user, $user->getRequest() );
+		}
 
 		$request = new FauxRequest(
-			[
-				'wpEditToken' => $user->getEditToken(),
-			],
+			[ 'wpEditToken' => $user->getEditToken() ],
 			true
 		);
 
 		$request->setUpload( 'wpUploadFile', [
-			'name' => basename( $data['UploadFile'] ),
-			'type' => 'application/xml',
-			'tmp_name' => $data['UploadFile'],
+			'name' => basename( $formData['UploadFile'] ),
+			'type' => $extraData['mime-type'],
+			'tmp_name' => $formData['UploadFile'],
 			'error' => UPLOAD_ERR_OK,
-			'size' => filesize( $data['UploadFile'] ),
+			'size' => filesize( $formData['UploadFile'] ),
 		] );
 
 		$context->setRequest( $request );
@@ -119,102 +124,114 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
 		$specialRequestImport->setContext( $context );
 
-		$status = $specialRequestImport->onSubmit( $data );
+		$status = $specialRequestImport->onSubmit( $formData );
 		$this->assertInstanceOf( Status::class, $status );
-		if ( $expectedSuccess ) {
+		if ( !$expectedError ) {
 			$this->assertStatusGood( $status );
 		} else {
-			$this->assertStatusError( 'empty-file', $status );
+			$this->assertStatusError( $expectedError, $status );
+		}
+
+		if ( $extraData['duplicate'] ) {
+			$status = $specialRequestImport->onSubmit( $formData );
+			$this->assertInstanceOf( Status::class, $status );
+			$this->assertStatusError( 'importdump-duplicate-request', $status );
 		}
 	}
 
 	/**
 	 * Data provider for testOnSubmit
 	 *
-	 * @return array
+	 * @return Generator
 	 */
-	public function onSubmitDataProvider(): array {
-		return [
-			'valid data' => [
-				[
-					'source' => 'http://example.com',
-					'target' => 'wikidb',
-					'reason' => 'Test reason',
-					'UploadSourceType' => 'File',
-					'UploadFile' => __DIR__ . '/testfile.xml',
-				],
-				true,
-			],
-			'invalid data' => [
-				[
-					'source' => '',
-					'target' => '',
-					'reason' => '',
-					'UploadSourceType' => 'File',
-					'UploadFile' => '',
-				],
-				false,
-			],
-		];
-	}
-
-	/**
-	 * @covers ::onSubmit
-	 */
-	public function testOnSubmitDuplicate() {
-		$data = [
-			'source' => 'http://example.com',
-			'target' => 'wikidb',
-			'reason' => 'Test reason',
-			'UploadSourceType' => 'File',
-			'UploadFile' => __DIR__ . '/testfile.xml',
-		];
-
-		// Create a test file
-		file_put_contents( __DIR__ . '/testfile.xml', '<test>content</test>' );
-
-		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
-		$user = $this->getMutableTestUser()->getUser();
-
-		$context->setUser( $user );
-		$this->setSessionUser( $user, $user->getRequest() );
-
-		$request = new FauxRequest(
+	public function onSubmitDataProvider(): Generator {
+		yield 'valid data' => [
 			[
-				'wpEditToken' => $user->getEditToken(),
+				'source' => 'http://example.com',
+				'target' => 'wikidb',
+				'reason' => 'Test reason',
+				'UploadSourceType' => 'File',
+				'UploadFile' => __DIR__ . '/testfile.xml',
 			],
-			true
-		);
+			[
+				'mime-type' => 'application/xml',
+				'duplicate' => false,
+				'session' => true,
+			],
+			null,
+		];
 
-		$request->setUpload( 'wpUploadFile', [
-			'name' => 'testfile.xml',
-			'type' => 'application/xml',
-			'tmp_name' => __DIR__ . '/testfile.xml',
-			'error' => UPLOAD_ERR_OK,
-			'size' => filesize( __DIR__ . '/testfile.xml' ),
-		] );
+		yield 'duplicate data' => [
+			[
+				'source' => 'http://example.com',
+				'target' => 'wikidb',
+				'reason' => 'Test reason',
+				'UploadSourceType' => 'File',
+				'UploadFile' => __DIR__ . '/testfile.xml',
+			],
+			[
+				'mime-type' => 'application/xml',
+				'duplicate' => true,
+				'session' => true,
+			],
+			null,
+		];
 
-		$context->setRequest( $request );
+		yield 'empty file' => [
+			[
+				'source' => '',
+				'target' => '',
+				'reason' => '',
+				'UploadSourceType' => 'File',
+				'UploadFile' => '',
+			],
+			[
+				'mime-type' => 'application/xml',
+				'duplicate' => false,
+				'session' => true,
+			],
+			'empty-file',
+		];
 
-		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
-		$specialRequestImport->setContext( $context );
+		yield 'mime mismatch' => [
+			[
+				'source' => 'http://example.com',
+				'target' => 'wikidb',
+				'reason' => 'Test reason',
+				'UploadSourceType' => 'File',
+				'UploadFile' => __DIR__ . '/testfile.xml',
+			],
+			[
+				'mime-type' => 'text/plain',
+				'duplicate' => false,
+				'session' => true,
+				'testfile' => 'content',
+			],
+			'filetype-mime-mismatch',
+		];
 
-		// First submission should succeed
-		$status = $specialRequestImport->onSubmit( $data );
-		$this->assertInstanceOf( Status::class, $status );
-		$this->assertStatusGood( $status );
-
-		// Second identical submission should fail
-		$status = $specialRequestImport->onSubmit( $data );
-		$this->assertInstanceOf( Status::class, $status );
-		$this->assertStatusError( 'importdump-duplicate-request', $status );
+		yield 'session failure' => [
+			[
+				'source' => '',
+				'target' => '',
+				'reason' => '',
+				'UploadSourceType' => 'File',
+				'UploadFile' => '',
+			],
+			[
+				'mime-type' => 'application/xml',
+				'duplicate' => false,
+				'session' => false,
+			],
+			'sessionfailure',
+		];
 	}
 
 	/**
 	 * @dataProvider isValidDatabaseDataProvider
 	 * @covers ::isValidDatabase
 	 */
-	public function testIsValidDatabase( ?string $target, $expected ) {
+	public function testIsValidDatabase( string $target, $expected ) {
 		$result = $this->specialRequestImport->isValidDatabase( $target );
 		if ( is_string( $expected ) ) {
 			$this->assertSame( $expected, $result->getKey() );
@@ -226,20 +243,18 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * Data provider for testIsValidDatabase
 	 *
-	 * @return array
+	 * @return Generator
 	 */
-	public function isValidDatabaseDataProvider(): array {
-		return [
-			'valid database' => [ 'wikidb', true ],
-			'invalid database' => [ 'invalidwiki', 'importdump-invalid-target' ],
-		];
+	public function isValidDatabaseDataProvider(): Generator {
+		yield 'valid database' => [ 'wikidb', true ];
+		yield 'invalid database' => [ 'invalidwiki', 'importdump-invalid-target' ];
 	}
 
 	/**
 	 * @dataProvider isValidReasonDataProvider
 	 * @covers ::isValidReason
 	 */
-	public function testIsValidReason( ?string $reason, $expected ) {
+	public function testIsValidReason( string $reason, $expected ) {
 		$result = $this->specialRequestImport->isValidReason( $reason );
 		if ( is_string( $expected ) ) {
 			$this->assertSame( $expected, $result->getKey() );
@@ -251,13 +266,11 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * Data provider for testIsValidReason
 	 *
-	 * @return array
+	 * @return Generator
 	 */
-	public function isValidReasonDataProvider(): array {
-		return [
-			'valid reason' => [ 'Test reason', true ],
-			'invalid reason' => [ '', 'htmlform-required' ],
-		];
+	public function isValidReasonDataProvider(): Generator {
+		yield 'valid reason' => [ 'Test reason', true ];
+		yield 'invalid reason' => [ ' ', 'htmlform-required' ];
 	}
 
 	/**
