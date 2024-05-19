@@ -94,7 +94,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 
 		if ( $formData['UploadFile'] ) {
 			// Create a test file
-			file_put_contents( $formData['UploadFile'], '<test>content</test>' );
+			file_put_contents( $formData['UploadFile'], $extraData['testfile'] ?? '<test>content</test>' );
 		}
 
 		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
@@ -205,6 +205,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 				'mime-type' => 'text/plain',
 				'duplicate' => false,
 				'session' => true,
+				'testfile' => 'content',
 			],
 			'filetype-mime-mismatch',
 		];
