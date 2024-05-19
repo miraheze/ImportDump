@@ -16,6 +16,7 @@ use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
 use UserNotLoggedIn;
 use Wikimedia\TestingAccessWrapper;
+use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
  * @group ImportDump
@@ -45,12 +46,8 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	}
 
 	protected function tearDown(): void {
-		if ( file_exists( __DIR__ . '/testfile1.xml' ) ) {
-			unlink( __DIR__ . '/testfile1.xml' );
-		}
-
-		if ( file_exists( __DIR__ . '/testfile2.xml' ) ) {
-			unlink( __DIR__ . '/testfile2.xml' );
+		if ( file_exists( __DIR__ . '/testfile.xml' ) ) {
+			unlink( __DIR__ . '/testfile.xml' );
 		}
 
 		parent::tearDown();
@@ -93,6 +90,8 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::onSubmit
 	 */
 	public function testOnSubmit( array $formData, array $extraData, ?string $expectedError ) {
+		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
+
 		if ( $formData['UploadFile'] ) {
 			// Create a test file
 			file_put_contents( $formData['UploadFile'], '<test>content</test>' );
@@ -152,7 +151,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 				'target' => 'wikidb',
 				'reason' => 'Test reason',
 				'UploadSourceType' => 'File',
-				'UploadFile' => __DIR__ . '/testfile1.xml',
+				'UploadFile' => __DIR__ . '/testfile.xml',
 			],
 			[
 				'mime-type' => 'application/xml',
@@ -168,7 +167,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 				'target' => 'wikidb',
 				'reason' => 'Test reason',
 				'UploadSourceType' => 'File',
-				'UploadFile' => __DIR__ . '/testfile1.xml',
+				'UploadFile' => __DIR__ . '/testfile.xml',
 			],
 			[
 				'mime-type' => 'application/xml',
@@ -176,22 +175,6 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 				'session' => true,
 			],
 			null,
-		];
-
-		yield 'mime mismatch' => [
-			[
-				'source' => 'http://example.com',
-				'target' => 'wikidb',
-				'reason' => 'Test reason',
-				'UploadSourceType' => 'File',
-				'UploadFile' => __DIR__ . '/testfile2.xml',
-			],
-			[
-				'mime-type' => 'text/plain',
-				'duplicate' => false,
-				'session' => true,
-			],
-			'filetype-mime-mismatch',
 		];
 
 		yield 'empty file' => [
@@ -208,6 +191,22 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 				'session' => true,
 			],
 			'empty-file',
+		];
+
+		yield 'mime mismatch' => [
+			[
+				'source' => 'http://example.com',
+				'target' => 'wikidb',
+				'reason' => 'Test reason',
+				'UploadSourceType' => 'File',
+				'UploadFile' => __DIR__ . '/testfile.xml',
+			],
+			[
+				'mime-type' => 'text/plain',
+				'duplicate' => false,
+				'session' => true,
+			],
+			'filetype-mime-mismatch',
 		];
 
 		yield 'session failure' => [
@@ -243,13 +242,11 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * Data provider for testIsValidDatabase
 	 *
-	 * @return array
+	 * @return Generator
 	 */
-	public function isValidDatabaseDataProvider(): array {
-		return [
-			'valid database' => [ 'wikidb', true ],
-			'invalid database' => [ 'invalidwiki', 'importdump-invalid-target' ],
-		];
+	public function isValidDatabaseDataProvider(): Generator {
+		yield 'valid database' => [ 'wikidb', true ];
+		yield 'invalid database' => [ 'invalidwiki', 'importdump-invalid-target' ];
 	}
 
 	/**
@@ -268,13 +265,11 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * Data provider for testIsValidReason
 	 *
-	 * @return array
+	 * @return Generator
 	 */
-	public function isValidReasonDataProvider(): array {
-		return [
-			'valid reason' => [ 'Test reason', true ],
-			'invalid reason' => [ ' ', 'htmlform-required' ],
-		];
+	public function isValidReasonDataProvider(): Generator {
+		yield 'valid reason' => [ 'Test reason', true ];
+		yield 'invalid reason' => [ ' ', 'htmlform-required' ];
 	}
 
 	/**
