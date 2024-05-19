@@ -45,7 +45,7 @@ class Main implements
 	 */
 	public function onGetAllBlockActions( &$actions ) {
 		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
-		if ( !WikiMap::isCurrentWikiId( $dbr->getDBname() ?? '' ) ) {
+		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			return;
 		}
 
@@ -66,7 +66,7 @@ class Main implements
 	 */
 	public function onBeforeCreateEchoEvent( &$notifications, &$notificationCategories, &$icons ) {
 		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
-		if ( !WikiMap::isCurrentWikiId( $dbr->getDBname() ?? '' ) ) {
+		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			return;
 		}
 
