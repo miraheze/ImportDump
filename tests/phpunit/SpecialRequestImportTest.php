@@ -27,7 +27,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		parent::setUp();
 
 		$this->setMwGlobals( 'wgVirtualDomainsMapping', [
-			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
+			[ 'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ] ],
 		] );
 
 		$this->specialRequestImport = new SpecialRequestImport(
@@ -41,7 +41,10 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	}
 
 	protected function tearDown(): void {
-		unlink( __DIR__ . '/testfile.xml' );
+		if ( file_exists( __DIR__ . '/testfile.xml' ) ) {
+			unlink( __DIR__ . '/testfile.xml' );
+		}
+
 		parent::tearDown();
 	}
 
