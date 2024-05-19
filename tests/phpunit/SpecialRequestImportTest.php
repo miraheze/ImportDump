@@ -110,6 +110,8 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 			'size' => filesize( $data['UploadFile'] ),
 		] );
 
+		$request->getSession()->setUser( $user );
+
 		$context->setRequest( $request );
 
 		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
@@ -188,6 +190,8 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 			'error' => UPLOAD_ERR_OK,
 			'size' => filesize( __DIR__ . '/testfile.xml' ),
 		] );
+
+		$request->getSession()->setUser( $user );
 
 		$context->setRequest( $request );
 
