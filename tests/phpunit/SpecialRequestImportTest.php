@@ -82,8 +82,10 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::onSubmit
 	 */
 	public function testOnSubmit( array $data, bool $expectedSuccess ) {
-		// Create a test file
-		file_put_contents( __DIR__ . '/testfile.xml', '<test>content</test>' );
+		if ( $data['UploadFile'] ) {
+			// Create a test file
+			file_put_contents( $data['UploadFile'], '<test>content</test>' );
+		}
 
 		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
 		$user = $this->getTestUser()->getUser();
@@ -98,11 +100,11 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		);
 
 		$request->setUpload( 'wpUploadFile', [
-			'name' => 'testfile.xml',
+			'name' => basename( $data['UploadFile'] ),
 			'type' => 'application/xml',
-			'tmp_name' => __DIR__ . '/testfile.xml',
+			'tmp_name' => $data['UploadFile'],
 			'error' => UPLOAD_ERR_OK,
-			'size' => filesize( __DIR__ . '/testfile.xml' ),
+			'size' => filesize( $data['UploadFile'] ),
 		] );
 
 		$context->setRequest( $request );
@@ -132,7 +134,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 					'target' => 'wikidb',
 					'reason' => 'Test reason',
 					'UploadSourceType' => 'File',
-					'UploadFile' => __DIR__ . '/testfile.xml'
+					'UploadFile' => __DIR__ . '/testfile.xml',
 				],
 				true
 			],
@@ -142,7 +144,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 					'target' => '',
 					'reason' => '',
 					'UploadSourceType' => 'File',
-					'UploadFile' => ''
+					'UploadFile' => '',
 				],
 				false
 			]
@@ -158,7 +160,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 			'target' => 'wikidb',
 			'reason' => 'Test reason',
 			'UploadSourceType' => 'File',
-			'UploadFile' => __DIR__ . '/testfile.xml'
+			'UploadFile' => __DIR__ . '/testfile.xml',
 		];
 
 		// Create a test file
@@ -201,7 +203,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	public function isValidDatabaseDataProvider(): array {
 		return [
 			'valid database' => [ 'wikidb', true ],
-			'invalid database' => [ 'invalidwiki', 'importdump-invalid-target' ]
+			'invalid database' => [ 'invalidwiki', 'importdump-invalid-target' ],
 		];
 	}
 
@@ -226,7 +228,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	public function isValidReasonDataProvider(): array {
 		return [
 			'valid reason' => [ 'Test reason', true ],
-			'invalid reason' => [ '', 'htmlform-required' ]
+			'invalid reason' => [ '', 'htmlform-required' ],
 		];
 	}
 
