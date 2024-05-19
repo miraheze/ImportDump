@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, REL1_42 ]
 
 jobs:
   call-mediawiki-tests-workflow:
