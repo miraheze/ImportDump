@@ -27,7 +27,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		parent::setUp();
 
 		$this->setMwGlobals( 'wgVirtualDomainsMapping', [
-			[ 'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ] ],
+			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
 		] );
 
 		$this->specialRequestImport = new SpecialRequestImport(
