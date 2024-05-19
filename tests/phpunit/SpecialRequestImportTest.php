@@ -3,7 +3,7 @@
 namespace Miraheze\ImportDump\Tests;
 
 use MediaWiki\Context\DerivativeContext;
-use MediaWiki\Context\RequestContext;
+use MediaWiki\Context\IContextSource;
 use MediaWiki\Request\FauxRequest;
 use MediaWiki\Session\CsrfTokenSet;
 use MediaWiki\SpecialPage\SpecialPage;
@@ -103,15 +103,17 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 			->getMock();
 		$csrfTokenSet->method( 'matchToken' )->willReturn( true );
 
-		$context = $this->createMock( RequestContext::class );
+		$context = $this->createMock( IContextSource::class );
 		$context->method( 'getCsrfTokenSet' )->willReturn( $csrfTokenSet );
 
 		$context->setRequest( $request );
 		$context->setUser( $user );
 
-		$this->specialRequestImport->setContext( $context );
+		
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$specialRequestImport->setContext( $context );
 
-		$status = $this->specialRequestImport->onSubmit( $data );
+		$status = $specialRequestImport->onSubmit( $data );
 		$this->assertInstanceOf( Status::class, $status );
 		if ( $expectedSuccess ) {
 			$this->assertStatusGood( $status );
