@@ -3,7 +3,7 @@
 namespace Miraheze\ImportDump\Tests;
 
 use MediaWiki\Context\DerivativeContext;
-use MediaWiki\Context\IContextSource;
+use MediaWiki\Context\RequestContext;
 use MediaWiki\Request\FauxRequest;
 use MediaWiki\Session\CsrfTokenSet;
 use MediaWiki\SpecialPage\SpecialPage;
@@ -103,7 +103,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 			->getMock();
 		$csrfTokenSet->method( 'matchToken' )->willReturn( true );
 
-		$context = $this->createMock( IContextSource::class );
+		$context = $this->createMock( RequestContext::class );
 		$context->method( 'getCsrfTokenSet' )->willReturn( $csrfTokenSet );
 
 		$context->setRequest( $request );
