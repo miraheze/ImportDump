@@ -2,6 +2,7 @@
 
 namespace Miraheze\ImportDump\Tests;
 
+use Generator;
 use MediaWiki\Context\DerivativeContext;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Request\FauxRequest;
@@ -44,8 +45,12 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	}
 
 	protected function tearDown(): void {
-		if ( file_exists( __DIR__ . '/testfile.xml' ) ) {
-			unlink( __DIR__ . '/testfile.xml' );
+		if ( file_exists( __DIR__ . '/testfile1.xml' ) ) {
+			unlink( __DIR__ . '/testfile1.xml' );
+		}
+
+		if ( file_exists( __DIR__ . '/testfile2.xml' ) ) {
+			unlink( __DIR__ . '/testfile2.xml' );
 		}
 
 		parent::tearDown();
@@ -138,85 +143,87 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * Data provider for testOnSubmit
 	 *
-	 * @return array
+	 * @return Generator
 	 */
-	public function onSubmitDataProvider(): array {
-		return [
-			'valid data' => [
-				[
-					'source' => 'http://example.com',
-					'target' => 'wikidb',
-					'reason' => 'Test reason',
-					'UploadSourceType' => 'File',
-					'UploadFile' => __DIR__ . '/testfile.xml',
-				],
-				[
-					'mime-type' => 'application/xml',
-					'duplicate' => false,
-					'session' => true,
-				],
-				null,
+	public function onSubmitDataProvider(): Generator {
+		yield 'valid data' => [
+			[
+				'source' => 'http://example.com',
+				'target' => 'wikidb',
+				'reason' => 'Test reason',
+				'UploadSourceType' => 'File',
+				'UploadFile' => __DIR__ . '/testfile1.xml',
 			],
-			'duplicate data' => [
-				[
-					'source' => 'http://example.com',
-					'target' => 'wikidb',
-					'reason' => 'Test reason',
-					'UploadSourceType' => 'File',
-					'UploadFile' => __DIR__ . '/testfile.xml',
-				],
-				[
-					'mime-type' => 'application/xml',
-					'duplicate' => true,
-					'session' => true,
-				],
-				null,
+			[
+				'mime-type' => 'application/xml',
+				'duplicate' => false,
+				'session' => true,
 			],
-			'empty file' => [
-				[
-					'source' => '',
-					'target' => '',
-					'reason' => '',
-					'UploadSourceType' => 'File',
-					'UploadFile' => '',
-				],
-				[
-					'mime-type' => 'application/xml',
-					'duplicate' => false,
-					'session' => true,
-				],
-				'empty-file',
+			null,
+		];
+
+		yield 'duplicate data' => [
+			[
+				'source' => 'http://example.com',
+				'target' => 'wikidb',
+				'reason' => 'Test reason',
+				'UploadSourceType' => 'File',
+				'UploadFile' => __DIR__ . '/testfile1.xml',
 			],
-			'mime mismatch' => [
-				[
-					'source' => 'http://example.com',
-					'target' => 'wikidb',
-					'reason' => 'Test reason',
-					'UploadSourceType' => 'File',
-					'UploadFile' => __DIR__ . '/testfile.xml',
-				],
-				[
-					'mime-type' => 'text/plain',
-					'duplicate' => false,
-					'session' => true,
-				],
-				'filetype-mime-mismatch',
+			[
+				'mime-type' => 'application/xml',
+				'duplicate' => true,
+				'session' => true,
 			],
-			'session failure' => [
-				[
-					'source' => '',
-					'target' => '',
-					'reason' => '',
-					'UploadSourceType' => 'File',
-					'UploadFile' => '',
-				],
-				[
-					'mime-type' => 'application/xml',
-					'duplicate' => false,
-					'session' => false,
-				],
-				'sessionfailure',
+			null,
+		];
+
+		yield 'mime mismatch' => [
+			[
+				'source' => 'http://example.com',
+				'target' => 'wikidb',
+				'reason' => 'Test reason',
+				'UploadSourceType' => 'File',
+				'UploadFile' => __DIR__ . '/testfile2.xml',
 			],
+			[
+				'mime-type' => 'text/plain',
+				'duplicate' => false,
+				'session' => true,
+			],
+			'filetype-mime-mismatch',
+		];
+
+		yield 'empty file' => [
+			[
+				'source' => '',
+				'target' => '',
+				'reason' => '',
+				'UploadSourceType' => 'File',
+				'UploadFile' => '',
+			],
+			[
+				'mime-type' => 'application/xml',
+				'duplicate' => false,
+				'session' => true,
+			],
+			'empty-file',
+		];
+
+		yield 'session failure' => [
+			[
+				'source' => '',
+				'target' => '',
+				'reason' => '',
+				'UploadSourceType' => 'File',
+				'UploadFile' => '',
+			],
+			[
+				'mime-type' => 'application/xml',
+				'duplicate' => false,
+				'session' => false,
+			],
+			'sessionfailure',
 		];
 	}
 
