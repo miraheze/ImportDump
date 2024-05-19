@@ -85,20 +85,27 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		// Create a test file
 		file_put_contents( __DIR__ . '/testfile.xml', '<test>content</test>' );
 
+		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
 		$user = $this->getTestUser()->getUser();
+
+		$context->setUser( $user );
 
 		$request = new FauxRequest(
 			[
 				'wpEditToken' => $user->getEditToken(),
-				'wpUploadFile' => __DIR__ . '/testfile.xml',
 			],
 			true
 		);
 
-		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
+		$request->setUpload( 'wpUploadFile', [
+			'name' => 'testfile.xml',
+			'type' => 'application/xml',
+			'tmp_name' => __DIR__ . '/testfile.xml',
+			'error' => UPLOAD_ERR_OK,
+			'size' => filesize( __DIR__ . '/testfile.xml' ),
+		] );
 
 		$context->setRequest( $request );
-		$context->setUser( $user );
 
 		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
 		$specialRequestImport->setContext( $context );
@@ -156,6 +163,11 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 
 		// Create a test file
 		file_put_contents( __DIR__ . '/testfile.xml', '<test>content</test>' );
+
+		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
+		$user = $this->getTestUser()->getUser();
+
+		$context->setUser( $user );
 
 		// First submission should succeed
 		$status = $this->specialRequestImport->onSubmit( $data );
