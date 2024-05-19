@@ -84,10 +84,10 @@ class SpecialRequestImport extends FormSpecialPage
 		$this->setParameter( $par );
 		$this->setHeaders();
 
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
-		if ( !WikiMap::isCurrentWikiId( $dbr->getDBname() ?? '' ) ) {
-			throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
-		}
+		// $dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		// if ( !WikiMap::isCurrentWikiId( $dbr->getDBname() ?? '' ) ) {
+			// throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
+		// }
 
 		$this->checkPermissions();
 
@@ -184,7 +184,7 @@ class SpecialRequestImport extends FormSpecialPage
 		$userToken = $this->getContext()->getCsrfTokenSet();
 
 		if ( !$userToken->matchToken( $token ) ) {
-			return Status::newFatal( 'sessionfailure' );
+			return Status::newFatal( $userToken->getToken() . ':' . $token );
 		}
 
 		if (
