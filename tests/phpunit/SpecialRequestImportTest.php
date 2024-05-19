@@ -179,12 +179,14 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		);
 
 		$request->setUpload( 'wpUploadFile', [
-			'name' => basename( $data['UploadFile'] ),
+			'name' => 'testfile.xml',
 			'type' => 'application/xml',
-			'tmp_name' => $data['UploadFile'],
+			'tmp_name' => __DIR__ . '/testfile.xml',
 			'error' => UPLOAD_ERR_OK,
-			'size' => filesize( $data['UploadFile'] ),
+			'size' => filesize( __DIR__ . '/testfile.xml' ),
 		] );
+
+		$context->setRequest( $request );
 
 		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
 		$specialRequestImport->setContext( $context );
