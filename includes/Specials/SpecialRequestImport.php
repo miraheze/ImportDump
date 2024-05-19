@@ -85,7 +85,7 @@ class SpecialRequestImport extends FormSpecialPage
 		$this->setHeaders();
 
 		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
-		if ( !WikiMap::isCurrentWikiId( $dbr->getDBname() ?? '' ) ) {
+		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
 		}
 
