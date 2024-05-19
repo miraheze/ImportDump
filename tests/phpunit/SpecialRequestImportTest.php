@@ -41,7 +41,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	}
 
 	protected function tearDown(): void {
-		@unlink( __DIR__ . '/testfile.xml' );
+		unlink( __DIR__ . '/testfile.xml' );
 		parent::tearDown();
 	}
 
