@@ -5,9 +5,11 @@ namespace Miraheze\ImportDump\Tests;
 use MediaWiki\Context\DerivativeContext;
 use MediaWiki\Message\Message;
 use MediaWiki\Permissions\PermissionManager;
+use MediaWiki\Request\FauxRequest;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
 use MediaWiki\User\UserFactory;
+use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use MimeAnalyzer;
 use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
@@ -18,10 +20,10 @@ use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\TestingAccessWrapper;
 
 /**
- * @coversDefaultClass \Miraheze\ImportDump\Specials\SpecialRequestImport
  * @group ImportDump
  * @group Database
  * @group Medium
+ * @coversDefaultClass \Miraheze\ImportDump\Specials\SpecialRequestImport
  */
 class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 
@@ -63,6 +65,10 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::execute
 	 */
 	public function testExecute() {
+		$this->setMwGlobals( 'wgVirtualDomainsMapping', [
+			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
+		] );
+
 		$user = $this->getTestUser()->getUser();
 		$testContext = new DerivativeContext( $this->specialRequestImport->getContext() );
 
@@ -85,12 +91,30 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * @covers ::onSubmit
 	 * @dataProvider onSubmitDataProvider
+	 * @covers ::onSubmit
 	 */
 	public function testOnSubmit( array $data, bool $expectedSuccess ) {
 		// Create a test file
 		file_put_contents( __DIR__ . '/testfile.xml', '<test>content</test>' );
+
+		$user = $this->getTestUser()->getUser();
+		$testContext = new DerivativeContext( $this->specialRequestImport->getContext() );
+
+		$testContext->setUser( $user );
+		$testContext->setTitle( SpecialPage::getTitleFor( 'RequestImport' ) );
+
+		$request = new FauxRequest(
+			[
+				'wpEditToken' => $user->getEditToken(),
+			],
+			true
+		);
+
+		$testContext->setRequest( $request );
+
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$specialRequestImport->setContext( $testContext );
 
 		$status = $this->specialRequestImport->onSubmit( $data );
 		$this->assertInstanceOf( Status::class, $status );
@@ -101,6 +125,11 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		}
 	}
 
+	/**
+	 * Data provider for testOnSubmit
+	 *
+	 * @return array
+	 */
 	public function onSubmitDataProvider(): array {
 		return [
 			'valid data' => [
@@ -153,8 +182,8 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * @covers ::isValidDatabase
 	 * @dataProvider isValidDatabaseDataProvider
+	 * @covers ::isValidDatabase
 	 */
 	public function testIsValidDatabase( ?string $target, $expected ) {
 		$result = $this->specialRequestImport->isValidDatabase( $target );
@@ -165,6 +194,11 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		}
 	}
 
+	/**
+	 * Data provider for testIsValidDatabase
+	 *
+	 * @return array
+	 */
 	public function isValidDatabaseDataProvider(): array {
 		return [
 			'valid database' => [ 'wikidb', true ],
@@ -173,8 +207,8 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * @covers ::isValidReason
 	 * @dataProvider isValidReasonDataProvider
+	 * @covers ::isValidReason
 	 */
 	public function testIsValidReason( ?string $reason, $expected ) {
 		$result = $this->specialRequestImport->isValidReason( $reason );
@@ -185,6 +219,11 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		}
 	}
 
+	/**
+	 * Data provider for testIsValidReason
+	 *
+	 * @return array
+	 */
 	public function isValidReasonDataProvider(): array {
 		return [
 			'valid reason' => [ 'Test reason', true ],
