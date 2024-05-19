@@ -15,7 +15,6 @@ use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
 use RepoGroup;
 use UserNotLoggedIn;
-use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\TestingAccessWrapper;
 
 /**
@@ -35,7 +34,8 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
 		] );
 
-		$connectionProvider = $this->createMock( IConnectionProvider::class );
+		$connectionProvider = $this->getServiceContainer()->getConnectionProvider();
+
 		$mimeAnalyzer = $this->createMock( MimeAnalyzer::class );
 		$permissionManager = $this->createMock( PermissionManager::class );
 		$repoGroup = $this->createMock( RepoGroup::class );
