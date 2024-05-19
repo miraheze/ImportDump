@@ -109,7 +109,6 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		$context->setRequest( $request );
 		$context->setUser( $user );
 
-		
 		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
 		$specialRequestImport->setContext( $context );
 
