@@ -16,6 +16,7 @@ use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
+use MediaWiki\WikiMap\WikiMap;
 use MimeAnalyzer;
 use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\CreateWiki\RemoteWiki;
@@ -83,10 +84,10 @@ class SpecialRequestImport extends FormSpecialPage
 		$this->setParameter( $par );
 		$this->setHeaders();
 
-		// $dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
-		// if ( !WikiMap::isCurrentWikiId( $dbr->getDBname() ?? '' ) ) {
-			// throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
-		// }
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		if ( !WikiMap::isCurrentWikiId( $dbr->getDBname() ?? '' ) ) {
+			throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
+		}
 
 		$this->checkPermissions();
 
@@ -182,9 +183,9 @@ class SpecialRequestImport extends FormSpecialPage
 		$token = $this->getRequest()->getVal( 'wpEditToken' );
 		$userToken = $this->getContext()->getCsrfTokenSet();
 
-		// if ( !$userToken->matchToken( $token ) ) {
-		//	return Status::newFatal( 'sessionfailure' );
-		// }
+		if ( !$userToken->matchToken( $token ) ) {
+			return Status::newFatal( 'sessionfailure' );
+		}
 
 		if (
 			$this->getUser()->pingLimiter( 'request-import' ) ||
