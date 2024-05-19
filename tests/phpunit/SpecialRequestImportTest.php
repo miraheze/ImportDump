@@ -3,9 +3,12 @@
 namespace Miraheze\ImportDump\Tests;
 
 use MediaWiki\Context\DerivativeContext;
+use MediaWiki\Context\RequestContext;
 use MediaWiki\Request\FauxRequest;
+use MediaWiki\Request\WebRequest;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
+use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
@@ -91,9 +94,10 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		}
 
 		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
-		$user = $this->getTestUser()->getUser();
+		$user = $this->getMutableTestUser()->getUser();
 
 		$context->setUser( $user );
+		$this->setSessionUser( $user, $user->getRequest() );
 
 		$request = new FauxRequest(
 			[
@@ -109,8 +113,6 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 			'error' => UPLOAD_ERR_OK,
 			'size' => filesize( $data['UploadFile'] ),
 		] );
-
-		$request->getSession()->setUser( $user );
 
 		$context->setRequest( $request );
 
@@ -172,9 +174,10 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		file_put_contents( __DIR__ . '/testfile.xml', '<test>content</test>' );
 
 		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
-		$user = $this->getTestUser()->getUser();
+		$user = $this->getMutableTestUser()->getUser();
 
 		$context->setUser( $user );
+		$this->setSessionUser( $user, $user->getRequest() );
 
 		$request = new FauxRequest(
 			[
@@ -190,8 +193,6 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 			'error' => UPLOAD_ERR_OK,
 			'size' => filesize( __DIR__ . '/testfile.xml' ),
 		] );
-
-		$request->getSession()->setUser( $user );
 
 		$context->setRequest( $request );
 
@@ -293,5 +294,12 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
 		$result = $specialRequestImport->getLogType( 'testwiki' );
 		$this->assertSame( 'importdump', $result );
+	}
+
+	private function setSessionUser( User $user, WebRequest $request ) {
+		RequestContext::getMain()->setUser( $user );
+		RequestContext::getMain()->setRequest( $request );
+		TestingAccessWrapper::newFromObject( $user )->mRequest = $request;
+		$request->getSession()->setUser( $user );
 	}
 }
