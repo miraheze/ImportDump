@@ -136,7 +136,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 					'UploadSourceType' => 'File',
 					'UploadFile' => __DIR__ . '/testfile.xml',
 				],
-				true
+				true,
 			],
 			'invalid data' => [
 				[
@@ -146,8 +146,8 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 					'UploadSourceType' => 'File',
 					'UploadFile' => '',
 				],
-				false
-			]
+				false,
+			],
 		];
 	}
 
@@ -171,13 +171,31 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 
 		$context->setUser( $user );
 
+		$request = new FauxRequest(
+			[
+				'wpEditToken' => $user->getEditToken(),
+			],
+			true
+		);
+
+		$request->setUpload( 'wpUploadFile', [
+			'name' => basename( $data['UploadFile'] ),
+			'type' => 'application/xml',
+			'tmp_name' => $data['UploadFile'],
+			'error' => UPLOAD_ERR_OK,
+			'size' => filesize( $data['UploadFile'] ),
+		] );
+
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$specialRequestImport->setContext( $context );
+
 		// First submission should succeed
-		$status = $this->specialRequestImport->onSubmit( $data );
+		$status = $specialRequestImport->onSubmit( $data );
 		$this->assertInstanceOf( Status::class, $status );
 		$this->assertStatusGood( $status );
 
 		// Second identical submission should fail
-		$status = $this->specialRequestImport->onSubmit( $data );
+		$status = $specialRequestImport->onSubmit( $data );
 		$this->assertInstanceOf( Status::class, $status );
 		$this->assertStatusError( 'importdump-duplicate-request', $status );
 	}
