@@ -117,7 +117,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		if ( $expectedSuccess ) {
 			$this->assertStatusGood( $status );
 		} else {
-			$this->assertStatusNotGood( $status );
+			$this->assertStatusError( 'empty-file', $status );
 		}
 	}
 
