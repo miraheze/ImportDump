@@ -3,7 +3,6 @@
 namespace Miraheze\ImportDump\Tests;
 
 use MediaWiki\Context\DerivativeContext;
-use MediaWiki\Message\Message;
 use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\Request\FauxRequest;
 use MediaWiki\SpecialPage\SpecialPage;
@@ -31,6 +30,10 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
+
+		$this->setMwGlobals( 'wgVirtualDomainsMapping', [
+			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
+		] );
 
 		$connectionProvider = $this->createMock( IConnectionProvider::class );
 		$mimeAnalyzer = $this->createMock( MimeAnalyzer::class );
@@ -65,10 +68,6 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::execute
 	 */
 	public function testExecute() {
-		$this->setMwGlobals( 'wgVirtualDomainsMapping', [
-			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
-		] );
-
 		$user = $this->getTestUser()->getUser();
 		$testContext = new DerivativeContext( $this->specialRequestImport->getContext() );
 
@@ -104,14 +103,9 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		$testContext->setUser( $user );
 		$testContext->setTitle( SpecialPage::getTitleFor( 'RequestImport' ) );
 
-		$request = new FauxRequest(
-			[
-				'wpEditToken' => $user->getEditToken(),
-			],
-			true
-		);
+		$testContext->setRequest( new FauxRequest() );
 
-		$testContext->setRequest( $request );
+		$testContext->getRequest()->setVal( 'wpEditToken', $testContext->getUser()->getEditToken() );
 
 		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
 		$specialRequestImport->setContext( $testContext );
@@ -187,8 +181,8 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	 */
 	public function testIsValidDatabase( ?string $target, $expected ) {
 		$result = $this->specialRequestImport->isValidDatabase( $target );
-		if ( $expected instanceof Message ) {
-			$this->assertInstanceOf( Message::class, $result );
+		if ( is_string( $expected ) ) {
+			$this->assertSame( $expected, $result->getKey() );
 		} else {
 			$this->assertSame( $expected, $result );
 		}
@@ -202,7 +196,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	public function isValidDatabaseDataProvider(): array {
 		return [
 			'valid database' => [ 'wikidb', true ],
-			'invalid database' => [ 'invalidwiki', Message::class ]
+			'invalid database' => [ 'invalidwiki', 'importdump-invalid-target' ]
 		];
 	}
 
@@ -212,8 +206,8 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	 */
 	public function testIsValidReason( ?string $reason, $expected ) {
 		$result = $this->specialRequestImport->isValidReason( $reason );
-		if ( $expected instanceof Message ) {
-			$this->assertInstanceOf( Message::class, $result );
+		if ( is_string( $expected ) ) {
+			$this->assertSame( $expected, $result->getKey() );
 		} else {
 			$this->assertSame( $expected, $result );
 		}
@@ -227,7 +221,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	public function isValidReasonDataProvider(): array {
 		return [
 			'valid reason' => [ 'Test reason', true ],
-			'invalid reason' => [ '', Message::class ]
+			'invalid reason' => [ '', 'htmlform-required' ]
 		];
 	}
 
