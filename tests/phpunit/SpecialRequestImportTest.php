@@ -13,8 +13,6 @@ use MimeAnalyzer;
 use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
 use RepoGroup;
-use UploadBase;
-use UploadStash;
 use UserNotLoggedIn;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\TestingAccessWrapper;
