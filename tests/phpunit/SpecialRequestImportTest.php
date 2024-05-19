@@ -3,17 +3,13 @@
 namespace Miraheze\ImportDump\Tests;
 
 use MediaWiki\Context\DerivativeContext;
-use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\Request\FauxRequest;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
-use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
-use MimeAnalyzer;
 use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
-use RepoGroup;
 use UserNotLoggedIn;
 use Wikimedia\TestingAccessWrapper;
 
@@ -34,21 +30,13 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
 		] );
 
-		$connectionProvider = $this->getServiceContainer()->getConnectionProvider();
-
-		$mimeAnalyzer = $this->createMock( MimeAnalyzer::class );
-		$permissionManager = $this->createMock( PermissionManager::class );
-		$repoGroup = $this->createMock( RepoGroup::class );
-		$userFactory = $this->createMock( UserFactory::class );
-		$createWikiHookRunner = $this->createMock( CreateWikiHookRunner::class );
-
 		$this->specialRequestImport = new SpecialRequestImport(
-			$connectionProvider,
-			$mimeAnalyzer,
-			$permissionManager,
-			$repoGroup,
-			$userFactory,
-			$createWikiHookRunner
+			$this->getServiceContainer()->getConnectionProvider(),
+			$this->getServiceContainer()->getMimeAnalyzer(),
+			$this->getServiceContainer()->getPermissionManager(),
+			$this->getServiceContainer()->getRepoGroup(),
+			$this->getServiceContainer()->getUserFactory(),
+			$this->createMock( CreateWikiHookRunner::class )
 		);
 	}
 
