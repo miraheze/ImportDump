@@ -4,7 +4,7 @@ namespace Miraheze\ImportDump\Tests;
 
 use MediaWiki\Context\DerivativeContext;
 use MediaWiki\Context\RequestContext;
-use MediaWiki\Request\WebRequest;
+use MediaWiki\Request\FauxRequest;
 use MediaWiki\Session\CsrfTokenSet;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
@@ -87,8 +87,15 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		// Create a test file
 		file_put_contents( __DIR__ . '/testfile.xml', '<test>content</test>' );
 
-		$request = $this->createMock( WebRequest::class );
-		$request->method( 'getVal' )->with( 'wpEditToken' )->willReturn( 'abc123' );
+		$user = $this->getTestUser()->getUser();
+
+		$request = new FauxRequest(
+			[
+				'wpEditToken' => $user->getEditToken(),
+				'wpUploadFile' => __DIR__ . '/testfile.xml',
+			],
+			true
+		);
 
 		$csrfTokenSet = $this->getMockBuilder( CsrfTokenSet::class )
 			->setConstructorArgs( [ $request ] )
@@ -98,8 +105,9 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 
 		$context = $this->createMock( RequestContext::class );
 		$context->method( 'getCsrfTokenSet' )->willReturn( $csrfTokenSet );
+
 		$context->setRequest( $request );
-		$context->setUser( $this->getTestUser()->getUser() );
+		$context->setUser( $user );
 
 		$this->specialRequestImport->setContext( $context );
 
