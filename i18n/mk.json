@@ -20,6 +20,7 @@
 	"importdump-comment-given": "Коментар на $1:",
 	"importdump-comment-success": "Коментарот е упешно додаден во ова барање.",
 	"importdump-desc": "Додаток предвиден за автоматизирање на барања за кориснички увози.",
+	"importdump-duplicate-comment": "Не можам да го преподнесам истиот коментар како ваше претходно барање.",
 	"importdump-duplicate-request": "Не можев да го поднесам ова барање. Премногу е сличен на веќе постоечко барање.",
 	"importdump-edit-success": "Барањето е успешно изменето.",
 	"importdump-extensionname": "Увоз на складиштен извадок",

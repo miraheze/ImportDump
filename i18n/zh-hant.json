@@ -23,6 +23,7 @@
 	"importdump-comment-given": "由 $1 給出的意見：",
 	"importdump-comment-success": "已成功新增意見到此申請。",
 	"importdump-desc": "一個旨在自動化使用者匯入申請的擴充功能。",
+	"importdump-duplicate-comment": "無法重新提交跟您先前請求相同的意見。",
 	"importdump-duplicate-request": "無法提交此申請。它與一份已經開啟的申請過於相似。",
 	"importdump-edit-success": "已成功編輯申請。",
 	"importdump-extensionname": "匯入傾印​（ImportDump）",

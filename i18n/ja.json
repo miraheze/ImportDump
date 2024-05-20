@@ -29,6 +29,7 @@
 	"importdump-comment-given": "$1からのコメント:",
 	"importdump-comment-success": "この申請にコメントが正常に追加されました。",
 	"importdump-desc": "利用者の取り込み申請を自動化するために設計された拡張機能。",
+	"importdump-duplicate-comment": "前回の申請で送ったコメントと同じコメントは送信できません。",
 	"importdump-duplicate-request": "申請を送信できません。すでに提出している申請に似すぎています。",
 	"importdump-edit-success": "申請を編集しました。",
 	"importdump-extensionname": "インポートダンプ",

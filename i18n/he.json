@@ -19,6 +19,7 @@
 	"importdump-comment-given": "ההערה הוגשה על־ידי $1:",
 	"importdump-comment-success": "נוספה הערה לבקשה הזאת.",
 	"importdump-desc": "הרחבה שתוכננה לטפל אוטומטית בבקשות יבוא ממשתמשים.",
+	"importdump-duplicate-comment": "לא ניתן לשלוח שוב את אותה ההערה כמו בבקשה הקודמת שלך.",
 	"importdump-duplicate-request": "לא ניתן להגיש את הבקשה הזאת. היא דומה מדי לבקשה פתוחה אחרת.",
 	"importdump-edit-success": "הבקשה נערכה.",
 	"importdump-header-comment-withtimestamp": "ההערה נכתבה על־ידי $1 ב־$2:",

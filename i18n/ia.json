@@ -19,6 +19,7 @@
 	"importdump-comment-given": "Commento lassate per $1:",
 	"importdump-comment-success": "Le commento ha essite addite a iste requesta.",
 	"importdump-desc": "Un extension concipite pro automatisar le requestas de importation de usatores.",
+	"importdump-duplicate-comment": "Impossibile resubmitter le mesme commento que illo in tu requesta previe.",
 	"importdump-duplicate-request": "Impossibile submitter iste requesta. Es troppo similar a un requesta ja aperte.",
 	"importdump-edit-success": "Requesta modificate con successo.",
 	"importdump-header-comment-withtimestamp": "Commento lassate per $1 a $2",
