@@ -12,9 +12,9 @@ use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
 use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
-use MediaWikiIntegrationTestCase;
 use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
+use SpecialPageTestBase;
 use UserNotLoggedIn;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
@@ -25,9 +25,24 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group Medium
  * @coversDefaultClass \Miraheze\ImportDump\Specials\SpecialRequestImport
  */
-class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
+class SpecialRequestImportTest extends SpecialPageTestBase {
 
 	private SpecialRequestImport $specialRequestImport;
+
+	/**
+	 * @inheritDoc
+	 */
+	protected function newSpecialPage() {
+		$services = $this->getServiceContainer();
+		return new SpecialRequestImport(
+			$services->getConnectionProvider(),
+			$services->getMimeAnalyzer(),
+			$services->getPermissionManager(),
+			$services->getRepoGroup(),
+			$services->getUserFactory(),
+			$this->createMock( CreateWikiHookRunner::class )
+		);
+	}
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -36,14 +51,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
 		] );
 
-		$this->specialRequestImport = new SpecialRequestImport(
-			$this->getServiceContainer()->getConnectionProvider(),
-			$this->getServiceContainer()->getMimeAnalyzer(),
-			$this->getServiceContainer()->getPermissionManager(),
-			$this->getServiceContainer()->getRepoGroup(),
-			$this->getServiceContainer()->getUserFactory(),
-			$this->createMock( CreateWikiHookRunner::class )
-		);
+		$this->specialRequestImport = $this->newSpecialPage();
 	}
 
 	protected function tearDown(): void {
@@ -65,25 +73,17 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::execute
 	 */
 	public function testExecute() {
-		$user = $this->getTestUser()->getUser();
-		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
-
-		$context->setUser( $user );
-		$context->setTitle( SpecialPage::getTitleFor( 'RequestImport' ) );
-
-		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
-		$specialRequestImport->setContext( $context );
-
-		$this->assertNull( $specialRequestImport->execute( '' ) );
+		$performer = $this->getTestUser()->getAuthority();
+		[ $html, ] = $this->executeSpecialPage( '', null, 'qqx', $performer );
+		$this->assertStringContainsString( '(requestimport-text)', $html );
 	}
 
 	/**
 	 * @covers ::execute
 	 */
-	public function testExecuteLoggedOut() {
+	public function testExecuteNotLoggedIn() {
 		$this->expectException( UserNotLoggedIn::class );
-		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
-		$specialRequestImport->execute( '' );
+		$this->executeSpecialPage();
 	}
 
 	/**
