@@ -298,12 +298,12 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 
 		$this->setGroupPermissions( 'user', 'upload_by_url', true );
 
-		$context = new DerivativeContext( $specialRequestWiki->getContext() );
+		$context = new DerivativeContext( $specialRequestImport->getContext() );
 
 		$context->setUser( $user );
-		$context->setTitle( SpecialPage::getTitleFor( 'RequestWiki' ) );
+		$context->setTitle( SpecialPage::getTitleFor( 'RequestImport' ) );
 
-		$specialRequestWiki->setContext( $context );
+		$specialRequestImport->setContext( $context );
 
 		$formFields = $specialRequestImport->getFormFields();
 
