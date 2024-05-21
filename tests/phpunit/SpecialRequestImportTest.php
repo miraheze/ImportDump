@@ -335,8 +335,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	 * @covers ::getLogType
 	 */
 	public function testGetLogType() {
-		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
-		$result = $specialRequestImport->getLogType( 'testwiki' );
+		$result = $this->specialRequestImport->getLogType( 'testwiki' );
 		$this->assertSame( 'importdump', $result );
 	}
 
