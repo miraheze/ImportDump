@@ -18,7 +18,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
 class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
 	implements ImportDumpStatus {
 
-	public function addDBData() {
+	public function addDBDataOnce(): void {
 		$this->setMwGlobals( MainConfigNames::VirtualDomainsMapping, [
 			'virtual-importdump' => [ 'db' => 'wikidb' ],
 		] );
