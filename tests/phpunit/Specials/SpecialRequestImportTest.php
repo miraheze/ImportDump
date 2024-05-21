@@ -1,6 +1,6 @@
 <?php
 
-namespace Miraheze\ImportDump\Tests;
+namespace Miraheze\ImportDump\Tests\Specials;
 
 use Generator;
 use MediaWiki\Context\DerivativeContext;
