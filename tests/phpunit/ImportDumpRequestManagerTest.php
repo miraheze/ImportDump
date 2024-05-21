@@ -2,6 +2,7 @@
 
 namespace Miraheze\ImportDump\Tests;
 
+use MediaWiki\MainConfigNames;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
@@ -18,7 +19,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
 	implements ImportDumpStatus {
 
 	public function addDBData() {
-		$this->setMwGlobals( 'wgVirtualDomainsMapping', [
+		$this->setMwGlobals( MainConfigNames::VirtualDomainsMapping, [
 			'virtual-importdump' => [ 'db' => 'wikidb' ],
 		] );
 
