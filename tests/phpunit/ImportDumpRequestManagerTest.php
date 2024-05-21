@@ -6,7 +6,7 @@ use MediaWiki\MainConfigNames;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
-use ReflectionClass;
+use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
@@ -57,15 +57,11 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
 	 * @covers ::fromID
 	 */
 	public function testFromID() {
-		$manager = $this->getImportDumpRequestManager();
+		$manager = TestingAccessWrapper::newFromObject(
+			$this->getImportDumpRequestManager()
+		);
 
-		$reflectedClass = new ReflectionClass( $manager );
-		$reflection = $reflectedClass->getProperty( 'ID' );
-		$reflection->setAccessible( true );
-
-		$ID = $reflection->getValue( $manager );
-
-		$this->assertSame( 1, $ID );
+		$this->assertSame( 1, $manager->ID );
 	}
 
 	/**
@@ -75,5 +71,17 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
 		$manager = $this->getImportDumpRequestManager();
 
 		$this->assertTrue( $manager->exists() );
+	}
+
+	/**
+	 * @covers ::addComment
+	 * @covers ::getComments
+	 */
+	public function testAddComment() {
+		$manager = $this->getImportDumpRequestManager();
+		$this->assertArrayEquals( [], $manager->getComments() );
+
+		$manager->addComment( 'Test', $this->getTestUser()->getUser() );
+		$this->assertNotSame( [], $manager->getComments() );
 	}
 }
