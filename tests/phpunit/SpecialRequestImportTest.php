@@ -5,6 +5,7 @@ namespace Miraheze\ImportDump\Tests;
 use Generator;
 use MediaWiki\Context\DerivativeContext;
 use MediaWiki\Context\RequestContext;
+use MediaWiki\MainConfigNames;
 use MediaWiki\Request\FauxRequest;
 use MediaWiki\Request\WebRequest;
 use MediaWiki\SpecialPage\SpecialPage;
@@ -31,7 +32,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->setMwGlobals( 'wgVirtualDomainsMapping', [
+		$this->setMwGlobals( MainConfigNames::VirtualDomainsMapping, [
 			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
 		] );
 
@@ -279,10 +280,36 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	public function testGetFormFields() {
 		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
 		$formFields = $specialRequestImport->getFormFields();
+
 		$this->assertIsArray( $formFields );
 		$this->assertArrayHasKey( 'source', $formFields );
 		$this->assertArrayHasKey( 'target', $formFields );
 		$this->assertArrayHasKey( 'reason', $formFields );
+		$this->assertArrayHasKey( 'UploadFile', $formFields );
+
+		$this->assertArrayNotHasKey( 'UploadSourceType', $formFields );
+		$this->assertArrayNotHasKey( 'UploadFileURL', $formFields );
+
+		$this->setMwGlobals( MainConfigNames::AllowCopyUploads, true );
+
+		// We still shouldn't have them as we don't have upload_by_url permission yet
+		$this->assertArrayNotHasKey( 'UploadSourceType', $formFields );
+		$this->assertArrayNotHasKey( 'UploadFileURL', $formFields );
+
+		$this->setGroupPermissions( 'user', 'upload_by_url', true );
+
+		$context = new DerivativeContext( $specialRequestWiki->getContext() );
+
+		$context->setUser( $user );
+		$context->setTitle( SpecialPage::getTitleFor( 'RequestWiki' ) );
+
+		$specialRequestWiki->setContext( $context );
+
+		$formFields = $specialRequestImport->getFormFields();
+
+		// We should now have them
+		$this->assertArrayHasKey( 'UploadSourceType', $formFields );
+		$this->assertArrayHasKey( 'UploadFileURL', $formFields );
 	}
 
 	/**
