@@ -38,8 +38,8 @@ class ImportDumpRequestManager {
 	];
 
 	public const CONSTRUCTOR_OPTIONS = [
-		'ImportDumpInterwikiMap',
-		'ImportDumpScriptCommand',
+		ConfigNames::InterwikiMap,
+		ConfigNames::ScriptCommand,
 	];
 
 	/** @var Config */
@@ -401,14 +401,14 @@ class ImportDumpRequestManager {
 			}
 		}
 
-		if ( $this->options->get( 'ImportDumpInterwikiMap' ) ) {
+		if ( $this->options->get( ConfigNames::InterwikiMap ) ) {
 			$parsedSource = parse_url( $this->getSource(), PHP_URL_HOST ) ?: '';
 			$domain = explode( '.', $parsedSource )[1] ?? '';
 
 			if ( $domain ) {
 				$domain .= '.' . ( explode( '.', $parsedSource )[2] ?? '' );
-				if ( $this->options->get( 'ImportDumpInterwikiMap' )[$domain] ?? '' ) {
-					$domain = $this->options->get( 'ImportDumpInterwikiMap' )[$domain];
+				if ( $this->options->get( ConfigNames::InterwikiMap )[$domain] ?? '' ) {
+					$domain = $this->options->get( ConfigNames::InterwikiMap )[$domain];
 					$subdomain = explode( '.', $parsedSource )[0] ?? '';
 
 					if ( $subdomain ) {
@@ -425,7 +425,7 @@ class ImportDumpRequestManager {
 	 * @return string
 	 */
 	public function getCommand(): string {
-		$command = $this->options->get( 'ImportDumpScriptCommand' );
+		$command = $this->options->get( ConfigNames::ScriptCommand );
 
 		if ( !$this->getInterwikiPrefix() ) {
 			$command = preg_replace( '/--username-prefix=?/', '', $command );

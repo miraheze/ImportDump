@@ -20,6 +20,7 @@ use MediaWiki\WikiMap\WikiMap;
 use MimeAnalyzer;
 use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\CreateWiki\RemoteWiki;
+use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\ImportDumpStatus;
 use PermissionsError;
 use RepoGroup;
@@ -91,8 +92,8 @@ class SpecialRequestImport extends FormSpecialPage
 
 		$this->checkPermissions();
 
-		if ( $this->getConfig()->get( 'ImportDumpHelpUrl' ) ) {
-			$this->getOutput()->addHelpLink( $this->getConfig()->get( 'ImportDumpHelpUrl' ), true );
+		if ( $this->getConfig()->get( ConfigNames::HelpUrl ) ) {
+			$this->getOutput()->addHelpLink( $this->getConfig()->get( ConfigNames::HelpUrl ), true );
 		}
 
 		$form = $this->getForm();
@@ -317,7 +318,7 @@ class SpecialRequestImport extends FormSpecialPage
 
 		if (
 			ExtensionRegistry::getInstance()->isLoaded( 'Echo' ) &&
-			$this->getConfig()->get( 'ImportDumpUsersNotifiedOnAllRequests' )
+			$this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests )
 		) {
 			$this->sendNotifications( $data['reason'], $this->getUser()->getName(), $requestID, $data['target'] );
 		}
@@ -353,7 +354,7 @@ class SpecialRequestImport extends FormSpecialPage
 			array_map(
 				function ( string $userName ): ?User {
 					return $this->userFactory->newFromName( $userName );
-				}, $this->getConfig()->get( 'ImportDumpUsersNotifiedOnAllRequests' )
+				}, $this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests )
 			)
 		);
 

@@ -12,6 +12,7 @@ use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MessageLocalizer;
+use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
 
@@ -116,7 +117,7 @@ class ImportDumpNotifyJob extends Job
 			array_map(
 				function ( string $userName ): ?User {
 					return $this->userFactory->newFromName( $userName );
-				}, $this->config->get( 'ImportDumpUsersNotifiedOnFailedImports' )
+				}, $this->config->get( ConfigNames::UsersNotifiedOnFailedImports )
 			)
 		);
 

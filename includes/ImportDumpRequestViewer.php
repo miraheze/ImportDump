@@ -212,7 +212,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					$this->context->msg( 'importdump-button-copy' )->text()
 				);
 
-				if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) && $status !== self::STATUS_FAILED ) {
+				if ( $this->config->get( ConfigNames::EnableAutomatedJob ) && $status !== self::STATUS_FAILED ) {
 					$fileInfo = '';
 				}
 
@@ -315,7 +315,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				];
 			}
 
-			if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
+			if ( $this->config->get( ConfigNames::EnableAutomatedJob ) ) {
 				$formDescriptor += [
 					'handle-status' => [
 						'type' => 'select',
@@ -378,7 +378,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				];
 			}
 
-			if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
+			if ( $this->config->get( ConfigNames::EnableAutomatedJob ) ) {
 				$validStatus = true;
 				if (
 					$status === self::STATUS_COMPLETE ||
@@ -734,7 +734,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			}
 
 			if ( isset( $formData['handle-status'] ) ) {
-				if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
+				if ( $this->config->get( ConfigNames::EnableAutomatedJob ) ) {
 					$formData['handle-comment'] = '';
 				}
 
