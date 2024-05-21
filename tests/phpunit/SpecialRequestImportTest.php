@@ -5,15 +5,16 @@ namespace Miraheze\ImportDump\Tests;
 use Generator;
 use MediaWiki\Context\DerivativeContext;
 use MediaWiki\Context\RequestContext;
+use MediaWiki\MainConfigNames;
 use MediaWiki\Request\FauxRequest;
 use MediaWiki\Request\WebRequest;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
 use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
-use MediaWikiIntegrationTestCase;
 use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
+use SpecialPageTestBase;
 use UserNotLoggedIn;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
@@ -24,25 +25,33 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group Medium
  * @coversDefaultClass \Miraheze\ImportDump\Specials\SpecialRequestImport
  */
-class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
+class SpecialRequestImportTest extends SpecialPageTestBase {
 
 	private SpecialRequestImport $specialRequestImport;
+
+	/**
+	 * @inheritDoc
+	 */
+	protected function newSpecialPage() {
+		$services = $this->getServiceContainer();
+		return new SpecialRequestImport(
+			$services->getConnectionProvider(),
+			$services->getMimeAnalyzer(),
+			$services->getPermissionManager(),
+			$services->getRepoGroup(),
+			$services->getUserFactory(),
+			$this->createMock( CreateWikiHookRunner::class )
+		);
+	}
 
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->setMwGlobals( 'wgVirtualDomainsMapping', [
+		$this->setMwGlobals( MainConfigNames::VirtualDomainsMapping, [
 			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
 		] );
 
-		$this->specialRequestImport = new SpecialRequestImport(
-			$this->getServiceContainer()->getConnectionProvider(),
-			$this->getServiceContainer()->getMimeAnalyzer(),
-			$this->getServiceContainer()->getPermissionManager(),
-			$this->getServiceContainer()->getRepoGroup(),
-			$this->getServiceContainer()->getUserFactory(),
-			$this->createMock( CreateWikiHookRunner::class )
-		);
+		$this->specialRequestImport = $this->newSpecialPage();
 	}
 
 	protected function tearDown(): void {
@@ -64,25 +73,17 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::execute
 	 */
 	public function testExecute() {
-		$user = $this->getTestUser()->getUser();
-		$testContext = new DerivativeContext( $this->specialRequestImport->getContext() );
-
-		$testContext->setUser( $user );
-		$testContext->setTitle( SpecialPage::getTitleFor( 'RequestImport' ) );
-
-		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
-		$specialRequestImport->setContext( $testContext );
-
-		$this->assertNull( $specialRequestImport->execute( '' ) );
+		$performer = $this->getTestUser()->getAuthority();
+		[ $html, ] = $this->executeSpecialPage( '', null, 'qqx', $performer );
+		$this->assertStringContainsString( '(requestimport-text)', $html );
 	}
 
 	/**
 	 * @covers ::execute
 	 */
-	public function testExecuteLoggedOut() {
+	public function testExecuteNotLoggedIn() {
 		$this->expectException( UserNotLoggedIn::class );
-		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
-		$specialRequestImport->execute( '' );
+		$this->executeSpecialPage();
 	}
 
 	/**
@@ -279,10 +280,40 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	public function testGetFormFields() {
 		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
 		$formFields = $specialRequestImport->getFormFields();
+
 		$this->assertIsArray( $formFields );
 		$this->assertArrayHasKey( 'source', $formFields );
 		$this->assertArrayHasKey( 'target', $formFields );
 		$this->assertArrayHasKey( 'reason', $formFields );
+		$this->assertArrayHasKey( 'UploadFile', $formFields );
+
+		$this->assertArrayNotHasKey( 'UploadSourceType', $formFields );
+		$this->assertArrayNotHasKey( 'UploadFileURL', $formFields );
+
+		$this->overrideConfigValues( [
+			MainConfigNames::EnableUploads => true,
+			MainConfigNames::AllowCopyUploads => true,
+		] );
+
+		// We still shouldn't have them as we don't have upload_by_url permission yet
+		$this->assertArrayNotHasKey( 'UploadSourceType', $formFields );
+		$this->assertArrayNotHasKey( 'UploadFileURL', $formFields );
+
+		$this->setGroupPermissions( 'user', 'upload_by_url', true );
+
+		$context = new DerivativeContext( $specialRequestImport->getContext() );
+		$user = $this->getTestUser()->getUser();
+
+		$context->setUser( $user );
+		$context->setTitle( SpecialPage::getTitleFor( 'RequestImport' ) );
+
+		$specialRequestImport->setContext( $context );
+
+		$formFields = $specialRequestImport->getFormFields();
+
+		// We should now have them
+		$this->assertArrayHasKey( 'UploadSourceType', $formFields );
+		$this->assertArrayHasKey( 'UploadFileURL', $formFields );
 	}
 
 	/**
@@ -290,13 +321,13 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	 */
 	public function testCheckPermissions() {
 		$user = $this->getTestUser()->getUser();
-		$testContext = new DerivativeContext( $this->specialRequestImport->getContext() );
+		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
 
-		$testContext->setUser( $user );
-		$testContext->setTitle( SpecialPage::getTitleFor( 'RequestImport' ) );
+		$context->setUser( $user );
+		$context->setTitle( SpecialPage::getTitleFor( 'RequestImport' ) );
 
 		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
-		$specialRequestImport->setContext( $testContext );
+		$specialRequestImport->setContext( $context );
 		$this->assertNull( $specialRequestImport->checkPermissions() );
 	}
 
@@ -304,11 +335,16 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::getLogType
 	 */
 	public function testGetLogType() {
-		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
-		$result = $specialRequestImport->getLogType( 'testwiki' );
+		$result = $this->specialRequestImport->getLogType( 'testwiki' );
 		$this->assertSame( 'importdump', $result );
 	}
 
+	/**
+	 * Set a session user so we have a proper edit token in session
+	 *
+	 * @param User $user
+	 * @param WebRequest $request
+	 */
 	private function setSessionUser( User $user, WebRequest $request ) {
 		RequestContext::getMain()->setUser( $user );
 		RequestContext::getMain()->setRequest( $request );
