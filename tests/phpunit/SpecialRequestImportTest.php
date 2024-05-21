@@ -290,7 +290,10 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		$this->assertArrayNotHasKey( 'UploadSourceType', $formFields );
 		$this->assertArrayNotHasKey( 'UploadFileURL', $formFields );
 
-		$this->setMwGlobals( MainConfigNames::AllowCopyUploads, true );
+		$this->overrideConfigValues( [
+			MainConfigNames::EnableUploads => true,
+			MainConfigNames::AllowCopyUploads => true,
+		] );
 
 		// We still shouldn't have them as we don't have upload_by_url permission yet
 		$this->assertArrayNotHasKey( 'UploadSourceType', $formFields );
