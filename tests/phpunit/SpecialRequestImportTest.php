@@ -66,13 +66,13 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	 */
 	public function testExecute() {
 		$user = $this->getTestUser()->getUser();
-		$testContext = new DerivativeContext( $this->specialRequestImport->getContext() );
+		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
 
-		$testContext->setUser( $user );
-		$testContext->setTitle( SpecialPage::getTitleFor( 'RequestImport' ) );
+		$context->setUser( $user );
+		$context->setTitle( SpecialPage::getTitleFor( 'RequestImport' ) );
 
 		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
-		$specialRequestImport->setContext( $testContext );
+		$specialRequestImport->setContext( $context );
 
 		$this->assertNull( $specialRequestImport->execute( '' ) );
 	}
@@ -299,6 +299,7 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		$this->setGroupPermissions( 'user', 'upload_by_url', true );
 
 		$context = new DerivativeContext( $specialRequestImport->getContext() );
+		$user = $this->getTestUser()->getUser();
 
 		$context->setUser( $user );
 		$context->setTitle( SpecialPage::getTitleFor( 'RequestImport' ) );
@@ -317,13 +318,13 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 	 */
 	public function testCheckPermissions() {
 		$user = $this->getTestUser()->getUser();
-		$testContext = new DerivativeContext( $this->specialRequestImport->getContext() );
+		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
 
-		$testContext->setUser( $user );
-		$testContext->setTitle( SpecialPage::getTitleFor( 'RequestImport' ) );
+		$context->setUser( $user );
+		$context->setTitle( SpecialPage::getTitleFor( 'RequestImport' ) );
 
 		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
-		$specialRequestImport->setContext( $testContext );
+		$specialRequestImport->setContext( $context );
 		$this->assertNull( $specialRequestImport->checkPermissions() );
 	}
 
@@ -336,6 +337,12 @@ class SpecialRequestImportTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( 'importdump', $result );
 	}
 
+	/**
+	 * Set a session user so we have a proper edit token in session
+	 *
+	 * @param User $user
+	 * @param WebRequest $request
+	 */
 	private function setSessionUser( User $user, WebRequest $request ) {
 		RequestContext::getMain()->setUser( $user );
 		RequestContext::getMain()->setRequest( $request );
