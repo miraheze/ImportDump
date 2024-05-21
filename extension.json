@@ -21,8 +21,7 @@
 		"Miraheze\\ImportDump\\": "includes/"
 	},
 	"TestAutoloadNamespaces": {
-		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/",
-		"Miraheze\\ImportDump\\Tests\\Unit\\": "tests/phpunit/unit/"
+		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/"
 	},
 	"JobClasses": {
 		"ImportDumpJob": {
