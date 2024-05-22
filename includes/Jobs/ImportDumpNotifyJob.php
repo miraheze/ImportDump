@@ -13,8 +13,8 @@ use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MessageLocalizer;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\Services\ImportDumpRequestManager;
 
 class ImportDumpNotifyJob extends Job
 	implements ImportDumpStatus {
@@ -36,11 +36,12 @@ class ImportDumpNotifyJob extends Job
 	/** @var Config */
 	private $config;
 
-	/** @var ImportDumpRequestManager */
-	private $importDumpRequestManager;
 
 	/** @var MessageLocalizer */
 	private $messageLocalizer;
+
+	/** @var ImportDumpRequestManager */
+	private $importDumpRequestManager;
 
 	/** @var UserFactory */
 	private $userFactory;

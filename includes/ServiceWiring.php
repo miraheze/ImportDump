@@ -4,7 +4,7 @@ use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\MediaWikiServices;
 use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
-use Miraheze\ImportDump\ImportDumpRequestManager;
+use Miraheze\ImportDump\Services\ImportDumpRequestManager;
 
 return [
 	'ImportDumpRequestManager' => static function ( MediaWikiServices $services ): ImportDumpRequestManager {

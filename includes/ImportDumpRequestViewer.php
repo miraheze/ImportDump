@@ -12,6 +12,7 @@ use MediaWiki\Message\Message;
 use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\Services\ImportDumpRequestManager;
 use UserNotLoggedIn;
 
 class ImportDumpRequestViewer implements ImportDumpStatus {

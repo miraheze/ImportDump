@@ -1,6 +1,6 @@
 <?php
 
-namespace Miraheze\ImportDump;
+namespace Miraheze\ImportDump\Services;
 
 use ExtensionRegistry;
 use FileBackend;
@@ -21,6 +21,7 @@ use MediaWiki\User\UserGroupManagerFactory;
 use MessageLocalizer;
 use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\CreateWiki\RemoteWiki;
+use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use RepoGroup;
 use stdClass;
