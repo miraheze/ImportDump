@@ -36,12 +36,11 @@ class ImportDumpNotifyJob extends Job
 	/** @var Config */
 	private $config;
 
+	/** @var ImportDumpRequestManager */
+	private $importDumpRequestManager;
 
 	/** @var MessageLocalizer */
 	private $messageLocalizer;
-
-	/** @var ImportDumpRequestManager */
-	private $importDumpRequestManager;
 
 	/** @var UserFactory */
 	private $userFactory;
