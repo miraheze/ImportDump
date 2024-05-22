@@ -1,11 +1,11 @@
 <?php
 
-namespace Miraheze\ImportDump\Tests;
+namespace Miraheze\ImportDump\Tests\Services;
 
 use MediaWiki\MainConfigNames;
 use MediaWikiIntegrationTestCase;
-use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\Services\ImportDumpRequestManager;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
@@ -13,7 +13,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group ImportDump
  * @group Database
  * @group Medium
- * @coversDefaultClass \Miraheze\ImportDump\ImportDumpRequestManager
+ * @coversDefaultClass \Miraheze\ImportDump\Services\ImportDumpRequestManager
  */
 class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
 	implements ImportDumpStatus {

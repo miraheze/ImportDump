@@ -6,10 +6,10 @@ use MediaWiki\HTMLForm\HTMLForm;
 use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
-use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpRequestQueuePager;
 use Miraheze\ImportDump\ImportDumpRequestViewer;
 use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\Services\ImportDumpRequestManager;
 use Wikimedia\Rdbms\IConnectionProvider;
 
 class SpecialRequestImportQueue extends SpecialPage
