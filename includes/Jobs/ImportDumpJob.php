@@ -107,15 +107,15 @@ class ImportDumpJob extends Job
 
 		$this->importDumpHookRunner->onImportDumpJobGetFile( $filePath, $this->importDumpRequestManager );
 
-		if ( !FileBackend::isPathTraversalFree( $filePath ) ) {
+		if ( FileBackend::isPathTraversalFree( $filePath ) ) {
+			$importStreamSource = ImportStreamSource::newFromFile( $filePath );
+			if ( !$importStreamSource->isGood() ) {
+				$this->setLastError( "Import source for {$filePath} failed" );
+				$this->notifyFailed();
+				return true;
+			}
+		} else {
 			$this->setLastError( 'Invalid file path: ' . $filePath );
-			$this->notifyFailed();
-			return true;
-		}
-
-		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
-		if ( !$importStreamSource->isGood() ) {
-			$this->setLastError( "Import source for {$filePath} failed" );
 			$this->notifyFailed();
 			return true;
 		}
