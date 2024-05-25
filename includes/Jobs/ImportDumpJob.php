@@ -3,6 +3,7 @@
 namespace Miraheze\ImportDump\Jobs;
 
 use FakeMaintenance;
+use FileBackend;
 use ImportStreamSource;
 use InitEditCount;
 use Job;
@@ -106,7 +107,12 @@ class ImportDumpJob extends Job
 
 		$this->importDumpHookRunner->onImportDumpJobGetFile( $filePath, $this->importDumpRequestManager );
 
-		// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
+		if ( !FileBackend::isPathTraversalFree( $filePath ) ) {
+			$this->setLastError( 'Invalid file path: ' . $filePath );
+			$this->notifyFailed();
+			return true;
+		}
+
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
 			$this->setLastError( "Import source for {$filePath} failed" );
