@@ -3,8 +3,6 @@
 namespace Miraheze\ImportDump\Hooks\Handlers;
 
 use MediaWiki\Block\Hook\GetAllBlockActionsHook;
-use MediaWiki\Config\Config;
-use MediaWiki\Config\ConfigFactory;
 use MediaWiki\Extension\Notifications\AttributeManager;
 use MediaWiki\Extension\Notifications\UserLocator;
 use MediaWiki\Hook\LoginFormValidErrorMessagesHook;
@@ -14,6 +12,7 @@ use Miraheze\ImportDump\Notifications\EchoImportFailedPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoNewRequestPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestCommentPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestStatusUpdatePresentationModel;
+use Wikimedia\Rdbms\IConnectionProvider;
 
 class Main implements
 	GetAllBlockActionsHook,
@@ -21,14 +20,14 @@ class Main implements
 	UserGetReservedNamesHook
 {
 
-	/** @var Config */
-	private $config;
+	/** @var IConnectionProvider */
+	private $connectionProvider;
 
 	/**
-	 * @param ConfigFactory $configFactory
+	 * @param IConnectionProvider $connectionProvider
 	 */
-	public function __construct( ConfigFactory $configFactory ) {
-		$this->config = $configFactory->makeConfig( 'ImportDump' );
+	public function __construct( IConnectionProvider $connectionProvider ) {
+		$this->connectionProvider = $connectionProvider;
 	}
 
 	/**
@@ -45,10 +44,8 @@ class Main implements
 	 * @param array &$actions
 	 */
 	public function onGetAllBlockActions( &$actions ) {
-		if (
-			$this->config->get( 'ImportDumpCentralWiki' ) &&
-			!WikiMap::isCurrentWikiId( $this->config->get( 'ImportDumpCentralWiki' ) )
-		) {
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			return;
 		}
 
@@ -68,10 +65,8 @@ class Main implements
 	 * @param array &$icons
 	 */
 	public function onBeforeCreateEchoEvent( &$notifications, &$notificationCategories, &$icons ) {
-		if (
-			$this->config->get( 'ImportDumpCentralWiki' ) &&
-			!WikiMap::isCurrentWikiId( $this->config->get( 'ImportDumpCentralWiki' ) )
-		) {
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			return;
 		}
 

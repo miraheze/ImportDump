@@ -4,7 +4,7 @@ namespace Miraheze\ImportDump\Notifications;
 
 use MediaWiki\Extension\Notifications\Formatters\EchoEventPresentationModel;
 use MediaWiki\Language\RawMessage;
-use Message;
+use MediaWiki\Message\Message;
 
 class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationModel {
 

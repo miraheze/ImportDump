@@ -1,6 +1,7 @@
 <?php
 
 use MediaWiki\Config\ServiceOptions;
+use MediaWiki\Context\RequestContext;
 use MediaWiki\MediaWikiServices;
 use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
 use Miraheze\ImportDump\ImportDumpRequestManager;
@@ -10,7 +11,7 @@ return [
 		return new ImportDumpRequestManager(
 			$services->getConfigFactory()->makeConfig( 'ImportDump' ),
 			$services->getActorStoreFactory(),
-			$services->getDBLoadBalancerFactory(),
+			$services->getConnectionProvider(),
 			$services->getInterwikiLookup(),
 			$services->getJobQueueGroupFactory(),
 			$services->getLinkRenderer(),

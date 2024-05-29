@@ -2,9 +2,11 @@
 
 namespace Miraheze\ImportDump\Tests;
 
+use MediaWiki\MainConfigNames;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ImportDumpRequestManager;
-use ReflectionClass;
+use Miraheze\ImportDump\ImportDumpStatus;
+use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
@@ -13,18 +15,27 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group Medium
  * @coversDefaultClass \Miraheze\ImportDump\ImportDumpRequestManager
  */
-class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
-	public function addDBData() {
+class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
+	implements ImportDumpStatus {
+
+	public function addDBDataOnce(): void {
+		$this->setMwGlobals( MainConfigNames::VirtualDomainsMapping, [
+			'virtual-importdump' => [ 'db' => 'wikidb' ],
+		] );
+
 		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
 
-		$this->db->newInsertQueryBuilder()
+		$connectionProvider = $this->getServiceContainer()->getConnectionProvider();
+		$dbw = $connectionProvider->getPrimaryDatabase( 'virtual-importdump' );
+
+		$dbw->newInsertQueryBuilder()
 			->insertInto( 'import_requests' )
 			->ignore()
 			->row( [
 				'request_source' => 'https://importdumptest.com',
 				'request_target' => 'importdumptest',
 				'request_reason' => 'test',
-				'request_status' => 'pending',
+				'request_status' => self::STATUS_PENDING,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
 				'request_timestamp' => $this->db->timestamp(),
 			] )
@@ -46,15 +57,11 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::fromID
 	 */
 	public function testFromID() {
-		$manager = $this->getImportDumpRequestManager();
+		$manager = TestingAccessWrapper::newFromObject(
+			$this->getImportDumpRequestManager()
+		);
 
-		$reflectedClass = new ReflectionClass( $manager );
-		$reflection = $reflectedClass->getProperty( 'ID' );
-		$reflection->setAccessible( true );
-
-		$ID = $reflection->getValue( $manager );
-
-		$this->assertSame( 1, $ID );
+		$this->assertSame( 1, $manager->ID );
 	}
 
 	/**
@@ -64,5 +71,17 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 		$manager = $this->getImportDumpRequestManager();
 
 		$this->assertTrue( $manager->exists() );
+	}
+
+	/**
+	 * @covers ::addComment
+	 * @covers ::getComments
+	 */
+	public function testAddComment() {
+		$manager = $this->getImportDumpRequestManager();
+		$this->assertArrayEquals( [], $manager->getComments() );
+
+		$manager->addComment( 'Test', $this->getTestUser()->getUser() );
+		$this->assertNotSame( [], $manager->getComments() );
 	}
 }

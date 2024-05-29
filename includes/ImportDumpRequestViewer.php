@@ -2,14 +2,14 @@
 
 namespace Miraheze\ImportDump;
 
-use HTMLForm;
-use IContextSource;
 use MediaWiki\Config\Config;
+use MediaWiki\Context\IContextSource;
 use MediaWiki\Html\Html;
+use MediaWiki\HTMLForm\HTMLForm;
 use MediaWiki\Linker\Linker;
 use MediaWiki\MainConfigNames;
+use MediaWiki\Message\Message;
 use MediaWiki\Permissions\PermissionManager;
-use MediaWiki\Status\Status;
 use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
 use UserNotLoggedIn;
@@ -212,7 +212,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					$this->context->msg( 'importdump-button-copy' )->text()
 				);
 
-				if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) && $status !== self::STATUS_FAILED ) {
+				if ( $this->config->get( ConfigNames::EnableAutomatedJob ) && $status !== self::STATUS_FAILED ) {
 					$fileInfo = '';
 				}
 
@@ -315,7 +315,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				];
 			}
 
-			if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
+			if ( $this->config->get( ConfigNames::EnableAutomatedJob ) ) {
 				$formDescriptor += [
 					'handle-status' => [
 						'type' => 'select',
@@ -378,7 +378,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				];
 			}
 
-			if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
+			if ( $this->config->get( ConfigNames::EnableAutomatedJob ) ) {
 				$validStatus = true;
 				if (
 					$status === self::STATUS_COMPLETE ||
@@ -446,11 +446,11 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 	/**
 	 * @param ?string $comment
 	 * @param array $alldata
-	 * @return string|bool
+	 * @return string|bool|Message
 	 */
 	public function isValidComment( ?string $comment, array $alldata ) {
 		if ( isset( $alldata['submit-comment'] ) && ( !$comment || ctype_space( $comment ) ) ) {
-			return Status::newFatal( 'htmlform-required' )->getMessage();
+			return $this->context->msg( 'htmlform-required' );
 		}
 
 		return true;
@@ -458,11 +458,11 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 	/**
 	 * @param ?string $target
-	 * @return string|bool
+	 * @return string|bool|Message
 	 */
 	public function isValidDatabase( ?string $target ) {
 		if ( !in_array( $target, $this->config->get( MainConfigNames::LocalDatabases ) ) ) {
-			return Status::newFatal( 'importdump-invalid-target' )->getMessage();
+			return $this->context->msg( 'importdump-invalid-target' );
 		}
 
 		return true;
@@ -470,11 +470,11 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 	/**
 	 * @param ?string $reason
-	 * @return string|bool
+	 * @return string|bool|Message
 	 */
 	public function isValidReason( ?string $reason ) {
 		if ( !$reason || ctype_space( $reason ) ) {
-			return Status::newFatal( 'htmlform-required' )->getMessage();
+			return $this->context->msg( 'htmlform-required' );
 		}
 
 		return true;
@@ -483,11 +483,11 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 	/**
 	 * @param ?string $prefix
 	 * @param array $alldata
-	 * @return string|bool
+	 * @return string|bool|Message
 	 */
 	public function isValidInterwikiPrefix( ?string $prefix, array $alldata ) {
 		if ( isset( $alldata['submit-interwiki'] ) && ( !$prefix || ctype_space( $prefix ) ) ) {
-			return Status::newFatal( 'htmlform-required' )->getMessage();
+			return $this->context->msg( 'htmlform-required' );
 		}
 
 		return true;
@@ -496,7 +496,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 	/**
 	 * @param ?string $url
 	 * @param array $alldata
-	 * @return string|bool
+	 * @return string|bool|Message
 	 */
 	public function isValidInterwikiUrl( ?string $url, array $alldata ) {
 		if ( !isset( $alldata['submit-interwiki'] ) ) {
@@ -504,14 +504,14 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		if ( !$url || ctype_space( $url ) ) {
-			return Status::newFatal( 'htmlform-required' )->getMessage();
+			return $this->context->msg( 'htmlform-required' );
 		}
 
 		if (
 			!parse_url( $url, PHP_URL_SCHEME ) ||
 			!parse_url( $url, PHP_URL_HOST )
 		) {
-			return Status::newFatal( 'importdump-invalid-interwiki-url' )->getMessage();
+			return $this->context->msg( 'importdump-invalid-interwiki-url' );
 		}
 
 		return true;
@@ -734,7 +734,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			}
 
 			if ( isset( $formData['handle-status'] ) ) {
-				if ( $this->config->get( 'ImportDumpEnableAutomatedJob' ) ) {
+				if ( $this->config->get( ConfigNames::EnableAutomatedJob ) ) {
 					$formData['handle-comment'] = '';
 				}
 

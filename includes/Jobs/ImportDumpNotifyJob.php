@@ -6,14 +6,15 @@ use ExtensionRegistry;
 use Job;
 use MediaWiki\Config\Config;
 use MediaWiki\Config\ConfigFactory;
+use MediaWiki\Context\RequestContext;
 use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MessageLocalizer;
+use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
-use RequestContext;
 
 class ImportDumpNotifyJob extends Job
 	implements ImportDumpStatus {
@@ -116,7 +117,7 @@ class ImportDumpNotifyJob extends Job
 			array_map(
 				function ( string $userName ): ?User {
 					return $this->userFactory->newFromName( $userName );
-				}, $this->config->get( 'ImportDumpUsersNotifiedOnFailedImports' )
+				}, $this->config->get( ConfigNames::UsersNotifiedOnFailedImports )
 			)
 		);
 
