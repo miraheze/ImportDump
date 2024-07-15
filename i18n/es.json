@@ -48,5 +48,13 @@
 	"importdump-table-requested-date": "Fecha de solicitud",
 	"importdump-table-requester": "Solicitante",
 	"log-action-filter-importdump": "Tipo de acción:",
-	"log-action-filter-importdumpprivate": "Tipo de acción:"
+	"log-action-filter-importdump-interwiki": "Modificaciones de la tabla interwiki",
+	"log-action-filter-importdump-request": "Nuevas solicitudes enviadas",
+	"log-action-filter-importdump-started": "Importación iniciada",
+	"log-action-filter-importdump-statusupdate": "Estado actualizado para solicitudes",
+	"log-action-filter-importdumpprivate": "Tipo de acción:",
+	"log-action-filter-importdumpprivate-interwiki": "Modificaciones de la tabla interwiki",
+	"log-action-filter-importdumpprivate-request": "Nuevas solicitudes enviadas",
+	"log-action-filter-importdumpprivate-started": "Importación iniciada",
+	"log-action-filter-importdumpprivate-statusupdate": "Estado actualizado para solicitudes"
 }
