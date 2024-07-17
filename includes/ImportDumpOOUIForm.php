@@ -2,13 +2,13 @@
 
 namespace Miraheze\ImportDump;
 
+use MediaWiki\HTMLForm\OOUIHTMLForm;
 use OOUI\FieldsetLayout;
 use OOUI\HtmlSnippet;
 use OOUI\IndexLayout;
 use OOUI\PanelLayout;
 use OOUI\TabPanelLayout;
 use OOUI\Widget;
-use OOUIHTMLForm;
 use Xml;
 
 class ImportDumpOOUIForm extends OOUIHTMLForm {

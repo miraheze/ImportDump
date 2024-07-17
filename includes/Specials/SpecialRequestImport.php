@@ -9,6 +9,7 @@ use ManualLogEntry;
 use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\Html\Html;
 use MediaWiki\MainConfigNames;
+use MediaWiki\Message\Message;
 use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\SpecialPage\FormSpecialPage;
 use MediaWiki\SpecialPage\SpecialPage;
@@ -16,10 +17,10 @@ use MediaWiki\Status\Status;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
-use Message;
 use MimeAnalyzer;
 use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\CreateWiki\RemoteWiki;
+use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\ImportDumpStatus;
 use PermissionsError;
 use RepoGroup;
@@ -84,17 +85,15 @@ class SpecialRequestImport extends FormSpecialPage
 		$this->setParameter( $par );
 		$this->setHeaders();
 
-		if (
-			$this->getConfig()->get( 'ImportDumpCentralWiki' ) &&
-			!WikiMap::isCurrentWikiId( $this->getConfig()->get( 'ImportDumpCentralWiki' ) )
-		) {
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
 		}
 
 		$this->checkPermissions();
 
-		if ( $this->getConfig()->get( 'ImportDumpHelpUrl' ) ) {
-			$this->getOutput()->addHelpLink( $this->getConfig()->get( 'ImportDumpHelpUrl' ), true );
+		if ( $this->getConfig()->get( ConfigNames::HelpUrl ) ) {
+			$this->getOutput()->addHelpLink( $this->getConfig()->get( ConfigNames::HelpUrl ), true );
 		}
 
 		$form = $this->getForm();
@@ -196,10 +195,7 @@ class SpecialRequestImport extends FormSpecialPage
 			return Status::newFatal( 'actionthrottledtext' );
 		}
 
-		$centralWiki = $this->getConfig()->get( 'ImportDumpCentralWiki' );
-		$dbw = $this->connectionProvider->getPrimaryDatabase(
-			$centralWiki ?: false
-		);
+		$dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-importdump' );
 
 		$duplicate = $dbw->newSelectQueryBuilder()
 			->table( 'import_requests' )
@@ -322,7 +318,7 @@ class SpecialRequestImport extends FormSpecialPage
 
 		if (
 			ExtensionRegistry::getInstance()->isLoaded( 'Echo' ) &&
-			$this->getConfig()->get( 'ImportDumpUsersNotifiedOnAllRequests' )
+			$this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests )
 		) {
 			$this->sendNotifications( $data['reason'], $this->getUser()->getName(), $requestID, $data['target'] );
 		}
@@ -358,7 +354,7 @@ class SpecialRequestImport extends FormSpecialPage
 			array_map(
 				function ( string $userName ): ?User {
 					return $this->userFactory->newFromName( $userName );
-				}, $this->getConfig()->get( 'ImportDumpUsersNotifiedOnAllRequests' )
+				}, $this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests )
 			)
 		);
 
@@ -392,11 +388,11 @@ class SpecialRequestImport extends FormSpecialPage
 
 	/**
 	 * @param ?string $target
-	 * @return string|bool
+	 * @return string|bool|Message
 	 */
 	public function isValidDatabase( ?string $target ) {
 		if ( !in_array( $target, $this->getConfig()->get( MainConfigNames::LocalDatabases ) ) ) {
-			return Status::newFatal( 'importdump-invalid-target' )->getMessage();
+			return $this->msg( 'importdump-invalid-target' );
 		}
 
 		return true;
@@ -404,11 +400,11 @@ class SpecialRequestImport extends FormSpecialPage
 
 	/**
 	 * @param ?string $reason
-	 * @return string|bool
+	 * @return string|bool|Message
 	 */
 	public function isValidReason( ?string $reason ) {
 		if ( !$reason || ctype_space( $reason ) ) {
-			return Status::newFatal( 'htmlform-required' )->getMessage();
+			return $this->msg( 'htmlform-required' );
 		}
 
 		return true;

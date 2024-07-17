@@ -9,13 +9,14 @@ use Job;
 use JobSpecification;
 use MediaWiki\Config\Config;
 use MediaWiki\Config\ConfigFactory;
+use MediaWiki\Context\RequestContext;
+use MediaWiki\Deferred\SiteStatsUpdate;
 use MediaWiki\Http\Telemetry;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Permissions\UltimateAuthority;
 use MediaWiki\SiteStats\SiteStatsInit;
 use MediaWiki\User\User;
-use MediaWiki\WikiMap\WikiMap;
 use MessageLocalizer;
 use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
 use Miraheze\ImportDump\ImportDumpRequestManager;
@@ -24,8 +25,6 @@ use MWExceptionHandler;
 use RebuildRecentchanges;
 use RebuildTextIndex;
 use RefreshLinks;
-use RequestContext;
-use SiteStatsUpdate;
 use Throwable;
 use WikiImporterFactory;
 use Wikimedia\Rdbms\IConnectionProvider;
@@ -128,16 +127,9 @@ class ImportDumpJob extends Job
 		try {
 			$user = User::newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
 
-			if ( version_compare( MW_VERSION, '1.42', '>=' ) ) {
-				// @phan-suppress-next-line PhanParamTooMany
-				$importer = $this->wikiImporterFactory->getWikiImporter(
-					$importStreamSource->value, new UltimateAuthority( $user )
-				);
-			} else {
-				$importer = $this->wikiImporterFactory->getWikiImporter(
-					$importStreamSource->value
-				);
-			}
+			$importer = $this->wikiImporterFactory->getWikiImporter(
+				$importStreamSource->value, new UltimateAuthority( $user )
+			);
 
 			$importer->disableStatisticsUpdate();
 			$importer->setNoUpdates( true );
@@ -220,8 +212,9 @@ class ImportDumpJob extends Job
 	 * @return string
 	 */
 	private function getLoggingWiki(): string {
-		return $this->config->get( 'ImportDumpCentralWiki' ) ?:
-			WikiMap::getCurrentWikiId();
+		return $this->connectionProvider
+			->getReplicaDatabase( 'virtual-importdump' )
+			->getDomainID();
 	}
 
 	/**

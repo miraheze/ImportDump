@@ -2,8 +2,7 @@
 
 namespace Miraheze\ImportDump;
 
-use IContextSource;
-use MediaWiki\Config\Config;
+use MediaWiki\Context\IContextSource;
 use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\Pager\TablePager;
 use MediaWiki\SpecialPage\SpecialPage;
@@ -29,7 +28,6 @@ class ImportDumpRequestQueuePager extends TablePager
 	private $target;
 
 	/**
-	 * @param Config $config
 	 * @param IContextSource $context
 	 * @param IConnectionProvider $connectionProvider
 	 * @param LinkRenderer $linkRenderer
@@ -39,7 +37,6 @@ class ImportDumpRequestQueuePager extends TablePager
 	 * @param string $target
 	 */
 	public function __construct(
-		Config $config,
 		IContextSource $context,
 		IConnectionProvider $connectionProvider,
 		LinkRenderer $linkRenderer,
@@ -50,10 +47,7 @@ class ImportDumpRequestQueuePager extends TablePager
 	) {
 		parent::__construct( $context, $linkRenderer );
 
-		$centralWiki = $config->get( 'ImportDumpCentralWiki' );
-		$this->mDb = $connectionProvider->getReplicaDatabase(
-			$centralWiki ?: false
-		);
+		$this->mDb = $connectionProvider->getReplicaDatabase( 'virtual-importdump' );
 
 		$this->linkRenderer = $linkRenderer;
 		$this->userFactory = $userFactory;

@@ -12,12 +12,12 @@ use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\Interwiki\InterwikiLookup;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\Linker\LinkRenderer;
+use MediaWiki\Message\Message;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\ActorStoreFactory;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManagerFactory;
-use Message;
 use MessageLocalizer;
 use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
 use Miraheze\CreateWiki\RemoteWiki;
@@ -38,9 +38,8 @@ class ImportDumpRequestManager {
 	];
 
 	public const CONSTRUCTOR_OPTIONS = [
-		'ImportDumpCentralWiki',
-		'ImportDumpInterwikiMap',
-		'ImportDumpScriptCommand',
+		ConfigNames::InterwikiMap,
+		ConfigNames::ScriptCommand,
 	];
 
 	/** @var Config */
@@ -136,12 +135,8 @@ class ImportDumpRequestManager {
 	 * @param int $requestID
 	 */
 	public function fromID( int $requestID ) {
+		$this->dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-importdump' );
 		$this->ID = $requestID;
-
-		$centralWiki = $this->options->get( 'ImportDumpCentralWiki' );
-		$this->dbw = $this->connectionProvider->getPrimaryDatabase(
-			$centralWiki ?: false
-		);
 
 		$this->row = $this->dbw->newSelectQueryBuilder()
 			->table( 'import_requests' )
@@ -312,9 +307,7 @@ class ImportDumpRequestManager {
 	 * @return bool
 	 */
 	public function insertInterwikiPrefix( string $prefix, string $url, User $user ): bool {
-		$dbw = $this->connectionProvider->getPrimaryDatabase(
-			$this->getTarget()
-		);
+		$dbw = $this->connectionProvider->getPrimaryDatabase( $this->getTarget() );
 
 		$dbw->newInsertQueryBuilder()
 			->insertInto( 'interwiki' )
@@ -364,9 +357,7 @@ class ImportDumpRequestManager {
 	 * @return string
 	 */
 	public function getInterwikiPrefix(): string {
-		$dbr = $this->connectionProvider->getReplicaDatabase(
-			$this->getTarget()
-		);
+		$dbr = $this->connectionProvider->getReplicaDatabase( $this->getTarget() );
 
 		$sourceHost = parse_url( $this->getSource(), PHP_URL_HOST );
 		if ( !$sourceHost ) {
@@ -410,14 +401,14 @@ class ImportDumpRequestManager {
 			}
 		}
 
-		if ( $this->options->get( 'ImportDumpInterwikiMap' ) ) {
+		if ( $this->options->get( ConfigNames::InterwikiMap ) ) {
 			$parsedSource = parse_url( $this->getSource(), PHP_URL_HOST ) ?: '';
 			$domain = explode( '.', $parsedSource )[1] ?? '';
 
 			if ( $domain ) {
 				$domain .= '.' . ( explode( '.', $parsedSource )[2] ?? '' );
-				if ( $this->options->get( 'ImportDumpInterwikiMap' )[$domain] ?? '' ) {
-					$domain = $this->options->get( 'ImportDumpInterwikiMap' )[$domain];
+				if ( $this->options->get( ConfigNames::InterwikiMap )[$domain] ?? '' ) {
+					$domain = $this->options->get( ConfigNames::InterwikiMap )[$domain];
 					$subdomain = explode( '.', $parsedSource )[0] ?? '';
 
 					if ( $subdomain ) {
@@ -434,7 +425,7 @@ class ImportDumpRequestManager {
 	 * @return string
 	 */
 	public function getCommand(): string {
-		$command = $this->options->get( 'ImportDumpScriptCommand' );
+		$command = $this->options->get( ConfigNames::ScriptCommand );
 
 		if ( !$this->getInterwikiPrefix() ) {
 			$command = preg_replace( '/--username-prefix=?/', '', $command );
