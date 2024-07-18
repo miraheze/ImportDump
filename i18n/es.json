@@ -37,7 +37,9 @@
 	"importdump-label-add-comment": "Añadir comentario",
 	"importdump-label-comment": "Comentario:",
 	"importdump-label-reason": "Motivo para la Petición:",
+	"importdump-label-requested-date": "Fecha de solicitud:",
 	"importdump-label-starting": "Iniciando...",
+	"importdump-label-target": "Nombre de la base de Datos de Destino:",
 	"importdump-label-upload-source-type": "Fuente de la carga:",
 	"importdump-log-name": "Registro de solicitudes de importación",
 	"importdump-no-changes": "no se hicieron cambios.",
@@ -56,5 +58,7 @@
 	"log-action-filter-importdumpprivate-interwiki": "Modificaciones de la tabla interwiki",
 	"log-action-filter-importdumpprivate-request": "Nuevas solicitudes enviadas",
 	"log-action-filter-importdumpprivate-started": "Importación iniciada",
-	"log-action-filter-importdumpprivate-statusupdate": "Estado actualizado para solicitudes"
+	"log-action-filter-importdumpprivate-statusupdate": "Estado actualizado para solicitudes",
+	"requestimportqueue-header": "Buscar solicitudes de importación",
+	"requestimportqueue-header-info": "Puedes utilizar este formulario para buscar solicitudes de importación. Utilice los parámetros siguientes para refinar su búsqueda."
 }
