@@ -7,6 +7,7 @@
 			"Dirruw'o",
 			"Okras",
 			"Putnik",
+			"Yurina Tatiana",
 			"Артём 13327"
 		]
 	},
@@ -60,6 +61,7 @@
 	"importdump-label-requested-date": "Дата запроса:",
 	"importdump-label-requester": "Запросивший:",
 	"importdump-label-source": "URL-адрес источника:",
+	"importdump-label-start-import": "Начать импорт",
 	"importdump-label-starting": "Запуск",
 	"importdump-label-status": "Состояние:",
 	"importdump-label-status-updated-comment": "Необязательный дополнительный комментарий к данному запросу:",
