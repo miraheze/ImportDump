@@ -141,7 +141,7 @@ class SpecialRequestImport extends FormSpecialPage
 					'label-message' => 'importdump-label-upload-file',
 					'help-message' => 'importdump-help-upload-file',
 					'hide-if' => [ '!==', 'wpUploadSourceType', 'File' ],
-					'accept' => [ '.xml' ],
+					'accept' => [ 'application/xml', 'text/xml' ],
 				],
 				'UploadFileURL' => [
 					'type' => 'url',
@@ -157,7 +157,7 @@ class SpecialRequestImport extends FormSpecialPage
 					'type' => 'file',
 					'label-message' => 'importdump-label-upload-file',
 					'help-message' => 'importdump-help-upload-file',
-					'accept' => [ '.xml' ],
+					'accept' => [ 'application/xml', 'text/xml' ],
 				],
 			];
 		}
