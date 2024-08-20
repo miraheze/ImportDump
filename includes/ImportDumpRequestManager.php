@@ -271,7 +271,7 @@ class ImportDumpRequestManager {
 			->table( 'import_request_comments' )
 			->field( '*' )
 			->where( [ 'request_id' => $this->ID ] )
-			->orderBy( 'request_comment_timestamp', SelectQueryBuilder::SORT_DESC )
+			->orderBy( 'request_comment_timestamp', SelectQueryBuilder::SORT_ASC )
 			->caller( __METHOD__ )
 			->fetchResultSet();
 
