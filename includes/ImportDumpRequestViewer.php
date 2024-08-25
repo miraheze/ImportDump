@@ -765,6 +765,11 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		if ( isset( $formData['submit-start'] ) ) {
+			if ( $this->importDumpRequestManager->getStatus() === self::STATUS_COMPLETE ) {
+				// Don't rerun a job that is already completed.
+				return;
+			}
+
 			$this->importDumpRequestManager->setStatus( self::STATUS_STARTING );
 			$this->importDumpRequestManager->executeJob( $user->getName() );
 			$out->addHTML( Html::successBox(
