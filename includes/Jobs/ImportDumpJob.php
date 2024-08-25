@@ -98,9 +98,13 @@ class ImportDumpJob extends Job
 	 * @return bool
 	 */
 	public function run(): bool {
-		$dbw = $this->connectionProvider->getPrimaryDatabase();
-
 		$this->importDumpRequestManager->fromID( $this->requestID );
+		if ( $this->importDumpRequestManager->getStatus() === self::STATUS_COMPLETE ) {
+			// Don't rerun a job that is already completed.
+			return true;
+		}
+
+		$dbw = $this->connectionProvider->getPrimaryDatabase();
 		$filePath = wfTempDir() . '/' . $this->importDumpRequestManager->getFileName();
 
 		$this->importDumpHookRunner->onImportDumpJobGetFile( $filePath, $this->importDumpRequestManager );
