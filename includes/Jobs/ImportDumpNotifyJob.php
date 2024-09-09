@@ -97,6 +97,11 @@ class ImportDumpNotifyJob extends Job
 	}
 
 	private function notifyComplete() {
+		if ( $this->importDumpRequestManager->getStatus() === self::STATUS_COMPLETE ) {
+			// Don't renotify for a job that is already completed.
+			return;
+		}
+
 		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
 
 		$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . self::STATUS_COMPLETE )
