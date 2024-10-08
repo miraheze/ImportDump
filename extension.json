@@ -117,7 +117,7 @@
 				"UserFactory"
 			],
 			"optional_services": [
-				"CreateWikiHookRunner"
+				"RemoteWikiFactory"
 			]
 		},
 		"RequestImportQueue": {
