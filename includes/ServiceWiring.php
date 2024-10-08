@@ -23,8 +23,8 @@ return [
 			),
 			$services->getUserFactory(),
 			$services->getUserGroupManagerFactory(),
-			$services->has( 'CreateWikiHookRunner' ) ?
-				$services->get( 'CreateWikiHookRunner' ) : null
+			$services->has( 'RemoteWikiFactory' ) ?
+				$services->get( 'RemoteWikiFactory' ) : null
 		);
 	},
 	'ImportDumpHookRunner' => static function ( MediaWikiServices $services ): ImportDumpHookRunner {
