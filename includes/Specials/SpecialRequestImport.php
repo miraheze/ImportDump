@@ -18,8 +18,7 @@ use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
 use MimeAnalyzer;
-use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
-use Miraheze\CreateWiki\RemoteWiki;
+use Miraheze\CreateWiki\Services\RemoteWikiFactory;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\ImportDumpStatus;
 use PermissionsError;
@@ -36,14 +35,14 @@ class SpecialRequestImport extends FormSpecialPage
 	/** @var IConnectionProvider */
 	private $connectionProvider;
 
-	/** @var CreateWikiHookRunner|null */
-	private $createWikiHookRunner;
-
 	/** @var MimeAnalyzer */
 	private $mimeAnalyzer;
 
 	/** @var PermissionManager */
 	private $permissionManager;
+
+	/** @var RemoteWikiFactory|null */
+	private $remoteWikiFactory;
 
 	/** @var RepoGroup */
 	private $repoGroup;
@@ -57,7 +56,7 @@ class SpecialRequestImport extends FormSpecialPage
 	 * @param PermissionManager $permissionManager
 	 * @param RepoGroup $repoGroup
 	 * @param UserFactory $userFactory
-	 * @param ?CreateWikiHookRunner $createWikiHookRunner
+	 * @param ?RemoteWikiFactory $remoteWikiFactory
 	 */
 	public function __construct(
 		IConnectionProvider $connectionProvider,
@@ -65,14 +64,14 @@ class SpecialRequestImport extends FormSpecialPage
 		PermissionManager $permissionManager,
 		RepoGroup $repoGroup,
 		UserFactory $userFactory,
-		?CreateWikiHookRunner $createWikiHookRunner
+		?RemoteWikiFactory $remoteWikiFactory
 	) {
 		parent::__construct( 'RequestImport', 'request-import' );
 
 		$this->connectionProvider = $connectionProvider;
-		$this->createWikiHookRunner = $createWikiHookRunner;
 		$this->mimeAnalyzer = $mimeAnalyzer;
 		$this->permissionManager = $permissionManager;
+		$this->remoteWikiFactory = $remoteWikiFactory;
 		$this->repoGroup = $repoGroup;
 		$this->userFactory = $userFactory;
 	}
@@ -334,12 +333,12 @@ class SpecialRequestImport extends FormSpecialPage
 		if (
 			!ExtensionRegistry::getInstance()->isLoaded( 'CreateWiki' ) ||
 			!$this->getConfig()->get( 'CreateWikiUsePrivateWikis' ) ||
-			!$this->createWikiHookRunner
+			!$this->remoteWikiFactory
 		) {
 			return 'importdump';
 		}
 
-		$remoteWiki = new RemoteWiki( $target, $this->createWikiHookRunner );
+		$remoteWiki = $this->remoteWikiFactory->newInstance( $target );
 		return $remoteWiki->isPrivate() ? 'importdumpprivate' : 'importdump';
 	}
 
