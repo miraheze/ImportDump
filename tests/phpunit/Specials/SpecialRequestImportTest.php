@@ -12,7 +12,7 @@ use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
 use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\CreateWiki\Hooks\CreateWikiHookRunner;
+use Miraheze\CreateWiki\Services\RemoteWikiFactory;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
 use SpecialPageTestBase;
 use UserNotLoggedIn;
@@ -40,7 +40,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			$services->getPermissionManager(),
 			$services->getRepoGroup(),
 			$services->getUserFactory(),
-			$this->createMock( CreateWikiHookRunner::class )
+			$this->createMock( RemoteWikiFactory::class )
 		);
 	}
 
