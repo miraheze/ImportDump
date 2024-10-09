@@ -92,6 +92,8 @@
 	"importdump-request-edited-target": "Target:\nPrevious value: $1\nNew value: $2",
 	"importdump-request-locked": "This request has been locked. It can not be edited, and no comments can be added to it.",
 	"importdump-request-reopened": "Request reopened by $1.\n\n[Changes made]$2",
+	"importdump-requestimportqueue-notcentral": "Disabled",
+	"importdump-requestimportqueue-notcentral-text": "Import requests are disabled on this wiki. Please check the import queue from the central wiki.",
 	"importdump-section-comments": "Request comments",
 	"importdump-section-details": "Request details",
 	"importdump-section-editing": "Edit request",

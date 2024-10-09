@@ -2,10 +2,12 @@
 
 namespace Miraheze\ImportDump\Specials;
 
+use ErrorPageError;
 use MediaWiki\HTMLForm\HTMLForm;
 use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
+use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpRequestQueuePager;
 use Miraheze\ImportDump\ImportDumpRequestViewer;
@@ -52,6 +54,11 @@ class SpecialRequestImportQueue extends SpecialPage
 	 */
 	public function execute( $par ) {
 		$this->setHeaders();
+
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
+			throw new ErrorPageError( 'importdump-requestimportqueue-notcentral', 'importdump-requestimportqueue-notcentral-text' );
+		}
 
 		if ( $par ) {
 			$this->getOutput()->addBacklinkSubtitle( $this->getPageTitle() );
