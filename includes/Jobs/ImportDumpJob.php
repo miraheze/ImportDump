@@ -156,12 +156,15 @@ class ImportDumpJob extends Job
 			}
 
 			$rebuildRC = $maintenance->runChild( RebuildRecentchanges::class );
+			$rebuildRC->setDB( $dbw );
 			$rebuildRC->execute();
 
 			$rebuildLinks = $maintenance->runChild( RefreshLinks::class );
+			$rebuildRC->setDB( $dbw );
 			$rebuildLinks->execute();
 
 			$initEditCount = $maintenance->runChild( InitEditCount::class );
+			$rebuildRC->setDB( $dbw );
 			$initEditCount->execute();
 
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
