@@ -169,7 +169,7 @@ class ImportDumpJob extends Job
 			MWExceptionHandler::rollbackPrimaryChangesAndLog( $e );
 			$this->setLastError( $this->getLogMessage( $e ) );
 			$this->notifyFailed();
-			return true;
+			return false;
 		}
 
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
