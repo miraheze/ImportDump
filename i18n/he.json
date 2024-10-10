@@ -92,6 +92,8 @@
 	"importdump-request-edited-target": "יעד:\nערך קודם: $1\nערך חדש: $2",
 	"importdump-request-locked": "הבקשה הזאת ננעלה. אי אפשר לערוך אותה או להוסיף לה הערות.",
 	"importdump-request-reopened": "הבקשה נפתחה מחדש על־ידי $1.\n\n[שינויים שנעשו]$2",
+	"importdump-requestimportqueue-notcentral": "כבוי",
+	"importdump-requestimportqueue-notcentral-text": "בקשות יבוא כבויות בוויקי הזה. נא לבדוק את תור היבוא מהוויקי המרכזי.",
 	"importdump-section-comments": "הערות על בקשה",
 	"importdump-section-details": "פרטי הבקשה",
 	"importdump-section-editing": "עריכת בקשה",

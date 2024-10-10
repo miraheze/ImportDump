@@ -92,6 +92,8 @@
 	"importdump-request-edited-target": "Destination:\nPrevie valor: $1\nNove valor: $2",
 	"importdump-request-locked": "Iste requesta ha essite serrate. Illo non pote esser modificate, e non es possibile adder commentos a illo.",
 	"importdump-request-reopened": "Requesta reaperite per $1.\n\n[Cambiamentos apportate]$2",
+	"importdump-requestimportqueue-notcentral": "Disactivate",
+	"importdump-requestimportqueue-notcentral-text": "Le requestas de importation es disactivate sur iste wiki. Per favor consulta le cauda de importationes a partir del wiki central.",
 	"importdump-section-comments": "Commentos del requesta",
 	"importdump-section-details": "Detalios del requesta",
 	"importdump-section-editing": "Modificar requesta",

@@ -2,6 +2,7 @@
 	"@metadata": {
 		"authors": [
 			"Amire80",
+			"DreZhsh",
 			"Gomoko",
 			"Graineahumus",
 			"MacOS Weed",
@@ -99,6 +100,7 @@
 	"importdump-request-edited-target": "Cible :\nValeur précédente : $1\nNouvelle valeur : $2",
 	"importdump-request-locked": "Cette demande a été verrouillée. Elle ne peut pas être modifiée et aucun commentaire ne peut y être ajouté.",
 	"importdump-request-reopened": "Demande rouverte par $1.\n\n[Changements réalisés]$2",
+	"importdump-requestimportqueue-notcentral": "Désactivé",
 	"importdump-section-comments": "Commentaires de la demande",
 	"importdump-section-details": "Détails de la demande",
 	"importdump-section-editing": "Modifier la demande",

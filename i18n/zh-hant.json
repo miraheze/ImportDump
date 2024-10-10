@@ -97,6 +97,8 @@
 	"importdump-request-edited-target": "目標：\n之前的值：$1\n新的值：$2",
 	"importdump-request-locked": "此申請已鎖定。它已無法被編輯與新增意見。",
 	"importdump-request-reopened": "由$1重開的申請。\n\n[做出的變動]$2",
+	"importdump-requestimportqueue-notcentral": "已停用",
+	"importdump-requestimportqueue-notcentral-text": "此 wiki 上已停用匯入申請。請從中央 wiki 檢查匯入佇列。",
 	"importdump-section-comments": "申請意見",
 	"importdump-section-details": "申請詳情",
 	"importdump-section-editing": "編輯申請",
