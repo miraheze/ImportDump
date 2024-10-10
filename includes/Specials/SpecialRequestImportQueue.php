@@ -57,7 +57,10 @@ class SpecialRequestImportQueue extends SpecialPage
 
 		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
-			throw new ErrorPageError( 'importdump-requestimportqueue-notcentral', 'importdump-requestimportqueue-notcentral-text' );
+			throw new ErrorPageError(
+				'importdump-requestimportqueue-notcentral',
+				'importdump-requestimportqueue-notcentral-text'
+			);
 		}
 
 		if ( $par ) {
