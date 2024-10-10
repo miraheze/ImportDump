@@ -38,6 +38,9 @@ class ImportDumpJob extends Job
 	private $requestID;
 
 	/** @var string */
+	private $jobError;
+
+	/** @var string */
 	private $username;
 
 	/** @var Config */
@@ -92,6 +95,8 @@ class ImportDumpJob extends Job
 
 		$this->config = $configFactory->makeConfig( 'ImportDump' );
 		$this->messageLocalizer = RequestContext::getMain();
+
+		$this->executionFlags |= self::JOB_NO_EXPLICIT_TRX_ROUND;
 	}
 
 	/**
@@ -112,7 +117,8 @@ class ImportDumpJob extends Job
 		// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
-			$this->setLastError( "Import source for {$filePath} failed" );
+			$this->jobError = "Import source for {$filePath} failed";
+			$this->setLastError( $this->jobError );
 			$this->notifyFailed();
 			return true;
 		}
@@ -167,9 +173,9 @@ class ImportDumpJob extends Job
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
 		} catch ( Throwable $e ) {
 			MWExceptionHandler::rollbackPrimaryChangesAndLog( $e );
-			$this->setLastError( $this->getLogMessage( $e ) );
+			$this->jobError = $this->getLogMessage( $e );
 			$this->notifyFailed();
-			return false;
+			return true;
 		}
 
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
@@ -191,7 +197,7 @@ class ImportDumpJob extends Job
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
-					'lasterror' => $this->getLastError(),
+					'joberror' => $this->jobError,
 					'requestid' => $this->requestID,
 					'status' => self::STATUS_FAILED,
 					'username' => $this->username,
