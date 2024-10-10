@@ -34,11 +34,11 @@ class ImportDumpJob extends Job
 
 	public const JOB_NAME = 'ImportDumpJob';
 
-	/** @var string */
-	private $jobError;
-
 	/** @var int */
 	private $requestID;
+
+	/** @var string */
+	private $jobError;
 
 	/** @var string */
 	private $username;
