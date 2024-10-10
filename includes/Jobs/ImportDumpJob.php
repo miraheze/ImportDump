@@ -35,7 +35,7 @@ class ImportDumpJob extends Job
 	public const JOB_NAME = 'ImportDumpJob';
 
 	/** @var string */
-	private $error;
+	private $jobError;
 
 	/** @var int */
 	private $requestID;
@@ -117,8 +117,8 @@ class ImportDumpJob extends Job
 		// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
-			$this->error = "Import source for {$filePath} failed";
-			$this->setLastError( $this->error );
+			$this->jobError = "Import source for {$filePath} failed";
+			$this->setLastError( $this->jobError );
 			$this->notifyFailed();
 			return true;
 		}
@@ -173,7 +173,7 @@ class ImportDumpJob extends Job
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
 		} catch ( Throwable $e ) {
 			MWExceptionHandler::rollbackPrimaryChangesAndLog( $e );
-			$this->error = $this->getLogMessage( $e );
+			$this->jobError = $this->getLogMessage( $e );
 			$this->notifyFailed();
 			return true;
 		}
@@ -197,7 +197,7 @@ class ImportDumpJob extends Job
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
-					'error' => $this->error,
+					'joberror' => $this->jobError,
 					'requestid' => $this->requestID,
 					'status' => self::STATUS_FAILED,
 					'username' => $this->username,
