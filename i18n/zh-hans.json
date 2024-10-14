@@ -103,6 +103,7 @@
 	"importdump-request-edited-target": "目标：\n之前的值：$1\n新的值：$2",
 	"importdump-request-locked": "该申请已锁定。它已无法被编辑和添加备注。",
 	"importdump-request-reopened": "$1重新开启了申请。\n\n[作出的更改]$2",
+	"importdump-requestimportqueue-notcentral": "已禁用",
 	"importdump-section-comments": "申请备注",
 	"importdump-section-details": "申请详情",
 	"importdump-section-editing": "编辑申请",

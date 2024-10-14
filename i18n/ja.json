@@ -103,6 +103,8 @@
 	"importdump-request-edited-target": "ターゲット:\n前の値: $1 \n新しい値: $2",
 	"importdump-request-locked": "この申請はロックされています。編集したり、コメントを追加したりすることはできません。",
 	"importdump-request-reopened": "申請は $1 により再オープンされました。\n\n[変更が行われました]$2",
+	"importdump-requestimportqueue-notcentral": "無効",
+	"importdump-requestimportqueue-notcentral-text": "このウィキでは取り込み申請が無効になっています。中央ウィキから取り込みキューを確認してください。",
 	"importdump-section-comments": "申請コメント",
 	"importdump-section-details": "申請の詳細",
 	"importdump-section-editing": "申請を編集",

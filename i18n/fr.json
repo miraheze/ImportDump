@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Alien333",
 			"Amire80",
 			"DreZhsh",
 			"Gomoko",
@@ -101,6 +102,7 @@
 	"importdump-request-locked": "Cette demande a été verrouillée. Elle ne peut pas être modifiée et aucun commentaire ne peut y être ajouté.",
 	"importdump-request-reopened": "Demande rouverte par $1.\n\n[Changements réalisés]$2",
 	"importdump-requestimportqueue-notcentral": "Désactivé",
+	"importdump-requestimportqueue-notcentral-text": "Les demandes d'importation sont désactivées sur ce wiki. Veuillez vérifier la file d'attente d'importation du le wiki central.",
 	"importdump-section-comments": "Commentaires de la demande",
 	"importdump-section-details": "Détails de la demande",
 	"importdump-section-editing": "Modifier la demande",

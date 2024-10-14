@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Minh Nguyen",
 			"NguyenHung",
 			"Pisceskaze",
 			"SongNgu.xyz"
@@ -26,12 +27,12 @@
 	"importdump-help-reason": "Vui lòng mô tả chi tiết lý do bạn thực hiện yêu cầu nhập này.",
 	"importdump-help-source": "Nhập URL đầy đủ của wiki nguồn (nơi bạn lấy bản kết xuất).",
 	"importdump-help-target": "Đây phải là tên một cơ sở dữ liệu hợp lệ.",
-	"importdump-help-upload-file": "Chỉ cho phép các tệp XML. Nếu tệp XML của bạn ở dạng nén, vui lòng giải nén nó trước khi tải lên.",
-	"importdump-help-upload-file-url": "Chỉ cho phép các tệp XML không nén.",
+	"importdump-help-upload-file": "Chỉ cho phép các tập tin XML. Nếu tập tin XML của bạn ở dạng nén, vui lòng giải nén nó trước khi tải lên.",
+	"importdump-help-upload-file-url": "Chỉ cho phép các tập tin XML không nén.",
 	"importdump-import-failed-comment": "Đã xảy ra lỗi khi nhập XML được cung cấp.",
 	"importdump-import-started": "Quá trình nhập đã bắt đầu thành công.",
 	"importdump-info-command": "'''Lệnh cho lần nhập này:''' <code>$1</code>",
-	"importdump-info-filesize": "'''Kích thước tệp cho lần nhập này:''' $1",
+	"importdump-info-filesize": "'''Kích thước tập tin cho lần nhập này:''' $1",
 	"importdump-info-groups": "Nhóm người dùng $1 có trên $2: $3",
 	"importdump-info-interwiki": "Thêm tiền tố liên wiki vào bảng liên wiki cục bộ của $1 với các trường bên dưới. Hãy đảm bảo các giá trị là chính xác trước khi gửi.",
 	"importdump-info-no-file-found": "Không tìm thấy tập tin nào ở $1. Nó có thể đã bị xóa.",

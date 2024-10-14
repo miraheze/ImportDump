@@ -94,6 +94,8 @@
 	"importdump-request-edited-target": "Цел:\nПретходна вредност: $1\nНова вредност: $2",
 	"importdump-request-locked": "Ова барање е заклучено. Не може да се уредува и коментира.",
 	"importdump-request-reopened": "Барањето е преотворено од $1.\n\n[Направени промени]$2",
+	"importdump-requestimportqueue-notcentral": "Оневозможено",
+	"importdump-requestimportqueue-notcentral-text": "Барањата за увоз се оневозможени на ова вики. Проверете ја редицата за увоз од централното вики.",
 	"importdump-section-comments": "Коментари на барањето",
 	"importdump-section-details": "Поединости за барањето",
 	"importdump-section-editing": "Уреди барање",
