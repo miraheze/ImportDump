@@ -94,6 +94,8 @@
 	"importdump-request-edited-target": "Doel:\nVorige waarde: $1 \nNieuwe waarde: $2",
 	"importdump-request-locked": "Deze aanvraag is vergrendeld. Ze kan niet worden bewerkt en er kunnen geen opmerkingen aan worden toegevoegd.",
 	"importdump-request-reopened": "Aanvraag heropend door $1.\n\n[Wijzigingen aangebracht]$2",
+	"importdump-requestimportqueue-notcentral": "Uitgeschakeld",
+	"importdump-requestimportqueue-notcentral-text": "Importaanvragen zijn uitgeschakeld op deze wiki. Bekijk de importwachtrij op de centrale wiki.",
 	"importdump-section-comments": "Reacties op de aanvraag",
 	"importdump-section-details": "Details over de aanvraag",
 	"importdump-section-editing": "De aanvraag wijzigen",
