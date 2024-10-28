@@ -103,6 +103,7 @@
 	"importdump-request-locked": "该申请已锁定。它已无法被编辑和添加备注。",
 	"importdump-request-reopened": "$1重新开启了申请。\n\n[作出的更改]$2",
 	"importdump-requestimportqueue-notcentral": "已禁用",
+	"importdump-requestimportqueue-notcentral-text": "此wiki上已禁用导入请求。请从中央wiki检查导入队列。",
 	"importdump-section-comments": "申请备注",
 	"importdump-section-details": "申请详情",
 	"importdump-section-editing": "编辑申请",
