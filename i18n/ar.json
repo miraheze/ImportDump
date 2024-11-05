@@ -2,15 +2,16 @@
 	"@metadata": {
 		"authors": [
 			"Asma",
+			"Meno25",
 			"Mohammed Qays",
 			"Mohanad",
 			"Mohanad Kh",
 			"محمد أحمد عبد الفتاح"
 		]
 	},
-	"action-view-private-import-requests": "عرض طلبات التفريغ الخاصة بالاستيراد",
-	"echo-category-title-importdump-new-request": "طلب تفريغ استيراد جديد",
-	"echo-category-title-importdump-request-comment": "تمت إضافة التعليق إلى طلب تفريغ الاستيراد",
+	"action-view-private-import-requests": "عرض طلبات الاستيراد الخاصة",
+	"echo-category-title-importdump-new-request": "طلب استيراد جديد",
+	"echo-category-title-importdump-request-comment": "تمت إضافة تعليق إلى طلب الاستيراد",
 	"importdump-comment-given": "تم تقديم التعليق بواسطة $1:",
 	"importdump-desc": "ملحق مصمم لأتمتة طلبات استيراد المستخدمين.",
 	"importdump-duplicate-request": "غير قادر على تقديم هذا الطلب. إنه مشابه لطلب مفتوح بالفعل.",
@@ -50,13 +51,13 @@
 	"importdump-no-changes": "لم يتم إجراء أية تغييرات.",
 	"importdump-notcentral": "عاجز",
 	"importdump-notification-body-new-request": "تم استلام طلب تفريغ استيراد جديد. <br /> السبب المقدم: $1 <br /> مقدم الطلب: $2 <br /> الهدف قاعدة البيانات\nالاسم: $3",
-	"importdump-notification-header-new-request": "طلب تفريغ استيراد جديد #$1",
-	"importdump-notification-header-status-update": "تم تحديث الحالة لطلب تفريغ الاستيراد #$1",
+	"importdump-notification-header-new-request": "طلب استيراد جديد # $1",
+	"importdump-notification-header-status-update": "تم تحديث الحالة لطلب الاستيراد $1",
 	"importdump-notification-visit-request": "زيارة الطلب",
 	"importdump-section-comments": "طلب التعليقات",
-	"importdump-section-details": "طلب تفاصيل",
+	"importdump-section-details": "تفاصيل الطلب",
 	"importdump-section-editing": "تعديل الطلب",
-	"importdump-section-handling": "التعامل مع طلب",
+	"importdump-section-handling": "طلب التعامل",
 	"importdump-status-updated": "اطلب $1.",
 	"importdump-status-updated-success": "تم تحديث الوضع بنجاح لهذا الطلب.",
 	"importdump-table-requested-date": "التاريخ المطلوب",
@@ -65,9 +66,9 @@
 	"importdump-table-target": "الهدف",
 	"importdump-unknown": "طلب غير معروف.",
 	"importdump-usergroups-none": "لا شيء",
-	"importdumpprivate-log-header": "هذا سجل لجميع طلبات تفريغ الاستيراد وتحديثات الحالة للطلبات ذات الأهداف التي تمثل مواقع ويكى الخاصة.",
-	"ipb-action-request-import": "طلب استيراد تفريغ",
+	"importdumpprivate-log-header": "هذا سجل لجميع طلبات الاستيراد وتحديثات الحالة للطلبات التي كانت أهدافها عبارة عن ويكيات خاصة.",
+	"ipb-action-request-import": "طلب الاستيراد",
 	"log-action-filter-importdumpprivate": "نوع الفعل:",
-	"logentry-importdumpprivate-request": "طلب $1 تفريغ استيراد لـويكى الخاص $4 في $5.",
-	"right-handle-import-requests": "التعامل مع طلبات تفريغ استيراد المستخدم"
+	"logentry-importdumpprivate-request": "$1 {{GENDER:$2| تم طلب}} استيرادًا لويكي خاص $4 في $5 .",
+	"right-handle-import-requests": "التعامل مع طلبات استيراد المستخدم"
 }
