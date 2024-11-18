@@ -1,7 +1,8 @@
 {
 	"@metadata": {
 		"authors": [
-			"Hamilton Abreu"
+			"Hamilton Abreu",
+			"Mbs262"
 		]
 	},
 	"action-handle-import-request-interwiki": "tratar de importações de cópias em ficheiro entre wikis",
