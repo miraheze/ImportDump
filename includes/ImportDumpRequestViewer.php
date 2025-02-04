@@ -12,6 +12,8 @@ use MediaWiki\Message\Message;
 use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
+use OOUI\HtmlSnippet;
+use OOUI\MessageWidget;
 use UserNotLoggedIn;
 
 class ImportDumpRequestViewer implements ImportDumpStatus {
@@ -69,6 +71,8 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				Html::errorBox( $this->context->msg( 'importdump-request-locked' )->escaped() )
 			);
 		}
+
+		$this->context->getOutput()->enableOOUI();
 
 		$formDescriptor = [
 			'source' => [
@@ -207,7 +211,8 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 				$fileInfo .= Html::element( 'button', [
 						'type' => 'button',
-						'onclick' => 'navigator.clipboard.writeText( $( \'.mw-message-box-notice code\' ).text() );',
+						'onclick' => 'navigator.clipboard.writeText(
+      								$( \'.oo-ui-flaggedElement-notice\' ).text() );',
 					],
 					$this->context->msg( 'importdump-button-copy' )->text()
 				);
@@ -226,13 +231,19 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					)->parse();
 				}
 
-				$info = Html::noticeBox( $fileInfo, '' );
+				$info = new MessageWidget( [
+					'label' => new HtmlSnippet( $fileInfo ),
+					'type' => 'notice',
+				] );
 			} else {
-				$info = Html::errorBox(
-					$this->context->msg( 'importdump-info-no-file-found',
-						$this->importDumpRequestManager->getFilePath()
-					)->escaped()
-				);
+				$info = new MessageWidget( [
+					'label' => new HtmlSnippet(
+								$this->context->msg( 'importdump-info-no-file-found',
+								$this->importDumpRequestManager->getFilePath()
+							)->escaped()
+						),
+					'type' => 'error',
+				] );
 
 				$validRequest = false;
 				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
@@ -240,38 +251,47 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				}
 			}
 
-			$info .= Html::noticeBox(
-				$this->context->msg( 'importdump-info-groups',
-					$this->importDumpRequestManager->getRequester()->getName(),
-					$this->importDumpRequestManager->getTarget(),
-					$this->context->getLanguage()->commaList(
-						$this->importDumpRequestManager->getUserGroupsFromTarget()
-					)
-				)->escaped(),
-				''
-			);
+			$info .= new MessageWidget( [
+				'label' => new HtmlSnippet(
+						$this->context->msg( 'importdump-info-groups',
+							$this->importDumpRequestManager->getRequester()->getName(),
+							$this->importDumpRequestManager->getTarget(),
+							$this->context->getLanguage()->commaList(
+								$this->importDumpRequestManager->getUserGroupsFromTarget()
+							)
+						)->escaped(),
+					),
+				'type' => 'notice',
+			] );
 
 			if ( $this->importDumpRequestManager->isPrivate() ) {
-				$info .= Html::warningBox(
-					$this->context->msg( 'importdump-info-request-private' )->escaped()
-				);
+				$info .= new MessageWidget( [
+					'label' => new HtmlSnippet( $this->context->msg( 'importdump-info-request-private' )->escaped() ),
+					'type' => 'warning',
+				] );
 			}
 
 			if ( $this->importDumpRequestManager->getRequester()->getBlock() ) {
-				$info .= Html::warningBox(
-					$this->context->msg( 'importdump-info-requester-blocked',
-						$this->importDumpRequestManager->getRequester()->getName(),
-						WikiMap::getCurrentWikiId()
-					)->escaped()
-				);
+				$info .= new MessageWidget( [
+					'label' => new HtmlSnippet( 
+							$this->context->msg( 'importdump-info-requester-blocked',
+								$this->importDumpRequestManager->getRequester()->getName(),
+								WikiMap::getCurrentWikiId()
+							)->escaped()
+						),
+					'type' => 'warning',
+				] );
 			}
 
 			if ( $this->importDumpRequestManager->getRequester()->isLocked() ) {
-				$info .= Html::errorBox(
-					$this->context->msg( 'importdump-info-requester-locked',
-						$this->importDumpRequestManager->getRequester()->getName()
-					)->escaped()
-				);
+				$info .= new MessageWidget( [
+					'label' => new HtmlSnippet( 
+							$this->context->msg( 'importdump-info-requester-locked',
+								$this->importDumpRequestManager->getRequester()->getName()
+							)->escaped()
+						),
+					'type' => 'error',
+				] );
 
 				$validRequest = false;
 				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
@@ -280,12 +300,15 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			}
 
 			if ( !$this->importDumpRequestManager->getInterwikiPrefix() ) {
-				$info .= Html::errorBox(
-					$this->context->msg( 'importdump-info-no-interwiki-prefix',
-						$this->importDumpRequestManager->getTarget(),
-						parse_url( $this->importDumpRequestManager->getSource(), PHP_URL_HOST )
-					)->escaped()
-				);
+				$info .= new MessageWidget( [
+					'label' => new HtmlSnippet( 
+							$this->context->msg( 'importdump-info-no-interwiki-prefix',
+								$this->importDumpRequestManager->getTarget(),
+								parse_url( $this->importDumpRequestManager->getSource(), PHP_URL_HOST )
+							)->escaped()
+						),
+					'type' => 'error',
+				] );
 			}
 
 			$formDescriptor += [
