@@ -273,7 +273,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 			if ( $this->importDumpRequestManager->getRequester()->getBlock() ) {
 				$info .= new MessageWidget( [
-					'label' => new HtmlSnippet( 
+					'label' => new HtmlSnippet(
 							$this->context->msg( 'importdump-info-requester-blocked',
 								$this->importDumpRequestManager->getRequester()->getName(),
 								WikiMap::getCurrentWikiId()
@@ -285,7 +285,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 			if ( $this->importDumpRequestManager->getRequester()->isLocked() ) {
 				$info .= new MessageWidget( [
-					'label' => new HtmlSnippet( 
+					'label' => new HtmlSnippet(
 							$this->context->msg( 'importdump-info-requester-locked',
 								$this->importDumpRequestManager->getRequester()->getName()
 							)->escaped()
@@ -301,7 +301,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 			if ( !$this->importDumpRequestManager->getInterwikiPrefix() ) {
 				$info .= new MessageWidget( [
-					'label' => new HtmlSnippet( 
+					'label' => new HtmlSnippet(
 							$this->context->msg( 'importdump-info-no-interwiki-prefix',
 								$this->importDumpRequestManager->getTarget(),
 								parse_url( $this->importDumpRequestManager->getSource(), PHP_URL_HOST )
