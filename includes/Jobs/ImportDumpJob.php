@@ -157,17 +157,17 @@ class ImportDumpJob extends Job
 
 			$maintenance = new FakeMaintenance;
 			if ( !$this->config->get( MainConfigNames::DisableSearchUpdate ) ) {
-				$rebuildText = $maintenance->runChild( RebuildTextIndex::class );
+				$rebuildText = $maintenance->createChild( RebuildTextIndex::class );
 				$rebuildText->execute();
 			}
 
-			$rebuildRC = $maintenance->runChild( RebuildRecentchanges::class );
+			$rebuildRC = $maintenance->createChild( RebuildRecentchanges::class );
 			$rebuildRC->execute();
 
-			$rebuildLinks = $maintenance->runChild( RefreshLinks::class );
+			$rebuildLinks = $maintenance->createChild( RefreshLinks::class );
 			$rebuildLinks->execute();
 
-			$initEditCount = $maintenance->runChild( InitEditCount::class );
+			$initEditCount = $maintenance->createChild( InitEditCount::class );
 			$initEditCount->execute();
 
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
