@@ -2,7 +2,7 @@
 
 namespace Miraheze\ImportDump\Jobs;
 
-use ExtensionRegistry;
+use MediaWiki\Registration\ExtensionRegistry;
 use Job;
 use MediaWiki\Config\Config;
 use MediaWiki\Config\ConfigFactory;

@@ -2,8 +2,8 @@
 
 namespace Miraheze\ImportDump;
 
-use ExtensionRegistry;
-use FileBackend;
+use MediaWiki\Registration\ExtensionRegistry;
+use Wikimedia\FileBackend\FileBackend;
 use JobSpecification;
 use ManualLogEntry;
 use MediaWiki\Config\Config;

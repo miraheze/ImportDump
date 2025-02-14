@@ -2,7 +2,7 @@
 
 namespace Miraheze\ImportDump\Jobs;
 
-use FakeMaintenance;
+use MediaWiki\Maintenance\FakeMaintenance;
 use ImportStreamSource;
 use InitEditCount;
 use Job;

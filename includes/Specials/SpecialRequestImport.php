@@ -3,7 +3,7 @@
 namespace Miraheze\ImportDump\Specials;
 
 use ErrorPageError;
-use ExtensionRegistry;
+use MediaWiki\Registration\ExtensionRegistry;
 use FileRepo;
 use ManualLogEntry;
 use MediaWiki\Extension\Notifications\Model\Event;
@@ -17,7 +17,7 @@ use MediaWiki\Status\Status;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
-use MimeAnalyzer;
+use Wikimedia\Mime\MimeAnalyzer;
 use Miraheze\CreateWiki\Services\RemoteWikiFactory;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\ImportDumpStatus;
