@@ -2,7 +2,6 @@
 
 namespace Miraheze\ImportDump\Jobs;
 
-use FakeMaintenance;
 use ImportStreamSource;
 use InitEditCount;
 use Job;
@@ -14,6 +13,7 @@ use MediaWiki\Deferred\SiteStatsUpdate;
 use MediaWiki\Http\Telemetry;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\MainConfigNames;
+use MediaWiki\Maintenance\FakeMaintenance;
 use MediaWiki\Permissions\UltimateAuthority;
 use MediaWiki\SiteStats\SiteStatsInit;
 use MediaWiki\User\User;
