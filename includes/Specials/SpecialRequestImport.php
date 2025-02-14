@@ -3,7 +3,6 @@
 namespace Miraheze\ImportDump\Specials;
 
 use ErrorPageError;
-use MediaWiki\Registration\ExtensionRegistry;
 use FileRepo;
 use ManualLogEntry;
 use MediaWiki\Extension\Notifications\Model\Event;
@@ -11,13 +10,13 @@ use MediaWiki\Html\Html;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
 use MediaWiki\Permissions\PermissionManager;
+use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\FormSpecialPage;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
-use Wikimedia\Mime\MimeAnalyzer;
 use Miraheze\CreateWiki\Services\RemoteWikiFactory;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\ImportDumpStatus;
@@ -27,6 +26,7 @@ use UploadBase;
 use UploadFromUrl;
 use UploadStash;
 use UserBlockedError;
+use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Rdbms\IConnectionProvider;
 
 class SpecialRequestImport extends FormSpecialPage

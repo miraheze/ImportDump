@@ -2,8 +2,6 @@
 
 namespace Miraheze\ImportDump;
 
-use MediaWiki\Registration\ExtensionRegistry;
-use Wikimedia\FileBackend\FileBackend;
 use JobSpecification;
 use ManualLogEntry;
 use MediaWiki\Config\Config;
@@ -13,6 +11,7 @@ use MediaWiki\Interwiki\InterwikiLookup;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\Message\Message;
+use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\ActorStoreFactory;
 use MediaWiki\User\User;
@@ -23,6 +22,7 @@ use Miraheze\CreateWiki\Services\RemoteWikiFactory;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use RepoGroup;
 use stdClass;
+use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\IDatabase;
 use Wikimedia\Rdbms\SelectQueryBuilder;
