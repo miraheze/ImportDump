@@ -178,10 +178,14 @@ class ImportDumpRequestManager {
 
 	/**
 	 * @param string $comment
-	 * @param string $newStatus
+	 * @param ImportStatus $newStatus
 	 * @param User $user
 	 */
-	public function logStatusUpdate( string $comment, string $newStatus, User $user ) {
+	public function logStatusUpdate(
+		string $comment,
+		ImportStatus $newStatus,
+		User $user
+	) {
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
 		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
@@ -201,7 +205,7 @@ class ImportDumpRequestManager {
 			[
 				'4::requestLink' => Message::rawParam( $requestLink ),
 				'5::requestStatus' => strtolower( $this->messageLocalizer->msg(
-					'importdump-label-' . $newStatus
+					'importdump-label-' . $newStatus->value
 				)->inContentLanguage()->text() ),
 			]
 		);
@@ -539,10 +543,10 @@ class ImportDumpRequestManager {
 	}
 
 	/**
-	 * @return string
+	 * @return ImportStatus
 	 */
-	public function getStatus(): string {
-		return $this->row->request_status;
+	public function getStatus(): ImportStatus {
+		return ImportStatus::from( $this->row->request_status );
 	}
 
 	/**
@@ -643,12 +647,12 @@ class ImportDumpRequestManager {
 	}
 
 	/**
-	 * @param string $status
+	 * @param ImportStatus $status
 	 */
-	public function setStatus( string $status ) {
+	public function setStatus( ImportStatus $status ) {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
-			->set( [ 'request_status' => $status ] )
+			->set( [ 'request_status' => $status->value ] )
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();
