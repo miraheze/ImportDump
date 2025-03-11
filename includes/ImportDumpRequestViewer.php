@@ -16,7 +16,7 @@ use OOUI\HtmlSnippet;
 use OOUI\MessageWidget;
 use UserNotLoggedIn;
 
-class ImportDumpRequestViewer implements ImportDumpStatus {
+class ImportDumpRequestViewer {
 
 	/** @var Config */
 	private $config;
@@ -217,7 +217,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					$this->context->msg( 'importdump-button-copy' )->text()
 				);
 
-				if ( $this->config->get( ConfigNames::EnableAutomatedJob ) && $status !== self::STATUS_FAILED ) {
+				if ( $this->config->get( ConfigNames::EnableAutomatedJob ) && $status !== ImportStatus::FAILED ) {
 					$fileInfo = '';
 				}
 
@@ -246,8 +246,8 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				] );
 
 				$validRequest = false;
-				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
-					$status = self::STATUS_DECLINED;
+				if ( $status === ImportStatus::PENDING || $status === ImportStatus::IN_PROGRESS ) {
+					$status = ImportStatus::DECLINED;
 				}
 			}
 
@@ -345,8 +345,8 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 						'label-message' => 'importdump-label-update-status',
 						'options-messages' => array_unique( [
 							'importdump-label-' . $status => $status,
-							'importdump-label-pending' => self::STATUS_PENDING,
-							'importdump-label-complete' => self::STATUS_COMPLETE,
+							'importdump-label-pending' => ImportStatus::PENDING,
+							'importdump-label-complete' => ImportStatus::COMPLETE,
 						] ),
 						'default' => $status,
 						'disabled' => !$validRequest,
@@ -404,9 +404,9 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			if ( $this->config->get( ConfigNames::EnableAutomatedJob ) ) {
 				$validStatus = true;
 				if (
-					$status === self::STATUS_COMPLETE ||
-					$status === self::STATUS_INPROGRESS ||
-					$status === self::STATUS_STARTING
+					$status === ImportStatus::COMPLETE ||
+					$status === ImportStatus::IN_PROGRESS ||
+					$status === ImportStatus::STARTING
 				) {
 					$validStatus = false;
 				}
@@ -428,7 +428,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 						'type' => 'submit',
 						'flags' => [ 'destructive', 'primary' ],
 						'buttonlabel-message' => 'importdump-label-decline-import',
-						'disabled' => !$validStatus || $status === self::STATUS_DECLINED,
+						'disabled' => !$validStatus || $status === ImportStatus::DECLINED,
 						'section' => 'handling',
 					],
 				];
@@ -438,10 +438,10 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 						'type' => 'select',
 						'label-message' => 'importdump-label-update-status',
 						'options-messages' => [
-							'importdump-label-pending' => self::STATUS_PENDING,
-							'importdump-label-inprogress' => self::STATUS_INPROGRESS,
-							'importdump-label-complete' => self::STATUS_COMPLETE,
-							'importdump-label-declined' => self::STATUS_DECLINED,
+							'importdump-label-pending' => ImportStatus::PENDING,
+							'importdump-label-inprogress' => ImportStatus::IN_PROGRESS,
+							'importdump-label-complete' => ImportStatus::COMPLETE,
+							'importdump-label-declined' => ImportStatus::DECLINED,
 						],
 						'default' => $status,
 						'disabled' => !$validRequest,
@@ -644,14 +644,14 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				return;
 			}
 
-			if ( $this->importDumpRequestManager->getStatus() === self::STATUS_DECLINED ) {
-				$this->importDumpRequestManager->setStatus( self::STATUS_PENDING );
+			if ( $this->importDumpRequestManager->getStatus() === ImportStatus::DECLINED ) {
+				$this->importDumpRequestManager->setStatus( ImportStatus::PENDING );
 
 				$comment = $this->context->msg( 'importdump-request-reopened', $user->getName() )->rawParams(
 					implode( "\n\n", $changes )
 				)->inContentLanguage()->escaped();
 
-				$this->importDumpRequestManager->logStatusUpdate( $comment, self::STATUS_PENDING, $user );
+				$this->importDumpRequestManager->logStatusUpdate( $comment, ImportStatus::PENDING, $user );
 
 				$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
 
@@ -768,9 +768,9 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		if (
-			$this->importDumpRequestManager->getStatus() === self::STATUS_COMPLETE ||
-			$this->importDumpRequestManager->getStatus() === self::STATUS_INPROGRESS ||
-			$this->importDumpRequestManager->getStatus() === self::STATUS_STARTING
+			$this->importDumpRequestManager->getStatus() === ImportStatus::COMPLETE ||
+			$this->importDumpRequestManager->getStatus() === ImportStatus::IN_PROGRESS ||
+			$this->importDumpRequestManager->getStatus() === ImportStatus::STARTING
 		) {
 			$out->addHTML( Html::errorBox(
 				$this->context->msg( 'importdump-status-conflict' )->escaped()
@@ -780,7 +780,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		if ( isset( $formData['submit-decline'] ) ) {
-			$formData['handle-status'] = self::STATUS_DECLINED;
+			$formData['handle-status'] = ImportStatus::DECLINED;
 			$this->importDumpRequestManager->startAtomic( __METHOD__ );
 			$this->handleStatusUpdate( $formData, $user );
 			$this->importDumpRequestManager->endAtomic( __METHOD__ );
@@ -788,12 +788,12 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		if ( isset( $formData['submit-start'] ) ) {
-			if ( $this->importDumpRequestManager->getStatus() === self::STATUS_COMPLETE ) {
+			if ( $this->importDumpRequestManager->getStatus() === ImportStatus::COMPLETE ) {
 				// Don't rerun a job that is already completed.
 				return;
 			}
 
-			$this->importDumpRequestManager->setStatus( self::STATUS_STARTING );
+			$this->importDumpRequestManager->setStatus( ImportStatus::STARTING );
 			$this->importDumpRequestManager->executeJob( $user->getName() );
 			$out->addHTML( Html::successBox(
 				$this->context->msg( 'importdump-import-started' )->escaped()
