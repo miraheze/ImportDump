@@ -5,7 +5,7 @@ namespace Miraheze\ImportDump\Tests;
 use MediaWiki\MainConfigNames;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ImportDumpRequestManager;
-use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\ImportStatus;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
@@ -15,8 +15,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group Medium
  * @coversDefaultClass \Miraheze\ImportDump\ImportDumpRequestManager
  */
-class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
-	implements ImportDumpStatus {
+class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase {
 
 	public function addDBDataOnce(): void {
 		$this->setMwGlobals( MainConfigNames::VirtualDomainsMapping, [
@@ -35,7 +34,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
 				'request_source' => 'https://importdumptest.com',
 				'request_target' => 'importdumptest',
 				'request_reason' => 'test',
-				'request_status' => self::STATUS_PENDING,
+				'request_status' => ImportStatus::PENDING->value,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
 				'request_timestamp' => $this->db->timestamp(),
 			] )
