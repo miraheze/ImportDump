@@ -114,7 +114,7 @@ class ImportDumpRequestViewer {
 				'readonly' => true,
 				'section' => 'details',
 				'default' => $this->context->msg(
-					'importdump-label-' . $this->importDumpRequestManager->getStatus()
+					'importdump-label-' . $this->importDumpRequestManager->getStatus()->value
 				)->text(),
 			],
 			'reason' => [
@@ -294,8 +294,8 @@ class ImportDumpRequestViewer {
 				] );
 
 				$validRequest = false;
-				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
-					$status = self::STATUS_DECLINED;
+				if ( $status === ImportStatus::PENDING || $status === ImportStatus::IN_PROGRESS ) {
+					$status = ImportStatus::DECLINED;
 				}
 			}
 
@@ -344,11 +344,11 @@ class ImportDumpRequestViewer {
 						'type' => 'select',
 						'label-message' => 'importdump-label-update-status',
 						'options-messages' => array_unique( [
-							'importdump-label-' . $status => $status,
-							'importdump-label-pending' => ImportStatus::PENDING,
-							'importdump-label-complete' => ImportStatus::COMPLETE,
+							'importdump-label-' . $status->value => $status->value,
+							'importdump-label-pending' => ImportStatus::PENDING->value,
+							'importdump-label-complete' => ImportStatus::COMPLETE->value,
 						] ),
-						'default' => $status,
+						'default' => $status->value,
 						'disabled' => !$validRequest,
 						'cssclass' => 'importdump-infuse',
 						'section' => 'handling',
