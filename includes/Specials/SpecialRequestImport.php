@@ -19,7 +19,7 @@ use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\CreateWiki\Services\RemoteWikiFactory;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\ImportStatus;
 use PermissionsError;
 use RepoGroup;
 use UploadBase;
@@ -29,8 +29,7 @@ use UserBlockedError;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Rdbms\IConnectionProvider;
 
-class SpecialRequestImport extends FormSpecialPage
-	implements ImportDumpStatus {
+class SpecialRequestImport extends FormSpecialPage {
 
 	/** @var IConnectionProvider */
 	private $connectionProvider;
@@ -201,7 +200,7 @@ class SpecialRequestImport extends FormSpecialPage
 			->field( '*' )
 			->where( [
 				'request_reason' => $data['reason'],
-				'request_status' => self::STATUS_PENDING,
+				'request_status' => ImportStatus::PENDING->value,
 			] )
 			->caller( __METHOD__ )
 			->fetchRow();
@@ -281,7 +280,7 @@ class SpecialRequestImport extends FormSpecialPage
 				'request_source' => $data['source'],
 				'request_target' => $data['target'],
 				'request_reason' => $data['reason'],
-				'request_status' => self::STATUS_PENDING,
+				'request_status' => ImportStatus::PENDING->value,
 				'request_actor' => $this->getUser()->getActorId(),
 				'request_timestamp' => $timestamp,
 			] )
