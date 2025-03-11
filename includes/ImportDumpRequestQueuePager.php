@@ -147,7 +147,7 @@ class ImportDumpRequestQueuePager extends TablePager {
 		if ( $this->status && $this->status != '*' ) {
 			$info['conds']['request_status'] = $this->status;
 		} elseif ( !$this->status ) {
-			$info['conds']['request_status'] = ImportStatus::PENDING;
+			$info['conds']['request_status'] = ImportStatus::PENDING->value;
 		}
 
 		return $info;
