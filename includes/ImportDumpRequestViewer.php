@@ -718,9 +718,11 @@ class ImportDumpRequestViewer {
 				$this->importDumpRequestManager->setPrivate( (int)$formData['handle-private'] );
 			}
 
+			$status = ImportStatus::from( $formData['handle-status'] );
+
 			if (
 				!isset( $formData['handle-status'] ) ||
-				$this->importDumpRequestManager->getStatus() === $formData['handle-status']
+				$this->importDumpRequestManager->getStatus() === $status
 			) {
 				$this->importDumpRequestManager->endAtomic( __METHOD__ );
 
@@ -780,7 +782,7 @@ class ImportDumpRequestViewer {
 		}
 
 		if ( isset( $formData['submit-decline'] ) ) {
-			$formData['handle-status'] = ImportStatus::DECLINED;
+			$formData['handle-status'] = ImportStatus::DECLINED->value;
 			$this->importDumpRequestManager->startAtomic( __METHOD__ );
 			$this->handleStatusUpdate( $formData, $user );
 			$this->importDumpRequestManager->endAtomic( __METHOD__ );
@@ -806,7 +808,8 @@ class ImportDumpRequestViewer {
 	 * @param User $user
 	 */
 	private function handleStatusUpdate( array $formData, User $user ) {
-		$this->importDumpRequestManager->setStatus( $formData['handle-status'] );
+		$status = ImportStatus::from( $formData['handle-status'] );
+		$this->importDumpRequestManager->setStatus( $status );
 
 		$statusMessage = $this->context->msg( 'importdump-label-' . $formData['handle-status'] )
 			->inContentLanguage()
@@ -828,7 +831,7 @@ class ImportDumpRequestViewer {
 
 		$this->importDumpRequestManager->addComment( $comment, $commentUser ?? $user );
 		$this->importDumpRequestManager->logStatusUpdate(
-			$formData['handle-comment'], $formData['handle-status'], $user
+			$formData['handle-comment'], $status, $user
 		);
 
 		$this->importDumpRequestManager->sendNotification(
