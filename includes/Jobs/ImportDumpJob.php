@@ -26,6 +26,7 @@ use RebuildRecentchanges;
 use RebuildTextIndex;
 use RefreshLinks;
 use Throwable;
+use UpdateArticleCount;
 use WikiImporterFactory;
 use Wikimedia\Rdbms\IConnectionProvider;
 
@@ -169,6 +170,10 @@ class ImportDumpJob extends Job
 
 			$initEditCount = $maintenance->createChild( InitEditCount::class );
 			$initEditCount->execute();
+
+			$updateArticleCount = $maintenance->createChild( UpdateArticleCount::class );
+			$updateArticleCount->setOption( 'update', true );
+			$updateArticleCount->execute();
 
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
 		} catch ( Throwable $e ) {
