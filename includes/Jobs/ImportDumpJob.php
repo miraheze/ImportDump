@@ -172,7 +172,7 @@ class ImportDumpJob extends Job
 			$initEditCount->execute();
 
 			$updateArticleCount = $maintenance->createChild( UpdateArticleCount::class );
-			$updateArticleCount->loadParamsAndArgs( UpdateArticleCount::class, [ 'update' => true ] );
+			$updateArticleCount->setOption( 'update', true );
 			$updateArticleCount->execute();
 
 			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
