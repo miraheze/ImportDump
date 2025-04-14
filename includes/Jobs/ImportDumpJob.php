@@ -20,7 +20,7 @@ use MediaWiki\User\User;
 use MessageLocalizer;
 use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
 use Miraheze\ImportDump\ImportDumpRequestManager;
-use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\ImportStatus;
 use MWExceptionHandler;
 use RebuildRecentchanges;
 use RebuildTextIndex;
@@ -30,8 +30,7 @@ use UpdateArticleCount;
 use WikiImporterFactory;
 use Wikimedia\Rdbms\IConnectionProvider;
 
-class ImportDumpJob extends Job
-	implements ImportDumpStatus {
+class ImportDumpJob extends Job {
 
 	public const JOB_NAME = 'ImportDumpJob';
 
@@ -105,7 +104,7 @@ class ImportDumpJob extends Job
 	 */
 	public function run(): bool {
 		$this->importDumpRequestManager->fromID( $this->requestID );
-		if ( $this->importDumpRequestManager->getStatus() === self::STATUS_COMPLETE ) {
+		if ( $this->importDumpRequestManager->getStatus() === ImportStatus::COMPLETE ) {
 			// Don't rerun a job that is already completed.
 			return true;
 		}
@@ -129,7 +128,7 @@ class ImportDumpJob extends Job
 				ImportDumpNotifyJob::JOB_NAME,
 				[
 					'requestid' => $this->requestID,
-					'status' => self::STATUS_INPROGRESS,
+					'status' => ImportStatus::IN_PROGRESS,
 					'username' => $this->username,
 				]
 			)
@@ -188,7 +187,7 @@ class ImportDumpJob extends Job
 				ImportDumpNotifyJob::JOB_NAME,
 				[
 					'requestid' => $this->requestID,
-					'status' => self::STATUS_COMPLETE,
+					'status' => ImportStatus::COMPLETE,
 					'username' => $this->username,
 				]
 			)
@@ -204,7 +203,7 @@ class ImportDumpJob extends Job
 				[
 					'joberror' => $this->jobError,
 					'requestid' => $this->requestID,
-					'status' => self::STATUS_FAILED,
+					'status' => ImportStatus::FAILED,
 					'username' => $this->username,
 				]
 			)

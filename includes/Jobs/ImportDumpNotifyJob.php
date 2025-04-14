@@ -14,10 +14,9 @@ use MediaWiki\User\UserFactory;
 use MessageLocalizer;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\ImportDumpRequestManager;
-use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\ImportStatus;
 
-class ImportDumpNotifyJob extends Job
-	implements ImportDumpStatus {
+class ImportDumpNotifyJob extends Job {
 
 	public const JOB_NAME = 'ImportDumpNotifyJob';
 
@@ -30,7 +29,7 @@ class ImportDumpNotifyJob extends Job
 	/** @var string */
 	private $username;
 
-	/** @var string */
+	/** @var ImportStatus */
 	private $status;
 
 	/** @var Config */
@@ -81,15 +80,15 @@ class ImportDumpNotifyJob extends Job
 
 		$this->importDumpRequestManager->fromID( $this->requestID );
 
-		if ( $this->status === self::STATUS_COMPLETE ) {
+		if ( $this->status === ImportStatus::COMPLETE ) {
 			$this->notifyComplete();
 		}
 
-		if ( $this->status === self::STATUS_FAILED ) {
+		if ( $this->status === ImportStatus::FAILED ) {
 			$this->notifyFailed();
 		}
 
-		if ( $this->status === self::STATUS_INPROGRESS ) {
+		if ( $this->status === ImportStatus::IN_PROGRESS ) {
 			$this->notifyStarted();
 		}
 
@@ -97,14 +96,14 @@ class ImportDumpNotifyJob extends Job
 	}
 
 	private function notifyComplete() {
-		if ( $this->importDumpRequestManager->getStatus() === self::STATUS_COMPLETE ) {
+		if ( $this->importDumpRequestManager->getStatus() === ImportStatus::COMPLETE ) {
 			// Don't renotify for a job that is already completed.
 			return;
 		}
 
 		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
 
-		$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . self::STATUS_COMPLETE )
+		$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . ImportStatus::COMPLETE->value )
 			->inContentLanguage()
 			->text();
 
@@ -114,7 +113,7 @@ class ImportDumpNotifyJob extends Job
 
 		$this->importDumpRequestManager->addComment( $comment, $commentUser );
 		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $commentUser );
-		$this->importDumpRequestManager->setStatus( self::STATUS_COMPLETE );
+		$this->importDumpRequestManager->setStatus( ImportStatus::COMPLETE );
 	}
 
 	private function notifyFailed() {
@@ -158,7 +157,7 @@ class ImportDumpNotifyJob extends Job
 
 		$this->importDumpRequestManager->addComment( $comment, $commentUser );
 		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $commentUser );
-		$this->importDumpRequestManager->setStatus( self::STATUS_FAILED );
+		$this->importDumpRequestManager->setStatus( ImportStatus::FAILED );
 	}
 
 	private function notifyStarted() {
@@ -170,7 +169,7 @@ class ImportDumpNotifyJob extends Job
 
 		$this->importDumpRequestManager->logStarted( $user );
 
-		$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . self::STATUS_INPROGRESS )
+		$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . ImportStatus::IN_PROGRESS->value )
 			->inContentLanguage()
 			->text();
 
@@ -180,6 +179,6 @@ class ImportDumpNotifyJob extends Job
 
 		$this->importDumpRequestManager->addComment( $comment, $user );
 		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $user );
-		$this->importDumpRequestManager->setStatus( self::STATUS_INPROGRESS );
+		$this->importDumpRequestManager->setStatus( ImportStatus::IN_PROGRESS );
 	}
 }

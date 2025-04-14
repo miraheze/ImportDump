@@ -11,11 +11,10 @@ use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpRequestQueuePager;
 use Miraheze\ImportDump\ImportDumpRequestViewer;
-use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\ImportStatus;
 use Wikimedia\Rdbms\IConnectionProvider;
 
-class SpecialRequestImportQueue extends SpecialPage
-	implements ImportDumpStatus {
+class SpecialRequestImportQueue extends SpecialPage {
 
 	/** @var IConnectionProvider */
 	private $connectionProvider;
@@ -100,15 +99,15 @@ class SpecialRequestImportQueue extends SpecialPage
 				'name' => 'status',
 				'label-message' => 'importdump-label-status',
 				'options-messages' => [
-					'importdump-label-pending' => self::STATUS_PENDING,
-					'importdump-label-starting' => self::STATUS_STARTING,
-					'importdump-label-inprogress' => self::STATUS_INPROGRESS,
-					'importdump-label-complete' => self::STATUS_COMPLETE,
-					'importdump-label-declined' => self::STATUS_DECLINED,
-					'importdump-label-failed' => self::STATUS_FAILED,
+					'importdump-label-pending' => ImportStatus::PENDING->value,
+					'importdump-label-starting' => ImportStatus::STARTING->value,
+					'importdump-label-inprogress' => ImportStatus::IN_PROGRESS->value,
+					'importdump-label-complete' => ImportStatus::COMPLETE->value,
+					'importdump-label-declined' => ImportStatus::DECLINED->value,
+					'importdump-label-failed' => ImportStatus::FAILED->value,
 					'importdump-label-all' => '*',
 				],
-				'default' => $status ?: self::STATUS_PENDING,
+				'default' => $status ?: ImportStatus::PENDING->value,
 			],
 		];
 
