@@ -29,9 +29,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 
 	private SpecialRequestImport $specialRequestImport;
 
-	/**
-	 * @inheritDoc
-	 */
+	/** @inheritDoc */
 	protected function newSpecialPage() {
 		$services = $this->getServiceContainer();
 		return new SpecialRequestImport(
@@ -145,7 +143,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	 *
 	 * @return Generator
 	 */
-	public function onSubmitDataProvider(): Generator {
+	public static function onSubmitDataProvider(): Generator {
 		yield 'valid data' => [
 			[
 				'source' => 'http://example.com',
@@ -269,7 +267,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	 *
 	 * @return Generator
 	 */
-	public function isValidReasonDataProvider(): Generator {
+	public static function isValidReasonDataProvider(): Generator {
 		yield 'valid reason' => [ 'Test reason', true ];
 		yield 'invalid reason' => [ ' ', 'htmlform-required' ];
 	}
