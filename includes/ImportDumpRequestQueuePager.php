@@ -9,8 +9,7 @@ use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
 use Wikimedia\Rdbms\IConnectionProvider;
 
-class ImportDumpRequestQueuePager extends TablePager
-	implements ImportDumpStatus {
+class ImportDumpRequestQueuePager extends TablePager {
 
 	/** @var LinkRenderer */
 	private $linkRenderer;
@@ -148,7 +147,7 @@ class ImportDumpRequestQueuePager extends TablePager
 		if ( $this->status && $this->status != '*' ) {
 			$info['conds']['request_status'] = $this->status;
 		} elseif ( !$this->status ) {
-			$info['conds']['request_status'] = self::STATUS_PENDING;
+			$info['conds']['request_status'] = ImportStatus::PENDING->value;
 		}
 
 		return $info;
