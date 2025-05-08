@@ -244,7 +244,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	 *
 	 * @return Generator
 	 */
-	public function isValidDatabaseDataProvider(): Generator {
+	public static function isValidDatabaseDataProvider(): Generator {
 		yield 'valid database' => [ 'wikidb', true ];
 		yield 'invalid database' => [ 'invalidwiki', 'importdump-invalid-target' ];
 	}
