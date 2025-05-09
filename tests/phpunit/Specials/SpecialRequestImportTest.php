@@ -105,11 +105,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			$this->setSessionUser( $user, $user->getRequest() );
 		}
 
-		$request = new FauxRequest(
-			[], true,
-			RequestContext::getMain()->getRequest()->getSession()
-		);
-
+		$request = new FauxRequest( [], true );
 		$request->setUpload( 'wpUploadFile', [
 			'name' => basename( $formData['UploadFile'] ),
 			'type' => $extraData['mime-type'],
