@@ -25,7 +25,8 @@ class ImportDumpHookRunner implements
 	public function onImportDumpJobAfterImport( $filePath, $importDumpRequestManager ): void {
 		$this->container->run(
 			'ImportDumpJobAfterImport',
-			[ $filePath, $importDumpRequestManager ]
+			[ $filePath, $importDumpRequestManager ],
+			[ 'abortable' => false ]
 		);
 	}
 
@@ -33,7 +34,8 @@ class ImportDumpHookRunner implements
 	public function onImportDumpJobGetFile( &$filePath, $importDumpRequestManager ): void {
 		$this->container->run(
 			'ImportDumpJobGetFile',
-			[ &$filePath, $importDumpRequestManager ]
+			[ &$filePath, $importDumpRequestManager ],
+			[ 'abortable' => false ]
 		);
 	}
 }
