@@ -346,6 +346,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 						'options-messages' => array_unique( [
 							'importdump-label-' . $status => $status,
 							'importdump-label-pending' => self::STATUS_PENDING,
+							'importdump-label-inprogress' => self::STATUS_INPROGRESS,
 							'importdump-label-complete' => self::STATUS_COMPLETE,
 						] ),
 						'default' => $status,
