@@ -516,10 +516,10 @@ class ImportDumpRequestManager {
 
 		return (int)$backend->getFileSize( [ 'src' => $this->getFilePath() ] );
 	}
-	
+
 		/**
-	 * @return string
-	 */
+		 * @return string
+		 */
 	public function getSourceType(): string {
 		return $this->row->request_sourcetype;
 	}
@@ -624,7 +624,7 @@ class ImportDumpRequestManager {
 			->caller( __METHOD__ )
 			->execute();
 	}
-	
+
 	/**
 	 * @param string $reason
 	 */

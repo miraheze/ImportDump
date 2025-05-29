@@ -160,14 +160,14 @@ class SpecialRequestImport extends FormSpecialPage
 				],
 			];
 		}
-		
+
 		$formDescriptor += [
 			'sourcetype' => [
 				'type' => 'list',
 				'options' => [
 					'Forking or migrating from an existing wiki' => 'fork',
 					'Importing a template or page from Wikipedia or another Wikimedia project' => 'wikipedia',
-			],
+				],
 				'label-message' => 'importdump-label-sourcetype',
 				'help-message' => 'importdump-help-sourcetype',
 				'required' => true,
