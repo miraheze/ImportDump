@@ -162,7 +162,7 @@ class SpecialRequestImport extends FormSpecialPage
 		}
 		
 		$formDescriptor += [
-			'source-type' => [
+			'sourcetype' => [
 				'type' => 'list',
 				'options' => [
 					'Forking or migrating from an existing wiki' => 'fork',
@@ -293,7 +293,7 @@ class SpecialRequestImport extends FormSpecialPage
 			->row( [
 				'request_source' => $data['source'],
 				'request_target' => $data['target'],
-				'request_sourcetype' => $data['reason'],
+				'request_sourcetype' => $data['sourcetype'],
 				'request_reason' => $data['reason'],
 				'request_status' => self::STATUS_PENDING,
 				'request_actor' => $this->getUser()->getActorId(),
