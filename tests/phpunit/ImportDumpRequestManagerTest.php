@@ -34,6 +34,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
 			->row( [
 				'request_source' => 'https://importdumptest.com',
 				'request_target' => 'importdumptest',
+				'request_sourcetype' => 'test',
 				'request_reason' => 'test',
 				'request_status' => self::STATUS_PENDING,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
