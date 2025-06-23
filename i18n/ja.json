@@ -146,7 +146,7 @@
 	"requestimport": "取り込みを申請する",
 	"requestimportqueue": "取り込み申請キュー",
 	"requestimportqueue-header": "取り込み申請を検索",
-	"requestimportqueue-header-info": "このフォームを使用して取り込み申請を検索することができます。以下のパラメータを使用して検索を絞り込むことができます。",
+	"requestimportqueue-header-info": "このフォームを使用して取り込み申請を検索できます。以下のパラメーターを使用して検索条件を絞り込めます。",
 	"right-handle-import-request-interwiki": "取り込み申請に対するリモートインターウィキを処理",
 	"right-handle-import-requests": "利用者による取り込み申請を処理",
 	"right-request-import": "取り込みを申請",
