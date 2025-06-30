@@ -6,13 +6,14 @@
 			"BerryAVGN",
 			"Danvintius Bookix",
 			"Dirruw'o",
+			"Engineer56",
 			"Okras",
 			"Putnik",
 			"Yurina Tatiana",
 			"Артём 13327"
 		]
 	},
-	"action-handle-import-request-interwiki": "обработать импорт дампа interwiki",
+	"action-handle-import-request-interwiki": "обработать удалённые интервики-префиксы для запроса на импорт",
 	"action-handle-import-requests": "обработать запрос на импорт пользователей",
 	"action-request-import": "запросы импорта",
 	"action-view-private-import-requests": "просмотр закрытых запросов на импорт",

@@ -68,6 +68,7 @@
 	"importdump-usergroups-none": "لا شيء",
 	"importdumpprivate-log-header": "هذا سجل لجميع طلبات الاستيراد وتحديثات الحالة للطلبات التي كانت أهدافها عبارة عن ويكيات خاصة.",
 	"ipb-action-request-import": "طلب الاستيراد",
+	"log-action-filter-importdump": "نوع الفعل:",
 	"log-action-filter-importdumpprivate": "نوع الفعل:",
 	"logentry-importdumpprivate-request": "$1 {{GENDER:$2| تم طلب}} استيرادًا لويكي خاص $4 في $5 .",
 	"right-handle-import-requests": "التعامل مع طلبات استيراد المستخدم"
