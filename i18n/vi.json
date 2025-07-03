@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Chaiwan2009",
 			"Minh Nguyen",
 			"NguyenHung",
 			"Pisceskaze",
@@ -21,6 +22,7 @@
 	"importdump-comment-given": "Bình luận được đưa ra bởi $1:",
 	"importdump-comment-success": "Bình luận đã được thêm thành công vào yêu cầu này.",
 	"importdump-desc": "Tiện ích mở rộng được thiết kế để tự động hóa các yêu cầu nhập của người dùng.",
+	"importdump-duplicate-comment": "Không thể gửi lại bình luận giống như yêu cầu trước đó của bạn.",
 	"importdump-duplicate-request": "Không thể gửi yêu cầu này. Nó quá giống với một yêu cầu đã mở.",
 	"importdump-edit-success": "Yêu cầu đã được chỉnh sửa thành công.",
 	"importdump-header-comment-withtimestamp": "Bình luận được đưa ra bởi $1 vào lúc $2",
@@ -63,6 +65,7 @@
 	"importdump-label-requester": "Người yêu cầu:",
 	"importdump-label-source": "URL nguồn:",
 	"importdump-label-start-import": "Thực thi",
+	"importdump-label-starting": "Đang bắt đầu…",
 	"importdump-label-status": "Trạng thái:",
 	"importdump-label-status-updated-comment": "Bình luận bổ sung tùy chọn để thêm vào yêu cầu này:",
 	"importdump-label-target": "Tên cơ sở dữ liệu mục tiêu:",
@@ -92,10 +95,13 @@
 	"importdump-request-edited-target": "Mục tiêu:\nGiá trị trước đó: $1 \nGiá trị mới: $2",
 	"importdump-request-locked": "Yêu cầu này đã bị khóa. Nó không thể được chỉnh sửa và không thể thêm bình luận vào nó.",
 	"importdump-request-reopened": "Yêu cầu được chỉnh sửa bởi $1 .\n\n[Đã thực hiện thay đổi] $2",
+	"importdump-requestimportqueue-notcentral": "Tắt",
+	"importdump-requestimportqueue-notcentral-text": "Yêu cầu nhập bị vô hiệu hóa trên wiki này. Vui lòng yêu cầu nhập từ wiki trung tâm.",
 	"importdump-section-comments": "Bình luận yêu cầu",
 	"importdump-section-details": "Chi tiết yêu cầu",
 	"importdump-section-editing": "Sửa đổi yêu cầu",
 	"importdump-section-handling": "Xử lý yêu cầu",
+	"importdump-status-conflict": "Không thể cập nhật trạng thái của yêu cầu nhập này vì đã phát hiện ra xung đột. Có thể yêu cầu đã được bắt đầu hoặc đã hoàn tất.",
 	"importdump-status-updated": "Yêu cầu $1.",
 	"importdump-status-updated-success": "Trạng thái đã được cập nhật thành công cho yêu cầu này.",
 	"importdump-success": "Yêu cầu nhập của bạn ($1) đã được gửi thành công. Yêu cầu của bạn sẽ được xem xét sớm nhất có thể.",
