@@ -43,7 +43,7 @@ class ImportDumpRequestQueuePager extends TablePager
 
 		switch ( $field ) {
 			case 'request_timestamp':
-				$this->escape( $this->getLanguage()->userTimeAndDate(
+				$formatted = $this->escape( $this->getLanguage()->userTimeAndDate(
 					$value, $this->getUser()
 				) );
 				break;
