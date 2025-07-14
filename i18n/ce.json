@@ -4,6 +4,7 @@
 			"Умар"
 		]
 	},
+	"action-request-import": "импортан дехарш",
 	"importdump-button-copy": "(хийцаран буфере копийан)",
 	"importdump-comment-given": "Комментари $1:",
 	"importdump-comment-success": "Комментари кхиамца тӀетоьхна оцу дехарна.",
@@ -26,6 +27,7 @@
 	"importdump-label-start-import": "Импорт дӀайолайе",
 	"importdump-label-starting": "Йолайалар…",
 	"importdump-label-status": "Статус:",
+	"importdump-label-target": "Ӏалашонан базин цӀе:",
 	"importdump-label-upload-file": "Файл чуйаккхар:",
 	"importdump-label-upload-file-url": "Хьостан URL-адрес:",
 	"importdump-label-upload-source-file": "Файл чуйаккхар",
@@ -47,8 +49,17 @@
 	"importdump-table-target": "Ӏалашо",
 	"importdump-unknown": "Ца девза дехар.",
 	"importdump-usergroups-none": "хӀан-хӀа",
+	"importdumpprivate-log-name": "ДӀакъевлина дехарийн импортан журнал",
+	"ipb-action-request-import": "Импортан дехар",
 	"log-action-filter-importdump": "Ардаман тайпа:",
+	"log-action-filter-importdump-interwiki": "Интервики таблицийн хийцамаш",
+	"log-action-filter-importdump-request": "Керла дехарш чуделла",
+	"log-action-filter-importdump-statusupdate": "Дехаршна статус карлайаьккхина",
 	"log-action-filter-importdumpprivate": "Ардаман тайпа:",
+	"log-action-filter-importdumpprivate-interwiki": "Интервики таблицийн хийцамаш",
+	"log-action-filter-importdumpprivate-request": "Керла дехарш чуделла",
+	"log-action-filter-importdumpprivate-started": "Импорт йолайелла",
+	"log-action-filter-importdumpprivate-statusupdate": "Дехаршна статус карлайаьккхина",
 	"requestimport": "Импортан дехар",
 	"requestimportqueue": "Импортан дехарийн рагӀ",
 	"right-request-import": "Импортан дехарш"
