@@ -4,6 +4,7 @@
 			"Ahonc",
 			"Base",
 			"Ice bulldog",
+			"METROKOP228 UA",
 			"Vlad5250",
 			"Ата",
 			"Пан Хаунд"
@@ -49,7 +50,9 @@
 	"importdump-no-changes": "Жодних змін не внесено.",
 	"importdump-notcentral": "Вимкнено",
 	"importdump-notification-visit-request": "Заявка на відвідування",
+	"importdump-table-target": "Ціль",
 	"importdump-unknown": "Невідомий запит.",
 	"importdump-usergroups-none": "немає",
+	"log-action-filter-importdump": "Тип дії:",
 	"log-action-filter-importdumpprivate": "Тип дії:"
 }
