@@ -517,6 +517,13 @@ class ImportDumpRequestManager {
 		return (int)$backend->getFileSize( [ 'src' => $this->getFilePath() ] );
 	}
 
+		/**
+		 * @return string
+		 */
+	public function getSourceType(): string {
+		return $this->row->request_sourcetype;
+	}
+
 	/**
 	 * @return string
 	 */
@@ -613,6 +620,18 @@ class ImportDumpRequestManager {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
 			->set( [ 'request_private' => $private ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
+	}
+
+	/**
+	 * @param string $reason
+	 */
+	public function setSourceType( string $reason ) {
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_sourcetype' => $sourcetype ] )
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();

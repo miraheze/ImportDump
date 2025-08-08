@@ -162,6 +162,19 @@ class SpecialRequestImport extends FormSpecialPage
 		}
 
 		$formDescriptor += [
+			'sourcetype' => [
+				'type' => 'list',
+				'options' => [
+					'Forking or migrating from an existing wiki' => 'fork',
+					'Importing a template or page from Wikipedia or another Wikimedia project' => 'wikipedia',
+				],
+				'label-message' => 'importdump-label-sourcetype',
+				'help-message' => 'importdump-help-sourcetype',
+				'required' => true,
+			],
+		];
+
+		$formDescriptor += [
 			'reason' => [
 				'type' => 'textarea',
 				'rows' => 6,
@@ -280,6 +293,7 @@ class SpecialRequestImport extends FormSpecialPage
 			->row( [
 				'request_source' => $data['source'],
 				'request_target' => $data['target'],
+				'request_sourcetype' => $data['sourcetype'],
 				'request_reason' => $data['reason'],
 				'request_status' => self::STATUS_PENDING,
 				'request_actor' => $this->getUser()->getActorId(),
