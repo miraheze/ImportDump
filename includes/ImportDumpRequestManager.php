@@ -50,7 +50,7 @@ class ImportDumpRequestManager {
 	public function __construct(
 		private readonly ActorStoreFactory $actorStoreFactory,
 		private readonly IConnectionProvider $connectionProvider,
-		private readonly ExtensionRegistry $ExtensionRegistry;
+		private readonly ExtensionRegistry $extensionRegistry,
 		private readonly InterwikiLookup $interwikiLookup,
 		private readonly JobQueueGroupFactory $jobQueueGroupFactory,
 		private readonly LinkRenderer $linkRenderer,
