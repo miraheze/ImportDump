@@ -9,7 +9,7 @@ use MediaWiki\Message\Message;
 class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationModel {
 
 	/** @inheritDoc */
-	public function getIconType(): string  {
+	public function getIconType(): string {
 		return 'global';
 	}
 
@@ -34,7 +34,7 @@ class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationMode
 	}
 
 	/** @inheritDoc */
-	public function getSecondaryLinks(): array  {
+	public function getSecondaryLinks(): array {
 		$visitLink = [
 			'url' => $this->event->getExtraParam( 'request-url', 0 ),
 			'label' => $this->msg( 'importdump-notification-visit-request' )->text(),
