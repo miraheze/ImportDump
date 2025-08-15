@@ -4,7 +4,6 @@ namespace Miraheze\ImportDump;
 
 use JobSpecification;
 use ManualLogEntry;
-use MediaWiki\Config\Config;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\Interwiki\InterwikiLookup;
@@ -18,13 +17,16 @@ use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManagerFactory;
 use MessageLocalizer;
-use Miraheze\CreateWiki\Services\RemoteWikiFactory;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
+use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use RepoGroup;
 use stdClass;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\IDatabase;
+use Wikimedia\Rdbms\IExpression;
+use Wikimedia\Rdbms\LikeValue;
+use Wikimedia\Rdbms\Platform\ISQLPlatform;
 use Wikimedia\Rdbms\SelectQueryBuilder;
 
 class ImportDumpRequestManager {
@@ -41,122 +43,44 @@ class ImportDumpRequestManager {
 		ConfigNames::ScriptCommand,
 	];
 
-	/** @var Config */
-	private $config;
+	private IDatabase $dbw;
+	private stdClass|false $row;
+	private int $ID;
 
-	/** @var IDatabase */
-	private $dbw;
-
-	/** @var int */
-	private $ID;
-
-	/** @var ActorStoreFactory */
-	private $actorStoreFactory;
-
-	/** @var IConnectionProvider */
-	private $connectionProvider;
-
-	/** @var InterwikiLookup */
-	private $interwikiLookup;
-
-	/** @var JobQueueGroupFactory */
-	private $jobQueueGroupFactory;
-
-	/** @var MessageLocalizer */
-	private $messageLocalizer;
-
-	/** @var LinkRenderer */
-	private $linkRenderer;
-
-	/** @var ServiceOptions */
-	private $options;
-
-	/** @var RemoteWikiFactory|null */
-	private $remoteWikiFactory;
-
-	/** @var RepoGroup */
-	private $repoGroup;
-
-	/** @var stdClass|bool */
-	private $row;
-
-	/** @var UserFactory */
-	private $userFactory;
-
-	/** @var UserGroupManagerFactory */
-	private $userGroupManagerFactory;
-
-	/**
-	 * @param Config $config
-	 * @param ActorStoreFactory $actorStoreFactory
-	 * @param IConnectionProvider $connectionProvider
-	 * @param InterwikiLookup $interwikiLookup
-	 * @param JobQueueGroupFactory $jobQueueGroupFactory
-	 * @param LinkRenderer $linkRenderer
-	 * @param RepoGroup $repoGroup
-	 * @param MessageLocalizer $messageLocalizer
-	 * @param ServiceOptions $options
-	 * @param UserFactory $userFactory
-	 * @param UserGroupManagerFactory $userGroupManagerFactory
-	 * @param ?RemoteWikiFactory $remoteWikiFactory
-	 */
 	public function __construct(
-		Config $config,
-		ActorStoreFactory $actorStoreFactory,
-		IConnectionProvider $connectionProvider,
-		InterwikiLookup $interwikiLookup,
-		JobQueueGroupFactory $jobQueueGroupFactory,
-		LinkRenderer $linkRenderer,
-		RepoGroup $repoGroup,
-		MessageLocalizer $messageLocalizer,
-		ServiceOptions $options,
-		UserFactory $userFactory,
-		UserGroupManagerFactory $userGroupManagerFactory,
-		?RemoteWikiFactory $remoteWikiFactory
+		private readonly ActorStoreFactory $actorStoreFactory,
+		private readonly IConnectionProvider $connectionProvider,
+		private readonly ExtensionRegistry $ExtensionRegistry;
+		private readonly InterwikiLookup $interwikiLookup,
+		private readonly JobQueueGroupFactory $jobQueueGroupFactory,
+		private readonly LinkRenderer $linkRenderer,
+		private readonly RepoGroup $repoGroup,
+		private readonly MessageLocalizer $messageLocalizer,
+		private readonly ServiceOptions $options,
+		private readonly UserFactory $userFactory,
+		private readonly UserGroupManagerFactory $userGroupManagerFactory,
+		private readonly ?ModuleFactory $moduleFactory
 	) {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
-
-		$this->config = $config;
-		$this->actorStoreFactory = $actorStoreFactory;
-		$this->connectionProvider = $connectionProvider;
-		$this->interwikiLookup = $interwikiLookup;
-		$this->jobQueueGroupFactory = $jobQueueGroupFactory;
-		$this->linkRenderer = $linkRenderer;
-		$this->messageLocalizer = $messageLocalizer;
-		$this->options = $options;
-		$this->remoteWikiFactory = $remoteWikiFactory;
-		$this->repoGroup = $repoGroup;
-		$this->userFactory = $userFactory;
-		$this->userGroupManagerFactory = $userGroupManagerFactory;
 	}
 
-	/**
-	 * @param int $requestID
-	 */
-	public function fromID( int $requestID ) {
+	public function loadFromID( int $requestID ) {
 		$this->dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-importdump' );
 		$this->ID = $requestID;
 
 		$this->row = $this->dbw->newSelectQueryBuilder()
 			->table( 'import_requests' )
-			->field( '*' )
+			->field( ISQLPlatform::ALL_ROWS )
 			->where( [ 'request_id' => $requestID ] )
 			->caller( __METHOD__ )
 			->fetchRow();
 	}
 
-	/**
-	 * @return bool
-	 */
 	public function exists(): bool {
 		return (bool)$this->row;
 	}
 
-	/**
-	 * @param string $comment
-	 * @param User $user
-	 */
-	public function addComment( string $comment, User $user ) {
+	public function addComment( string $comment, User $user ): void {
 		$this->dbw->newInsertQueryBuilder()
 			->insertInto( 'import_request_comments' )
 			->row( [
@@ -169,19 +93,14 @@ class ImportDumpRequestManager {
 			->execute();
 
 		if (
-			ExtensionRegistry::getInstance()->isLoaded( 'Echo' ) &&
-			!in_array( $user->getName(), self::SYSTEM_USERS )
+			$this->extensionRegistry->isLoaded( 'Echo' ) &&
+			!in_array( $user->getName(), self::SYSTEM_USERS, true )
 		) {
 			$this->sendNotification( $comment, 'importdump-request-comment', $user );
 		}
 	}
 
-	/**
-	 * @param string $comment
-	 * @param string $newStatus
-	 * @param User $user
-	 */
-	public function logStatusUpdate( string $comment, string $newStatus, User $user ) {
+	public function logStatusUpdate( string $comment, string $newStatus, User $user ): void {
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
 		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
@@ -200,8 +119,8 @@ class ImportDumpRequestManager {
 		$logEntry->setParameters(
 			[
 				'4::requestLink' => Message::rawParam( $requestLink ),
-				'5::requestStatus' => strtolower( $this->messageLocalizer->msg(
-					'importdump-label-' . $newStatus
+				'5::requestStatus' => mb_strtolower( $this->messageLocalizer->msg(
+					"importdump-label-$newStatus"
 				)->inContentLanguage()->text() ),
 			]
 		);
@@ -210,10 +129,7 @@ class ImportDumpRequestManager {
 		$logEntry->publish( $logID );
 	}
 
-	/**
-	 * @param User $user
-	 */
-	public function logStarted( User $user ) {
+	public function logStarted( User $user ): void {
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
 		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
@@ -236,14 +152,8 @@ class ImportDumpRequestManager {
 		$logEntry->publish( $logID );
 	}
 
-	/**
-	 * @param string $comment
-	 * @param string $type
-	 * @param User $user
-	 */
-	public function sendNotification( string $comment, string $type, User $user ) {
+	public function sendNotification( string $comment, string $type, User $user ): void {
 		$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', (string)$this->ID )->getFullURL();
-
 		$involvedUsers = array_values( array_filter(
 			array_diff( $this->getInvolvedUsers(), [ $user ] )
 		) );
@@ -262,13 +172,10 @@ class ImportDumpRequestManager {
 		}
 	}
 
-	/**
-	 * @return array
-	 */
 	public function getComments(): array {
 		$res = $this->dbw->newSelectQueryBuilder()
-			->table( 'import_request_comments' )
-			->field( '*' )
+			->select( ISQLPlatform::ALL_ROWS )
+			->from( 'import_request_comments' )
 			->where( [ 'request_id' => $this->ID ] )
 			->orderBy( 'request_comment_timestamp', SelectQueryBuilder::SORT_ASC )
 			->caller( __METHOD__ )
@@ -281,7 +188,6 @@ class ImportDumpRequestManager {
 		$comments = [];
 		foreach ( $res as $row ) {
 			$user = $this->userFactory->newFromActorId( $row->request_comment_actor );
-
 			$comments[] = [
 				'comment' => $row->request_comment_text,
 				'timestamp' => $row->request_comment_timestamp,
@@ -292,22 +198,12 @@ class ImportDumpRequestManager {
 		return $comments;
 	}
 
-	/**
-	 * @return array
-	 */
 	public function getInvolvedUsers(): array {
 		return array_unique( array_merge( array_column( $this->getComments(), 'user' ), [ $this->getRequester() ] ) );
 	}
 
-	/**
-	 * @param string $prefix
-	 * @param string $url
-	 * @param User $user
-	 * @return bool
-	 */
 	public function insertInterwikiPrefix( string $prefix, string $url, User $user ): bool {
 		$dbw = $this->connectionProvider->getPrimaryDatabase( $this->getTarget() );
-
 		$dbw->newInsertQueryBuilder()
 			->insertInto( 'interwiki' )
 			->ignore()
@@ -352,25 +248,20 @@ class ImportDumpRequestManager {
 		return true;
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getInterwikiPrefix(): string {
 		$dbr = $this->connectionProvider->getReplicaDatabase( $this->getTarget() );
-
 		$sourceHost = parse_url( $this->getSource(), PHP_URL_HOST );
 		if ( !$sourceHost ) {
 			return '';
 		}
 
 		$sourceHost = '://' . $sourceHost;
-
 		$row = $dbr->newSelectQueryBuilder()
-			->table( 'interwiki' )
-			->field( 'iw_prefix' )
-			->where( [
-				'iw_url' . $dbr->buildLike( $dbr->anyString(), $sourceHost, $dbr->anyString() ),
-			] )
+			->select( 'iw_prefix' )
+			->from( 'interwiki' )
+			->where( $dbr->expr( 'iw_url', IExpression::LIKE,
+				new LikeValue( $dbr->anyString(), $sourceHost, $dbr->anyString() )
+			) )
 			->caller( __METHOD__ )
 			->fetchRow();
 
@@ -378,38 +269,28 @@ class ImportDumpRequestManager {
 			return $row->iw_prefix;
 		}
 
-		if (
-			ExtensionRegistry::getInstance()->isLoaded( 'Interwiki' ) &&
-			$this->config->get( 'InterwikiCentralDB' )
-		) {
-			$dbr = $this->connectionProvider->getReplicaDatabase(
-				$this->config->get( 'InterwikiCentralDB' )
-			);
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-interwiki' );
+		$row = $dbr->newSelectQueryBuilder()
+			->select( 'iw_prefix' )
+			->from( 'interwiki' )
+			->where( $dbr->expr( 'iw_url', IExpression::LIKE,
+				new LikeValue( $dbr->anyString(), $sourceHost, $dbr->anyString() )
+			) )
+			->caller( __METHOD__ )
+			->fetchRow();
 
-			$row = $dbr->newSelectQueryBuilder()
-				->table( 'interwiki' )
-				->field( 'iw_prefix' )
-				->where( [
-					'iw_url' . $dbr->buildLike( $dbr->anyString(), $sourceHost, $dbr->anyString() ),
-				] )
-				->caller( __METHOD__ )
-				->fetchRow();
-
-			if ( $row->iw_prefix ?? '' ) {
-				return $row->iw_prefix;
-			}
+		if ( $row->iw_prefix ?? '' ) {
+			return $row->iw_prefix;
 		}
 
 		if ( $this->options->get( ConfigNames::InterwikiMap ) ) {
 			$parsedSource = parse_url( $this->getSource(), PHP_URL_HOST ) ?: '';
 			$domain = explode( '.', $parsedSource )[1] ?? '';
-
 			if ( $domain ) {
 				$domain .= '.' . ( explode( '.', $parsedSource )[2] ?? '' );
 				if ( $this->options->get( ConfigNames::InterwikiMap )[$domain] ?? '' ) {
 					$domain = $this->options->get( ConfigNames::InterwikiMap )[$domain];
 					$subdomain = explode( '.', $parsedSource )[0] ?? '';
-
 					if ( $subdomain ) {
 						return $domain . ':' . $subdomain;
 					}
@@ -420,12 +301,8 @@ class ImportDumpRequestManager {
 		return '';
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getCommand(): string {
 		$command = $this->options->get( ConfigNames::ScriptCommand );
-
 		if ( !$this->getInterwikiPrefix() ) {
 			$command = preg_replace( '/--username-prefix=?/', '', $command );
 		}
@@ -445,10 +322,8 @@ class ImportDumpRequestManager {
 		], $command );
 	}
 
-	/**
-	 * @return string[]
-	 */
-	public function getUserGroupsFromTarget() {
+	/** @return string[] */
+	public function getUserGroupsFromTarget(): array {
 		$userName = $this->getRequester()->getName();
 		$remoteUser = $this->actorStoreFactory
 			->getUserIdentityLookup( $this->getTarget() )
@@ -463,9 +338,6 @@ class ImportDumpRequestManager {
 			->getUserGroups( $remoteUser );
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getFilePath(): string {
 		$fileName = $this->getFileName();
 
@@ -475,27 +347,17 @@ class ImportDumpRequestManager {
 		return $zonePath . '/' . $fileName;
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getSplitFilePath(): string {
 		return FileBackend::splitStoragePath( $this->getFilePath() )[2];
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getFileName(): string {
 		return $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
 	}
 
-	/**
-	 * @return bool
-	 */
 	public function fileExists(): bool {
 		$localRepo = $this->repoGroup->getLocalRepo();
 		$backend = $localRepo->getBackend();
-
 		if ( $backend->fileExists( [ 'src' => $this->getFilePath() ] ) ) {
 			return true;
 		}
@@ -503,9 +365,6 @@ class ImportDumpRequestManager {
 		return false;
 	}
 
-	/**
-	 * @return int
-	 */
 	public function getFileSize(): int {
 		if ( !$this->fileExists() ) {
 			return 0;
@@ -517,87 +376,60 @@ class ImportDumpRequestManager {
 		return (int)$backend->getFileSize( [ 'src' => $this->getFilePath() ] );
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getReason(): string {
 		return $this->row->request_reason;
 	}
 
-	/**
-	 * @return User
-	 */
 	public function getRequester(): User {
 		return $this->userFactory->newFromActorId( $this->row->request_actor );
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getSource(): string {
 		return $this->row->request_source;
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getStatus(): string {
 		return $this->row->request_status;
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getTarget(): string {
 		return $this->row->request_target;
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getTimestamp(): string {
 		return $this->row->request_timestamp;
 	}
 
-	/**
-	 * @return bool
-	 */
 	public function isLocked(): bool {
 		return (bool)$this->row->request_locked;
 	}
 
-	/**
-	 * @param bool $forced
-	 * @return bool
-	 */
-	public function isPrivate( bool $forced = false ): bool {
+	public function isPrivate( bool $forced ): bool {
 		if ( !$forced && $this->row->request_private ) {
 			return true;
 		}
 
 		if (
-			!ExtensionRegistry::getInstance()->isLoaded( 'CreateWiki' ) ||
-			!$this->config->get( 'CreateWikiUsePrivateWikis' ) ||
-			!$this->remoteWikiFactory
+			!$this->extensionRegistry->isLoaded( 'ManageWiki' ) ||
+			!$this->moduleFactory ||
+			!$this->moduleFactory->isEnabled( 'core' )
 		) {
 			return false;
 		}
 
-		$remoteWiki = $this->remoteWikiFactory->newInstance( $this->getTarget() );
-		return $remoteWiki->isPrivate();
+		$mwCore = $this->moduleFactory->core( $this->getTarget() );
+		if ( !$mwCore->isEnabled( 'private-wikis' ) ) {
+			return false;
+		}
+
+		return $mwCore->isPrivate();
 	}
 
-	/**
-	 * @param string $fname
-	 */
-	public function startAtomic( string $fname ) {
+	public function startAtomic( string $fname ): void {
 		$this->dbw->startAtomic( $fname );
 	}
 
-	/**
-	 * @param int $locked
-	 */
-	public function setLocked( int $locked ) {
+	public function setLocked( int $locked ): void {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
 			->set( [ 'request_locked' => $locked ] )
@@ -606,10 +438,7 @@ class ImportDumpRequestManager {
 			->execute();
 	}
 
-	/**
-	 * @param int $private
-	 */
-	public function setPrivate( int $private ) {
+	public function setPrivate( int $private ): void {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
 			->set( [ 'request_private' => $private ] )
@@ -618,10 +447,7 @@ class ImportDumpRequestManager {
 			->execute();
 	}
 
-	/**
-	 * @param string $reason
-	 */
-	public function setReason( string $reason ) {
+	public function setReason( string $reason ): void {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
 			->set( [ 'request_reason' => $reason ] )
@@ -630,10 +456,7 @@ class ImportDumpRequestManager {
 			->execute();
 	}
 
-	/**
-	 * @param string $source
-	 */
-	public function setSource( string $source ) {
+	public function setSource( string $source ): void {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
 			->set( [ 'request_source' => $source ] )
@@ -642,10 +465,7 @@ class ImportDumpRequestManager {
 			->execute();
 	}
 
-	/**
-	 * @param string $status
-	 */
-	public function setStatus( string $status ) {
+	public function setStatus( string $status ): void {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
 			->set( [ 'request_status' => $status ] )
@@ -654,10 +474,7 @@ class ImportDumpRequestManager {
 			->execute();
 	}
 
-	/**
-	 * @param string $target
-	 */
-	public function setTarget( string $target ) {
+	public function setTarget( string $target ): void {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
 			->set( [ 'request_target' => $target ] )
@@ -666,10 +483,7 @@ class ImportDumpRequestManager {
 			->execute();
 	}
 
-	/**
-	 * @param string $username
-	 */
-	public function executeJob( string $username ) {
+	public function executeJob( string $username ): void {
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getTarget() )->push(
 			new JobSpecification(
 				ImportDumpJob::JOB_NAME,
@@ -681,10 +495,7 @@ class ImportDumpRequestManager {
 		);
 	}
 
-	/**
-	 * @param string $fname
-	 */
-	public function endAtomic( string $fname ) {
+	public function endAtomic( string $fname ): void {
 		$this->dbw->endAtomic( $fname );
 	}
 }
