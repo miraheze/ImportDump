@@ -99,5 +99,5 @@ class Notifications implements BeforeCreateEchoEventHook {
 			'presentation-model' => EchoRequestStatusUpdatePresentationModel::class,
 			'immediate' => true,
 		];
-    }
+	}
 }
