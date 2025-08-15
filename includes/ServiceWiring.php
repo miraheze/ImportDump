@@ -10,9 +10,9 @@ use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
 return [
 	'ImportDumpRequestManager' => static function ( MediaWikiServices $services ): ImportDumpRequestManager {
 		return new ImportDumpRequestManager(
-			$services->getConfigFactory()->makeConfig( 'ImportDump' ),
 			$services->getActorStoreFactory(),
 			$services->getConnectionProvider(),
+			$services->getExtensionRegistry(),
 			$services->getInterwikiLookup(),
 			$services->getJobQueueGroupFactory(),
 			$services->getLinkRenderer(),
@@ -24,8 +24,8 @@ return [
 			),
 			$services->getUserFactory(),
 			$services->getUserGroupManagerFactory(),
-			$services->has( 'RemoteWikiFactory' ) ?
-				$services->get( 'RemoteWikiFactory' ) : null
+			$services->has( 'ManageWikiModuleFactory' ) ?
+				$services->get( 'ManageWikiModuleFactory' ) : null
 		);
 	},
 	'ImportDumpHookRunner' => static function ( MediaWikiServices $services ): ImportDumpHookRunner {
