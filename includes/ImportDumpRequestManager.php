@@ -69,8 +69,8 @@ class ImportDumpRequestManager {
 		$this->ID = $requestID;
 
 		$this->row = $this->dbw->newSelectQueryBuilder()
-			->table( 'import_requests' )
-			->field( ISQLPlatform::ALL_ROWS )
+			->select( ISQLPlatform::ALL_ROWS )
+			->from( 'import_requests' )
 			->where( [ 'request_id' => $requestID ] )
 			->caller( __METHOD__ )
 			->fetchRow();
