@@ -20,14 +20,9 @@ class Main implements
 	UserGetReservedNamesHook
 {
 
-	/** @var IConnectionProvider */
-	private $connectionProvider;
-
-	/**
-	 * @param IConnectionProvider $connectionProvider
-	 */
-	public function __construct( IConnectionProvider $connectionProvider ) {
-		$this->connectionProvider = $connectionProvider;
+	public function __construct(
+		private readonly IConnectionProvider $connectionProvider
+	) {
 	}
 
 	/**

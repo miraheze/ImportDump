@@ -7,8 +7,8 @@ use Miraheze\ImportDump\ImportDumpRequestManager;
 interface ImportDumpJobGetFileHook {
 	/**
 	 * @param string &$filePath
-	 * @param ImportDumpRequestManager $importDumpRequestManager
+	 * @param ImportDumpRequestManager $requestManager
 	 * @return void
 	 */
-	public function onImportDumpJobGetFile( &$filePath, $importDumpRequestManager ): void;
+	public function onImportDumpJobGetFile( &$filePath, $requestManager ): void;
 }

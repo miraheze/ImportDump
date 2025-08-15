@@ -2,12 +2,16 @@
 
 namespace Miraheze\ImportDump;
 
+use MediaWiki\Config\Config;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\MediaWikiServices;
 use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
 
 return [
+	'ImportDumpConfig' => static function ( MediaWikiServices $services ): Config {
+		return $services->getConfigFactory()->makeConfig( 'ImportDump' );
+	},
 	'ImportDumpRequestManager' => static function ( MediaWikiServices $services ): ImportDumpRequestManager {
 		return new ImportDumpRequestManager(
 			$services->getActorStoreFactory(),
@@ -20,7 +24,7 @@ return [
 			RequestContext::getMain(),
 			new ServiceOptions(
 				ImportDumpRequestManager::CONSTRUCTOR_OPTIONS,
-				$services->getConfigFactory()->makeConfig( 'ImportDump' )
+				$services->get( 'ImportDumpConfig' )
 			),
 			$services->getUserFactory(),
 			$services->getUserGroupManagerFactory(),

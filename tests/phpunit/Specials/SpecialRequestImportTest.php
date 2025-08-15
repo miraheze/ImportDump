@@ -12,8 +12,8 @@ use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
 use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\CreateWiki\Services\RemoteWikiFactory;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
+use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use SpecialPageTestBase;
 use UserNotLoggedIn;
 use Wikimedia\TestingAccessWrapper;
@@ -34,11 +34,12 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		$services = $this->getServiceContainer();
 		return new SpecialRequestImport(
 			$services->getConnectionProvider(),
+			$services->getExtensionRegistry(),
 			$services->getMimeAnalyzer(),
 			$services->getPermissionManager(),
 			$services->getRepoGroup(),
 			$services->getUserFactory(),
-			$this->createMock( RemoteWikiFactory::class )
+			$this->createMock( ModuleFactory::class )
 		);
 	}
 

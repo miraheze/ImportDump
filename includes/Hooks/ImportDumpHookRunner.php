@@ -9,32 +9,25 @@ class ImportDumpHookRunner implements
 	ImportDumpJobGetFileHook
 {
 
-	/**
-	 * @var HookContainer
-	 */
-	private $container;
-
-	/**
-	 * @param HookContainer $container
-	 */
-	public function __construct( HookContainer $container ) {
-		$this->container = $container;
+	public function __construct(
+		private readonly HookContainer $container
+	) {
 	}
 
 	/** @inheritDoc */
-	public function onImportDumpJobAfterImport( $filePath, $importDumpRequestManager ): void {
+	public function onImportDumpJobAfterImport( $filePath, $requestManager ): void {
 		$this->container->run(
 			'ImportDumpJobAfterImport',
-			[ $filePath, $importDumpRequestManager ],
+			[ $filePath, $requestManager ],
 			[ 'abortable' => false ]
 		);
 	}
 
 	/** @inheritDoc */
-	public function onImportDumpJobGetFile( &$filePath, $importDumpRequestManager ): void {
+	public function onImportDumpJobGetFile( &$filePath, $requestManager ): void {
 		$this->container->run(
 			'ImportDumpJobGetFile',
-			[ &$filePath, $importDumpRequestManager ],
+			[ &$filePath, $requestManager ],
 			[ 'abortable' => false ]
 		);
 	}

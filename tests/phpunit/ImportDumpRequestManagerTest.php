@@ -43,22 +43,21 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
 			->execute();
 	}
 
-	private function getImportDumpRequestManager(): ImportDumpRequestManager {
+	private function getRequestManager(): ImportDumpRequestManager {
 		$services = $this->getServiceContainer();
 		$manager = $services->getService( 'ImportDumpRequestManager' );
 
-		$manager->fromID( 1 );
-
+		$manager->loadFromID( 1 );
 		return $manager;
 	}
 
 	/**
 	 * @covers ::__construct
-	 * @covers ::fromID
+	 * @covers ::loadFromID
 	 */
 	public function testFromID() {
 		$manager = TestingAccessWrapper::newFromObject(
-			$this->getImportDumpRequestManager()
+			$this->getRequestManager()
 		);
 
 		$this->assertSame( 1, $manager->ID );
@@ -68,7 +67,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
 	 * @covers ::exists
 	 */
 	public function testExists() {
-		$manager = $this->getImportDumpRequestManager();
+		$manager = $this->getRequestManager();
 
 		$this->assertTrue( $manager->exists() );
 	}
@@ -78,7 +77,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
 	 * @covers ::getComments
 	 */
 	public function testAddComment() {
-		$manager = $this->getImportDumpRequestManager();
+		$manager = $this->getRequestManager();
 		$this->assertArrayEquals( [], $manager->getComments() );
 
 		$manager->addComment( 'Test', $this->getTestUser()->getUser() );

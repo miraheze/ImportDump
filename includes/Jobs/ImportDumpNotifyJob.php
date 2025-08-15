@@ -4,7 +4,6 @@ namespace Miraheze\ImportDump\Jobs;
 
 use Job;
 use MediaWiki\Config\Config;
-use MediaWiki\Config\ConfigFactory;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\Registration\ExtensionRegistry;
@@ -21,66 +20,37 @@ class ImportDumpNotifyJob extends Job
 
 	public const JOB_NAME = 'ImportDumpNotifyJob';
 
-	/** @var int */
-	private $requestID;
+	private readonly MessageLocalizer $messageLocalizer;
 
-	/** @var string */
-	private $jobError;
+	private readonly int $requestID;
+	private readonly string $jobError;
+	private readonly string $username;
+	private readonly string $status;
 
-	/** @var string */
-	private $username;
-
-	/** @var string */
-	private $status;
-
-	/** @var Config */
-	private $config;
-
-	/** @var ImportDumpRequestManager */
-	private $importDumpRequestManager;
-
-	/** @var MessageLocalizer */
-	private $messageLocalizer;
-
-	/** @var UserFactory */
-	private $userFactory;
-
-	/**
-	 * @param array $params
-	 * @param ConfigFactory $configFactory
-	 * @param ImportDumpRequestManager $importDumpRequestManager
-	 * @param UserFactory $userFactory
-	 */
 	public function __construct(
 		array $params,
-		ConfigFactory $configFactory,
-		ImportDumpRequestManager $importDumpRequestManager,
-		UserFactory $userFactory
+		private readonly ExtensionRegistry $extensionRegistry,
+		private readonly Config $config,
+		private readonly ImportDumpRequestManager $requestManager,
+		private readonly UserFactory $userFactory
 	) {
 		parent::__construct( self::JOB_NAME, $params );
 
 		$this->requestID = $params['requestid'];
 		$this->status = $params['status'];
-		$this->jobError = $params['joberror'] ?? '';
+		$this->jobError = $params['joberror'];
 		$this->username = $params['username'];
 
-		$this->importDumpRequestManager = $importDumpRequestManager;
-		$this->userFactory = $userFactory;
-
-		$this->config = $configFactory->makeConfig( 'ImportDump' );
 		$this->messageLocalizer = RequestContext::getMain();
 	}
 
-	/**
-	 * @return bool
-	 */
+	/** @inheritDoc */
 	public function run(): bool {
-		if ( !ExtensionRegistry::getInstance()->isLoaded( 'Echo' ) ) {
+		if ( !$this->extensionRegistry->isLoaded( 'Echo' ) ) {
 			return true;
 		}
 
-		$this->importDumpRequestManager->fromID( $this->requestID );
-
+		$this->requestManager->loadFromID( $this->requestID );
 		if ( $this->status === self::STATUS_COMPLETE ) {
 			$this->notifyComplete();
 		}
@@ -97,27 +67,26 @@ class ImportDumpNotifyJob extends Job
 	}
 
 	private function notifyComplete() {
-		if ( $this->importDumpRequestManager->getStatus() === self::STATUS_COMPLETE ) {
+		if ( $this->requestManager->getStatus() === self::STATUS_COMPLETE ) {
 			// Don't renotify for a job that is already completed.
 			return;
 		}
 
 		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
-
 		$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . self::STATUS_COMPLETE )
 			->inContentLanguage()
 			->text();
 
-		$comment = $this->messageLocalizer->msg( 'importdump-status-updated', strtolower( $statusMessage ) )
+		$comment = $this->messageLocalizer->msg( 'importdump-status-updated', mb_strtolower( $statusMessage ) )
 			->inContentLanguage()
 			->escaped();
 
-		$this->importDumpRequestManager->addComment( $comment, $commentUser );
-		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $commentUser );
-		$this->importDumpRequestManager->setStatus( self::STATUS_COMPLETE );
+		$this->requestManager->addComment( $comment, $commentUser );
+		$this->requestManager->sendNotification( $comment, 'importdump-request-status-update', $commentUser );
+		$this->requestManager->setStatus( self::STATUS_COMPLETE );
 	}
 
-	private function notifyFailed() {
+	private function notifyFailed(): void {
 		$notifiedUsers = array_filter(
 			array_map(
 				function ( string $userName ): ?User {
@@ -127,12 +96,11 @@ class ImportDumpNotifyJob extends Job
 		);
 
 		$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', (string)$this->requestID )->getFullURL();
-
 		foreach ( $notifiedUsers as $receiver ) {
 			if (
 				!$receiver->isAllowed( 'handle-import-requests' ) ||
 				(
-					$this->importDumpRequestManager->isPrivate() &&
+					$this->requestManager->isPrivate( forced: false ) &&
 					!$receiver->isAllowed( 'view-private-import-requests' )
 				)
 			) {
@@ -156,30 +124,29 @@ class ImportDumpNotifyJob extends Job
 			->inContentLanguage()
 			->escaped();
 
-		$this->importDumpRequestManager->addComment( $comment, $commentUser );
-		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $commentUser );
-		$this->importDumpRequestManager->setStatus( self::STATUS_FAILED );
+		$this->requestManager->addComment( $comment, $commentUser );
+		$this->requestManager->sendNotification( $comment, 'importdump-request-status-update', $commentUser );
+		$this->requestManager->setStatus( self::STATUS_FAILED );
 	}
 
-	private function notifyStarted() {
+	private function notifyStarted(): void {
 		$user = $this->userFactory->newFromName( $this->username );
 		if ( !( $user instanceof User ) ) {
 			$this->setLastError( '$user is not an instance of User' );
 			return;
 		}
 
-		$this->importDumpRequestManager->logStarted( $user );
-
+		$this->requestManager->logStarted( $user );
 		$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . self::STATUS_INPROGRESS )
 			->inContentLanguage()
 			->text();
 
-		$comment = $this->messageLocalizer->msg( 'importdump-status-updated', strtolower( $statusMessage ) )
+		$comment = $this->messageLocalizer->msg( 'importdump-status-updated', mb_strtolower( $statusMessage ) )
 			->inContentLanguage()
 			->escaped();
 
-		$this->importDumpRequestManager->addComment( $comment, $user );
-		$this->importDumpRequestManager->sendNotification( $comment, 'importdump-request-status-update', $user );
-		$this->importDumpRequestManager->setStatus( self::STATUS_INPROGRESS );
+		$this->requestManager->addComment( $comment, $user );
+		$this->requestManager->sendNotification( $comment, 'importdump-request-status-update', $user );
+		$this->requestManager->setStatus( self::STATUS_INPROGRESS );
 	}
 }

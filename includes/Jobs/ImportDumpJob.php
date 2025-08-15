@@ -7,7 +7,6 @@ use InitEditCount;
 use Job;
 use JobSpecification;
 use MediaWiki\Config\Config;
-use MediaWiki\Config\ConfigFactory;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Deferred\SiteStatsUpdate;
 use MediaWiki\Http\Telemetry;
@@ -35,85 +34,42 @@ class ImportDumpJob extends Job
 
 	public const JOB_NAME = 'ImportDumpJob';
 
-	/** @var int */
-	private $requestID;
+	private readonly MessageLocalizer $messageLocalizer;
 
-	/** @var string */
-	private $jobError;
+	private readonly int $requestID;
+	private readonly string $jobError;
+	private readonly string $username;
 
-	/** @var string */
-	private $username;
-
-	/** @var Config */
-	private $config;
-
-	/** @var IConnectionProvider */
-	private $connectionProvider;
-
-	/** @var JobQueueGroupFactory */
-	private $jobQueueGroupFactory;
-
-	/** @var ImportDumpHookRunner */
-	private $importDumpHookRunner;
-
-	/** @var ImportDumpRequestManager */
-	private $importDumpRequestManager;
-
-	/** @var MessageLocalizer */
-	private $messageLocalizer;
-
-	/** @var WikiImporterFactory */
-	private $wikiImporterFactory;
-
-	/**
-	 * @param array $params
-	 * @param ConfigFactory $configFactory
-	 * @param IConnectionProvider $connectionProvider
-	 * @param JobQueueGroupFactory $jobQueueGroupFactory
-	 * @param ImportDumpHookRunner $importDumpHookRunner
-	 * @param ImportDumpRequestManager $importDumpRequestManager
-	 * @param WikiImporterFactory $wikiImporterFactory
-	 */
 	public function __construct(
 		array $params,
-		ConfigFactory $configFactory,
-		IConnectionProvider $connectionProvider,
-		JobQueueGroupFactory $jobQueueGroupFactory,
-		ImportDumpHookRunner $importDumpHookRunner,
-		ImportDumpRequestManager $importDumpRequestManager,
-		WikiImporterFactory $wikiImporterFactory
+		private readonly IConnectionProvider $connectionProvider,
+		private readonly Config $config,
+		private readonly ImportDumpHookRunner $importDumpHookRunner,
+		private readonly ImportDumpRequestManager $requestManager,
+		private readonly JobQueueGroupFactory $jobQueueGroupFactory,
+		private readonly WikiImporterFactory $wikiImporterFactory
 	) {
 		parent::__construct( self::JOB_NAME, $params );
 
 		$this->requestID = $params['requestid'];
 		$this->username = $params['username'];
 
-		$this->connectionProvider = $connectionProvider;
-		$this->jobQueueGroupFactory = $jobQueueGroupFactory;
-		$this->importDumpHookRunner = $importDumpHookRunner;
-		$this->importDumpRequestManager = $importDumpRequestManager;
-		$this->wikiImporterFactory = $wikiImporterFactory;
-
-		$this->config = $configFactory->makeConfig( 'ImportDump' );
 		$this->messageLocalizer = RequestContext::getMain();
-
 		$this->executionFlags |= self::JOB_NO_EXPLICIT_TRX_ROUND;
 	}
 
-	/**
-	 * @return bool
-	 */
+	/** @inheritDoc */
 	public function run(): bool {
-		$this->importDumpRequestManager->fromID( $this->requestID );
-		if ( $this->importDumpRequestManager->getStatus() === self::STATUS_COMPLETE ) {
+		$this->requestManager->loadFromID( $this->requestID );
+		if ( $this->requestManager->getStatus() === self::STATUS_COMPLETE ) {
 			// Don't rerun a job that is already completed.
 			return true;
 		}
 
 		$dbw = $this->connectionProvider->getPrimaryDatabase();
-		$filePath = wfTempDir() . '/' . $this->importDumpRequestManager->getFileName();
+		$filePath = wfTempDir() . '/' . $this->requestManager->getFileName();
 
-		$this->importDumpHookRunner->onImportDumpJobGetFile( $filePath, $this->importDumpRequestManager );
+		$this->importDumpHookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
 
 		// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
@@ -128,6 +84,7 @@ class ImportDumpJob extends Job
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
+					'joberror' => '',
 					'requestid' => $this->requestID,
 					'status' => self::STATUS_INPROGRESS,
 					'username' => $this->username,
@@ -137,7 +94,6 @@ class ImportDumpJob extends Job
 
 		try {
 			$user = User::newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
-
 			$importer = $this->wikiImporterFactory->getWikiImporter(
 				$importStreamSource->value, new UltimateAuthority( $user )
 			);
@@ -145,7 +101,7 @@ class ImportDumpJob extends Job
 			$importer->disableStatisticsUpdate();
 			$importer->setNoUpdates( true );
 			$importer->setUsernamePrefix(
-				$this->importDumpRequestManager->getInterwikiPrefix(),
+				$this->requestManager->getInterwikiPrefix(),
 				true
 			);
 
@@ -175,7 +131,7 @@ class ImportDumpJob extends Job
 			$updateArticleCount->setOption( 'update', true );
 			$updateArticleCount->execute();
 
-			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
+			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->requestManager );
 		} catch ( Throwable $e ) {
 			MWExceptionHandler::rollbackPrimaryChangesAndLog( $e );
 			$this->jobError = $this->getLogMessage( $e );
@@ -187,6 +143,7 @@ class ImportDumpJob extends Job
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
+					'joberror' => '',
 					'requestid' => $this->requestID,
 					'status' => self::STATUS_COMPLETE,
 					'username' => $this->username,
@@ -197,7 +154,7 @@ class ImportDumpJob extends Job
 		return true;
 	}
 
-	private function notifyFailed() {
+	private function notifyFailed(): void {
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
@@ -211,10 +168,6 @@ class ImportDumpJob extends Job
 		);
 	}
 
-	/**
-	 * @param Throwable $e
-	 * @return string
-	 */
 	private function getLogMessage( Throwable $e ): string {
 		$id = Telemetry::getInstance()->getRequestId();
 		$type = get_class( $e );
@@ -223,18 +176,12 @@ class ImportDumpJob extends Job
 		return "[$id]   $type: $message";
 	}
 
-	/**
-	 * @return string
-	 */
 	private function getLoggingWiki(): string {
 		return $this->connectionProvider
 			->getReplicaDatabase( 'virtual-importdump' )
 			->getDomainID();
 	}
 
-	/**
-	 * @return bool
-	 */
 	public function allowRetries(): bool {
 		return false;
 	}

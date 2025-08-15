@@ -105,7 +105,7 @@ class ImportDumpRequestManager {
 		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
 		$logEntry = new ManualLogEntry(
-			$this->isPrivate() ? 'importdumpprivate' : 'importdump',
+			$this->isPrivate( forced: false ) ? 'importdumpprivate' : 'importdump',
 			'statusupdate'
 		);
 
@@ -134,7 +134,7 @@ class ImportDumpRequestManager {
 		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
 		$logEntry = new ManualLogEntry(
-			$this->isPrivate() ? 'importdumpprivate' : 'importdump',
+			$this->isPrivate( forced: false ) ? 'importdumpprivate' : 'importdump',
 			'started'
 		);
 
@@ -227,7 +227,7 @@ class ImportDumpRequestManager {
 		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
 		$logEntry = new ManualLogEntry(
-			$this->isPrivate() ? 'importdumpprivate' : 'importdump',
+			$this->isPrivate( forced: false ) ? 'importdumpprivate' : 'importdump',
 			'interwiki'
 		);
 
