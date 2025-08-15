@@ -2,11 +2,11 @@
 	$( () => {
 		let switchingNoHash;
 
-		const tabs = OO.ui.infuse( $( '.importdump-tabs' ) );
-		tabs.$element.addClass( 'importdump-tabs-infused' );
+		const tabs = OO.ui.infuse( $( '.ext-importdump-tabs' ) );
+		tabs.$element.addClass( 'ext-importdump-tabs-infused' );
 
 		function enhancePanel( panel ) {
-			const $infuse = $( panel.$element ).find( '.importdump-infuse' );
+			const $infuse = $( panel.$element ).find( '.ext-importdump-infuse' );
 			$infuse.each( function () {
 				try {
 					OO.ui.infuse( this );
@@ -68,7 +68,7 @@
 				switchImportDumpTab( hash.slice( 1 ) );
 			} else if ( hash.match( /^#mw-[\w-]+$/ ) ) {
 				matchedElement = document.getElementById( hash.slice( 1 ) );
-				$parentSection = $( matchedElement ).closest( '.importdump-section-fieldset' );
+				$parentSection = $( matchedElement ).closest( '.ext-importdump-section-fieldset' );
 				if ( $parentSection.length ) {
 					mw.storage.session.remove( 'importdump-prevTab' );
 					// Switch to proper tab and scroll to selected item.

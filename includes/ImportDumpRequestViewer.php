@@ -99,7 +99,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				'label-message' => 'importdump-label-reason',
 				'default' => $this->requestManager->getReason(),
 				'raw' => true,
-				'cssclass' => 'importdump-infuse',
+				'cssclass' => 'ext-importdump-infuse',
 				'section' => 'details',
 			],
 		];
@@ -326,7 +326,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 						] ),
 						'default' => $status,
 						'disabled' => !$validRequest,
-						'cssclass' => 'importdump-infuse',
+						'cssclass' => 'ext-importdump-infuse',
 						'section' => 'handling',
 					],
 					'submit-handle' => [
@@ -421,7 +421,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 						],
 						'default' => $status,
 						'disabled' => !$validRequest,
-						'cssclass' => 'importdump-infuse',
+						'cssclass' => 'ext-importdump-infuse',
 						'section' => 'handling',
 					],
 					'handle-comment' => [
@@ -493,7 +493,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		return true;
 	}
 
-	public function getForm( int $requestID ): ?ImportDumpOOUIForm {
+	public function getForm( int $requestID ): ?OOUIHTMLFormTabs {
 		$this->requestManager->loadFromID( $requestID );
 		$out = $this->context->getOutput();
 		if ( $requestID === 0 || !$this->requestManager->exists() ) {
@@ -509,7 +509,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		$out->addModuleStyles( [ 'oojs-ui-widgets.styles' ] );
 
 		$formDescriptor = $this->getFormDescriptor();
-		$htmlForm = new ImportDumpOOUIForm( $formDescriptor, $this->context, 'importdump-section' );
+		$htmlForm = new OOUIHTMLFormTabs( $formDescriptor, $this->context, 'importdump-section' );
 
 		$htmlForm->setId( 'importdump-request-viewer' );
 		$htmlForm->suppressDefaultSubmit();
