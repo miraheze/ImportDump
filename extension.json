@@ -137,7 +137,7 @@
 	},
 	"Hooks": {
 		"BeforeCreateEchoEvent": {
-			"handler": "Main"
+			"handler": "Notifications"
 		},
 		"GetAllBlockActions": {
 			"handler": "Main"
@@ -158,6 +158,12 @@
 		},
 		"Main": {
 			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Main",
+			"services": [
+				"ConnectionProvider"
+			]
+		},
+		"Notifications": {
+			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Notifications",
 			"services": [
 				"ConnectionProvider"
 			]
