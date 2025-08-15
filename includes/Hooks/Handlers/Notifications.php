@@ -19,7 +19,7 @@ class Notifications implements BeforeCreateEchoEventHook {
 	) {
 	}
 
-    /** @inheritDoc */
+	/** @inheritDoc */
 	public function onBeforeCreateEchoEvent(
 		array &$notifications,
 		array &$notificationCategories,
