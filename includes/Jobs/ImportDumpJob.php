@@ -37,8 +37,9 @@ class ImportDumpJob extends Job
 	private readonly MessageLocalizer $messageLocalizer;
 
 	private readonly int $requestID;
-	private readonly string $jobError;
 	private readonly string $username;
+
+	private string $jobError;
 
 	public function __construct(
 		array $params,

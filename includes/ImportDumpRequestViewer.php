@@ -30,7 +30,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		$user = $this->context->getUser();
 
 		if (
-			$this->requestManager->isPrivate() &&
+			$this->requestManager->isPrivate( forced: false ) &&
 			$user->getName() !== $this->requestManager->getRequester()->getName() &&
 			!$this->permissionManager->userHasRight( $user, 'view-private-import-requests' )
 		) {
@@ -239,7 +239,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				'type' => 'notice',
 			] );
 
-			if ( $this->requestManager->isPrivate() ) {
+			if ( $this->requestManager->isPrivate( forced: false ) ) {
 				$info .= new MessageWidget( [
 					'label' => new HtmlSnippet( $this->context->msg( 'importdump-info-request-private' )->escaped() ),
 					'type' => 'warning',
@@ -654,9 +654,9 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 			if (
 				isset( $formData['handle-private'] ) &&
-				$this->requestManager->isPrivate() !== (bool)$formData['handle-private']
+				$this->requestManager->isPrivate( forced: false ) !== (bool)$formData['handle-private']
 			) {
-				$changes[] = $this->requestManager->isPrivate() ?
+				$changes[] = $this->requestManager->isPrivate( forced: false ) ?
 					'public' : 'private';
 
 				$this->requestManager->setPrivate( (int)$formData['handle-private'] );
