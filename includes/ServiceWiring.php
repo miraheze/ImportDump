@@ -6,14 +6,14 @@ use MediaWiki\Config\Config;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\MediaWikiServices;
-use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
+use Miraheze\ImportDump\Hooks\HookRunner;
 
 return [
 	'ImportDumpConfig' => static function ( MediaWikiServices $services ): Config {
 		return $services->getConfigFactory()->makeConfig( 'ImportDump' );
 	},
-	'ImportDumpRequestManager' => static function ( MediaWikiServices $services ): ImportDumpRequestManager {
-		return new ImportDumpRequestManager(
+	'ImportDumpRequestManager' => static function ( MediaWikiServices $services ): RequestManager {
+		return new RequestManager(
 			$services->getActorStoreFactory(),
 			$services->getConnectionProvider(),
 			$services->getExtensionRegistry(),
@@ -23,7 +23,7 @@ return [
 			$services->getRepoGroup(),
 			RequestContext::getMain(),
 			new ServiceOptions(
-				ImportDumpRequestManager::CONSTRUCTOR_OPTIONS,
+				RequestManager::CONSTRUCTOR_OPTIONS,
 				$services->get( 'ImportDumpConfig' )
 			),
 			$services->getUserFactory(),
@@ -32,7 +32,7 @@ return [
 				$services->get( 'ManageWikiModuleFactory' ) : null
 		);
 	},
-	'ImportDumpHookRunner' => static function ( MediaWikiServices $services ): ImportDumpHookRunner {
-		return new ImportDumpHookRunner( $services->getHookContainer() );
+	'ImportDumpHookRunner' => static function ( MediaWikiServices $services ): HookRunner {
+		return new HookRunner( $services->getHookContainer() );
 	},
 ];

@@ -4,13 +4,10 @@ namespace Miraheze\ImportDump\Tests\Specials;
 
 use Generator;
 use MediaWiki\Context\DerivativeContext;
-use MediaWiki\Context\RequestContext;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Request\FauxRequest;
-use MediaWiki\Request\WebRequest;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
-use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
@@ -36,7 +33,6 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			$services->getConnectionProvider(),
 			$services->getExtensionRegistry(),
 			$services->getMimeAnalyzer(),
-			$services->getPermissionManager(),
 			$services->getRepoGroup(),
 			$services->getUserFactory(),
 			$this->createMock( ModuleFactory::class )
@@ -88,9 +84,6 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	/**
 	 * @covers ::onSubmit
 	 * @dataProvider onSubmitDataProvider
-	 *
-	 * Session fails on MediaWiki 1.44+ and not sure why at the moment
-	 * @group Broken
 	 */
 	public function testOnSubmit( array $formData, array $extraData, ?string $expectedError ): void {
 		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
@@ -102,18 +95,14 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 
 		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
 		$user = $this->getMutableTestUser()->getUser();
-
 		$context->setUser( $user );
 
-		if ( $extraData['session'] ) {
-			$this->setSessionUser( $user, $user->getRequest() );
+		$data = [];
+		if ( $extraData['token'] ) {
+			$data = [ 'wpEditToken' => $context->getCsrfTokenSet()->getToken()->toString() ];
 		}
 
-		$request = new FauxRequest(
-			[ 'wpEditToken' => $user->getEditToken() ],
-			true
-		);
-
+		$request = new FauxRequest( $data, true );
 		$request->setUpload( 'wpUploadFile', [
 			'name' => basename( $formData['UploadFile'] ),
 			'type' => $extraData['mime-type'],
@@ -154,7 +143,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			[
 				'mime-type' => 'application/xml',
 				'duplicate' => false,
-				'session' => true,
+				'token' => true,
 			],
 			null,
 		];
@@ -170,7 +159,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			[
 				'mime-type' => 'application/xml',
 				'duplicate' => true,
-				'session' => true,
+				'token' => true,
 			],
 			null,
 		];
@@ -186,7 +175,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			[
 				'mime-type' => 'application/xml',
 				'duplicate' => false,
-				'session' => true,
+				'token' => true,
 			],
 			'empty-file',
 		];
@@ -202,8 +191,8 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			[
 				'mime-type' => 'text/plain',
 				'duplicate' => false,
-				'session' => true,
 				'testfile' => 'content',
+				'token' => true,
 			],
 			'filetype-mime-mismatch',
 		];
@@ -219,7 +208,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			[
 				'mime-type' => 'application/xml',
 				'duplicate' => false,
-				'session' => false,
+				'token' => false,
 			],
 			'sessionfailure',
 		];
@@ -324,12 +313,5 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	public function testGetLogType(): void {
 		$result = $this->specialRequestImport->getLogType( 'testwiki' );
 		$this->assertSame( 'importdump', $result );
-	}
-
-	private function setSessionUser( User $user, WebRequest $request ): void {
-		RequestContext::getMain()->setUser( $user );
-		RequestContext::getMain()->setRequest( $request );
-		TestingAccessWrapper::newFromObject( $user )->mRequest = $request;
-		$request->getSession()->setUser( $user );
 	}
 }
