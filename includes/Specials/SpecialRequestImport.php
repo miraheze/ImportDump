@@ -9,7 +9,6 @@ use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\Html\Html;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
-use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\FormSpecialPage;
 use MediaWiki\SpecialPage\SpecialPage;
@@ -37,7 +36,6 @@ class SpecialRequestImport extends FormSpecialPage
 		private readonly IConnectionProvider $connectionProvider,
 		private readonly ExtensionRegistry $extensionRegistry,
 		private readonly MimeAnalyzer $mimeAnalyzer,
-		private readonly PermissionManager $permissionManager,
 		private readonly RepoGroup $repoGroup,
 		private readonly UserFactory $userFactory,
 		private readonly ?ModuleFactory $moduleFactory
@@ -185,11 +183,7 @@ class SpecialRequestImport extends FormSpecialPage
 
 		$permission = $uploadBase->isAllowed( $this->getUser() );
 		if ( $permission !== true ) {
-			return Status::wrap(
-				$this->permissionManager->newFatalPermissionDeniedStatus(
-					$permission, $this->getContext()
-				)
-			);
+			throw new PermissionsError( $permission );
 		}
 
 		if ( $uploadBase->isEmptyFile() ) {
@@ -252,7 +246,7 @@ class SpecialRequestImport extends FormSpecialPage
 		$requestID = (string)$dbw->insertId();
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', $requestID );
 
-		$requestLink = $this->getLinkRenderer()->makeLink( $requestQueueLink, "#{$requestID}" );
+		$requestLink = $this->getLinkRenderer()->makeLink( $requestQueueLink, "#$requestID" );
 
 		$this->getOutput()->addHTML(
 			Html::successBox(

@@ -4,14 +4,13 @@ namespace Miraheze\ImportDump\Specials;
 
 use ErrorPageError;
 use MediaWiki\HTMLForm\HTMLForm;
-use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpRequestQueuePager;
-use Miraheze\ImportDump\ImportDumpRequestViewer;
 use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\RequestViewer;
 use Wikimedia\Rdbms\IConnectionProvider;
 
 class SpecialRequestImportQueue extends SpecialPage
@@ -19,8 +18,7 @@ class SpecialRequestImportQueue extends SpecialPage
 
 	public function __construct(
 		private readonly IConnectionProvider $connectionProvider,
-		private readonly ImportDumpRequestManager $requestManager,
-		private readonly PermissionManager $permissionManager,
+		private readonly RequestManager $requestManager,
 		private readonly UserFactory $userFactory
 	) {
 		parent::__construct( 'RequestImportQueue' );
@@ -112,11 +110,10 @@ class SpecialRequestImportQueue extends SpecialPage
 	}
 
 	private function lookupRequest( string $par ): void {
-		$requestViewer = new ImportDumpRequestViewer(
+		$requestViewer = new RequestViewer(
 			$this->getConfig(),
 			$this->getContext(),
-			$this->requestManager,
-			$this->permissionManager
+			$this->requestManager
 		);
 
 		$htmlForm = $requestViewer->getForm( (int)$par );

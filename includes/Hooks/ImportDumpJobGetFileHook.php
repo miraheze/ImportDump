@@ -2,17 +2,17 @@
 
 namespace Miraheze\ImportDump\Hooks;
 
-use Miraheze\ImportDump\ImportDumpRequestManager;
+use Miraheze\ImportDump\RequestManager;
 
 interface ImportDumpJobGetFileHook {
 
 	/**
 	 * @param string &$filePath
-	 * @param ImportDumpRequestManager $requestManager
+	 * @param RequestManager $requestManager
 	 * @return void
 	 */
 	public function onImportDumpJobGetFile(
 		string &$filePath,
-		ImportDumpRequestManager $requestManager
+		RequestManager $requestManager
 	): void;
 }

@@ -4,8 +4,8 @@ namespace Miraheze\ImportDump\Tests;
 
 use MediaWiki\MainConfigNames;
 use MediaWikiIntegrationTestCase;
-use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\RequestManager;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
@@ -13,9 +13,9 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group ImportDump
  * @group Database
  * @group Medium
- * @coversDefaultClass \Miraheze\ImportDump\ImportDumpRequestManager
+ * @coversDefaultClass \Miraheze\ImportDump\RequestManager
  */
-class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
+class RequestManagerTest extends MediaWikiIntegrationTestCase
 	implements ImportDumpStatus {
 
 	public function addDBDataOnce(): void {
@@ -43,7 +43,7 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
 			->execute();
 	}
 
-	private function getRequestManager(): ImportDumpRequestManager {
+	private function getRequestManager(): RequestManager {
 		$services = $this->getServiceContainer();
 		$manager = $services->getService( 'ImportDumpRequestManager' );
 

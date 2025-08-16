@@ -12,8 +12,8 @@ use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MessageLocalizer;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\RequestManager;
 
 class ImportDumpNotifyJob extends Job
 	implements ImportDumpStatus {
@@ -31,7 +31,7 @@ class ImportDumpNotifyJob extends Job
 		array $params,
 		private readonly ExtensionRegistry $extensionRegistry,
 		private readonly Config $config,
-		private readonly ImportDumpRequestManager $requestManager,
+		private readonly RequestManager $requestManager,
 		private readonly UserFactory $userFactory
 	) {
 		parent::__construct( self::JOB_NAME, $params );

@@ -29,7 +29,7 @@ use Wikimedia\Rdbms\LikeValue;
 use Wikimedia\Rdbms\Platform\ISQLPlatform;
 use Wikimedia\Rdbms\SelectQueryBuilder;
 
-class ImportDumpRequestManager {
+class RequestManager {
 
 	private const SYSTEM_USERS = [
 		'ImportDump Extension',

@@ -9,30 +9,29 @@ use MediaWiki\HTMLForm\HTMLForm;
 use MediaWiki\Linker\Linker;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
-use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
 use OOUI\HtmlSnippet;
 use OOUI\MessageWidget;
 use UserNotLoggedIn;
 
-class ImportDumpRequestViewer implements ImportDumpStatus {
+class RequestViewer implements ImportDumpStatus {
 
 	public function __construct(
 		private readonly Config $config,
 		private readonly IContextSource $context,
-		private readonly ImportDumpRequestManager $requestManager,
-		private readonly PermissionManager $permissionManager
+		private readonly RequestManager $requestManager
 	) {
 	}
 
 	public function getFormDescriptor(): array {
 		$user = $this->context->getUser();
+		$authority = $this->context->getAuthority();
 
 		if (
 			$this->requestManager->isPrivate( forced: false ) &&
 			$user->getName() !== $this->requestManager->getRequester()->getName() &&
-			!$this->permissionManager->userHasRight( $user, 'view-private-import-requests' )
+			!$authority->isAllowed( 'view-private-import-requests' )
 		) {
 			$this->context->getOutput()->addHTML(
 				Html::errorBox( $this->context->msg( 'importdump-private' )->escaped() )
@@ -120,7 +119,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		if (
-			$this->permissionManager->userHasRight( $user, 'handle-import-requests' ) ||
+			$authority->isAllowed( 'handle-import-requests' ) ||
 			$user->getActorId() === $this->requestManager->getRequester()->getActorId()
 		) {
 			$formDescriptor += [
@@ -175,7 +174,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			];
 		}
 
-		if ( $this->permissionManager->userHasRight( $user, 'handle-import-requests' ) ) {
+		if ( $authority->isAllowed( 'handle-import-requests' ) ) {
 			$validRequest = true;
 			$status = $this->requestManager->getStatus();
 
@@ -301,7 +300,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				],
 			];
 
-			if ( $this->permissionManager->userHasRight( $user, 'view-private-import-requests' ) ) {
+			if ( $authority->isAllowed( 'view-private-import-requests' ) ) {
 				$formDescriptor += [
 					'handle-private' => [
 						'type' => 'check',
@@ -339,7 +338,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 			if (
 				!$this->requestManager->getInterwikiPrefix() &&
-				$this->permissionManager->userHasRight( $user, 'handle-import-request-interwiki' )
+				$authority->isAllowed( 'handle-import-request-interwiki' )
 			) {
 				$source = $this->requestManager->getSource();
 				$target = $this->requestManager->getTarget();

@@ -17,9 +17,9 @@ use MediaWiki\Permissions\UltimateAuthority;
 use MediaWiki\SiteStats\SiteStatsInit;
 use MediaWiki\User\User;
 use MessageLocalizer;
-use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
-use Miraheze\ImportDump\ImportDumpRequestManager;
+use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\RequestManager;
 use MWExceptionHandler;
 use RebuildRecentchanges;
 use RebuildTextIndex;
@@ -45,8 +45,8 @@ class ImportDumpJob extends Job
 		array $params,
 		private readonly IConnectionProvider $connectionProvider,
 		private readonly Config $config,
-		private readonly ImportDumpHookRunner $importDumpHookRunner,
-		private readonly ImportDumpRequestManager $requestManager,
+		private readonly HookRunner $hookRunner,
+		private readonly RequestManager $requestManager,
 		private readonly JobQueueGroupFactory $jobQueueGroupFactory,
 		private readonly WikiImporterFactory $wikiImporterFactory
 	) {
@@ -70,12 +70,12 @@ class ImportDumpJob extends Job
 		$dbw = $this->connectionProvider->getPrimaryDatabase();
 		$filePath = wfTempDir() . '/' . $this->requestManager->getFileName();
 
-		$this->importDumpHookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
+		$this->hookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
 
 		// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
-			$this->jobError = "Import source for {$filePath} failed";
+			$this->jobError = "Import source for $filePath failed";
 			$this->setLastError( $this->jobError );
 			$this->notifyFailed();
 			return true;
@@ -132,7 +132,7 @@ class ImportDumpJob extends Job
 			$updateArticleCount->setOption( 'update', true );
 			$updateArticleCount->execute();
 
-			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->requestManager );
+			$this->hookRunner->onImportDumpJobAfterImport( $filePath, $this->requestManager );
 		} catch ( Throwable $e ) {
 			MWExceptionHandler::rollbackPrimaryChangesAndLog( $e );
 			$this->jobError = $this->getLogMessage( $e );
