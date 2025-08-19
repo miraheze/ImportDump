@@ -26,7 +26,7 @@ class Main implements
 			return;
 		}
 
-		$actions[ 'request-import' ] = 200;
+		$actions['request-import'] = 200;
 	}
 
 	/** @inheritDoc */
