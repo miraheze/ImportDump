@@ -60,7 +60,7 @@ class ImportDumpJob extends Job
 	}
 
 	/** @inheritDoc */
-	public function run(): bool {
+	public function run(): true {
 		$this->requestManager->loadFromID( $this->requestID );
 		if ( $this->requestManager->getStatus() === self::STATUS_COMPLETE ) {
 			// Don't rerun a job that is already completed.
@@ -133,9 +133,9 @@ class ImportDumpJob extends Job
 			$updateArticleCount->execute();
 
 			$this->hookRunner->onImportDumpJobAfterImport( $filePath, $this->requestManager );
-		} catch ( Throwable $e ) {
-			MWExceptionHandler::rollbackPrimaryChangesAndLog( $e );
-			$this->jobError = $this->getLogMessage( $e );
+		} catch ( Throwable $t ) {
+			MWExceptionHandler::rollbackPrimaryChangesAndLog( $t );
+			$this->jobError = $this->getLogMessage( $t );
 			$this->notifyFailed();
 			return true;
 		}
@@ -169,10 +169,10 @@ class ImportDumpJob extends Job
 		);
 	}
 
-	private function getLogMessage( Throwable $e ): string {
+	private function getLogMessage( Throwable $t ): string {
 		$id = Telemetry::getInstance()->getRequestId();
-		$type = get_class( $e );
-		$message = $e->getMessage();
+		$type = get_class( $t );
+		$message = $t->getMessage();
 
 		return "[$id]   $type: $message";
 	}
@@ -183,7 +183,7 @@ class ImportDumpJob extends Job
 			->getDomainID();
 	}
 
-	public function allowRetries(): bool {
+	public function allowRetries(): false {
 		return false;
 	}
 }
