@@ -9,7 +9,6 @@ use JobSpecification;
 use MediaWiki\Config\Config;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Deferred\SiteStatsUpdate;
-use MediaWiki\Http\Telemetry;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Maintenance\FakeMaintenance;
@@ -85,6 +84,7 @@ class ImportDumpJob extends Job
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
+					// No errors
 					'joberror' => '',
 					'requestid' => $this->requestID,
 					'status' => self::STATUS_INPROGRESS,
@@ -134,6 +134,7 @@ class ImportDumpJob extends Job
 
 			$this->hookRunner->onImportDumpJobAfterImport( $filePath, $this->requestManager );
 		} catch ( Throwable $t ) {
+			// We want to handle any potential errors gracefully.
 			MWExceptionHandler::rollbackPrimaryChangesAndLog( $t );
 			$this->jobError = $this->getLogMessage( $t );
 			$this->notifyFailed();
@@ -144,6 +145,7 @@ class ImportDumpJob extends Job
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
+					// No errors
 					'joberror' => '',
 					'requestid' => $this->requestID,
 					'status' => self::STATUS_COMPLETE,
@@ -170,11 +172,12 @@ class ImportDumpJob extends Job
 	}
 
 	private function getLogMessage( Throwable $t ): string {
-		$id = Telemetry::getInstance()->getRequestId();
+		// This is the request ID from Telemetry.
+		$requestId = $this->getRequestId();
 		$type = get_class( $t );
 		$message = $t->getMessage();
 
-		return "[$id]   $type: $message";
+		return "[$requestId]   $type: $message";
 	}
 
 	private function getLoggingWiki(): string {
