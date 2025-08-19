@@ -45,7 +45,7 @@ class ImportDumpNotifyJob extends Job
 	}
 
 	/** @inheritDoc */
-	public function run(): bool {
+	public function run(): true {
 		if ( !$this->extensionRegistry->isLoaded( 'Echo' ) ) {
 			return true;
 		}
@@ -66,7 +66,7 @@ class ImportDumpNotifyJob extends Job
 		return true;
 	}
 
-	private function notifyComplete() {
+	private function notifyComplete(): void {
 		if ( $this->requestManager->getStatus() === self::STATUS_COMPLETE ) {
 			// Don't renotify for a job that is already completed.
 			return;
@@ -89,9 +89,8 @@ class ImportDumpNotifyJob extends Job
 	private function notifyFailed(): void {
 		$notifiedUsers = array_filter(
 			array_map(
-				function ( string $userName ): ?User {
-					return $this->userFactory->newFromName( $userName );
-				}, $this->config->get( ConfigNames::UsersNotifiedOnFailedImports )
+				fn ( string $userName ): ?User => $this->userFactory->newFromName( $userName ),
+				$this->config->get( ConfigNames::UsersNotifiedOnFailedImports )
 			)
 		);
 
