@@ -64,7 +64,7 @@ class RequestManager {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
 	}
 
-	public function loadFromID( int $requestID ) {
+	public function loadFromID( int $requestID ): void {
 		$this->dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-importdump' );
 		$this->ID = $requestID;
 
