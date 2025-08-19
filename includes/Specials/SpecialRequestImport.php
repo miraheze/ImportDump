@@ -220,8 +220,8 @@ class SpecialRequestImport extends FormSpecialPage
 
 		$status = $repo->publish(
 			$file->getPath(),
-			'/ImportDump/' . $fileName,
-			'/ImportDump/archive/' . $fileName,
+			"/ImportDump/$fileName",
+			"/ImportDump/archive/$fileName",
 			FileRepo::DELETE_SOURCE
 		);
 
@@ -305,9 +305,8 @@ class SpecialRequestImport extends FormSpecialPage
 	): void {
 		$notifiedUsers = array_filter(
 			array_map(
-				function ( string $userName ): ?User {
-					return $this->userFactory->newFromName( $userName );
-				}, $this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests )
+				fn ( string $userName ): ?User => $this->userFactory->newFromName( $userName ),
+				$this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests )
 			)
 		);
 
