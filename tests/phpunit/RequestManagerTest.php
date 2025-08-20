@@ -6,7 +6,6 @@ use MediaWiki\MainConfigNames;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ImportDumpStatus;
 use Miraheze\ImportDump\RequestManager;
-use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
@@ -43,44 +42,50 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 			->execute();
 	}
 
-	private function getRequestManager(): RequestManager {
-		$services = $this->getServiceContainer();
-		$manager = $services->getService( 'ImportDumpRequestManager' );
-
-		$manager->loadFromID( 1 );
+	private function getRequestManager( int $id ): RequestManager {
+		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		'@phan-var RequestManager $manager';
+		$manager->loadFromID( $id );
 		return $manager;
 	}
 
 	/**
 	 * @covers ::__construct
+	 */
+	public function testConstructor(): void {
+		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		$this->assertInstanceOf( RequestManager::class, $manager );
+	}
+
+	/**
 	 * @covers ::loadFromID
 	 */
-	public function testFromID() {
-		$manager = TestingAccessWrapper::newFromObject(
-			$this->getRequestManager()
-		);
-
-		$this->assertSame( 1, $manager->ID );
+	public function testLoadFromID(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$this->assertInstanceOf( RequestManager::class, $manager );
 	}
 
 	/**
 	 * @covers ::exists
 	 */
-	public function testExists() {
-		$manager = $this->getRequestManager();
-
+	public function testExists(): void {
+		$manager = $this->getRequestManager( id: 1 );
 		$this->assertTrue( $manager->exists() );
+
+		$manager = $this->getRequestManager( id: 2 );
+		$this->assertFalse( $manager->exists() );
 	}
 
 	/**
 	 * @covers ::addComment
 	 * @covers ::getComments
+	 * @covers ::sendNotification
 	 */
-	public function testAddComment() {
-		$manager = $this->getRequestManager();
+	public function testComments(): void {
+		$manager = $this->getRequestManager( id: 1 );
 		$this->assertArrayEquals( [], $manager->getComments() );
 
 		$manager->addComment( 'Test', $this->getTestUser()->getUser() );
-		$this->assertNotSame( [], $manager->getComments() );
+		$this->assertCount( 1, $manager->getComments() );
 	}
 }
