@@ -16,6 +16,9 @@ return [
 	'ImportDumpConfig' => static function ( MediaWikiServices $services ): Config {
 		return $services->getConfigFactory()->makeConfig( 'ImportDump' );
 	},
+	'ImportDumpHookRunner' => static function ( MediaWikiServices $services ): HookRunner {
+		return new HookRunner( $services->getHookContainer() );
+	},
 	'ImportDumpRequestManager' => static function ( MediaWikiServices $services ): RequestManager {
 		return new RequestManager(
 			$services->getActorStoreFactory(),
@@ -35,9 +38,6 @@ return [
 			$services->has( 'ManageWikiModuleFactory' ) ?
 				$services->get( 'ManageWikiModuleFactory' ) : null
 		);
-	},
-	'ImportDumpHookRunner' => static function ( MediaWikiServices $services ): HookRunner {
-		return new HookRunner( $services->getHookContainer() );
 	},
 ];
 
