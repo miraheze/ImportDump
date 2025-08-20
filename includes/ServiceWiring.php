@@ -8,6 +8,10 @@ use MediaWiki\Context\RequestContext;
 use MediaWiki\MediaWikiServices;
 use Miraheze\ImportDump\Hooks\HookRunner;
 
+// PHPUnit does not understand coverage for this file.
+// It is covered though, see ServiceWiringTest.
+// @codeCoverageIgnoreStart
+
 return [
 	'ImportDumpConfig' => static function ( MediaWikiServices $services ): Config {
 		return $services->getConfigFactory()->makeConfig( 'ImportDump' );
@@ -36,3 +40,5 @@ return [
 		return new HookRunner( $services->getHookContainer() );
 	},
 ];
+
+// @codeCoverageIgnoreEnd
