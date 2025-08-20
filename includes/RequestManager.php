@@ -41,6 +41,7 @@ class RequestManager {
 	public const CONSTRUCTOR_OPTIONS = [
 		ConfigNames::InterwikiMap,
 		ConfigNames::ScriptCommand,
+		'InterwikiCentralDB',
 	];
 
 	private IDatabase $dbw;
@@ -269,7 +270,9 @@ class RequestManager {
 			return $row->iw_prefix;
 		}
 
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-interwiki' );
+		$dbr = $this->connectionProvider->getReplicaDatabase(
+			$this->options->get( 'InterwikiCentralDB' )
+		);
 		$row = $dbr->newSelectQueryBuilder()
 			->select( 'iw_prefix' )
 			->from( 'interwiki' )
