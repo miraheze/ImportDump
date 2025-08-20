@@ -4,18 +4,17 @@ namespace Miraheze\ImportDump\Tests;
 
 use MediaWiki\MainConfigNames;
 use MediaWikiIntegrationTestCase;
-use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpStatus;
-use Wikimedia\TestingAccessWrapper;
+use Miraheze\ImportDump\RequestManager;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
  * @group ImportDump
  * @group Database
  * @group Medium
- * @coversDefaultClass \Miraheze\ImportDump\ImportDumpRequestManager
+ * @coversDefaultClass \Miraheze\ImportDump\RequestManager
  */
-class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
+class RequestManagerTest extends MediaWikiIntegrationTestCase
 	implements ImportDumpStatus {
 
 	public function addDBDataOnce(): void {
@@ -43,45 +42,50 @@ class ImportDumpRequestManagerTest extends MediaWikiIntegrationTestCase
 			->execute();
 	}
 
-	private function getImportDumpRequestManager(): ImportDumpRequestManager {
-		$services = $this->getServiceContainer();
-		$manager = $services->getService( 'ImportDumpRequestManager' );
-
-		$manager->fromID( 1 );
-
+	private function getRequestManager( int $id ): RequestManager {
+		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		'@phan-var RequestManager $manager';
+		$manager->loadFromID( $id );
 		return $manager;
 	}
 
 	/**
 	 * @covers ::__construct
-	 * @covers ::fromID
 	 */
-	public function testFromID() {
-		$manager = TestingAccessWrapper::newFromObject(
-			$this->getImportDumpRequestManager()
-		);
+	public function testConstructor(): void {
+		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		$this->assertInstanceOf( RequestManager::class, $manager );
+	}
 
-		$this->assertSame( 1, $manager->ID );
+	/**
+	 * @covers ::loadFromID
+	 */
+	public function testLoadFromID(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$this->assertInstanceOf( RequestManager::class, $manager );
 	}
 
 	/**
 	 * @covers ::exists
 	 */
-	public function testExists() {
-		$manager = $this->getImportDumpRequestManager();
-
+	public function testExists(): void {
+		$manager = $this->getRequestManager( id: 1 );
 		$this->assertTrue( $manager->exists() );
+
+		$manager = $this->getRequestManager( id: 2 );
+		$this->assertFalse( $manager->exists() );
 	}
 
 	/**
 	 * @covers ::addComment
 	 * @covers ::getComments
+	 * @covers ::sendNotification
 	 */
-	public function testAddComment() {
-		$manager = $this->getImportDumpRequestManager();
+	public function testComments(): void {
+		$manager = $this->getRequestManager( id: 1 );
 		$this->assertArrayEquals( [], $manager->getComments() );
 
 		$manager->addComment( 'Test', $this->getTestUser()->getUser() );
-		$this->assertNotSame( [], $manager->getComments() );
+		$this->assertCount( 1, $manager->getComments() );
 	}
 }

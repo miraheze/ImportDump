@@ -9,7 +9,7 @@
 	"requires": {
 		"MediaWiki": ">= 1.43.0",
 		"platform": {
-			"php": ">= 8.1"
+			"php": ">= 8.2"
 		}
 	},
 	"MessagesDirs": {
@@ -30,11 +30,11 @@
 		"ImportDumpJob": {
 			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpJob",
 			"services": [
-				"ConfigFactory",
 				"ConnectionProvider",
-				"JobQueueGroupFactory",
+				"ImportDumpConfig",
 				"ImportDumpHookRunner",
 				"ImportDumpRequestManager",
+				"JobQueueGroupFactory",
 				"WikiImporterFactory"
 			],
 			"needsPage": false
@@ -42,7 +42,8 @@
 		"ImportDumpNotifyJob": {
 			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpNotifyJob",
 			"services": [
-				"ConfigFactory",
+				"ExtensionRegistry",
+				"ImportDumpConfig",
 				"ImportDumpRequestManager",
 				"UserFactory"
 			],
@@ -114,13 +115,13 @@
 			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImport",
 			"services": [
 				"ConnectionProvider",
+				"ExtensionRegistry",
 				"MimeAnalyzer",
-				"PermissionManager",
 				"RepoGroup",
 				"UserFactory"
 			],
 			"optional_services": [
-				"RemoteWikiFactory"
+				"ManageWikiModuleFactory"
 			]
 		},
 		"RequestImportQueue": {
@@ -128,14 +129,13 @@
 			"services": [
 				"ConnectionProvider",
 				"ImportDumpRequestManager",
-				"PermissionManager",
 				"UserFactory"
 			]
 		}
 	},
 	"Hooks": {
 		"BeforeCreateEchoEvent": {
-			"handler": "Main"
+			"handler": "Notifications"
 		},
 		"GetAllBlockActions": {
 			"handler": "Main"
@@ -156,6 +156,12 @@
 		},
 		"Main": {
 			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Main",
+			"services": [
+				"ConnectionProvider"
+			]
+		},
+		"Notifications": {
+			"class": "Miraheze\\ImportDump\\Hooks\\Handlers\\Notifications",
 			"services": [
 				"ConnectionProvider"
 			]

@@ -2,13 +2,17 @@
 
 namespace Miraheze\ImportDump\Hooks;
 
-use Miraheze\ImportDump\ImportDumpRequestManager;
+use Miraheze\ImportDump\RequestManager;
 
 interface ImportDumpJobAfterImportHook {
+
 	/**
 	 * @param string $filePath
-	 * @param ImportDumpRequestManager $importDumpRequestManager
+	 * @param RequestManager $requestManager
 	 * @return void
 	 */
-	public function onImportDumpJobAfterImport( $filePath, $importDumpRequestManager ): void;
+	public function onImportDumpJobAfterImport(
+		string $filePath,
+		RequestManager $requestManager
+	): void;
 }

@@ -9,55 +9,29 @@ use MediaWiki\HTMLForm\HTMLForm;
 use MediaWiki\Linker\Linker;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
-use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
 use OOUI\HtmlSnippet;
 use OOUI\MessageWidget;
 use UserNotLoggedIn;
 
-class ImportDumpRequestViewer implements ImportDumpStatus {
+class RequestViewer implements ImportDumpStatus {
 
-	/** @var Config */
-	private $config;
-
-	/** @var IContextSource */
-	private $context;
-
-	/** @var ImportDumpRequestManager */
-	private $importDumpRequestManager;
-
-	/** @var PermissionManager */
-	private $permissionManager;
-
-	/**
-	 * @param Config $config
-	 * @param IContextSource $context
-	 * @param ImportDumpRequestManager $importDumpRequestManager
-	 * @param PermissionManager $permissionManager
-	 */
 	public function __construct(
-		Config $config,
-		IContextSource $context,
-		ImportDumpRequestManager $importDumpRequestManager,
-		PermissionManager $permissionManager
+		private readonly Config $config,
+		private readonly IContextSource $context,
+		private readonly RequestManager $requestManager
 	) {
-		$this->config = $config;
-		$this->context = $context;
-		$this->importDumpRequestManager = $importDumpRequestManager;
-		$this->permissionManager = $permissionManager;
 	}
 
-	/**
-	 * @return array
-	 */
 	public function getFormDescriptor(): array {
 		$user = $this->context->getUser();
+		$authority = $this->context->getAuthority();
 
 		if (
-			$this->importDumpRequestManager->isPrivate() &&
-			$user->getName() !== $this->importDumpRequestManager->getRequester()->getName() &&
-			!$this->permissionManager->userHasRight( $user, 'view-private-import-requests' )
+			$this->requestManager->isPrivate( forced: false ) &&
+			$user->getName() !== $this->requestManager->getRequester()->getName() &&
+			!$authority->isAllowed( 'view-private-import-requests' )
 		) {
 			$this->context->getOutput()->addHTML(
 				Html::errorBox( $this->context->msg( 'importdump-private' )->escaped() )
@@ -66,7 +40,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			return [];
 		}
 
-		if ( $this->importDumpRequestManager->isLocked() ) {
+		if ( $this->requestManager->isLocked() ) {
 			$this->context->getOutput()->addHTML(
 				Html::errorBox( $this->context->msg( 'importdump-request-locked' )->escaped() )
 			);
@@ -80,23 +54,23 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				'type' => 'url',
 				'readonly' => true,
 				'section' => 'details',
-				'default' => $this->importDumpRequestManager->getSource(),
+				'default' => $this->requestManager->getSource(),
 			],
 			'target' => [
 				'label-message' => 'importdump-label-target',
 				'type' => 'text',
 				'readonly' => true,
 				'section' => 'details',
-				'default' => $this->importDumpRequestManager->getTarget(),
+				'default' => $this->requestManager->getTarget(),
 			],
 			'requester' => [
 				'label-message' => 'importdump-label-requester',
 				'type' => 'info',
 				'section' => 'details',
-				'default' => htmlspecialchars( $this->importDumpRequestManager->getRequester()->getName() ) .
+				'default' => htmlspecialchars( $this->requestManager->getRequester()->getName() ) .
 					Linker::userToolLinks(
-						$this->importDumpRequestManager->getRequester()->getId(),
-						$this->importDumpRequestManager->getRequester()->getName()
+						$this->requestManager->getRequester()->getId(),
+						$this->requestManager->getRequester()->getName()
 					),
 				'raw' => true,
 			],
@@ -105,7 +79,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				'type' => 'info',
 				'section' => 'details',
 				'default' => $this->context->getLanguage()->timeanddate(
-					$this->importDumpRequestManager->getTimestamp(), true
+					$this->requestManager->getTimestamp(), true
 				),
 			],
 			'status' => [
@@ -114,7 +88,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				'readonly' => true,
 				'section' => 'details',
 				'default' => $this->context->msg(
-					'importdump-label-' . $this->importDumpRequestManager->getStatus()
+					'importdump-label-' . $this->requestManager->getStatus()
 				)->text(),
 			],
 			'reason' => [
@@ -122,14 +96,14 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				'rows' => 6,
 				'readonly' => true,
 				'label-message' => 'importdump-label-reason',
-				'default' => $this->importDumpRequestManager->getReason(),
+				'default' => $this->requestManager->getReason(),
 				'raw' => true,
-				'cssclass' => 'importdump-infuse',
+				'cssclass' => 'ext-importdump-infuse',
 				'section' => 'details',
 			],
 		];
 
-		foreach ( $this->importDumpRequestManager->getComments() as $comment ) {
+		foreach ( $this->requestManager->getComments() as $comment ) {
 			$formDescriptor['comment' . $comment['timestamp'] ] = [
 				'type' => 'textarea',
 				'readonly' => true,
@@ -145,8 +119,8 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		if (
-			$this->permissionManager->userHasRight( $user, 'handle-import-requests' ) ||
-			$user->getActorId() === $this->importDumpRequestManager->getRequester()->getActorId()
+			$authority->isAllowed( 'handle-import-requests' ) ||
+			$user->getActorId() === $this->requestManager->getRequester()->getActorId()
 		) {
 			$formDescriptor += [
 				'comment' => [
@@ -155,12 +129,12 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					'label-message' => 'importdump-label-comment',
 					'section' => 'comments',
 					'validation-callback' => [ $this, 'isValidComment' ],
-					'disabled' => $this->importDumpRequestManager->isLocked(),
+					'disabled' => $this->requestManager->isLocked(),
 				],
 				'submit-comment' => [
 					'type' => 'submit',
 					'buttonlabel-message' => 'importdump-label-add-comment',
-					'disabled' => $this->importDumpRequestManager->isLocked(),
+					'disabled' => $this->requestManager->isLocked(),
 					'section' => 'comments',
 				],
 				'edit-source' => [
@@ -168,17 +142,17 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					'type' => 'url',
 					'section' => 'editing',
 					'required' => true,
-					'default' => $this->importDumpRequestManager->getSource(),
-					'disabled' => $this->importDumpRequestManager->isLocked(),
+					'default' => $this->requestManager->getSource(),
+					'disabled' => $this->requestManager->isLocked(),
 				],
 				'edit-target' => [
 					'label-message' => 'importdump-label-target',
 					'type' => 'text',
 					'section' => 'editing',
 					'required' => true,
-					'default' => $this->importDumpRequestManager->getTarget(),
+					'default' => $this->requestManager->getTarget(),
 					'validation-callback' => [ $this, 'isValidDatabase' ],
-					'disabled' => $this->importDumpRequestManager->isLocked(),
+					'disabled' => $this->requestManager->isLocked(),
 				],
 				'edit-reason' => [
 					'type' => 'textarea',
@@ -186,27 +160,27 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					'label-message' => 'importdump-label-reason',
 					'section' => 'editing',
 					'required' => true,
-					'default' => $this->importDumpRequestManager->getReason(),
+					'default' => $this->requestManager->getReason(),
 					'validation-callback' => [ $this, 'isValidReason' ],
-					'disabled' => $this->importDumpRequestManager->isLocked(),
+					'disabled' => $this->requestManager->isLocked(),
 					'raw' => true,
 				],
 				'submit-edit' => [
 					'type' => 'submit',
 					'buttonlabel-message' => 'importdump-label-edit-request',
-					'disabled' => $this->importDumpRequestManager->isLocked(),
+					'disabled' => $this->requestManager->isLocked(),
 					'section' => 'editing',
 				],
 			];
 		}
 
-		if ( $this->permissionManager->userHasRight( $user, 'handle-import-requests' ) ) {
+		if ( $authority->isAllowed( 'handle-import-requests' ) ) {
 			$validRequest = true;
-			$status = $this->importDumpRequestManager->getStatus();
+			$status = $this->requestManager->getStatus();
 
-			if ( $this->importDumpRequestManager->fileExists() ) {
+			if ( $this->requestManager->fileExists() ) {
 				$fileInfo = $this->context->msg( 'importdump-info-command' )->plaintextParams(
-					$this->importDumpRequestManager->getCommand()
+					$this->requestManager->getCommand()
 				)->parse();
 
 				$fileInfo .= Html::element( 'button', [
@@ -221,13 +195,13 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					$fileInfo = '';
 				}
 
-				if ( $this->importDumpRequestManager->getFileSize() > 0 ) {
+				if ( $this->requestManager->getFileSize() > 0 ) {
 					if ( $fileInfo ) {
 						$fileInfo .= Html::element( 'br' );
 					}
 
 					$fileInfo .= $this->context->msg( 'importdump-info-filesize' )->sizeParams(
-						$this->importDumpRequestManager->getFileSize()
+						$this->requestManager->getFileSize()
 					)->parse();
 				}
 
@@ -239,7 +213,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				$info = new MessageWidget( [
 					'label' => new HtmlSnippet(
 								$this->context->msg( 'importdump-info-no-file-found',
-								$this->importDumpRequestManager->getFilePath()
+								$this->requestManager->getFilePath()
 							)->escaped()
 						),
 					'type' => 'error',
@@ -254,28 +228,28 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			$info .= new MessageWidget( [
 				'label' => new HtmlSnippet(
 						$this->context->msg( 'importdump-info-groups',
-							$this->importDumpRequestManager->getRequester()->getName(),
-							$this->importDumpRequestManager->getTarget(),
+							$this->requestManager->getRequester()->getName(),
+							$this->requestManager->getTarget(),
 							$this->context->getLanguage()->commaList(
-								$this->importDumpRequestManager->getUserGroupsFromTarget()
+								$this->requestManager->getUserGroupsFromTarget()
 							)
 						)->escaped(),
 					),
 				'type' => 'notice',
 			] );
 
-			if ( $this->importDumpRequestManager->isPrivate() ) {
+			if ( $this->requestManager->isPrivate( forced: false ) ) {
 				$info .= new MessageWidget( [
 					'label' => new HtmlSnippet( $this->context->msg( 'importdump-info-request-private' )->escaped() ),
 					'type' => 'warning',
 				] );
 			}
 
-			if ( $this->importDumpRequestManager->getRequester()->getBlock() ) {
+			if ( $this->requestManager->getRequester()->getBlock() ) {
 				$info .= new MessageWidget( [
 					'label' => new HtmlSnippet(
 							$this->context->msg( 'importdump-info-requester-blocked',
-								$this->importDumpRequestManager->getRequester()->getName(),
+								$this->requestManager->getRequester()->getName(),
 								WikiMap::getCurrentWikiId()
 							)->escaped()
 						),
@@ -283,11 +257,11 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				] );
 			}
 
-			if ( $this->importDumpRequestManager->getRequester()->isLocked() ) {
+			if ( $this->requestManager->getRequester()->isLocked() ) {
 				$info .= new MessageWidget( [
 					'label' => new HtmlSnippet(
 							$this->context->msg( 'importdump-info-requester-locked',
-								$this->importDumpRequestManager->getRequester()->getName()
+								$this->requestManager->getRequester()->getName()
 							)->escaped()
 						),
 					'type' => 'error',
@@ -299,12 +273,12 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				}
 			}
 
-			if ( !$this->importDumpRequestManager->getInterwikiPrefix() ) {
+			if ( !$this->requestManager->getInterwikiPrefix() ) {
 				$info .= new MessageWidget( [
 					'label' => new HtmlSnippet(
 							$this->context->msg( 'importdump-info-no-interwiki-prefix',
-								$this->importDumpRequestManager->getTarget(),
-								parse_url( $this->importDumpRequestManager->getSource(), PHP_URL_HOST )
+								$this->requestManager->getTarget(),
+								parse_url( $this->requestManager->getSource(), PHP_URL_HOST )
 							)->escaped()
 						),
 					'type' => 'error',
@@ -321,18 +295,18 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				'handle-lock' => [
 					'type' => 'check',
 					'label-message' => 'importdump-label-lock',
-					'default' => $this->importDumpRequestManager->isLocked(),
+					'default' => $this->requestManager->isLocked(),
 					'section' => 'handling',
 				],
 			];
 
-			if ( $this->permissionManager->userHasRight( $user, 'view-private-import-requests' ) ) {
+			if ( $authority->isAllowed( 'view-private-import-requests' ) ) {
 				$formDescriptor += [
 					'handle-private' => [
 						'type' => 'check',
 						'label-message' => 'importdump-label-private',
-						'default' => $this->importDumpRequestManager->isPrivate(),
-						'disabled' => $this->importDumpRequestManager->isPrivate( true ),
+						'default' => $this->requestManager->isPrivate( forced: false ),
+						'disabled' => $this->requestManager->isPrivate( forced: true ),
 						'section' => 'handling',
 					],
 				];
@@ -351,7 +325,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 						] ),
 						'default' => $status,
 						'disabled' => !$validRequest,
-						'cssclass' => 'importdump-infuse',
+						'cssclass' => 'ext-importdump-infuse',
 						'section' => 'handling',
 					],
 					'submit-handle' => [
@@ -363,11 +337,11 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			}
 
 			if (
-				!$this->importDumpRequestManager->getInterwikiPrefix() &&
-				$this->permissionManager->userHasRight( $user, 'handle-import-request-interwiki' )
+				!$this->requestManager->getInterwikiPrefix() &&
+				$authority->isAllowed( 'handle-import-request-interwiki' )
 			) {
-				$source = $this->importDumpRequestManager->getSource();
-				$target = $this->importDumpRequestManager->getTarget();
+				$source = $this->requestManager->getSource();
+				$target = $this->requestManager->getTarget();
 
 				$formDescriptor += [
 					'handle-interwiki-info' => [
@@ -446,7 +420,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 						],
 						'default' => $status,
 						'disabled' => !$validRequest,
-						'cssclass' => 'importdump-infuse',
+						'cssclass' => 'ext-importdump-infuse',
 						'section' => 'handling',
 					],
 					'handle-comment' => [
@@ -467,12 +441,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		return $formDescriptor;
 	}
 
-	/**
-	 * @param ?string $comment
-	 * @param array $alldata
-	 * @return string|bool|Message
-	 */
-	public function isValidComment( ?string $comment, array $alldata ) {
+	public function isValidComment( ?string $comment, array $alldata ): Message|true {
 		if ( isset( $alldata['submit-comment'] ) && ( !$comment || ctype_space( $comment ) ) ) {
 			return $this->context->msg( 'htmlform-required' );
 		}
@@ -480,23 +449,15 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		return true;
 	}
 
-	/**
-	 * @param ?string $target
-	 * @return string|bool|Message
-	 */
-	public function isValidDatabase( ?string $target ) {
-		if ( !in_array( $target, $this->config->get( MainConfigNames::LocalDatabases ) ) ) {
+	public function isValidDatabase( ?string $target ): Message|true {
+		if ( !in_array( $target, $this->config->get( MainConfigNames::LocalDatabases ), true ) ) {
 			return $this->context->msg( 'importdump-invalid-target' );
 		}
 
 		return true;
 	}
 
-	/**
-	 * @param ?string $reason
-	 * @return string|bool|Message
-	 */
-	public function isValidReason( ?string $reason ) {
+	public function isValidReason( ?string $reason ): Message|true {
 		if ( !$reason || ctype_space( $reason ) ) {
 			return $this->context->msg( 'htmlform-required' );
 		}
@@ -504,12 +465,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		return true;
 	}
 
-	/**
-	 * @param ?string $prefix
-	 * @param array $alldata
-	 * @return string|bool|Message
-	 */
-	public function isValidInterwikiPrefix( ?string $prefix, array $alldata ) {
+	public function isValidInterwikiPrefix( ?string $prefix, array $alldata ): Message|true {
 		if ( isset( $alldata['submit-interwiki'] ) && ( !$prefix || ctype_space( $prefix ) ) ) {
 			return $this->context->msg( 'htmlform-required' );
 		}
@@ -517,12 +473,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		return true;
 	}
 
-	/**
-	 * @param ?string $url
-	 * @param array $alldata
-	 * @return string|bool|Message
-	 */
-	public function isValidInterwikiUrl( ?string $url, array $alldata ) {
+	public function isValidInterwikiUrl( ?string $url, array $alldata ): Message|true {
 		if ( !isset( $alldata['submit-interwiki'] ) ) {
 			return true;
 		}
@@ -541,15 +492,10 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		return true;
 	}
 
-	/**
-	 * @param int $requestID
-	 * @return ?ImportDumpOOUIForm
-	 */
-	public function getForm( int $requestID ): ?ImportDumpOOUIForm {
-		$this->importDumpRequestManager->fromID( $requestID );
+	public function getForm( int $requestID ): ?OOUIHTMLFormTabs {
+		$this->requestManager->loadFromID( $requestID );
 		$out = $this->context->getOutput();
-
-		if ( $requestID === 0 || !$this->importDumpRequestManager->exists() ) {
+		if ( $requestID === 0 || !$this->requestManager->exists() ) {
 			$out->addHTML(
 				Html::errorBox( $this->context->msg( 'importdump-unknown' )->escaped() )
 			);
@@ -562,7 +508,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		$out->addModuleStyles( [ 'oojs-ui-widgets.styles' ] );
 
 		$formDescriptor = $this->getFormDescriptor();
-		$htmlForm = new ImportDumpOOUIForm( $formDescriptor, $this->context, 'importdump-section' );
+		$htmlForm = new OOUIHTMLFormTabs( $formDescriptor, $this->context, 'importdump-section' );
 
 		$htmlForm->setId( 'importdump-request-viewer' );
 		$htmlForm->suppressDefaultSubmit();
@@ -575,14 +521,10 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		return $htmlForm;
 	}
 
-	/**
-	 * @param array $formData
-	 * @param HTMLForm $form
-	 */
 	protected function submitForm(
 		array $formData,
 		HTMLForm $form
-	) {
+	): void {
 		$user = $form->getUser();
 		if ( !$user->isRegistered() ) {
 			throw new UserNotLoggedIn( 'exception-nologin-text', 'exception-nologin' );
@@ -594,7 +536,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		if ( isset( $formData['submit-comment'] ) ) {
 			if ( $session->get( 'previous_posted_comment' ) !== $formData['comment'] ) {
 				$session->set( 'previous_posted_comment', $formData['comment'] );
-				$this->importDumpRequestManager->addComment( $formData['comment'], $user );
+				$this->requestManager->addComment( $formData['comment'], $user );
 				$out->addHTML( Html::successBox( $this->context->msg( 'importdump-comment-success' )->escaped() ) );
 				return;
 			}
@@ -606,57 +548,57 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		$session->remove( 'previous_posted_comment' );
 
 		if ( isset( $formData['submit-edit'] ) ) {
-			$this->importDumpRequestManager->startAtomic( __METHOD__ );
+			$this->requestManager->startAtomic( __METHOD__ );
 
 			$changes = [];
-			if ( $this->importDumpRequestManager->getReason() !== $formData['edit-reason'] ) {
+			if ( $this->requestManager->getReason() !== $formData['edit-reason'] ) {
 				$changes[] = $this->context->msg( 'importdump-request-edited-reason' )->plaintextParams(
-					$this->importDumpRequestManager->getReason(),
+					$this->requestManager->getReason(),
 					$formData['edit-reason']
 				)->escaped();
 
-				$this->importDumpRequestManager->setReason( $formData['edit-reason'] );
+				$this->requestManager->setReason( $formData['edit-reason'] );
 			}
 
-			if ( $this->importDumpRequestManager->getSource() !== $formData['edit-source'] ) {
+			if ( $this->requestManager->getSource() !== $formData['edit-source'] ) {
 				$changes[] = $this->context->msg( 'importdump-request-edited-source' )->plaintextParams(
-					$this->importDumpRequestManager->getSource(),
+					$this->requestManager->getSource(),
 					$formData['edit-source']
 				)->escaped();
 
-				$this->importDumpRequestManager->setSource( $formData['edit-source'] );
+				$this->requestManager->setSource( $formData['edit-source'] );
 			}
 
-			if ( $this->importDumpRequestManager->getTarget() !== $formData['edit-target'] ) {
+			if ( $this->requestManager->getTarget() !== $formData['edit-target'] ) {
 				$changes[] = $this->context->msg(
 					'importdump-request-edited-target',
-					$this->importDumpRequestManager->getTarget(),
+					$this->requestManager->getTarget(),
 					$formData['edit-target']
 				)->escaped();
 
-				$this->importDumpRequestManager->setTarget( $formData['edit-target'] );
+				$this->requestManager->setTarget( $formData['edit-target'] );
 			}
 
 			if ( !$changes ) {
-				$this->importDumpRequestManager->endAtomic( __METHOD__ );
+				$this->requestManager->endAtomic( __METHOD__ );
 
 				$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-no-changes' )->escaped() ) );
 
 				return;
 			}
 
-			if ( $this->importDumpRequestManager->getStatus() === self::STATUS_DECLINED ) {
-				$this->importDumpRequestManager->setStatus( self::STATUS_PENDING );
+			if ( $this->requestManager->getStatus() === self::STATUS_DECLINED ) {
+				$this->requestManager->setStatus( self::STATUS_PENDING );
 
 				$comment = $this->context->msg( 'importdump-request-reopened', $user->getName() )->rawParams(
 					implode( "\n\n", $changes )
 				)->inContentLanguage()->escaped();
 
-				$this->importDumpRequestManager->logStatusUpdate( $comment, self::STATUS_PENDING, $user );
+				$this->requestManager->logStatusUpdate( $comment, self::STATUS_PENDING, $user );
 
-				$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
+				$this->requestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
 
-				$this->importDumpRequestManager->sendNotification(
+				$this->requestManager->sendNotification(
 					$comment, 'importdump-request-status-update', $user
 				);
 			} else {
@@ -664,10 +606,10 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 					implode( "\n\n", $changes )
 				)->inContentLanguage()->escaped();
 
-				$this->importDumpRequestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
+				$this->requestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
 			}
 
-			$this->importDumpRequestManager->endAtomic( __METHOD__ );
+			$this->requestManager->endAtomic( __METHOD__ );
 
 			$out->addHTML( Html::successBox( $this->context->msg( 'importdump-edit-success' )->escaped() ) );
 
@@ -675,14 +617,14 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		if ( isset( $formData['submit-interwiki'] ) ) {
-			if ( $this->importDumpRequestManager->insertInterwikiPrefix(
+			if ( $this->requestManager->insertInterwikiPrefix(
 				$formData['handle-interwiki-prefix'],
 				$formData['handle-interwiki-url'],
 				$user
 			) ) {
 				$out->addHTML( Html::successBox(
 					$this->context->msg( 'importdump-interwiki-success',
-						$this->importDumpRequestManager->getTarget()
+						$this->requestManager->getTarget()
 					)->escaped() )
 				);
 
@@ -691,7 +633,7 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 			$out->addHTML( Html::errorBox(
 				$this->context->msg( 'importdump-interwiki-failed',
-					$this->importDumpRequestManager->getTarget()
+					$this->requestManager->getTarget()
 				)->escaped() )
 			);
 
@@ -699,31 +641,31 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 		}
 
 		if ( isset( $formData['submit-handle'] ) ) {
-			$this->importDumpRequestManager->startAtomic( __METHOD__ );
+			$this->requestManager->startAtomic( __METHOD__ );
 			$changes = [];
 
-			if ( $this->importDumpRequestManager->isLocked() !== (bool)$formData['handle-lock'] ) {
-				$changes[] = $this->importDumpRequestManager->isLocked() ?
+			if ( $this->requestManager->isLocked() !== (bool)$formData['handle-lock'] ) {
+				$changes[] = $this->requestManager->isLocked() ?
 					'unlocked' : 'locked';
 
-				$this->importDumpRequestManager->setLocked( (int)$formData['handle-lock'] );
+				$this->requestManager->setLocked( (int)$formData['handle-lock'] );
 			}
 
 			if (
 				isset( $formData['handle-private'] ) &&
-				$this->importDumpRequestManager->isPrivate() !== (bool)$formData['handle-private']
+				$this->requestManager->isPrivate( forced: false ) !== (bool)$formData['handle-private']
 			) {
-				$changes[] = $this->importDumpRequestManager->isPrivate() ?
+				$changes[] = $this->requestManager->isPrivate( forced: false ) ?
 					'public' : 'private';
 
-				$this->importDumpRequestManager->setPrivate( (int)$formData['handle-private'] );
+				$this->requestManager->setPrivate( (int)$formData['handle-private'] );
 			}
 
 			if (
 				!isset( $formData['handle-status'] ) ||
-				$this->importDumpRequestManager->getStatus() === $formData['handle-status']
+				$this->requestManager->getStatus() === $formData['handle-status']
 			) {
-				$this->importDumpRequestManager->endAtomic( __METHOD__ );
+				$this->requestManager->endAtomic( __METHOD__ );
 
 				if ( !$changes ) {
 					$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-no-changes' )->escaped() ) );
@@ -763,15 +705,15 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 				}
 
 				$this->handleStatusUpdate( $formData, $user );
-				$this->importDumpRequestManager->endAtomic( __METHOD__ );
+				$this->requestManager->endAtomic( __METHOD__ );
 				return;
 			}
 		}
 
 		if (
-			$this->importDumpRequestManager->getStatus() === self::STATUS_COMPLETE ||
-			$this->importDumpRequestManager->getStatus() === self::STATUS_INPROGRESS ||
-			$this->importDumpRequestManager->getStatus() === self::STATUS_STARTING
+			$this->requestManager->getStatus() === self::STATUS_COMPLETE ||
+			$this->requestManager->getStatus() === self::STATUS_INPROGRESS ||
+			$this->requestManager->getStatus() === self::STATUS_STARTING
 		) {
 			$out->addHTML( Html::errorBox(
 				$this->context->msg( 'importdump-status-conflict' )->escaped()
@@ -782,38 +724,33 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 
 		if ( isset( $formData['submit-decline'] ) ) {
 			$formData['handle-status'] = self::STATUS_DECLINED;
-			$this->importDumpRequestManager->startAtomic( __METHOD__ );
+			$this->requestManager->startAtomic( __METHOD__ );
 			$this->handleStatusUpdate( $formData, $user );
-			$this->importDumpRequestManager->endAtomic( __METHOD__ );
+			$this->requestManager->endAtomic( __METHOD__ );
 			return;
 		}
 
 		if ( isset( $formData['submit-start'] ) ) {
-			if ( $this->importDumpRequestManager->getStatus() === self::STATUS_COMPLETE ) {
+			if ( $this->requestManager->getStatus() === self::STATUS_COMPLETE ) {
 				// Don't rerun a job that is already completed.
 				return;
 			}
 
-			$this->importDumpRequestManager->setStatus( self::STATUS_STARTING );
-			$this->importDumpRequestManager->executeJob( $user->getName() );
+			$this->requestManager->setStatus( self::STATUS_STARTING );
+			$this->requestManager->executeJob( $user->getName() );
 			$out->addHTML( Html::successBox(
 				$this->context->msg( 'importdump-import-started' )->escaped()
 			) );
 		}
 	}
 
-	/**
-	 * @param array $formData
-	 * @param User $user
-	 */
-	private function handleStatusUpdate( array $formData, User $user ) {
-		$this->importDumpRequestManager->setStatus( $formData['handle-status'] );
-
+	private function handleStatusUpdate( array $formData, User $user ): void {
+		$this->requestManager->setStatus( $formData['handle-status'] );
 		$statusMessage = $this->context->msg( 'importdump-label-' . $formData['handle-status'] )
 			->inContentLanguage()
 			->text();
 
-		$comment = $this->context->msg( 'importdump-status-updated', strtolower( $statusMessage ) )
+		$comment = $this->context->msg( 'importdump-status-updated', mb_strtolower( $statusMessage ) )
 			->inContentLanguage()
 			->escaped();
 
@@ -827,12 +764,12 @@ class ImportDumpRequestViewer implements ImportDumpStatus {
 			$comment .= ' ' . $formData['handle-comment'];
 		}
 
-		$this->importDumpRequestManager->addComment( $comment, $commentUser ?? $user );
-		$this->importDumpRequestManager->logStatusUpdate(
+		$this->requestManager->addComment( $comment, $commentUser ?? $user );
+		$this->requestManager->logStatusUpdate(
 			$formData['handle-comment'], $formData['handle-status'], $user
 		);
 
-		$this->importDumpRequestManager->sendNotification(
+		$this->requestManager->sendNotification(
 			$comment, 'importdump-request-status-update', $user
 		);
 

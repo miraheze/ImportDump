@@ -9,44 +9,34 @@ use MediaWiki\Message\Message;
 
 class EchoRequestCommentPresentationModel extends EchoEventPresentationModel {
 
-	/**
-	 * @return string
-	 */
-	public function getIconType() {
+	/** @inheritDoc */
+	public function getIconType(): string {
 		return 'chat';
 	}
 
-	/**
-	 * @return Message
-	 */
-	public function getHeaderMessage() {
+	/** @inheritDoc */
+	public function getHeaderMessage(): Message {
 		return $this->msg(
 			'importdump-notification-header-comment',
 			$this->event->getExtraParam( 'request-id' )
 		);
 	}
 
-	/**
-	 * @return Message
-	 */
-	public function getBodyMessage() {
+	/** @inheritDoc */
+	public function getBodyMessage(): Message {
 		$comment = $this->event->getExtraParam( 'comment' );
 		$text = DiscussionParser::getTextSnippet( $comment, $this->language );
 
 		return new RawMessage( '$1', [ $text ] );
 	}
 
-	/**
-	 * @return bool
-	 */
-	public function getPrimaryLink() {
+	/** @inheritDoc */
+	public function getPrimaryLink(): false {
 		return false;
 	}
 
-	/**
-	 * @return array
-	 */
-	public function getSecondaryLinks() {
+	/** @inheritDoc */
+	public function getSecondaryLinks(): array {
 		$visitLink = [
 			'url' => $this->event->getExtraParam( 'request-url', 0 ),
 			'label' => $this->msg( 'importdump-notification-visit-request' )->text(),

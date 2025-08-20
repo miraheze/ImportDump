@@ -9,7 +9,6 @@ use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\Html\Html;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
-use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\FormSpecialPage;
 use MediaWiki\SpecialPage\SpecialPage;
@@ -17,9 +16,9 @@ use MediaWiki\Status\Status;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\CreateWiki\Services\RemoteWikiFactory;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use PermissionsError;
 use RepoGroup;
 use UploadBase;
@@ -28,58 +27,26 @@ use UploadStash;
 use UserBlockedError;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Rdbms\IConnectionProvider;
+use Wikimedia\Rdbms\Platform\ISQLPlatform;
 
 class SpecialRequestImport extends FormSpecialPage
 	implements ImportDumpStatus {
 
-	/** @var IConnectionProvider */
-	private $connectionProvider;
-
-	/** @var MimeAnalyzer */
-	private $mimeAnalyzer;
-
-	/** @var PermissionManager */
-	private $permissionManager;
-
-	/** @var RemoteWikiFactory|null */
-	private $remoteWikiFactory;
-
-	/** @var RepoGroup */
-	private $repoGroup;
-
-	/** @var UserFactory */
-	private $userFactory;
-
-	/**
-	 * @param IConnectionProvider $connectionProvider
-	 * @param MimeAnalyzer $mimeAnalyzer
-	 * @param PermissionManager $permissionManager
-	 * @param RepoGroup $repoGroup
-	 * @param UserFactory $userFactory
-	 * @param ?RemoteWikiFactory $remoteWikiFactory
-	 */
 	public function __construct(
-		IConnectionProvider $connectionProvider,
-		MimeAnalyzer $mimeAnalyzer,
-		PermissionManager $permissionManager,
-		RepoGroup $repoGroup,
-		UserFactory $userFactory,
-		?RemoteWikiFactory $remoteWikiFactory
+		private readonly IConnectionProvider $connectionProvider,
+		private readonly ExtensionRegistry $extensionRegistry,
+		private readonly MimeAnalyzer $mimeAnalyzer,
+		private readonly RepoGroup $repoGroup,
+		private readonly UserFactory $userFactory,
+		private readonly ?ModuleFactory $moduleFactory
 	) {
 		parent::__construct( 'RequestImport', 'request-import' );
-
-		$this->connectionProvider = $connectionProvider;
-		$this->mimeAnalyzer = $mimeAnalyzer;
-		$this->permissionManager = $permissionManager;
-		$this->remoteWikiFactory = $remoteWikiFactory;
-		$this->repoGroup = $repoGroup;
-		$this->userFactory = $userFactory;
 	}
 
 	/**
-	 * @param string $par
+	 * @param ?string $par
 	 */
-	public function execute( $par ) {
+	public function execute( $par ): void {
 		$this->requireLogin( 'importdump-notloggedin' );
 		$this->setParameter( $par );
 		$this->setHeaders();
@@ -101,10 +68,8 @@ class SpecialRequestImport extends FormSpecialPage
 		}
 	}
 
-	/**
-	 * @return array
-	 */
-	protected function getFormFields() {
+	/** @inheritDoc */
+	protected function getFormFields(): array {
 		$formDescriptor = [
 			'source' => [
 				'type' => 'url',
@@ -175,14 +140,10 @@ class SpecialRequestImport extends FormSpecialPage
 		return $formDescriptor;
 	}
 
-	/**
-	 * @param array $data
-	 * @return Status
-	 */
-	public function onSubmit( array $data ) {
+	/** @inheritDoc */
+	public function onSubmit( array $data ): Status {
 		$token = $this->getRequest()->getVal( 'wpEditToken' );
 		$userToken = $this->getContext()->getCsrfTokenSet();
-
 		if ( !$userToken->matchToken( $token ) ) {
 			return Status::newFatal( 'sessionfailure' );
 		}
@@ -195,10 +156,9 @@ class SpecialRequestImport extends FormSpecialPage
 		}
 
 		$dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-importdump' );
-
 		$duplicate = $dbw->newSelectQueryBuilder()
-			->table( 'import_requests' )
-			->field( '*' )
+			->select( ISQLPlatform::ALL_ROWS )
+			->from( 'import_requests' )
 			->where( [
 				'request_reason' => $data['reason'],
 				'request_status' => self::STATUS_PENDING,
@@ -217,18 +177,13 @@ class SpecialRequestImport extends FormSpecialPage
 		$request->setVal( 'wpDestFile', $fileName );
 
 		$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] ?? 'File' );
-
 		if ( !$uploadBase->isEnabled() ) {
 			return Status::newFatal( 'uploaddisabled' );
 		}
 
 		$permission = $uploadBase->isAllowed( $this->getUser() );
 		if ( $permission !== true ) {
-			return Status::wrap(
-				$this->permissionManager->newFatalPermissionDeniedStatus(
-					$permission, $this->getContext()
-				)
-			);
+			throw new PermissionsError( $permission );
 		}
 
 		if ( $uploadBase->isEmptyFile() ) {
@@ -265,8 +220,8 @@ class SpecialRequestImport extends FormSpecialPage
 
 		$status = $repo->publish(
 			$file->getPath(),
-			'/ImportDump/' . $fileName,
-			'/ImportDump/archive/' . $fileName,
+			"/ImportDump/$fileName",
+			"/ImportDump/archive/$fileName",
 			FileRepo::DELETE_SOURCE
 		);
 
@@ -291,7 +246,7 @@ class SpecialRequestImport extends FormSpecialPage
 		$requestID = (string)$dbw->insertId();
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', $requestID );
 
-		$requestLink = $this->getLinkRenderer()->makeLink( $requestQueueLink, "#{$requestID}" );
+		$requestLink = $this->getLinkRenderer()->makeLink( $requestQueueLink, "#$requestID" );
 
 		$this->getOutput()->addHTML(
 			Html::successBox(
@@ -316,7 +271,7 @@ class SpecialRequestImport extends FormSpecialPage
 		$logEntry->publish( $logID );
 
 		if (
-			ExtensionRegistry::getInstance()->isLoaded( 'Echo' ) &&
+			$this->extensionRegistry->isLoaded( 'Echo' ) &&
 			$this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests )
 		) {
 			$this->sendNotifications( $data['reason'], $this->getUser()->getName(), $requestID, $data['target'] );
@@ -325,40 +280,37 @@ class SpecialRequestImport extends FormSpecialPage
 		return Status::newGood();
 	}
 
-	/**
-	 * @param string $target
-	 * @return string
-	 */
 	public function getLogType( string $target ): string {
 		if (
-			!ExtensionRegistry::getInstance()->isLoaded( 'CreateWiki' ) ||
-			!$this->getConfig()->get( 'CreateWikiUsePrivateWikis' ) ||
-			!$this->remoteWikiFactory
+			!$this->extensionRegistry->isLoaded( 'ManageWiki' ) ||
+			!$this->moduleFactory ||
+			!$this->moduleFactory->isEnabled( 'core' )
 		) {
 			return 'importdump';
 		}
 
-		$remoteWiki = $this->remoteWikiFactory->newInstance( $target );
-		return $remoteWiki->isPrivate() ? 'importdumpprivate' : 'importdump';
+		$mwCore = $this->moduleFactory->core( $target );
+		if ( !$mwCore->isEnabled( 'private-wikis' ) ) {
+			return 'importdump';
+		}
+
+		return $mwCore->isPrivate() ? 'importdumpprivate' : 'importdump';
 	}
 
-	/**
-	 * @param string $reason
-	 * @param string $requester
-	 * @param string $requestID
-	 * @param string $target
-	 */
-	public function sendNotifications( string $reason, string $requester, string $requestID, string $target ) {
+	public function sendNotifications(
+		string $reason,
+		string $requester,
+		string $requestID,
+		string $target
+	): void {
 		$notifiedUsers = array_filter(
 			array_map(
-				function ( string $userName ): ?User {
-					return $this->userFactory->newFromName( $userName );
-				}, $this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests )
+				fn ( string $userName ): ?User => $this->userFactory->newFromName( $userName ),
+				$this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests )
 			)
 		);
 
 		$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', $requestID )->getFullURL();
-
 		foreach ( $notifiedUsers as $receiver ) {
 			if (
 				!$receiver->isAllowed( 'handle-import-requests' ) ||
@@ -385,23 +337,15 @@ class SpecialRequestImport extends FormSpecialPage
 		}
 	}
 
-	/**
-	 * @param ?string $target
-	 * @return string|bool|Message
-	 */
-	public function isValidDatabase( ?string $target ) {
-		if ( !in_array( $target, $this->getConfig()->get( MainConfigNames::LocalDatabases ) ) ) {
+	public function isValidDatabase( ?string $target ): Message|true {
+		if ( !in_array( $target, $this->getConfig()->get( MainConfigNames::LocalDatabases ), true ) ) {
 			return $this->msg( 'importdump-invalid-target' );
 		}
 
 		return true;
 	}
 
-	/**
-	 * @param ?string $reason
-	 * @return string|bool|Message
-	 */
-	public function isValidReason( ?string $reason ) {
+	public function isValidReason( ?string $reason ): Message|true {
 		if ( !$reason || ctype_space( $reason ) ) {
 			return $this->msg( 'htmlform-required' );
 		}
@@ -409,7 +353,7 @@ class SpecialRequestImport extends FormSpecialPage
 		return true;
 	}
 
-	public function checkPermissions() {
+	public function checkPermissions(): void {
 		parent::checkPermissions();
 
 		$user = $this->getUser();
@@ -434,17 +378,13 @@ class SpecialRequestImport extends FormSpecialPage
 		}
 	}
 
-	/**
-	 * @return string
-	 */
-	protected function getDisplayFormat() {
+	/** @inheritDoc */
+	protected function getDisplayFormat(): string {
 		return 'ooui';
 	}
 
-	/**
-	 * @return string
-	 */
-	protected function getGroupName() {
+	/** @inheritDoc */
+	protected function getGroupName(): string {
 		return 'other';
 	}
 }

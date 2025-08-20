@@ -4,55 +4,30 @@ namespace Miraheze\ImportDump\Specials;
 
 use ErrorPageError;
 use MediaWiki\HTMLForm\HTMLForm;
-use MediaWiki\Permissions\PermissionManager;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\ImportDump\ImportDumpRequestManager;
 use Miraheze\ImportDump\ImportDumpRequestQueuePager;
-use Miraheze\ImportDump\ImportDumpRequestViewer;
 use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\RequestViewer;
 use Wikimedia\Rdbms\IConnectionProvider;
 
 class SpecialRequestImportQueue extends SpecialPage
 	implements ImportDumpStatus {
 
-	/** @var IConnectionProvider */
-	private $connectionProvider;
-
-	/** @var ImportDumpRequestManager */
-	private $importDumpRequestManager;
-
-	/** @var PermissionManager */
-	private $permissionManager;
-
-	/** @var UserFactory */
-	private $userFactory;
-
-	/**
-	 * @param IConnectionProvider $connectionProvider
-	 * @param ImportDumpRequestManager $importDumpRequestManager
-	 * @param PermissionManager $permissionManager
-	 * @param UserFactory $userFactory
-	 */
 	public function __construct(
-		IConnectionProvider $connectionProvider,
-		ImportDumpRequestManager $importDumpRequestManager,
-		PermissionManager $permissionManager,
-		UserFactory $userFactory
+		private readonly IConnectionProvider $connectionProvider,
+		private readonly RequestManager $requestManager,
+		private readonly UserFactory $userFactory
 	) {
 		parent::__construct( 'RequestImportQueue' );
-
-		$this->connectionProvider = $connectionProvider;
-		$this->importDumpRequestManager = $importDumpRequestManager;
-		$this->permissionManager = $permissionManager;
-		$this->userFactory = $userFactory;
 	}
 
 	/**
-	 * @param string $par
+	 * @param ?string $par
 	 */
-	public function execute( $par ) {
+	public function execute( $par ): void {
 		$this->setHeaders();
 
 		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
@@ -72,7 +47,7 @@ class SpecialRequestImportQueue extends SpecialPage
 		$this->doPagerStuff();
 	}
 
-	private function doPagerStuff() {
+	private function doPagerStuff(): void {
 		$requester = $this->getRequest()->getText( 'requester' );
 		$status = $this->getRequest()->getText( 'status' );
 		$target = $this->getRequest()->getText( 'target' );
@@ -131,32 +106,24 @@ class SpecialRequestImportQueue extends SpecialPage
 		);
 
 		$table = $pager->getFullOutput();
-
 		$this->getOutput()->addParserOutputContent( $table );
 	}
 
-	/**
-	 * @param string $par
-	 */
-	private function lookupRequest( $par ) {
-		$requestViewer = new ImportDumpRequestViewer(
+	private function lookupRequest( string $par ): void {
+		$requestViewer = new RequestViewer(
 			$this->getConfig(),
 			$this->getContext(),
-			$this->importDumpRequestManager,
-			$this->permissionManager
+			$this->requestManager
 		);
 
 		$htmlForm = $requestViewer->getForm( (int)$par );
-
 		if ( $htmlForm ) {
 			$htmlForm->show();
 		}
 	}
 
-	/**
-	 * @return string
-	 */
-	protected function getGroupName() {
+	/** @inheritDoc */
+	protected function getGroupName(): string {
 		return 'other';
 	}
 }

@@ -7,10 +7,8 @@ use InitEditCount;
 use Job;
 use JobSpecification;
 use MediaWiki\Config\Config;
-use MediaWiki\Config\ConfigFactory;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Deferred\SiteStatsUpdate;
-use MediaWiki\Http\Telemetry;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Maintenance\FakeMaintenance;
@@ -18,9 +16,9 @@ use MediaWiki\Permissions\UltimateAuthority;
 use MediaWiki\SiteStats\SiteStatsInit;
 use MediaWiki\User\User;
 use MessageLocalizer;
-use Miraheze\ImportDump\Hooks\ImportDumpHookRunner;
-use Miraheze\ImportDump\ImportDumpRequestManager;
+use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\RequestManager;
 use MWExceptionHandler;
 use RebuildRecentchanges;
 use RebuildTextIndex;
@@ -35,90 +33,48 @@ class ImportDumpJob extends Job
 
 	public const JOB_NAME = 'ImportDumpJob';
 
-	/** @var int */
-	private $requestID;
+	private readonly MessageLocalizer $messageLocalizer;
 
-	/** @var string */
-	private $jobError;
+	private readonly int $requestID;
+	private readonly string $username;
 
-	/** @var string */
-	private $username;
+	private string $jobError;
 
-	/** @var Config */
-	private $config;
-
-	/** @var IConnectionProvider */
-	private $connectionProvider;
-
-	/** @var JobQueueGroupFactory */
-	private $jobQueueGroupFactory;
-
-	/** @var ImportDumpHookRunner */
-	private $importDumpHookRunner;
-
-	/** @var ImportDumpRequestManager */
-	private $importDumpRequestManager;
-
-	/** @var MessageLocalizer */
-	private $messageLocalizer;
-
-	/** @var WikiImporterFactory */
-	private $wikiImporterFactory;
-
-	/**
-	 * @param array $params
-	 * @param ConfigFactory $configFactory
-	 * @param IConnectionProvider $connectionProvider
-	 * @param JobQueueGroupFactory $jobQueueGroupFactory
-	 * @param ImportDumpHookRunner $importDumpHookRunner
-	 * @param ImportDumpRequestManager $importDumpRequestManager
-	 * @param WikiImporterFactory $wikiImporterFactory
-	 */
 	public function __construct(
 		array $params,
-		ConfigFactory $configFactory,
-		IConnectionProvider $connectionProvider,
-		JobQueueGroupFactory $jobQueueGroupFactory,
-		ImportDumpHookRunner $importDumpHookRunner,
-		ImportDumpRequestManager $importDumpRequestManager,
-		WikiImporterFactory $wikiImporterFactory
+		private readonly IConnectionProvider $connectionProvider,
+		private readonly Config $config,
+		private readonly HookRunner $hookRunner,
+		private readonly RequestManager $requestManager,
+		private readonly JobQueueGroupFactory $jobQueueGroupFactory,
+		private readonly WikiImporterFactory $wikiImporterFactory
 	) {
 		parent::__construct( self::JOB_NAME, $params );
 
 		$this->requestID = $params['requestid'];
 		$this->username = $params['username'];
 
-		$this->connectionProvider = $connectionProvider;
-		$this->jobQueueGroupFactory = $jobQueueGroupFactory;
-		$this->importDumpHookRunner = $importDumpHookRunner;
-		$this->importDumpRequestManager = $importDumpRequestManager;
-		$this->wikiImporterFactory = $wikiImporterFactory;
-
-		$this->config = $configFactory->makeConfig( 'ImportDump' );
 		$this->messageLocalizer = RequestContext::getMain();
-
 		$this->executionFlags |= self::JOB_NO_EXPLICIT_TRX_ROUND;
 	}
 
-	/**
-	 * @return bool
-	 */
-	public function run(): bool {
-		$this->importDumpRequestManager->fromID( $this->requestID );
-		if ( $this->importDumpRequestManager->getStatus() === self::STATUS_COMPLETE ) {
+	/** @inheritDoc */
+	public function run(): true {
+		$this->requestManager->loadFromID( $this->requestID );
+		if ( $this->requestManager->getStatus() === self::STATUS_COMPLETE ) {
 			// Don't rerun a job that is already completed.
 			return true;
 		}
 
 		$dbw = $this->connectionProvider->getPrimaryDatabase();
-		$filePath = wfTempDir() . '/' . $this->importDumpRequestManager->getFileName();
+		$filePath = wfTempDir() . '/' . $this->requestManager->getFileName();
 
-		$this->importDumpHookRunner->onImportDumpJobGetFile( $filePath, $this->importDumpRequestManager );
+		$this->hookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
 
 		// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
 		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
 		if ( !$importStreamSource->isGood() ) {
-			$this->jobError = "Import source for {$filePath} failed";
+			$this->jobError = "Import source for $filePath failed";
 			$this->setLastError( $this->jobError );
 			$this->notifyFailed();
 			return true;
@@ -128,6 +84,8 @@ class ImportDumpJob extends Job
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
+					// No errors
+					'joberror' => '',
 					'requestid' => $this->requestID,
 					'status' => self::STATUS_INPROGRESS,
 					'username' => $this->username,
@@ -137,7 +95,6 @@ class ImportDumpJob extends Job
 
 		try {
 			$user = User::newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
-
 			$importer = $this->wikiImporterFactory->getWikiImporter(
 				$importStreamSource->value, new UltimateAuthority( $user )
 			);
@@ -145,7 +102,7 @@ class ImportDumpJob extends Job
 			$importer->disableStatisticsUpdate();
 			$importer->setNoUpdates( true );
 			$importer->setUsernamePrefix(
-				$this->importDumpRequestManager->getInterwikiPrefix(),
+				$this->requestManager->getInterwikiPrefix(),
 				true
 			);
 
@@ -175,10 +132,11 @@ class ImportDumpJob extends Job
 			$updateArticleCount->setOption( 'update', true );
 			$updateArticleCount->execute();
 
-			$this->importDumpHookRunner->onImportDumpJobAfterImport( $filePath, $this->importDumpRequestManager );
-		} catch ( Throwable $e ) {
-			MWExceptionHandler::rollbackPrimaryChangesAndLog( $e );
-			$this->jobError = $this->getLogMessage( $e );
+			$this->hookRunner->onImportDumpJobAfterImport( $filePath, $this->requestManager );
+		} catch ( Throwable $t ) {
+			// We want to handle any potential errors gracefully.
+			MWExceptionHandler::rollbackPrimaryChangesAndLog( $t );
+			$this->jobError = $this->getLogMessage( $t );
 			$this->notifyFailed();
 			return true;
 		}
@@ -187,6 +145,8 @@ class ImportDumpJob extends Job
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
+					// No errors
+					'joberror' => '',
 					'requestid' => $this->requestID,
 					'status' => self::STATUS_COMPLETE,
 					'username' => $this->username,
@@ -197,7 +157,7 @@ class ImportDumpJob extends Job
 		return true;
 	}
 
-	private function notifyFailed() {
+	private function notifyFailed(): void {
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
@@ -211,31 +171,21 @@ class ImportDumpJob extends Job
 		);
 	}
 
-	/**
-	 * @param Throwable $e
-	 * @return string
-	 */
-	private function getLogMessage( Throwable $e ): string {
-		$id = Telemetry::getInstance()->getRequestId();
-		$type = get_class( $e );
-		$message = $e->getMessage();
+	private function getLogMessage( Throwable $t ): string {
+		// This is the request ID from Telemetry.
+		$requestId = $this->getRequestId();
+		$type = get_class( $t );
+		$message = $t->getMessage();
 
-		return "[$id]   $type: $message";
+		return "[$requestId]   $type: $message";
 	}
 
-	/**
-	 * @return string
-	 */
 	private function getLoggingWiki(): string {
-		return $this->connectionProvider
-			->getReplicaDatabase( 'virtual-importdump' )
-			->getDomainID();
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		return $dbr->getDomainID();
 	}
 
-	/**
-	 * @return bool
-	 */
-	public function allowRetries(): bool {
+	public function allowRetries(): false {
 		return false;
 	}
 }
