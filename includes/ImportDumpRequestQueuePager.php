@@ -36,19 +36,19 @@ class ImportDumpRequestQueuePager extends TablePager
 	}
 
 	/** @inheritDoc */
-	public function formatValue( $field, $value ): string {
+	public function formatValue( $name, $value ): string {
 		if ( $value === null ) {
 			return '';
 		}
 
-		switch ( $field ) {
+		switch ( $name ) {
 			case 'request_timestamp':
-				$formatted = $this->escape( $this->getLanguage()->userTimeAndDate(
+				$formatted = htmlspecialchars( $this->getLanguage()->userTimeAndDate(
 					$value, $this->getUser()
 				) );
 				break;
 			case 'request_target':
-				$formatted = $this->escape( $value );
+				$formatted = htmlspecialchars( $value );
 				break;
 			case 'request_status':
 				$row = $this->getCurrentRow();
@@ -59,20 +59,13 @@ class ImportDumpRequestQueuePager extends TablePager
 				break;
 			case 'request_actor':
 				$user = $this->userFactory->newFromActorId( (int)$value );
-				$formatted = $this->escape( $user->getName() );
+				$formatted = htmlspecialchars( $user->getName() );
 				break;
 			default:
-				$formatted = $this->escape( "Unable to format $field" );
+				$formatted = "Unable to format $name";
 		}
 
 		return $formatted;
-	}
-
-	/**
-	 * Safely HTML-escapes $value
-	 */
-	private function escape( string $value ): string {
-		return htmlspecialchars( $value, ENT_QUOTES );
 	}
 
 	/** @inheritDoc */
