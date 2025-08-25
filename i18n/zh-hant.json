@@ -25,7 +25,7 @@
 	"importdump-duplicate-comment": "無法重新提交跟您先前請求相同的意見。",
 	"importdump-duplicate-request": "無法提交此申請。它與一份已經開啟的申請過於相似。",
 	"importdump-edit-success": "已成功編輯申請。",
-	"importdump-extensionname": "匯入傾印​（ImportDump）",
+	"importdump-extensionname": "ImportDump​（匯入傾印）",
 	"importdump-header-comment-withtimestamp": "由 $1 於 $2 給出的意見",
 	"importdump-help-reason": "請詳細說明您提出此匯入申請的原因。",
 	"importdump-help-source": "輸入來源 wiki 的完整 URL（您匯入的來源）。",
