@@ -1,6 +1,7 @@
 {
 	"@metadata": {
 		"authors": [
+			"Aca",
 			"Vlad5250",
 			"Winston Sung"
 		]
@@ -27,7 +28,7 @@
 	"importdump-help-reason": "Molimo detaljno opišite razlog za zahtjev.",
 	"importdump-help-source": "Unesite punu URL-adresu izvornog vikija (odakle uvozite).",
 	"importdump-help-target": "Ovo mora biti važeće ime baze podataka.",
-	"importdump-help-upload-file": "Dopuštene su samo XML-datoteke. Ako je vaša XML-datoteka kompresovana arhiva, izvucite je prije nego što otpremite.",
+	"importdump-help-upload-file": "Dopuštene su samo XML datoteke. Ako je vaša XML datoteka kompresirana arhiva, izvucite je prije postavljanja.",
 	"importdump-help-upload-file-url": "Dopuštene su samo nekompresovane XML-datoteke.",
 	"importdump-info-command": "'''Naredba za ovaj uvoz:''' <code>$1</code>",
 	"importdump-info-filesize": "'''Veličina datoteke za ovaj uvoz:''' $1",
@@ -63,11 +64,11 @@
 	"importdump-label-status-updated-comment": "Dodatni komentar za zahtjev:",
 	"importdump-label-target": "Ime ciljne baze podataka:",
 	"importdump-label-update-status": "Novi status ovog zahtjeva:",
-	"importdump-label-upload-file": "Otpremi datoteku:",
+	"importdump-label-upload-file": "Postavi datoteku:",
 	"importdump-label-upload-file-url": "URL izvora:",
-	"importdump-label-upload-source-file": "Otpremi datoteku",
+	"importdump-label-upload-source-file": "Postavi datoteku",
 	"importdump-label-upload-source-type": "Izvor otpremanja:",
-	"importdump-label-upload-source-url": "Otpremi sa URL-a",
+	"importdump-label-upload-source-url": "Postavi sa URL-a",
 	"importdump-log-header": "Ovo je dnevnik svih zahtjeva za uvoz i promjena statusa.",
 	"importdump-log-name": "Dnevnik zahtjeva za uvoz",
 	"importdump-no-changes": "Nema promjena.",
