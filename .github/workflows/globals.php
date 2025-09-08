@@ -1,3 +1,0 @@
-<?php
-
-$wgInterwikiCentralDB = null;
