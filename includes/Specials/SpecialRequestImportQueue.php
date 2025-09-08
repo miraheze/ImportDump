@@ -2,7 +2,7 @@
 
 namespace Miraheze\ImportDump\Specials;
 
-use ErrorPageError;
+use MediaWiki\Exception\ErrorPageError;
 use MediaWiki\HTMLForm\HTMLForm;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;

@@ -62,8 +62,8 @@
 		"view-private-import-requests"
 	],
 	"LogActionsHandlers": {
-		"importdump/*": "LogFormatter",
-		"importdumpprivate/*": "LogFormatter"
+		"importdump/*": "MediaWiki\\Logging\\LogFormatter",
+		"importdumpprivate/*": "MediaWiki\\Logging\\LogFormatter"
 	},
 	"LogHeaders": {
 		"importdump": "importdump-log-header",

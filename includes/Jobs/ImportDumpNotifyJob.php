@@ -2,10 +2,10 @@
 
 namespace Miraheze\ImportDump\Jobs;
 
-use Job;
 use MediaWiki\Config\Config;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Extension\Notifications\Model\Event;
+use MediaWiki\JobQueue\Job;
 use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\User;
