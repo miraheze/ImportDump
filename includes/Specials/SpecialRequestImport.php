@@ -45,6 +45,7 @@ class SpecialRequestImport extends FormSpecialPage
 
 	/**
 	 * @param ?string $par
+	 * @throws ErrorPageError
 	 */
 	public function execute( $par ): void {
 		$this->requireLogin( 'importdump-notloggedin' );
@@ -356,6 +357,7 @@ class SpecialRequestImport extends FormSpecialPage
 		return true;
 	}
 
+	/** @throws ErrorPageError|PermissionsError|UserBlockedError */
 	public function checkPermissions(): void {
 		parent::checkPermissions();
 

@@ -26,6 +26,7 @@ class SpecialRequestImportQueue extends SpecialPage
 
 	/**
 	 * @param ?string $par
+	 * @throws ErrorPageError
 	 */
 	public function execute( $par ): void {
 		$this->setHeaders();
