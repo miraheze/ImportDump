@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump\Tests\Specials;
 
 use Generator;
 use MediaWiki\Context\DerivativeContext;
+use MediaWiki\Exception\UserNotLoggedIn;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Request\FauxRequest;
 use MediaWiki\SpecialPage\SpecialPage;
@@ -12,7 +13,6 @@ use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use SpecialPageTestBase;
-use UserNotLoggedIn;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
