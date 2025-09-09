@@ -2,11 +2,14 @@
 
 namespace Miraheze\ImportDump\Specials;
 
-use ErrorPageError;
-use FileRepo;
-use ManualLogEntry;
+use MediaWiki\Exception\ErrorPageError;
+use MediaWiki\Exception\PermissionsError;
+use MediaWiki\Exception\UserBlockedError;
 use MediaWiki\Extension\Notifications\Model\Event;
+use MediaWiki\FileRepo\FileRepo;
+use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\Html\Html;
+use MediaWiki\Logging\ManualLogEntry;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
 use MediaWiki\Registration\ExtensionRegistry;
@@ -19,12 +22,9 @@ use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\ImportDumpStatus;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
-use PermissionsError;
-use RepoGroup;
 use UploadBase;
 use UploadFromUrl;
 use UploadStash;
-use UserBlockedError;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\Platform\ISQLPlatform;
@@ -45,6 +45,7 @@ class SpecialRequestImport extends FormSpecialPage
 
 	/**
 	 * @param ?string $par
+	 * @throws ErrorPageError
 	 */
 	public function execute( $par ): void {
 		$this->requireLogin( 'importdump-notloggedin' );
@@ -140,7 +141,10 @@ class SpecialRequestImport extends FormSpecialPage
 		return $formDescriptor;
 	}
 
-	/** @inheritDoc */
+	/**
+	 * @inheritDoc
+	 * @throws PermissionsError
+	 */
 	public function onSubmit( array $data ): Status {
 		$token = $this->getRequest()->getVal( 'wpEditToken' );
 		$userToken = $this->getContext()->getCsrfTokenSet();
@@ -353,6 +357,7 @@ class SpecialRequestImport extends FormSpecialPage
 		return true;
 	}
 
+	/** @throws ErrorPageError|PermissionsError|UserBlockedError */
 	public function checkPermissions(): void {
 		parent::checkPermissions();
 

@@ -25,4 +25,6 @@ $cfg['suppress_issue_types'] = [
 
 $cfg['plugins'][] = __DIR__ . '/../vendor/miraheze/phan-plugins/NoOptionalParamPlugin.php';
 
+$cfg['enable_class_alias_support'] = false;
+
 return $cfg;

@@ -7,7 +7,7 @@
 	"license-name": "GPL-3.0-or-later",
 	"type": "specialpage",
 	"requires": {
-		"MediaWiki": ">= 1.43.0",
+		"MediaWiki": ">= 1.44.0",
 		"platform": {
 			"php": ">= 8.2"
 		}
@@ -62,8 +62,8 @@
 		"view-private-import-requests"
 	],
 	"LogActionsHandlers": {
-		"importdump/*": "LogFormatter",
-		"importdumpprivate/*": "LogFormatter"
+		"importdump/*": "MediaWiki\\Logging\\LogFormatter",
+		"importdumpprivate/*": "MediaWiki\\Logging\\LogFormatter"
 	},
 	"LogHeaders": {
 		"importdump": "importdump-log-header",

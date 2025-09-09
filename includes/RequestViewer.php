@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump;
 
 use MediaWiki\Config\Config;
 use MediaWiki\Context\IContextSource;
+use MediaWiki\Exception\UserNotLoggedIn;
 use MediaWiki\Html\Html;
 use MediaWiki\HTMLForm\HTMLForm;
 use MediaWiki\Linker\Linker;
@@ -13,7 +14,6 @@ use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
 use OOUI\HtmlSnippet;
 use OOUI\MessageWidget;
-use UserNotLoggedIn;
 
 class RequestViewer implements ImportDumpStatus {
 
@@ -521,6 +521,7 @@ class RequestViewer implements ImportDumpStatus {
 		return $htmlForm;
 	}
 
+	/** @throws UserNotLoggedIn */
 	protected function submitForm(
 		array $formData,
 		HTMLForm $form
