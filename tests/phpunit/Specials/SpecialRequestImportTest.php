@@ -135,7 +135,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		yield 'valid data' => [
 			[
 				'source' => 'http://example.com',
-				'target' => WikiMap::getCurrentWikiId(),
+				'target' => 'wikidb',
 				'reason' => 'Test reason',
 				'UploadSourceType' => 'File',
 				'UploadFile' => __DIR__ . '/testfile.xml',
@@ -151,7 +151,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		yield 'duplicate data' => [
 			[
 				'source' => 'http://example.com',
-				'target' => WikiMap::getCurrentWikiId(),
+				'target' => 'wikidb',
 				'reason' => 'Test reason',
 				'UploadSourceType' => 'File',
 				'UploadFile' => __DIR__ . '/testfile.xml',
@@ -183,7 +183,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		yield 'mime mismatch' => [
 			[
 				'source' => 'http://example.com',
-				'target' => WikiMap::getCurrentWikiId(),
+				'target' => 'wikidb',
 				'reason' => 'Test reason',
 				'UploadSourceType' => 'File',
 				'UploadFile' => __DIR__ . '/testfile.xml',
@@ -228,7 +228,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	}
 
 	public static function isValidDatabaseDataProvider(): Generator {
-		yield 'valid database' => [ WikiMap::getCurrentWikiId(), true ];
+		yield 'valid database' => [ 'wikidb', true ];
 		yield 'invalid database' => [ 'invalidwiki', 'importdump-invalid-target' ];
 	}
 
