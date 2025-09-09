@@ -42,8 +42,11 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->setMwGlobals( MainConfigNames::VirtualDomainsMapping, [
-			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
+		$this->setMwGlobals( [
+			MainConfigNames::LocalDatabases => [ 'wikidb' ],
+			MainConfigNames::VirtualDomainsMapping => [
+				'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
+			],
 		] );
 
 		$this->specialRequestImport = $this->newSpecialPage();
