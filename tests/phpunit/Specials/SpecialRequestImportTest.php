@@ -222,6 +222,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	 */
 	public function testIsValidDatabase( string $target, string|true $expected ): void {
 		var_dump( $this->getConfVar( MainConfigNames::LocalDatabases ) );
+		var_dump( WikiMap::getCurrentWikiId() );
 		var_dump( $target );
 		$result = $this->specialRequestImport->isValidDatabase( $target );
 		if ( is_string( $expected ) ) {
