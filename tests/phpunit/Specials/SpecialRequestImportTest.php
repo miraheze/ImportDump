@@ -220,9 +220,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	 */
 	public function testIsValidDatabase( string $target, string|true $expected ): void {
 		if ( $target === 'validwiki' ) {
-			// If we do this in the data provider directly,
-			// it doesn't return the same result.
-			$target = WikiMap::getCurrentWikiId();
+			$target = $this->getConfVar( MainConfigNames::LocalDatabases )[0];
 		}
 
 		$result = $this->specialRequestImport->isValidDatabase( $target );
