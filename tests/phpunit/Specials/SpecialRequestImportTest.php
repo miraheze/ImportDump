@@ -132,12 +132,10 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	}
 
 	public static function onSubmitDataProvider(): Generator {
-		$wikiId = WikiMap::getCurrentWikiId();
-
 		yield 'valid data' => [
 			[
 				'source' => 'http://example.com',
-				'target' => $wikiId,
+				'target' => 'wikidb',
 				'reason' => 'Test reason',
 				'UploadSourceType' => 'File',
 				'UploadFile' => __DIR__ . '/testfile.xml',
@@ -153,7 +151,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		yield 'duplicate data' => [
 			[
 				'source' => 'http://example.com',
-				'target' => $wikiId,
+				'target' => 'wikidb',
 				'reason' => 'Test reason',
 				'UploadSourceType' => 'File',
 				'UploadFile' => __DIR__ . '/testfile.xml',
@@ -185,7 +183,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		yield 'mime mismatch' => [
 			[
 				'source' => 'http://example.com',
-				'target' => $wikiId,
+				'target' => 'wikidb',
 				'reason' => 'Test reason',
 				'UploadSourceType' => 'File',
 				'UploadFile' => __DIR__ . '/testfile.xml',
@@ -221,9 +219,12 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	 * @dataProvider isValidDatabaseDataProvider
 	 */
 	public function testIsValidDatabase( string $target, string|true $expected ): void {
-		var_dump( $this->getConfVar( MainConfigNames::LocalDatabases ) );
-		var_dump( WikiMap::getCurrentWikiId() );
-		var_dump( $target );
+		if ( $target === 'validwiki' ) {
+			// If we do this in the data provider directly,
+			// it doesn't return the same result.
+			$target = WikiMap::getCurrentWikiId();
+		}
+
 		$result = $this->specialRequestImport->isValidDatabase( $target );
 		if ( is_string( $expected ) ) {
 			$this->assertSame( $expected, $result->getKey() );
@@ -233,7 +234,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	}
 
 	public static function isValidDatabaseDataProvider(): Generator {
-		yield 'valid database' => [ WikiMap::getCurrentWikiId(), true ];
+		yield 'valid database' => [ 'validwiki', true ];
 		yield 'invalid database' => [ 'invalidwiki', 'importdump-invalid-target' ];
 	}
 
