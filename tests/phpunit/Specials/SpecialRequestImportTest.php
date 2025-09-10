@@ -221,6 +221,8 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	 * @dataProvider isValidDatabaseDataProvider
 	 */
 	public function testIsValidDatabase( string $target, string|true $expected ): void {
+		var_dump( $this->getConfVar( MainConfigNames::LocalDatabases ) );
+		var_dump( $target );
 		$result = $this->specialRequestImport->isValidDatabase( $target );
 		if ( is_string( $expected ) ) {
 			$this->assertSame( $expected, $result->getKey() );
