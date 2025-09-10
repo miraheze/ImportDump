@@ -42,7 +42,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->setMwGlobals( MainConfigNames::VirtualDomainsMapping, [
+		$this->overrideConfigValue( MainConfigNames::VirtualDomainsMapping, [
 			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
 		] );
 
@@ -132,10 +132,12 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	}
 
 	public static function onSubmitDataProvider(): Generator {
+		$wikiId = WikiMap::getCurrentWikiId();
+
 		yield 'valid data' => [
 			[
 				'source' => 'http://example.com',
-				'target' => 'wikidb',
+				'target' => $wikiId,
 				'reason' => 'Test reason',
 				'UploadSourceType' => 'File',
 				'UploadFile' => __DIR__ . '/testfile.xml',
@@ -151,7 +153,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		yield 'duplicate data' => [
 			[
 				'source' => 'http://example.com',
-				'target' => 'wikidb',
+				'target' => $wikiId,
 				'reason' => 'Test reason',
 				'UploadSourceType' => 'File',
 				'UploadFile' => __DIR__ . '/testfile.xml',
@@ -183,7 +185,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		yield 'mime mismatch' => [
 			[
 				'source' => 'http://example.com',
-				'target' => 'wikidb',
+				'target' => $wikiId,
 				'reason' => 'Test reason',
 				'UploadSourceType' => 'File',
 				'UploadFile' => __DIR__ . '/testfile.xml',
@@ -218,7 +220,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	 * @covers ::isValidDatabase
 	 * @dataProvider isValidDatabaseDataProvider
 	 */
-	public function testIsValidDatabase( string $target, bool|string $expected ): void {
+	public function testIsValidDatabase( string $target, string|true $expected ): void {
 		$result = $this->specialRequestImport->isValidDatabase( $target );
 		if ( is_string( $expected ) ) {
 			$this->assertSame( $expected, $result->getKey() );
@@ -228,7 +230,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	}
 
 	public static function isValidDatabaseDataProvider(): Generator {
-		yield 'valid database' => [ 'wikidb', true ];
+		yield 'valid database' => [ WikiMap::getCurrentWikiId(), true ];
 		yield 'invalid database' => [ 'invalidwiki', 'importdump-invalid-target' ];
 	}
 
@@ -236,7 +238,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	 * @covers ::isValidReason
 	 * @dataProvider isValidReasonDataProvider
 	 */
-	public function testIsValidReason( string $reason, bool|string $expected ): void {
+	public function testIsValidReason( string $reason, string|true $expected ): void {
 		$result = $this->specialRequestImport->isValidReason( $reason );
 		if ( is_string( $expected ) ) {
 			$this->assertSame( $expected, $result->getKey() );
