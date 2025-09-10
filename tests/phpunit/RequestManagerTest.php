@@ -11,14 +11,14 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
 /**
  * @group ImportDump
  * @group Database
- * @group Medium
+ * @group medium
  * @coversDefaultClass \Miraheze\ImportDump\RequestManager
  */
 class RequestManagerTest extends MediaWikiIntegrationTestCase
 	implements ImportDumpStatus {
 
 	public function addDBDataOnce(): void {
-		$this->setMwGlobals( MainConfigNames::VirtualDomainsMapping, [
+		$this->overrideConfigValue( MainConfigNames::VirtualDomainsMapping, [
 			'virtual-importdump' => [ 'db' => 'wikidb' ],
 		] );
 
