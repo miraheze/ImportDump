@@ -24,7 +24,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  */
 class SpecialRequestImportTest extends SpecialPageTestBase {
 
-	private readonly SpecialRequestImport $specialRequestImport;
+	private SpecialRequestImport $specialRequestImport;
 
 	/** @inheritDoc */
 	protected function newSpecialPage(): SpecialRequestImport {
