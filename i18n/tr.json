@@ -7,10 +7,11 @@
 			"Khalvar",
 			"Qwea1",
 			"Rapsar",
+			"SaldırganSincap",
 			"Slickdaddy"
 		]
 	},
-	"action-handle-import-requests": "kullanıcı içe aktarma isteklerini işle",
+	"action-handle-import-requests": "kullanıcı içe aktarma isteklerini yönetme",
 	"action-request-import": "İçe aktarma talepleri",
 	"action-view-private-import-requests": "Gizli içe aktarma taleplerini gör",
 	"echo-category-title-importdump-import-failed": "İçe aktarma talebi başarısız",
