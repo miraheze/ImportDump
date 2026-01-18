@@ -16,6 +16,7 @@ use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\FormSpecialPage;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
+use MediaWiki\Upload\UploadVerification;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
@@ -37,6 +38,7 @@ class SpecialRequestImport extends FormSpecialPage
 		private readonly ExtensionRegistry $extensionRegistry,
 		private readonly MimeAnalyzer $mimeAnalyzer,
 		private readonly RepoGroup $repoGroup,
+		private readonly UploadVerification $uploadVerification,
 		private readonly UserFactory $userFactory,
 		private readonly ?ModuleFactory $moduleFactory
 	) {
@@ -194,7 +196,7 @@ class SpecialRequestImport extends FormSpecialPage
 			return Status::newFatal( 'empty-file' );
 		}
 
-		$virus = UploadBase::detectVirus( $uploadBase->getTempPath() );
+		$virus = $this->uploadVerification->detectVirus( $uploadBase->getTempPath() );
 		if ( $virus ) {
 			return Status::newFatal( 'uploadvirus', $virus );
 		}
