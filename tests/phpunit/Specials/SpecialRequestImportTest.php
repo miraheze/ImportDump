@@ -34,6 +34,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			$services->getExtensionRegistry(),
 			$services->getMimeAnalyzer(),
 			$services->getRepoGroup(),
+			$services->getUploadVerification(),
 			$services->getUserFactory(),
 			$this->createMock( ModuleFactory::class )
 		);
