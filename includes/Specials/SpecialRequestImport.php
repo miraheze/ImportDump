@@ -40,9 +40,13 @@ class SpecialRequestImport extends FormSpecialPage
 		private readonly RepoGroup $repoGroup,
 		private readonly UploadVerification $uploadVerification,
 		private readonly UserFactory $userFactory,
-		private readonly ?ModuleFactory $moduleFactory
+		private readonly ?ModuleFactory $moduleFactory,
 	) {
-		parent::__construct( 'RequestImport', 'request-import' );
+		if ( version_compare( MW_VERSION, '1.46', '>=' ) ) {
+			parent::__construct( 'RequestImport' );
+		} else {
+			parent::__construct( 'RequestImport', 'request-import' );
+		}
 	}
 
 	/**
@@ -393,5 +397,10 @@ class SpecialRequestImport extends FormSpecialPage
 	/** @inheritDoc */
 	protected function getGroupName(): string {
 		return 'other';
+	}
+
+	/** @inheritDoc */
+	public function getRestriction(): string {
+		return 'request-import';
 	}
 }
