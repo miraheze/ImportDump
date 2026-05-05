@@ -319,4 +319,11 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		$result = $this->specialRequestImport->getLogType( 'testwiki' );
 		$this->assertSame( 'importdump', $result );
 	}
+
+	/**
+	 * @covers ::getRestriction
+	 */
+	public function testGetRestriction(): void {
+		$this->assertSame( 'request-import', $this->specialRequestImport->getRestriction() );
+	}
 }
