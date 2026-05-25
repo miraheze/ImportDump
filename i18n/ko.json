@@ -57,7 +57,7 @@
 	"importdump-label-interwiki-prefix": "위키의 로컬 인터위키 테이블에 추가할 접두어를 입력:",
 	"importdump-label-interwiki-url": "위키의 로컬 인터위키 테이블에 추가할 URL을 입력(예: $1):",
 	"importdump-label-lock": "이 요청을 편집하거나 의견을 달 수 없도록 잠그시겠습니까?",
-	"importdump-label-pending": "보류 중",
+	"importdump-label-pending": "대기 중",
 	"importdump-label-private": "이 위키를 비공개로 표시합니까?",
 	"importdump-label-reason": "요청 이유:",
 	"importdump-label-requested-date": "요청일:",
