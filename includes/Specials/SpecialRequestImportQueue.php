@@ -8,8 +8,8 @@ use MediaWiki\Parser\ParserOptions;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\ImportDump\ImportDumpRequestQueuePager;
 use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\RequestImportQueuePager;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestViewer;
 use Wikimedia\Rdbms\IConnectionProvider;
@@ -97,7 +97,7 @@ class SpecialRequestImportQueue extends SpecialPage
 			->prepareForm()
 			->displayForm( false );
 
-		$pager = new ImportDumpRequestQueuePager(
+		$pager = new RequestImportQueuePager(
 			$this->getContext(),
 			$this->connectionProvider,
 			$this->getLinkRenderer(),

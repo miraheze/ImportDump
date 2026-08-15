@@ -9,7 +9,7 @@ use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
 use Wikimedia\Rdbms\IConnectionProvider;
 
-class ImportDumpRequestQueuePager extends TablePager
+class RequestImportQueuePager extends TablePager
 	implements ImportDumpStatus {
 
 	public function __construct(
