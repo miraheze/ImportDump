@@ -15,7 +15,7 @@ use MediaWiki\WikiMap\WikiMap;
 use OOUI\HtmlSnippet;
 use OOUI\MessageWidget;
 
-class RequestViewer implements ImportDumpStatus {
+class RequestViewer implements RequestStatus {
 
 	public function __construct(
 		private readonly Config $config,

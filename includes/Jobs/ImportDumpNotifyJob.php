@@ -12,11 +12,11 @@ use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MessageLocalizer;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\ImportDumpStatus;
 use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\RequestStatus;
 
 class ImportDumpNotifyJob extends Job
-	implements ImportDumpStatus {
+	implements RequestStatus {
 
 	public const JOB_NAME = 'ImportDumpNotifyJob';
 

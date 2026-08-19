@@ -4,8 +4,8 @@ namespace Miraheze\ImportDump\Tests;
 
 use MediaWiki\MainConfigNames;
 use MediaWikiIntegrationTestCase;
-use Miraheze\ImportDump\ImportDumpStatus;
 use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\RequestStatus;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
@@ -15,7 +15,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @coversDefaultClass \Miraheze\ImportDump\RequestManager
  */
 class RequestManagerTest extends MediaWikiIntegrationTestCase
-	implements ImportDumpStatus {
+	implements RequestStatus {
 
 	public function addDBDataOnce(): void {
 		$this->overrideConfigValue( MainConfigNames::VirtualDomainsMapping, [

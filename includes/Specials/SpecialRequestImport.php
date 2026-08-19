@@ -21,7 +21,7 @@ use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\ImportDumpStatus;
+use Miraheze\ImportDump\RequestStatus;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use UploadBase;
 use UploadFromUrl;
@@ -31,7 +31,7 @@ use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\Platform\ISQLPlatform;
 
 class SpecialRequestImport extends FormSpecialPage
-	implements ImportDumpStatus {
+	implements RequestStatus {
 
 	public function __construct(
 		private readonly IConnectionProvider $connectionProvider,

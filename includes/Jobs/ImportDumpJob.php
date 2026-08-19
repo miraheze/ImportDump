@@ -18,8 +18,8 @@ use MediaWiki\SiteStats\SiteStatsInit;
 use MediaWiki\User\User;
 use MessageLocalizer;
 use Miraheze\ImportDump\Hooks\HookRunner;
-use Miraheze\ImportDump\ImportDumpStatus;
 use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\RequestStatus;
 use RebuildRecentchanges;
 use RebuildTextIndex;
 use RefreshLinks;
@@ -29,7 +29,7 @@ use WikiImporterFactory;
 use Wikimedia\Rdbms\IConnectionProvider;
 
 class ImportDumpJob extends Job
-	implements ImportDumpStatus {
+	implements RequestStatus {
 
 	public const JOB_NAME = 'ImportDumpJob';
 
