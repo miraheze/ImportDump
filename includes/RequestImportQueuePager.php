@@ -10,7 +10,7 @@ use MediaWiki\User\UserFactory;
 use Wikimedia\Rdbms\IConnectionProvider;
 
 class RequestImportQueuePager extends TablePager
-	implements ImportDumpStatus {
+	implements RequestStatus {
 
 	public function __construct(
 		IContextSource $context,

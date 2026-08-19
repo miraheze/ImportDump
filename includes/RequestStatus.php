@@ -1,8 +1,8 @@
-<?php
+s<?php
 
 namespace Miraheze\ImportDump;
 
-interface ImportDumpStatus {
+interface RequestStatus {
 
 	public const STATUS_COMPLETE = 'complete';
 

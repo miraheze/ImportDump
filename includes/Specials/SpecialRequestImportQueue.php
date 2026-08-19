@@ -8,19 +8,19 @@ use MediaWiki\Parser\ParserOptions;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\ImportDump\ImportDumpStatus;
 use Miraheze\ImportDump\RequestImportQueuePager;
 use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\RequestStatus;
 use Miraheze\ImportDump\RequestViewer;
 use Wikimedia\Rdbms\IConnectionProvider;
 
 class SpecialRequestImportQueue extends SpecialPage
-	implements ImportDumpStatus {
+	implements RequestStatus {
 
 	public function __construct(
 		private readonly IConnectionProvider $connectionProvider,
 		private readonly RequestManager $requestManager,
-		private readonly UserFactory $userFactory
+		private readonly UserFactory $userFactory,
 	) {
 		parent::__construct( 'RequestImportQueue' );
 	}
