@@ -192,7 +192,7 @@
 		},
 		"RequestImportImportDumpScriptCommand": {
 			"value": "php {IP}/maintenance/importDump.php --wiki={wiki} --username-prefix=\"{username-prefix}\" {file-path}",
-			"description": "Generated maintenance script command to use. If $wgImportDumpEnableAutomatedJob is enabled, this is not displayed unless the status is 'failed'."
+			"description": "Generated maintenance script command to use. If $wgRequestImportEnableAutomatedJob is enabled, this is not displayed unless the status is 'failed'."
 		},
 		"RequestImportInterwikiMap": {
 			"value": [],
@@ -204,7 +204,7 @@
 		},
 		"RequestImportUsersNotifiedOnFailedImports": {
 			"value": [],
-			"description": "Array of usernames to send email notifications to for failed imports. Users listed here must have a verified email address on their account. This doesn't do anything if the Echo extension is not installed or if $wgImportDumpEnableAutomatedJob is not enabled."
+			"description": "Array of usernames to send email notifications to for failed imports. Users listed here must have a verified email address on their account. This doesn't do anything if the Echo extension is not installed or if $wgRequestImportEnableAutomatedJob is not enabled."
 		}
 	},
 	"ConfigRegistry": {
