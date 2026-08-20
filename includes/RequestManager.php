@@ -39,8 +39,8 @@ class RequestManager {
 	];
 
 	public const CONSTRUCTOR_OPTIONS = [
+		ConfigNames::ImportDumpScriptCommand,
 		ConfigNames::InterwikiMap,
-		ConfigNames::ScriptCommand,
 	];
 
 	private IDatabase $dbw;
@@ -302,7 +302,7 @@ class RequestManager {
 	}
 
 	public function getCommand(): string {
-		$command = $this->options->get( ConfigNames::ScriptCommand );
+		$command = $this->options->get( ConfigNames::ImportDumpScriptCommand );
 		if ( !$this->getInterwikiPrefix() ) {
 			$command = preg_replace( '/--username-prefix=?/', '', $command );
 		}
