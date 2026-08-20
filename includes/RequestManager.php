@@ -301,7 +301,7 @@ class RequestManager {
 		return '';
 	}
 
-	public function getImportDumpCommand(): string {
+	public function getCommand(): string {
 		$command = $this->options->get( ConfigNames::ImportDumpScriptCommand );
 		if ( !$this->getInterwikiPrefix() ) {
 			$command = preg_replace( '/--username-prefix=?/', '', $command );
