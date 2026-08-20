@@ -13,9 +13,9 @@ class ConfigNames {
 
 	public const HelpUrl = 'RequestImportHelpUrl';
 
-	public const InterwikiMap = 'RequestImportInterwikiMap';
+	public const ImportDumpScriptCommand = 'RequestImportImportDumpScriptCommand';
 
-	public const ScriptCommand = 'RequestImportScriptCommand';
+	public const InterwikiMap = 'RequestImportInterwikiMap';
 
 	public const UsersNotifiedOnAllRequests = 'RequestImportUsersNotifiedOnAllRequests';
 
