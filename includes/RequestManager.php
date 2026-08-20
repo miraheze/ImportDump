@@ -65,7 +65,7 @@ class RequestManager {
 	}
 
 	public function loadFromID( int $requestID ): void {
-		$this->dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-importdump' );
+		$this->dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-requestimport' );
 		$this->ID = $requestID;
 
 		$this->row = $this->dbw->newSelectQueryBuilder()

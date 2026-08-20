@@ -58,7 +58,7 @@ class SpecialRequestImport extends FormSpecialPage
 		$this->setParameter( $par );
 		$this->setHeaders();
 
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
 		}
@@ -165,7 +165,7 @@ class SpecialRequestImport extends FormSpecialPage
 			return Status::newFatal( 'actionthrottledtext' );
 		}
 
-		$dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-importdump' );
+		$dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-requestimport' );
 		$duplicate = $dbw->newSelectQueryBuilder()
 			->select( ISQLPlatform::ALL_ROWS )
 			->from( 'import_requests' )
