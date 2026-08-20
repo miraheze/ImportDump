@@ -9,15 +9,15 @@ namespace Miraheze\ImportDump;
  */
 class ConfigNames {
 
-	public const EnableAutomatedJob = 'ImportDumpEnableAutomatedJob';
+	public const EnableAutomatedJob = 'RequestImportEnableAutomatedJob';
 
-	public const HelpUrl = 'ImportDumpHelpUrl';
+	public const HelpUrl = 'RequestImportHelpUrl';
 
-	public const InterwikiMap = 'ImportDumpInterwikiMap';
+	public const InterwikiMap = 'RequestImportInterwikiMap';
 
-	public const ScriptCommand = 'ImportDumpScriptCommand';
+	public const ScriptCommand = 'RequestImportScriptCommand';
 
-	public const UsersNotifiedOnAllRequests = 'ImportDumpUsersNotifiedOnAllRequests';
+	public const UsersNotifiedOnAllRequests = 'RequestImportUsersNotifiedOnAllRequests';
 
-	public const UsersNotifiedOnFailedImports = 'ImportDumpUsersNotifiedOnFailedImports';
+	public const UsersNotifiedOnFailedImports = 'RequestImportUsersNotifiedOnFailedImports';
 }
