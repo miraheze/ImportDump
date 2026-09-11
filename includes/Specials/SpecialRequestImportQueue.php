@@ -69,7 +69,8 @@ class SpecialRequestImportQueue extends SpecialPage
 				'type' => 'user',
 				'name' => 'requester',
 				'label-message' => 'importdump-label-requester',
-				'exist' => true,
+				'exists' => true,
+				'excludetemp' => true,
 				'default' => $requester,
 			],
 			'status' => [
