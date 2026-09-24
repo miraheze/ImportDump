@@ -32,7 +32,7 @@ class SpecialRequestImportQueue extends SpecialPage
 	public function execute( $par ): void {
 		$this->setHeaders();
 
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			throw new ErrorPageError(
 				'importdump-requestimportqueue-notcentral',

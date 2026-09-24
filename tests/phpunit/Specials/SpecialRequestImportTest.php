@@ -44,7 +44,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		parent::setUp();
 
 		$this->overrideConfigValue( MainConfigNames::VirtualDomainsMapping, [
-			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
+			'virtual-requestimport' => [ 'db' => WikiMap::getCurrentWikiId() ],
 		] );
 
 		$this->specialRequestImport = $this->newSpecialPage();
