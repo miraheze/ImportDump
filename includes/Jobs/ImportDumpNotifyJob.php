@@ -10,7 +10,7 @@ use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
-use MessageLocalizer;
+use MediaWiki\Language\MessageLocalizer;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
