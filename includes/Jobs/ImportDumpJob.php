@@ -2,21 +2,22 @@
 
 namespace Miraheze\ImportDump\Jobs;
 
-use MediaWiki\Import\ImportStreamSource;
 use InitEditCount;
 use MediaWiki\Config\Config;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Deferred\SiteStatsUpdate;
 use MediaWiki\Exception\MWExceptionHandler;
+use MediaWiki\Import\ImportStreamSource;
+use MediaWiki\Import\WikiImporterFactory;
 use MediaWiki\JobQueue\Job;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\JobQueue\JobSpecification;
+use MediaWiki\Language\MessageLocalizer;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Maintenance\FakeMaintenance;
 use MediaWiki\Permissions\UltimateAuthority;
 use MediaWiki\SiteStats\SiteStatsInit;
 use MediaWiki\User\User;
-use MediaWiki\Language\MessageLocalizer;
 use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
@@ -25,7 +26,6 @@ use RebuildTextIndex;
 use RefreshLinks;
 use Throwable;
 use UpdateArticleCount;
-use MediaWiki\Import\WikiImporterFactory;
 use Wikimedia\Rdbms\IConnectionProvider;
 
 class ImportDumpJob extends Job
