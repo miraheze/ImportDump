@@ -42,11 +42,7 @@ class SpecialRequestImport extends FormSpecialPage
 		private readonly UserFactory $userFactory,
 		private readonly ?ModuleFactory $moduleFactory,
 	) {
-		if ( version_compare( MW_VERSION, '1.46', '>=' ) ) {
-			parent::__construct( 'RequestImport' );
-		} else {
-			parent::__construct( 'RequestImport', 'request-import' );
-		}
+		parent::__construct( 'RequestImport' );
 	}
 
 	/**
