@@ -16,6 +16,9 @@ use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\FormSpecialPage;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
+use MediaWiki\Upload\UploadBase;
+use MediaWiki\Upload\UploadFromUrl;
+use MediaWiki\Upload\UploadStash;
 use MediaWiki\Upload\UploadVerification;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
@@ -23,9 +26,6 @@ use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\RequestStatus;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
-use UploadBase;
-use UploadFromUrl;
-use UploadStash;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\Platform\ISQLPlatform;
@@ -42,11 +42,7 @@ class SpecialRequestImport extends FormSpecialPage
 		private readonly UserFactory $userFactory,
 		private readonly ?ModuleFactory $moduleFactory,
 	) {
-		if ( version_compare( MW_VERSION, '1.46', '>=' ) ) {
-			parent::__construct( 'RequestImport' );
-		} else {
-			parent::__construct( 'RequestImport', 'request-import' );
-		}
+		parent::__construct( 'RequestImport' );
 	}
 
 	/**

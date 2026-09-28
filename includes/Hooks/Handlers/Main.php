@@ -3,7 +3,7 @@
 namespace Miraheze\ImportDump\Hooks\Handlers;
 
 use MediaWiki\Block\Hook\GetAllBlockActionsHook;
-use MediaWiki\Hook\LoginFormValidErrorMessagesHook;
+use MediaWiki\Specials\Hook\LoginFormValidErrorMessagesHook;
 use MediaWiki\User\Hook\UserGetReservedNamesHook;
 use MediaWiki\WikiMap\WikiMap;
 use Wikimedia\Rdbms\IConnectionProvider;
