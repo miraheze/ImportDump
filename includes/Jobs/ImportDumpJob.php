@@ -2,7 +2,7 @@
 
 namespace Miraheze\ImportDump\Jobs;
 
-use ImportStreamSource;
+use MediaWiki\Import\ImportStreamSource;
 use InitEditCount;
 use MediaWiki\Config\Config;
 use MediaWiki\Context\RequestContext;
@@ -16,7 +16,7 @@ use MediaWiki\Maintenance\FakeMaintenance;
 use MediaWiki\Permissions\UltimateAuthority;
 use MediaWiki\SiteStats\SiteStatsInit;
 use MediaWiki\User\User;
-use MessageLocalizer;
+use MediaWiki\Language\MessageLocalizer;
 use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
@@ -25,7 +25,7 @@ use RebuildTextIndex;
 use RefreshLinks;
 use Throwable;
 use UpdateArticleCount;
-use WikiImporterFactory;
+use MediaWiki\Import\WikiImporterFactory;
 use Wikimedia\Rdbms\IConnectionProvider;
 
 class ImportDumpJob extends Job
