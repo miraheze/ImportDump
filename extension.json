@@ -107,6 +107,32 @@
 			]
 		}
 	},
+	"LogParamsAllowedClasses": {
+		"importdump/interwiki": [
+			"Wikimedia\\Message\\ScalarParam"
+		],
+		"importdump/request": [
+			"Wikimedia\\Message\\ScalarParam"
+		],
+		"importdump/started": [
+			"Wikimedia\\Message\\ScalarParam"
+		],
+		"importdump/statusupdate": [
+			"Wikimedia\\Message\\ScalarParam"
+		],
+		"importdumpprivate/interwiki": [
+			"Wikimedia\\Message\\ScalarParam"
+		],
+		"importdumpprivate/request": [
+			"Wikimedia\\Message\\ScalarParam"
+		],
+		"importdumpprivate/started": [
+			"Wikimedia\\Message\\ScalarParam"
+		],
+		"importdumpprivate/statusupdate": [
+			"Wikimedia\\Message\\ScalarParam"
+		]
+	},
 	"SpecialPages": {
 		"RequestImport": {
 			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImport",
