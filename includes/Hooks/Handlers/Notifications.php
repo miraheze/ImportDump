@@ -25,7 +25,7 @@ class Notifications implements BeforeCreateEchoEventHook {
 		array &$notificationCategories,
 		array &$icons
 	): void {
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			return;
 		}

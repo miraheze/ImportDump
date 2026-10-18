@@ -14,7 +14,7 @@ use Miraheze\ImportDump\Hooks\HookRunner;
 
 return [
 	'ImportDumpConfig' => static function ( MediaWikiServices $services ): Config {
-		return $services->getConfigFactory()->makeConfig( 'ImportDump' );
+		return $services->getConfigFactory()->makeConfig( 'RequestImport' );
 	},
 	'ImportDumpHookRunner' => static function ( MediaWikiServices $services ): HookRunner {
 		return new HookRunner( $services->getHookContainer() );
