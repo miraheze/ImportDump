@@ -56,7 +56,7 @@
 	"importdump-no-changes": "هېڅ بدلون نه دی راغلی.",
 	"importdump-notcentral": "ناچارن‌شوی",
 	"importdump-notification-body-import-failed": "د ناکامۍ لامل: $1",
-	"importdump-notification-visit-request": "ليدنې غوښتنه",
+	"importdump-notification-visit-request": "غوښتنې نه ليدنه وکړئ",
 	"importdump-requestimportqueue-notcentral": "ناچارن‌شوی",
 	"importdump-requestimportqueue-notcentral-text": "دې ويکي کې د رالېږدونې غوښتنې ناچارن شوې دي. مهرباني وکړ د مرکزي ويکي څخه د رالېږدونې کتار وگورئ.",
 	"importdump-section-comments": "د غوښتنې په اړه څرگندونې وکړئ",
