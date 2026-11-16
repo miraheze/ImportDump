@@ -33,7 +33,7 @@
 	"importdump-notification-header-import-failed": "D'Import-Ufro #$1 huet net geklappt.",
 	"importdump-notification-header-new-request": "Nei Importufro #$1",
 	"importdump-notification-header-status-update": "Status aktualiséiert fir d'Import-Ufro #$1",
-	"importdump-notloggedin": "Loggt Iech wgl. a fir en Import unzefroen.",
+	"importdump-notloggedin": "Loggt Iech wgl. an, fir en Import unzefroen.",
 	"importdump-private": "Dir sidd net berechtegt dës Ufro ze gesinn, well se als privat markéiert gouf.",
 	"importdump-request-edited-reason": "Grond:\nVirege Wäert: $1\nNeie Wäert: $2",
 	"importdump-request-edited-source": "Source:\nVirege Wäert: $1\nNeie Wäert: $2",
