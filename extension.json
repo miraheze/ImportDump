@@ -34,7 +34,10 @@
 		}
 	},
 	"JobClasses": {
-		"ImportDumpAssembleChunks": "Miraheze\\ImportDump\\Jobs\\AssembleChunksJob",
+		"ImportDumpAssembleChunks": {
+			"class": "Miraheze\\ImportDump\\Jobs\\AssembleChunksJob",
+			"needsPage": false
+		},
 		"ImportDumpJob": {
 			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpJob",
 			"services": [
