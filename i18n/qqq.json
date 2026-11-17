@@ -18,7 +18,7 @@
 	"echo-category-title-importdump-request-status-update": "Echo category title for {{msg-mw|echo-category-title-importdump-request-status-update}}.",
 	"echo-pref-tooltip-importdump-request-comment": "Echo preference tooltip for {{msg-mw|echo-category-title-importdump-request-comment}}.",
 	"echo-pref-tooltip-importdump-request-status-update": "Echo preference tooltip for {{msg-mw|echo-category-title-importdump-request-status-update}}.",
-	"importdump-apierror-chunking-disabled": "API error shown when action=importdumpupload is used while $wgImportDumpEnableChunkedUploads is false.",
+	"importdump-apierror-chunking-disabled": "API error shown when action=requestimportupload is used while $wgImportDumpEnableChunkedUploads is false.",
 	"importdump-button-copy": "Text for the 'Copy to Clipboard' button.",
 	"importdump-chunkedupload-error": "Error shown on [[Special:RequestImport]] when a chunked upload fails. Parameters:\n* $1 - the error message returned by the API",
 	"importdump-chunkedupload-progress": "Status text shown under the progress bar on [[Special:RequestImport]] while a large file is uploaded in chunks.",
