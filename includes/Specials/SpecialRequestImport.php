@@ -2,6 +2,7 @@
 
 namespace Miraheze\ImportDump\Specials;
 
+use MediaWiki\Api\ApiUpload;
 use MediaWiki\Exception\ErrorPageError;
 use MediaWiki\Exception\PermissionsError;
 use MediaWiki\Exception\UserBlockedError;
@@ -16,7 +17,9 @@ use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\FormSpecialPage;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
+use MediaWiki\Upload\Exception\UploadStashException;
 use MediaWiki\Upload\UploadBase;
+use MediaWiki\Upload\UploadFromStash;
 use MediaWiki\Upload\UploadFromUrl;
 use MediaWiki\Upload\UploadStash;
 use MediaWiki\Upload\UploadVerification;
@@ -63,6 +66,10 @@ class SpecialRequestImport extends FormSpecialPage
 
 		if ( $this->getConfig()->get( ConfigNames::HelpUrl ) ) {
 			$this->getOutput()->addHelpLink( $this->getConfig()->get( ConfigNames::HelpUrl ), true );
+		}
+
+		if ( $this->useChunkedUploads() ) {
+			$this->addChunkedUploadModule();
 		}
 
 		$form = $this->getForm();
@@ -129,6 +136,13 @@ class SpecialRequestImport extends FormSpecialPage
 			];
 		}
 
+		if ( $this->useChunkedUploads() ) {
+			$formDescriptor['UploadFileKey'] = [
+				'type' => 'hidden',
+				'default' => '',
+			];
+		}
+
 		$formDescriptor += [
 			'reason' => [
 				'type' => 'textarea',
@@ -182,7 +196,22 @@ class SpecialRequestImport extends FormSpecialPage
 		$request = $this->getRequest();
 		$request->setVal( 'wpDestFile', $fileName );
 
-		$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] ?? 'File' );
+		$stashKey = $this->useChunkedUploads() ? (string)( $data['UploadFileKey'] ?? '' ) : '';
+		if ( $stashKey !== '' ) {
+			if ( !UploadFromStash::isValidKey( $stashKey ) ) {
+				return Status::newFatal( 'apierror-invalid-file-key' );
+			}
+
+			$uploadBase = new UploadFromStash( $this->getUser() );
+			try {
+				$uploadBase->initialize( $stashKey, $fileName );
+			} catch ( UploadStashException $e ) {
+				return Status::newFatal( 'uploadstash-exception', get_class( $e ), $e->getMessage() );
+			}
+		} else {
+			$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] ?? 'File' );
+		}
+
 		if ( !$uploadBase->isEnabled() ) {
 			return Status::newFatal( 'uploaddisabled' );
 		}
@@ -213,16 +242,25 @@ class SpecialRequestImport extends FormSpecialPage
 			);
 		}
 
-		$status = $uploadBase->tryStashFile( $this->getUser() );
-		if ( !$status->isGood() ) {
-			return $status;
-		}
-
 		$repo = $this->repoGroup->getLocalRepo();
 		$uploadStash = new UploadStash( $repo, $this->getUser() );
 
-		$fileKey = $status->getStatusValue()->getValue()->getFileKey();
-		$file = $uploadStash->getFile( $fileKey );
+		if ( $stashKey !== '' ) {
+			$fileKey = $stashKey;
+		} else {
+			$status = $uploadBase->tryStashFile( $this->getUser() );
+			if ( !$status->isGood() ) {
+				return $status;
+			}
+
+			$fileKey = $status->getStatusValue()->getValue()->getFileKey();
+		}
+
+		try {
+			$file = $uploadStash->getFile( $fileKey );
+		} catch ( UploadStashException $e ) {
+			return Status::newFatal( 'uploadstash-exception', get_class( $e ), $e->getMessage() );
+		}
 
 		$status = $repo->publish(
 			$file->getPath(),
@@ -284,6 +322,20 @@ class SpecialRequestImport extends FormSpecialPage
 		}
 
 		return Status::newGood();
+	}
+
+	private function useChunkedUploads(): bool {
+		return (bool)$this->getConfig()->get( ConfigNames::EnableChunkedUploads );
+	}
+
+	private function addChunkedUploadModule(): void {
+		$out = $this->getOutput();
+		$out->addModules( [ 'ext.importdump.chunkedupload' ] );
+		$out->addJsConfigVars( 'wgImportDumpChunkedUpload', [
+			'maxUploadSize' => UploadBase::getMaxUploadSize( 'file' ),
+			'maxPhpUploadSize' => UploadBase::getMaxPhpUploadSize(),
+			'minChunkSize' => ApiUpload::getMinUploadChunkSize( $this->getConfig() ),
+		] );
 	}
 
 	public function getLogType( string $target ): string {
