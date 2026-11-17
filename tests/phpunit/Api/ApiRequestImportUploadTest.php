@@ -259,7 +259,7 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 	public function testMaxUploadSizeLimit(): void {
 		$this->overrideConfigValue( ConfigNames::MaxUploadSize, 2000 );
 
-		$this->expectApiErrorCode( 'integeroutofrange' );
+		$this->expectApiErrorCode( 'outofrange' );
 		$this->sendChunk( $this->getXml( self::CHUNK_SIZE ), [
 			'offset' => 0,
 			'filesize' => 5000,
