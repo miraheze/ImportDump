@@ -1,5 +1,5 @@
 ( function () {
-	const config = mw.config.get( 'wgImportDumpChunkedUpload' );
+	const config = mw.config.get( 'wgRequestImportChunkedUpload' );
 	if ( !config || !window.FormData ) {
 		return;
 	}
@@ -16,7 +16,7 @@
 
 	function sendChunk( file, start, end, filekey, onProgress, retries ) {
 		const data = {
-			action: 'importdumpupload',
+			action: 'requestimportupload',
 			filesize: file.size,
 			offset: start,
 			chunk: file.slice( start, end )
@@ -41,7 +41,7 @@
 				return xhr;
 			}
 		} ).then(
-			( result ) => result.importdumpupload,
+			( result ) => result.requestimportupload,
 			( code, result ) => {
 				if ( code === 'http' && retries > 0 && result.textStatus !== 'abort' ) {
 					return new Promise( ( resolve ) => {
