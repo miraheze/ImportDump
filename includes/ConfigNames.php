@@ -19,6 +19,8 @@ class ConfigNames {
 
 	public const InterwikiMap = 'ImportDumpInterwikiMap';
 
+	public const MaxUploadSize = 'ImportDumpMaxUploadSize';
+
 	public const ScriptCommand = 'ImportDumpScriptCommand';
 
 	public const UsersNotifiedOnAllRequests = 'ImportDumpUsersNotifiedOnAllRequests';
