@@ -200,7 +200,7 @@ class ApiRequestImportUpload extends ApiBase {
 		$maxSize = RequestImportUploadFromChunks::getMaxUploadSize();
 		if ( $maxSize < PHP_INT_MAX ) {
 			$fileSize[IntegerDef::PARAM_MAX] = $maxSize;
-			$fileSize[ApiBase::PARAM_RANGE_ENFORCE] = true;
+			$fileSize[IntegerDef::PARAM_IGNORE_RANGE] = false;
 		}
 
 		return [
