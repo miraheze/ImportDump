@@ -17,9 +17,10 @@
 	function sendChunk( file, start, end, filekey, onProgress, retries ) {
 		const data = {
 			action: 'requestimportupload',
+			chunk: file.slice( start, end ),
 			filesize: file.size,
 			offset: start,
-			chunk: file.slice( start, end )
+			type: config.type
 		};
 
 		if ( filekey ) {
