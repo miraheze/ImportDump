@@ -5,7 +5,6 @@ namespace Miraheze\ImportDump\Jobs;
 use Exception;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Exception\MWExceptionHandler;
-use MediaWiki\JobQueue\GenericParameterJob;
 use MediaWiki\JobQueue\Job;
 use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\Request\WebRequestUpload;
@@ -16,7 +15,7 @@ use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use UnexpectedValueException;
 use Wikimedia\ScopedCallback;
 
-class AssembleChunksJob extends Job implements GenericParameterJob {
+class AssembleChunksJob extends Job {
 
 	public const string JOB_NAME = 'ImportDumpAssembleChunks';
 
