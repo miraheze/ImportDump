@@ -28,11 +28,13 @@
 		"requestimportupload": {
 			"class": "Miraheze\\ImportDump\\Api\\ApiRequestImportUpload",
 			"services": [
-				"ConnectionProvider"
+				"ConnectionProvider",
+				"JobQueueGroup"
 			]
 		}
 	},
 	"JobClasses": {
+		"ImportDumpAssembleChunks": "Miraheze\\ImportDump\\Jobs\\AssembleChunksJob",
 		"ImportDumpJob": {
 			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpJob",
 			"services": [
@@ -183,6 +185,7 @@
 			],
 			"messages": [
 				"largefileserver",
+				"importdump-chunkedupload-assembling",
 				"importdump-chunkedupload-error",
 				"importdump-chunkedupload-progress"
 			]
