@@ -11,6 +11,8 @@ class ConfigNames {
 
 	public const EnableAutomatedJob = 'ImportDumpEnableAutomatedJob';
 
+	public const EnableChunkedUploads = 'ImportDumpEnableChunkedUploads';
+
 	public const HelpUrl = 'ImportDumpHelpUrl';
 
 	public const InterwikiMap = 'ImportDumpInterwikiMap';
