@@ -28,7 +28,10 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		parent::__construct( $user );
 	}
 
-	/** @inheritDoc */
+	/**
+	 * @inheritDoc
+	 * @param ?string $forType @phan-unused-param
+	 */
 	public static function getMaxUploadSize( $forType = null ) {
 		$limit = MediaWikiServices::getInstance()
 			->getMainConfig()
