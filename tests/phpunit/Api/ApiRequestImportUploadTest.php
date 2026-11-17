@@ -335,7 +335,7 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 		$chunk = '01234';
 		$this->fakeUploadChunk( 'chunk', 'blob', 'application/xml', $chunk );
 
-		$this->expectApiErrorCode( 'missingparam' );
+		$this->expectApiErrorCode( 'nooffset' );
 		$this->doApiRequestWithToken( [
 			'action' => 'requestimportupload',
 			'type' => 'xml',
