@@ -24,6 +24,7 @@ return [
 			$services->getActorStoreFactory(),
 			$services->getConnectionProvider(),
 			$services->getExtensionRegistry(),
+			$services->get( 'ImportDumpHookRunner' ),
 			$services->getInterwikiLookup(),
 			$services->getJobQueueGroupFactory(),
 			$services->getLinkRenderer(),
