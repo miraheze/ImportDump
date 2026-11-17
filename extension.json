@@ -23,6 +23,14 @@
 	"TestAutoloadNamespaces": {
 		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/"
 	},
+	"APIModules": {
+		"requestimportupload": {
+			"class": "Miraheze\\ImportDump\\Api\\ApiRequestImportUpload",
+			"services": [
+				"ConnectionProvider"
+			]
+		}
+	},
 	"JobClasses": {
 		"ImportDumpJob": {
 			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpJob",
@@ -166,6 +174,18 @@
 		}
 	},
 	"ResourceModules": {
+		"ext.importdump.chunkedupload": {
+			"scripts": "ext.importdump.chunkedupload.js",
+			"dependencies": [
+				"mediawiki.api",
+				"oojs-ui-core"
+			],
+			"messages": [
+				"largefileserver",
+				"importdump-chunkedupload-error",
+				"importdump-chunkedupload-progress"
+			]
+		},
 		"ext.importdump.oouiform": {
 			"scripts": "ext.importdump.oouiform.ooui.js",
 			"dependencies": [
@@ -185,6 +205,10 @@
 		"ImportDumpEnableAutomatedJob": {
 			"value": false,
 			"description": "Whether to enable a job where a reviewer just has to 'approve' an import and job handles everything else. You can use the ImportDumpJobGetFile hook to manipulate how the job gets the XML file."
+		},
+		"ImportDumpEnableChunkedUploads": {
+			"value": false,
+			"description": "Whether to upload XML files in chunks from Special:RequestImport using JavaScript. Chunks are sent to the requestimportupload API module."
 		},
 		"ImportDumpHelpUrl": {
 			"value": "",
