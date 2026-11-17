@@ -9,14 +9,6 @@
 	"requires": {
 		"MediaWiki": ">= 1.46.0"
 	},
-	"APIModules": {
-		"importdumpupload": {
-			"class": "Miraheze\\ImportDump\\Api\\ApiImportDumpUpload",
-			"services": [
-				"ConnectionProvider"
-			]
-		}
-	},
 	"MessagesDirs": {
 		"ImportDump": [
 			"i18n"
@@ -30,6 +22,14 @@
 	},
 	"TestAutoloadNamespaces": {
 		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/"
+	},
+	"APIModules": {
+		"requestimportupload": {
+			"class": "Miraheze\\ImportDump\\Api\\ApiRequestImportUpload",
+			"services": [
+				"ConnectionProvider"
+			]
+		}
 	},
 	"JobClasses": {
 		"ImportDumpJob": {
@@ -174,13 +174,6 @@
 		}
 	},
 	"ResourceModules": {
-		"ext.importdump.oouiform": {
-			"scripts": "ext.importdump.oouiform.ooui.js",
-			"dependencies": [
-				"mediawiki.storage",
-				"oojs-ui-widgets"
-			]
-		},
 		"ext.importdump.chunkedupload": {
 			"scripts": "ext.importdump.chunkedupload.js",
 			"dependencies": [
@@ -191,6 +184,13 @@
 				"largefileserver",
 				"importdump-chunkedupload-error",
 				"importdump-chunkedupload-progress"
+			]
+		},
+		"ext.importdump.oouiform": {
+			"scripts": "ext.importdump.oouiform.ooui.js",
+			"dependencies": [
+				"mediawiki.storage",
+				"oojs-ui-widgets"
 			]
 		},
 		"ext.importdump.oouiform.styles": {
@@ -208,7 +208,7 @@
 		},
 		"ImportDumpEnableChunkedUploads": {
 			"value": false,
-			"description": "Whether to upload XML files in chunks from Special:RequestImport using JavaScript. Chunks are sent to the importdumpupload API module."
+			"description": "Whether to upload XML files in chunks from Special:RequestImport using JavaScript. Chunks are sent to the requestimportupload API module."
 		},
 		"ImportDumpHelpUrl": {
 			"value": "",
