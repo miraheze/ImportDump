@@ -335,6 +335,7 @@ class SpecialRequestImport extends FormSpecialPage
 			'maxUploadSize' => UploadBase::getMaxUploadSize( 'file' ),
 			'maxPhpUploadSize' => UploadBase::getMaxPhpUploadSize(),
 			'minChunkSize' => ApiUpload::getMinUploadChunkSize( $this->getConfig() ),
+			'type' => 'xml',
 		] );
 	}
 
