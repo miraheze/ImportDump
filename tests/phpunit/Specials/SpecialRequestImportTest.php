@@ -9,7 +9,10 @@ use MediaWiki\MainConfigNames;
 use MediaWiki\Request\FauxRequest;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
+use MediaWiki\Upload\UploadStash;
+use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use SpecialPageTestBase;
@@ -213,6 +216,129 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			],
 			'sessionfailure',
 		];
+	}
+
+	/**
+	 * @covers ::getFormFields
+	 */
+	public function testGetFormFieldsChunkedUploads(): void {
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$this->assertArrayNotHasKey( 'UploadFileKey', $specialRequestImport->getFormFields() );
+
+		$this->overrideConfigValue( ConfigNames::EnableChunkedUploads, true );
+
+		$formFields = $specialRequestImport->getFormFields();
+		$this->assertArrayHasKey( 'UploadFileKey', $formFields );
+		$this->assertSame( 'hidden', $formFields['UploadFileKey']['type'] );
+	}
+
+	/**
+	 * @covers ::execute
+	 * @covers ::useChunkedUploads
+	 */
+	public function testExecuteChunkedUploads(): void {
+		$performer = $this->getTestUser()->getAuthority();
+
+		[ $html, ] = $this->executeSpecialPage( '', null, 'qqx', $performer );
+		$this->assertStringNotContainsString( 'wpUploadFileKey', $html );
+
+		$this->overrideConfigValue( ConfigNames::EnableChunkedUploads, true );
+
+		[ $html, ] = $this->executeSpecialPage( '', null, 'qqx', $performer );
+		$this->assertStringContainsString( 'wpUploadFileKey', $html );
+	}
+
+	/**
+	 * @covers ::addChunkedUploadModule
+	 */
+	public function testAddChunkedUploadModule(): void {
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$specialRequestImport->addChunkedUploadModule();
+
+		$out = $this->specialRequestImport->getOutput();
+		$this->assertContains( 'ext.importdump.chunkedupload', $out->getModules() );
+
+		$vars = $out->getJsConfigVars()['wgRequestImportChunkedUpload'];
+		$this->assertSame( 'xml', $vars['type'] );
+		$this->assertArrayHasKey( 'maxUploadSize', $vars );
+		$this->assertArrayHasKey( 'maxPhpUploadSize', $vars );
+		$this->assertArrayHasKey( 'minChunkSize', $vars );
+	}
+
+	private function stashXml( User $user ): string {
+		$path = $this->getNewTempFile();
+		file_put_contents( $path, "<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>" );
+
+		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
+		return ( new UploadStash( $repo, $user ) )->stashFile( $path, 'file' )->getFileKey();
+	}
+
+	private function submitStashKey( User $user, string $fileKey ): Status {
+		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
+
+		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
+		$context->setUser( $user );
+		$context->setRequest( new FauxRequest( [
+			'wpEditToken' => $context->getCsrfTokenSet()->getToken()->toString(),
+		], true ) );
+
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$specialRequestImport->setContext( $context );
+
+		return $specialRequestImport->onSubmit( [
+			'source' => 'http://example.com',
+			'target' => 'wikidb',
+			'reason' => 'Stash reason',
+			'UploadFile' => '',
+			'UploadFileKey' => $fileKey,
+		] );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testOnSubmitFromStash(): void {
+		$this->overrideConfigValue( ConfigNames::EnableChunkedUploads, true );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$status = $this->submitStashKey( $user, $this->stashXml( $user ) );
+		$this->assertStatusGood( $status );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testOnSubmitFromStashInvalidKey(): void {
+		$this->overrideConfigValue( ConfigNames::EnableChunkedUploads, true );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$status = $this->submitStashKey( $user, 'invalid' );
+		$this->assertStatusError( 'apierror-invalid-file-key', $status );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testOnSubmitFromStashMissingKey(): void {
+		$this->overrideConfigValue( ConfigNames::EnableChunkedUploads, true );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$status = $this->submitStashKey( $user, 'doesnotexist.xml' );
+		$this->assertStatusError( 'uploadstash-exception', $status );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testOnSubmitFromStashWrongOwner(): void {
+		$this->overrideConfigValue( ConfigNames::EnableChunkedUploads, true );
+
+		$owner = $this->getMutableTestUser()->getUser();
+		$fileKey = $this->stashXml( $owner );
+
+		$other = $this->getTestSysop()->getUser();
+		$status = $this->submitStashKey( $other, $fileKey );
+		$this->assertStatusError( 'uploadstash-exception', $status );
 	}
 
 	/**
