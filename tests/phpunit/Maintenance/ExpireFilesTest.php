@@ -2,6 +2,8 @@
 
 namespace Miraheze\ImportDump\Tests\Maintenance;
 
+use MediaWiki\FileRepo\LocalRepo;
+use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Tests\Maintenance\MaintenanceBaseTestCase;
 use MediaWiki\WikiMap\WikiMap;
@@ -9,6 +11,8 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Maintenance\ExpireFiles;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
+use Wikimedia\FileBackend\FSFileBackend;
+use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
@@ -27,6 +31,21 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 
 	protected function setUp(): void {
 		parent::setUp();
+
+		$this->setService( 'RepoGroup', new RepoGroup(
+			[
+				'class' => LocalRepo::class,
+				'name' => 'temp',
+				'backend' => new FSFileBackend( [
+					'name' => 'temp-backend',
+					'wikiId' => WikiMap::getCurrentWikiId(),
+					'basePath' => $this->getNewTempDirectory(),
+				] ),
+			],
+			[],
+			$this->getServiceContainer()->getMainWANObjectCache(),
+			$this->createMock( MimeAnalyzer::class )
+		) );
 
 		$this->overrideConfigValues( [
 			MainConfigNames::VirtualDomainsMapping => [
