@@ -17,6 +17,7 @@ use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\AssembleChunksJob;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
+use StatusValue;
 use Wikimedia\ParamValidator\ParamValidator;
 use Wikimedia\ParamValidator\TypeDef\IntegerDef;
 use Wikimedia\Rdbms\IConnectionProvider;
@@ -188,7 +189,7 @@ class ApiRequestImportUpload extends ApiBase {
 		}
 
 		if ( !$progress['status']->isGood() ) {
-			$this->dieStatusWithCode( $progress['status'], 'stashfailed' );
+			$this->dieStatusWithError( $progress['status'], 'stashfailed' );
 		}
 
 		$result = [
@@ -205,6 +206,15 @@ class ApiRequestImportUpload extends ApiBase {
 		}
 
 		$this->getResult()->addValue( null, $this->getModuleName(), $result );
+	}
+
+	private function dieStatusWithError( StatusValue $status, string $code ): never {
+		$fatal = StatusValue::newGood();
+		foreach ( $status->getMessages() as $error ) {
+			$fatal->fatal( ApiMessage::create( $error, $code ) );
+		}
+
+		$this->dieStatus( $fatal );
 	}
 
 	private function finish( RequestImportUploadFromChunks $upload, string $fileKey ): void {
