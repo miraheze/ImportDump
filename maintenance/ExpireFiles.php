@@ -24,7 +24,10 @@ class ExpireFiles extends Maintenance {
 	public function __construct() {
 		parent::__construct();
 
-		$this->addDescription( 'Deletes the stored XML files of old import requests using $wgImportDumpFileExpiryDays.' );
+		$this->addDescription(
+			'Deletes the stored XML files of old import requests using $wgImportDumpFileExpiryDays.'
+		);
+
 		$this->addOption( 'dry-run', 'List the files that would be deleted without deleting them.' );
 
 		$this->setBatchSize( 100 );
