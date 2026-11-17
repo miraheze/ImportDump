@@ -274,7 +274,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	}
 
 	private function submitStashKey( User $user, string $fileKey ): Status {
-		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
+		ConvertibleTimestamp::setFakeTime( (int)ConvertibleTimestamp::now( TS_UNIX ) + 86400 );
 
 		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
 		$context->setUser( $user );
