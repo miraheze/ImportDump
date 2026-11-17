@@ -104,7 +104,12 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 		return $filekey;
 	}
 
-	/** @param array<string, mixed> $params */
+	/**
+	 * @param string $filekey
+	 * @param int $size
+	 * @param array<string, mixed> $params
+	 * @return AssembleChunksJob
+	 */
 	private function newJob( string $filekey, int $size, array $params ): AssembleChunksJob {
 		return new AssembleChunksJob( $params + [
 			'filekey' => $filekey,
