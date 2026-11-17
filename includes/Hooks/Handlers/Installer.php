@@ -12,7 +12,7 @@ class Installer implements LoadExtensionSchemaUpdatesHook {
 		$dir = __DIR__ . '/../../../sql';
 
 		$updater->addExtensionUpdateOnVirtualDomain( [
-			'virtual-importdump',
+			'virtual-requestimport',
 			'addTable',
 			'import_requests',
 			"$dir/$dbType/tables-generated.sql",

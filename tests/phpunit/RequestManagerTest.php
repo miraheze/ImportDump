@@ -19,13 +19,13 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 	public function addDBDataOnce(): void {
 		$this->overrideConfigValue( MainConfigNames::VirtualDomainsMapping, [
-			'virtual-importdump' => [ 'db' => 'wikidb' ],
+			'virtual-requestimport' => [ 'db' => 'wikidb' ],
 		] );
 
 		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
 
 		$connectionProvider = $this->getServiceContainer()->getConnectionProvider();
-		$dbw = $connectionProvider->getPrimaryDatabase( 'virtual-importdump' );
+		$dbw = $connectionProvider->getPrimaryDatabase( 'virtual-requestimport' );
 
 		$dbw->newInsertQueryBuilder()
 			->insertInto( 'import_requests' )

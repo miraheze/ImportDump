@@ -181,7 +181,7 @@ class ImportDumpJob extends Job
 	}
 
 	private function getLoggingWiki(): string {
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
 		return $dbr->getDomainID();
 	}
 
