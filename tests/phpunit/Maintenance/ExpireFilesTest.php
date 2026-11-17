@@ -11,6 +11,7 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Maintenance\ExpireFiles;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
+use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
@@ -88,13 +89,18 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 		$id = $dbw->insertId();
 
 		$backend = $this->getServiceContainer()->getRepoGroup()->getLocalRepo()->getBackend();
-		$status = $backend->quickCreate( [
-			'dst' => $this->getRequestManager( $id )->getFilePath(),
+		$path = $this->getRequestManager( $id )->getFilePath();
+
+		$this->assertStatusGood( $backend->prepare( [
+			'dir' => FileBackend::parentStoragePath( $path ),
+		] ) );
+
+		$this->assertStatusGood( $backend->quickCreate( [
+			'dst' => $path,
 			'content' => 'test',
 			'overwrite' => true,
-		] );
+		] ) );
 
-		$this->assertStatusGood( $status );
 		return $id;
 	}
 
