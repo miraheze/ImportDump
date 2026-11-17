@@ -17,9 +17,16 @@
 		return config.maxDirectUploadSize || Infinity;
 	}
 
+	function wait( ms ) {
+		return new Promise( ( resolve ) => {
+			setTimeout( resolve, ms );
+		} );
+	}
+
 	function sendChunk( file, start, end, filekey, onProgress, retries ) {
 		const data = {
 			action: 'requestimportupload',
+			async: 1,
 			chunk: file.slice( start, end ),
 			filesize: file.size,
 			offset: start,
@@ -48,9 +55,7 @@
 			( result ) => result.requestimportupload,
 			( code, result ) => {
 				if ( code === 'http' && retries > 0 && result.textStatus !== 'abort' ) {
-					return new Promise( ( resolve ) => {
-						setTimeout( resolve, 1000 );
-					} ).then(
+					return wait( 1000 ).then(
 						() => sendChunk( file, start, end, filekey, onProgress, retries - 1 )
 					);
 				}
@@ -59,7 +64,74 @@
 		);
 	}
 
-	async function uploadFile( file, onProgress ) {
+	function checkStatus( filekey ) {
+		return new mw.Api().postWithEditToken( {
+			action: 'requestimportupload',
+			type: config.type,
+			checkstatus: 1,
+			filekey
+		} ).then(
+			( result ) => result.requestimportupload,
+			( code, result ) => $.Deferred().reject( { code, result } )
+		);
+	}
+
+	// Assembling a large file can outlast the request, so a timeout on the last chunk
+	// does not mean it failed. Ask the server what happened before sending it again.
+	async function sendLastChunk( file, start, filekey, onProgress ) {
+		let lastError;
+		for ( let attempt = 0; attempt <= maxRetries; attempt++ ) {
+			try {
+				return await sendChunk( file, start, file.size, filekey, onProgress, 0 );
+			} catch ( error ) {
+				if ( !error || error.code !== 'http' ) {
+					throw error;
+				}
+
+				lastError = error;
+				let progress = null;
+				try {
+					progress = await checkStatus( filekey );
+				} catch ( ignored ) {
+					// The status could not be read, so send the chunk again.
+				}
+
+				if ( progress && progress.result !== 'Continue' ) {
+					return progress;
+				}
+
+				await wait( 1000 );
+			}
+		}
+
+		throw lastError;
+	}
+
+	async function waitForAssembly( filekey, progress, onAssembling ) {
+		let delay = 1000;
+		let failures = 0;
+
+		while ( progress.result === 'Poll' ) {
+			onAssembling();
+			await wait( delay );
+			delay = Math.min( delay * 1.5, 10000 );
+
+			try {
+				progress = await checkStatus( filekey );
+				failures = 0;
+			} catch ( error ) {
+				// Checking is safe to repeat, so allow a few network errors.
+				failures++;
+				if ( !error || error.code !== 'http' || failures > 5 ) {
+					throw error;
+				}
+			}
+		}
+
+		return progress;
+	}
+
+	async function uploadFile( file, onProgress, onAssembling ) {
 		const chunkSize = Math.min(
 			Math.max( preferredChunkSize, config.minChunkSize || 0 ),
 			getChunkLimit()
@@ -71,10 +143,19 @@
 
 		while ( offset < file.size ) {
 			const end = Math.min( offset + chunkSize, file.size );
-			result = await sendChunk( file, offset, end, filekey, onProgress, maxRetries );
-			filekey = result.filekey;
+			if ( end < file.size ) {
+				result = await sendChunk( file, offset, end, filekey, onProgress, maxRetries );
+			} else {
+				result = await sendLastChunk( file, offset, filekey, onProgress );
+			}
+
+			filekey = result.filekey || filekey;
 			offset = end;
 			onProgress( offset );
+		}
+
+		if ( result.result === 'Poll' ) {
+			result = await waitForAssembly( filekey, result, onAssembling );
 		}
 
 		if ( result.result !== 'Success' ) {
@@ -149,6 +230,8 @@
 
 			uploadFile( file, ( sent ) => {
 				progress.setProgress( Math.min( 100, Math.round( ( sent / file.size ) * 100 ) ) );
+			}, () => {
+				$status.text( mw.message( 'importdump-chunkedupload-assembling' ).text() );
 			} ).then( ( filekey ) => {
 				$key.val( filekey );
 				$file.val( '' ).prop( 'disabled', true );
