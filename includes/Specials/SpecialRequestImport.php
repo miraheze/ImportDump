@@ -28,6 +28,7 @@ use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Rdbms\IConnectionProvider;
@@ -331,9 +332,13 @@ class SpecialRequestImport extends FormSpecialPage
 	private function addChunkedUploadModule(): void {
 		$out = $this->getOutput();
 		$out->addModules( [ 'ext.importdump.chunkedupload' ] );
+		$maxSize = RequestImportUploadFromChunks::getMaxUploadSize();
+		$maxPhpSize = UploadBase::getMaxPhpUploadSize();
+
 		$out->addJsConfigVars( 'wgRequestImportChunkedUpload', [
-			'maxUploadSize' => UploadBase::getMaxUploadSize( 'file' ),
-			'maxPhpUploadSize' => UploadBase::getMaxPhpUploadSize(),
+			'maxUploadSize' => $maxSize < PHP_INT_MAX ? $maxSize : null,
+			'maxPhpUploadSize' => $maxPhpSize,
+			'maxDirectUploadSize' => min( $maxPhpSize, UploadBase::getMaxUploadSize( 'file' ) ),
 			'minChunkSize' => ApiUpload::getMinUploadChunkSize( $this->getConfig() ),
 			'type' => 'xml',
 		] );

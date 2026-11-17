@@ -215,6 +215,10 @@
 			"value": [],
 			"description": "A mapping of 'status => days' for deleting the stored XML file of an import request once it is older than that many days, by running the ExpireFiles maintenance script. Only 'complete', 'declined' and 'failed' can be used. Statuses that are not listed are never expired. Leave empty to disable. Age is counted from when the request was made."
 		},
+		"ImportDumpMaxUploadSize": {
+			"value": null,
+			"description": "Maximum total size in bytes of a file uploaded in chunks. Chunked uploads ignore $wgMaxUploadSize. Leave as null for no limit."
+		},
 		"ImportDumpHelpUrl": {
 			"value": "",
 			"description": "Full URL. If set, adds a help URL to Special:RequestImport."

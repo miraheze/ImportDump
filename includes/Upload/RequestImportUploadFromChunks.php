@@ -4,9 +4,9 @@ namespace Miraheze\ImportDump\Upload;
 
 use InvalidArgumentException;
 use MediaWiki\MediaWikiServices;
-use MediaWiki\Upload\UploadBase;
 use MediaWiki\Upload\UploadFromChunks;
 use MediaWiki\User\User;
+use Miraheze\ImportDump\ConfigNames;
 
 class RequestImportUploadFromChunks extends UploadFromChunks {
 
@@ -26,6 +26,18 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		}
 
 		parent::__construct( $user );
+	}
+
+	/**
+	 * @inheritDoc
+	 * @param ?string $forType @phan-unused-param
+	 */
+	public static function getMaxUploadSize( $forType = null ) {
+		$limit = MediaWikiServices::getInstance()
+			->getMainConfig()
+			->get( ConfigNames::MaxUploadSize );
+
+		return $limit === null ? PHP_INT_MAX : (int)$limit;
 	}
 
 	/** @return string[] */
@@ -56,7 +68,7 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 			return [ 'status' => self::EMPTY_FILE ];
 		}
 
-		$maxSize = UploadBase::getMaxUploadSize( $this->getSourceType() );
+		$maxSize = static::getMaxUploadSize();
 		if ( $this->getFileSize() > $maxSize ) {
 			return [
 				'status' => self::FILE_TOO_LARGE,

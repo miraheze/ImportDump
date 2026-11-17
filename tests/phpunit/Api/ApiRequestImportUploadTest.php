@@ -23,7 +23,7 @@ use Wikimedia\Mime\MimeAnalyzer;
  */
 class ApiRequestImportUploadTest extends ApiUploadTestCase {
 
-	private const CHUNK_SIZE = 1024;
+	private const int CHUNK_SIZE = 1024;
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -230,6 +230,40 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
 		$file = ( new UploadStash( $repo, $user ) )->getFile( $filekey );
 		$this->assertSame( $size, $file->getSize() );
+	}
+
+	/**
+	 * @covers ::execute
+	 * @covers ::getAllowedParams
+	 */
+	public function testIgnoresCoreMaxUploadSize(): void {
+		$this->overrideConfigValue( MainConfigNames::MaxUploadSize, 10 );
+
+		$xml = $this->getXml( self::CHUNK_SIZE * 3 + 100 );
+		$size = strlen( $xml );
+		$firstKey = $this->uploadAllButLast( $xml );
+
+		$offset = (int)( floor( ( $size - 1 ) / self::CHUNK_SIZE ) * self::CHUNK_SIZE );
+		[ $result ] = $this->sendChunk( substr( $xml, $offset ), [
+			'offset' => $offset,
+			'filesize' => $size,
+			'filekey' => $firstKey,
+		] );
+
+		$this->assertSame( 'Success', $result['result'] );
+	}
+
+	/**
+	 * @covers ::getAllowedParams
+	 */
+	public function testMaxUploadSizeLimit(): void {
+		$this->overrideConfigValue( ConfigNames::MaxUploadSize, 2000 );
+
+		$this->expectApiErrorCode( 'outofrange' );
+		$this->sendChunk( $this->getXml( self::CHUNK_SIZE ), [
+			'offset' => 0,
+			'filesize' => 5000,
+		] );
 	}
 
 	/**

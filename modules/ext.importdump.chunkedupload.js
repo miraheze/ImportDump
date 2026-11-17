@@ -7,11 +7,14 @@
 	const preferredChunkSize = 50 * 1024 * 1024;
 	const maxRetries = 2;
 
-	function getRequestSizeLimit() {
-		const phpLimit = config.maxPhpUploadSize || null;
-		return phpLimit !== null ?
-			Math.min( phpLimit, config.maxUploadSize ) :
-			config.maxUploadSize;
+	// The most that fits in one request, which is what chunks are sized against.
+	function getChunkLimit() {
+		return config.maxPhpUploadSize || Infinity;
+	}
+
+	// Files up to this size can use the normal upload without chunking.
+	function getDirectLimit() {
+		return config.maxDirectUploadSize || Infinity;
 	}
 
 	function sendChunk( file, start, end, filekey, onProgress, retries ) {
@@ -59,7 +62,7 @@
 	async function uploadFile( file, onProgress ) {
 		const chunkSize = Math.min(
 			Math.max( preferredChunkSize, config.minChunkSize || 0 ),
-			getRequestSizeLimit()
+			getChunkLimit()
 		);
 
 		let filekey = '';
@@ -125,7 +128,7 @@
 			}
 
 			const file = $file[ 0 ].files && $file[ 0 ].files[ 0 ];
-			if ( !file || file.size <= getRequestSizeLimit() ) {
+			if ( !file || file.size <= getDirectLimit() ) {
 				return;
 			}
 
@@ -134,7 +137,7 @@
 				return;
 			}
 
-			if ( file.size > config.maxUploadSize ) {
+			if ( config.maxUploadSize && file.size > config.maxUploadSize ) {
 				fail( mw.message( 'largefileserver' ).text() );
 				return;
 			}
