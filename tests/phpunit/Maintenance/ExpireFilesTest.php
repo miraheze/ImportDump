@@ -79,7 +79,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 		return $id;
 	}
 
-	private function fileExists( int $id ): bool {
+	private function requestFileExists( int $id ): bool {
 		return $this->getRequestManager( $id )->fileExists();
 	}
 
@@ -102,11 +102,11 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 		$this->expectOutputRegex( '/Deleted 2 file\(s\)\. 0 failure\(s\)\./' );
 		$this->maintenance->execute();
 
-		$this->assertFalse( $this->fileExists( $ids['oldComplete'] ) );
-		$this->assertFalse( $this->fileExists( $ids['oldDeclined'] ) );
-		$this->assertTrue( $this->fileExists( $ids['recentComplete'] ) );
-		$this->assertTrue( $this->fileExists( $ids['oldFailed'] ) );
-		$this->assertTrue( $this->fileExists( $ids['oldPending'] ) );
+		$this->assertFalse( $this->requestFileExists( $ids['oldComplete'] ) );
+		$this->assertFalse( $this->requestFileExists( $ids['oldDeclined'] ) );
+		$this->assertTrue( $this->requestFileExists( $ids['recentComplete'] ) );
+		$this->assertTrue( $this->requestFileExists( $ids['oldFailed'] ) );
+		$this->assertTrue( $this->requestFileExists( $ids['oldPending'] ) );
 	}
 
 	public function testSkipsStatusesThatCannotExpire(): void {
@@ -125,7 +125,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 		$this->maintenance->execute();
 
 		foreach ( $ids as $id ) {
-			$this->assertTrue( $this->fileExists( $id ) );
+			$this->assertTrue( $this->requestFileExists( $id ) );
 		}
 	}
 
@@ -140,8 +140,8 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 		$this->expectOutputRegex( '/Deleted 2 file\(s\)\./' );
 		$this->maintenance->execute();
 
-		$this->assertFalse( $this->fileExists( $ids['oldComplete'] ) );
-		$this->assertFalse( $this->fileExists( $ids['oldDeclined'] ) );
+		$this->assertFalse( $this->requestFileExists( $ids['oldComplete'] ) );
+		$this->assertFalse( $this->requestFileExists( $ids['oldDeclined'] ) );
 	}
 
 	public function testNothingConfigured(): void {
@@ -152,7 +152,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 		$this->maintenance->execute();
 
 		foreach ( $ids as $id ) {
-			$this->assertTrue( $this->fileExists( $id ) );
+			$this->assertTrue( $this->requestFileExists( $id ) );
 		}
 	}
 
