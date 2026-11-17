@@ -105,7 +105,7 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 	}
 
 	/** @param array<string, mixed> $params */
-	private function newJob( string $filekey, int $size, array $params = [] ): AssembleChunksJob {
+	private function newJob( string $filekey, int $size, array $params ): AssembleChunksJob {
 		return new AssembleChunksJob( $params + [
 			'filekey' => $filekey,
 			'filesize' => $size,
@@ -128,7 +128,7 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 		$xml = $this->getXml( self::CHUNK_SIZE * 3 + 100 );
 		$filekey = $this->queueUpload( $xml );
 
-		$job = $this->newJob( $filekey, strlen( $xml ) );
+		$job = $this->newJob( $filekey, strlen( $xml ), [] );
 		$this->assertTrue( $job->run() );
 		$this->assertFalse( $job->getLastError() );
 
@@ -146,7 +146,7 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 		$content = str_repeat( 'not xml at all. ', 200 );
 		$filekey = $this->queueUpload( $content );
 
-		$job = $this->newJob( $filekey, strlen( $content ) );
+		$job = $this->newJob( $filekey, strlen( $content ), [] );
 
 		// A file that fails verification is reported to the client and is not a job failure.
 		$this->assertTrue( $job->run() );
@@ -165,7 +165,7 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 			'status' => Status::newGood(),
 		] );
 
-		$job = $this->newJob( $filekey, 1 );
+		$job = $this->newJob( $filekey, 1, [] );
 		$this->assertFalse( $job->run() );
 		$this->assertStringContainsString( 'UploadStash', $job->getLastError() );
 
@@ -182,7 +182,7 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 			'status' => Status::newGood(),
 		] );
 
-		$job = $this->newJob( $filekey, 1 );
+		$job = $this->newJob( $filekey, 1, [] );
 		$this->assertFalse( $job->run() );
 		$this->assertStringContainsString( 'already in progress', $job->getLastError() );
 
@@ -196,7 +196,7 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 			$this->getServiceContainer()->getUserFactory()->newAnonymous( '127.0.0.1' )
 		);
 
-		$job = $this->newJob( 'abc.xml', 1 );
+		$job = $this->newJob( 'abc.xml', 1, [] );
 		$this->assertFalse( $job->run() );
 		$this->assertStringContainsString( 'author user', $job->getLastError() );
 	}
@@ -214,6 +214,6 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 	}
 
 	public function testRetriesAreNotAllowed(): void {
-		$this->assertFalse( $this->newJob( 'abc.xml', 1 )->allowRetries() );
+		$this->assertFalse( $this->newJob( 'abc.xml', 1, [] )->allowRetries() );
 	}
 }
