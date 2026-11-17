@@ -9,6 +9,7 @@ use MediaWiki\Upload\UploadBase;
 use MediaWiki\Upload\UploadFromChunks;
 use MediaWiki\Upload\UploadVerification;
 use MediaWikiIntegrationTestCase;
+use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use Wikimedia\TestingAccessWrapper;
 
@@ -72,6 +73,39 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
+	 * @covers ::getMaxUploadSize
+	 */
+	public function testGetMaxUploadSizeUnlimitedByDefault(): void {
+		$this->overrideConfigValue( MainConfigNames::MaxUploadSize, 10 );
+
+		$this->assertSame( PHP_INT_MAX, RequestImportUploadFromChunks::getMaxUploadSize() );
+		$this->assertSame( PHP_INT_MAX, $this->newUpload( type: 'xml' )->getMaxUploadSize() );
+	}
+
+	/**
+	 * @covers ::getMaxUploadSize
+	 */
+	public function testGetMaxUploadSizeConfigured(): void {
+		$this->overrideConfigValue( ConfigNames::MaxUploadSize, 1234 );
+
+		$this->assertSame( 1234, RequestImportUploadFromChunks::getMaxUploadSize() );
+		$this->assertSame( 1234, $this->newUpload( type: 'xml' )->getMaxUploadSize() );
+	}
+
+	/**
+	 * @covers ::verifyUpload
+	 */
+	public function testVerifyUploadIgnoresCoreMaxUploadSize(): void {
+		$this->overrideConfigValue( MainConfigNames::MaxUploadSize, 5 );
+
+		$path = $this->newFile( "<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>" );
+		$upload = $this->newUpload( type: 'xml' );
+		$upload->initializePathInfo( $upload->getStashName(), $path, filesize( $path ) );
+
+		$this->assertSame( UploadBase::OK, $upload->verifyUpload()['status'] );
+	}
+
+	/**
 	 * @covers ::getStashName
 	 */
 	public function testGetStashName(): void {
@@ -89,7 +123,7 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 		?string $expectedMessage
 	): void {
 		if ( $maxUploadSize !== null ) {
-			$this->overrideConfigValue( MainConfigNames::MaxUploadSize, $maxUploadSize );
+			$this->overrideConfigValue( ConfigNames::MaxUploadSize, $maxUploadSize );
 		}
 
 		$path = $this->newFile( $content );
