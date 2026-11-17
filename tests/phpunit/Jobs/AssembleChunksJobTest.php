@@ -135,7 +135,7 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 
 		$job = $this->newJob( $filekey, strlen( $xml ), [] );
 		$this->assertTrue( $job->run() );
-		$this->assertFalse( $job->getLastError() );
+		$this->assertNull( $job->getLastError() );
 
 		$status = UploadBase::getSessionStatus( $this->uploader, $filekey );
 		$this->assertSame( 'Success', $status['result'] );
