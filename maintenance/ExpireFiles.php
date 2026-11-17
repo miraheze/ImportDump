@@ -26,8 +26,8 @@ class ExpireFiles extends Maintenance {
 
 		$this->addDescription( 'Deletes the stored XML files of old import requests using $wgImportDumpFileExpiryDays.' );
 		$this->addOption( 'dry-run', 'List the files that would be deleted without deleting them.' );
-		$this->addOption( 'batch-size', 'The number of requests to check at a time (Defaults to 100).', false, true );
 
+		$this->setBatchSize( 100 );
 		$this->requireExtension( 'ImportDump' );
 	}
 
@@ -52,7 +52,7 @@ class ExpireFiles extends Maintenance {
 		}
 
 		$dryRun = $this->hasOption( 'dry-run' );
-		$batchSize = max( 1, (int)$this->getOption( 'batch-size', 100 ) );
+		$batchSize = max( 1, $this->getBatchSize() );
 
 		$deleted = 0;
 		$failed = 0;
@@ -74,11 +74,9 @@ class ExpireFiles extends Maintenance {
 				$ids = $dbr->newSelectQueryBuilder()
 					->select( 'request_id' )
 					->from( 'import_requests' )
-					->where( [
-						'request_status' => $status,
-						$dbr->expr( 'request_timestamp', '<', $cutoff ),
-						$dbr->expr( 'request_id', '>', $lastId ),
-					] )
+					->where( [ 'request_status' => $status ] )
+					->andWhere( $dbr->expr( 'request_timestamp', '<', $cutoff ) )
+					->andWhere( $dbr->expr( 'request_id', '>', $lastId ) )
 					->orderBy( 'request_id' )
 					->limit( $batchSize )
 					->caller( __METHOD__ )
