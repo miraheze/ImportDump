@@ -11,6 +11,7 @@ use MediaWiki\Upload\UploadBase;
 use MediaWiki\Upload\UploadStash;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
+use Miraheze\ImportDump\Jobs\AssembleChunksJob;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 
@@ -72,6 +73,19 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 
 		$this->assertArrayHasKey( 'requestimportupload', $result );
 		return [ $result['requestimportupload'], $result['requestimportupload']['filekey'] ?? '' ];
+	}
+
+	/** @return array<string, mixed> */
+	private function checkStatus( string $filekey ): array {
+		[ $result ] = $this->doApiRequestWithToken( [
+			'action' => 'requestimportupload',
+			'type' => 'xml',
+			'checkstatus' => 1,
+			'filekey' => $filekey,
+		], null, $this->getTestUser()->getAuthority() );
+
+		$this->assertArrayHasKey( 'requestimportupload', $result );
+		return $result['requestimportupload'];
 	}
 
 	/**
@@ -230,6 +244,101 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
 		$file = ( new UploadStash( $repo, $user ) )->getFile( $filekey );
 		$this->assertSame( $size, $file->getSize() );
+	}
+
+	/**
+	 * @covers ::execute
+	 * @covers ::queueAssembly
+	 * @covers ::checkStatus
+	 */
+	public function testAsyncAssembly(): void {
+		$this->overrideConfigValue( MainConfigNames::EnableAsyncUploads, true );
+		// The job exports the session of the user, so the context needs the same user.
+		$this->apiContext->setAuthority( $this->getTestUser()->getAuthority() );
+
+		$xml = $this->getXml( self::CHUNK_SIZE * 3 + 100 );
+		$size = strlen( $xml );
+		$firstKey = $this->uploadAllButLast( $xml );
+
+		$progress = $this->checkStatus( $firstKey );
+		$this->assertSame( 'Continue', $progress['result'] );
+		$this->assertSame( 'uploading', $progress['stage'] );
+
+		$offset = (int)( floor( ( $size - 1 ) / self::CHUNK_SIZE ) * self::CHUNK_SIZE );
+		[ $result ] = $this->sendChunk( substr( $xml, $offset ), [
+			'offset' => $offset,
+			'filesize' => $size,
+			'filekey' => $firstKey,
+			'async' => 1,
+		] );
+
+		$this->assertSame( 'Poll', $result['result'] );
+		$this->assertSame( 'queued', $result['stage'] );
+		$this->assertSame( $firstKey, $result['filekey'] );
+
+		$progress = $this->checkStatus( $firstKey );
+		$this->assertSame( 'Poll', $progress['result'] );
+
+		$this->runJobs( [ 'maxJobs' => 1 ], [ 'type' => AssembleChunksJob::JOB_NAME ] );
+
+		$progress = $this->checkStatus( $firstKey );
+		$this->assertSame( 'Success', $progress['result'] );
+		$this->assertNotSame( $firstKey, $progress['filekey'] );
+
+		$user = $this->getTestUser()->getUser();
+		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
+		$file = ( new UploadStash( $repo, $user ) )->getFile( $progress['filekey'] );
+		$this->assertSame( $size, $file->getSize() );
+	}
+
+	/**
+	 * @covers ::execute
+	 */
+	public function testAsyncIgnoredWhenDisabled(): void {
+		$this->overrideConfigValue( MainConfigNames::EnableAsyncUploads, false );
+
+		$xml = $this->getXml( self::CHUNK_SIZE * 2 + 100 );
+		$size = strlen( $xml );
+		$firstKey = $this->uploadAllButLast( $xml );
+
+		$offset = self::CHUNK_SIZE * 2;
+		[ $result ] = $this->sendChunk( substr( $xml, $offset ), [
+			'offset' => $offset,
+			'filesize' => $size,
+			'filekey' => $firstKey,
+			'async' => 1,
+		] );
+
+		$this->assertSame( 'Success', $result['result'] );
+	}
+
+	/**
+	 * @covers ::checkStatus
+	 */
+	public function testCheckStatusMissingSession(): void {
+		$this->expectApiErrorCode( 'missingresult' );
+		$this->checkStatus( 'abc.xml' );
+	}
+
+	/**
+	 * @covers ::checkStatus
+	 */
+	public function testCheckStatusInvalidKey(): void {
+		$this->expectApiErrorCode( 'invalid-file-key' );
+		$this->checkStatus( 'not a valid key' );
+	}
+
+	/**
+	 * @covers ::execute
+	 */
+	public function testMissingOffset(): void {
+		$this->expectApiErrorCode( 'missingparam' );
+		$this->fakeUploadChunk( 'chunk', 'blob', 'application/xml', '01234' );
+		$this->doApiRequestWithToken( [
+			'action' => 'requestimportupload',
+			'type' => 'xml',
+			'filesize' => 5,
+		], null, $this->getTestUser()->getAuthority() );
 	}
 
 	/**
