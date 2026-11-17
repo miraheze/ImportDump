@@ -18,7 +18,7 @@ use Wikimedia\ParamValidator\ParamValidator;
 use Wikimedia\ParamValidator\TypeDef\IntegerDef;
 use Wikimedia\Rdbms\IConnectionProvider;
 
-class ApiImportDumpUpload extends ApiBase {
+class ApiRequestImportUpload extends ApiBase {
 
 	public function __construct(
 		ApiMain $mainModule,
