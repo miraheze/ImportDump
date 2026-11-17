@@ -28,7 +28,7 @@ class ApiRequestImportUpload extends ApiBase {
 		ApiMain $mainModule,
 		string $moduleName,
 		private readonly IConnectionProvider $connectionProvider,
-		private readonly JobQueueGroup $jobQueueGroup
+		private readonly JobQueueGroup $jobQueueGroup,
 	) {
 		parent::__construct( $mainModule, $moduleName );
 	}
