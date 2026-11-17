@@ -191,6 +191,17 @@ class ApiRequestImportUpload extends ApiBase {
 
 	/** @inheritDoc */
 	public function getAllowedParams(): array {
+		$fileSize = [
+			ParamValidator::PARAM_TYPE => 'integer',
+			ParamValidator::PARAM_REQUIRED => true,
+			IntegerDef::PARAM_MIN => 1,
+		];
+
+		$maxSize = RequestImportUploadFromChunks::getMaxUploadSize();
+		if ( $maxSize < PHP_INT_MAX ) {
+			$fileSize[IntegerDef::PARAM_MAX] = $maxSize;
+		}
+
 		return [
 			'chunk' => [
 				ParamValidator::PARAM_TYPE => 'upload',
@@ -198,12 +209,7 @@ class ApiRequestImportUpload extends ApiBase {
 			'filekey' => [
 				ParamValidator::PARAM_TYPE => 'string',
 			],
-			'filesize' => [
-				ParamValidator::PARAM_TYPE => 'integer',
-				ParamValidator::PARAM_REQUIRED => true,
-				IntegerDef::PARAM_MIN => 1,
-				IntegerDef::PARAM_MAX => UploadBase::getMaxUploadSize( 'file' ),
-			],
+			'filesize' => $fileSize,
 			'offset' => [
 				ParamValidator::PARAM_TYPE => 'integer',
 				ParamValidator::PARAM_REQUIRED => true,
