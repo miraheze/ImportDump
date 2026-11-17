@@ -27,9 +27,7 @@ class AssembleChunksJob extends Job {
 	/** @inheritDoc */
 	public function run(): bool {
 		$scope = RequestContext::importScopedSession( $this->params['session'] );
-		$this->addTeardownCallback( static function () use ( &$scope ): void {
-			ScopedCallback::consume( $scope );
-		} );
+		$this->addTeardownCallback( static fn () => ScopedCallback::consume( $scope ) );
 
 		$logger = LoggerFactory::getInstance( 'ImportDump' );
 		$context = RequestContext::getMain();
@@ -158,7 +156,7 @@ class AssembleChunksJob extends Job {
 	}
 
 	/** @inheritDoc */
-	public function allowRetries(): bool {
+	public function allowRetries(): false {
 		return false;
 	}
 }
