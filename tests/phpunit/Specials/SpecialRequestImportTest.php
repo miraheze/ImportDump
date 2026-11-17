@@ -260,9 +260,29 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 
 		$vars = $out->getJsConfigVars()['wgRequestImportChunkedUpload'];
 		$this->assertSame( 'xml', $vars['type'] );
-		$this->assertArrayHasKey( 'maxUploadSize', $vars );
+		$this->assertNull( $vars['maxUploadSize'] );
 		$this->assertArrayHasKey( 'maxPhpUploadSize', $vars );
+		$this->assertArrayHasKey( 'maxDirectUploadSize', $vars );
 		$this->assertArrayHasKey( 'minChunkSize', $vars );
+	}
+
+	/**
+	 * @covers ::addChunkedUploadModule
+	 */
+	public function testAddChunkedUploadModuleWithLimit(): void {
+		$this->overrideConfigValues( [
+			ConfigNames::MaxUploadSize => 123456,
+			MainConfigNames::MaxUploadSize => 1000,
+		] );
+
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$specialRequestImport->addChunkedUploadModule();
+
+		$vars = $this->specialRequestImport->getOutput()
+			->getJsConfigVars()['wgRequestImportChunkedUpload'];
+
+		$this->assertSame( 123456, $vars['maxUploadSize'] );
+		$this->assertLessThanOrEqual( 1000, $vars['maxDirectUploadSize'] );
 	}
 
 	private function stashXml( User $user ): string {
