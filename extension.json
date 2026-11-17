@@ -9,6 +9,14 @@
 	"requires": {
 		"MediaWiki": ">= 1.46.0"
 	},
+	"APIModules": {
+		"importdumpupload": {
+			"class": "Miraheze\\ImportDump\\Api\\ApiImportDumpUpload",
+			"services": [
+				"ConnectionProvider"
+			]
+		}
+	},
 	"MessagesDirs": {
 		"ImportDump": [
 			"i18n"
@@ -173,6 +181,18 @@
 				"oojs-ui-widgets"
 			]
 		},
+		"ext.importdump.chunkedupload": {
+			"scripts": "ext.importdump.chunkedupload.js",
+			"dependencies": [
+				"mediawiki.api",
+				"oojs-ui-core"
+			],
+			"messages": [
+				"largefileserver",
+				"importdump-chunkedupload-error",
+				"importdump-chunkedupload-progress"
+			]
+		},
 		"ext.importdump.oouiform.styles": {
 			"styles": "ext.importdump.oouiform.ooui.less"
 		}
@@ -185,6 +205,10 @@
 		"ImportDumpEnableAutomatedJob": {
 			"value": false,
 			"description": "Whether to enable a job where a reviewer just has to 'approve' an import and job handles everything else. You can use the ImportDumpJobGetFile hook to manipulate how the job gets the XML file."
+		},
+		"ImportDumpEnableChunkedUploads": {
+			"value": false,
+			"description": "Whether to upload XML files in chunks from Special:RequestImport using JavaScript. Chunks are sent to the importdumpupload API module."
 		},
 		"ImportDumpHelpUrl": {
 			"value": "",
