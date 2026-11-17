@@ -2,10 +2,15 @@
 
 namespace Miraheze\ImportDump\Tests;
 
+use MediaWiki\FileRepo\LocalRepo;
+use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\MainConfigNames;
+use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
+use Wikimedia\FileBackend\FSFileBackend;
+use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
@@ -40,6 +45,25 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 			] )
 			->caller( __METHOD__ )
 			->execute();
+	}
+
+	protected function setUp(): void {
+		parent::setUp();
+
+		$this->setService( 'RepoGroup', new RepoGroup(
+			[
+				'class' => LocalRepo::class,
+				'name' => 'temp',
+				'backend' => new FSFileBackend( [
+					'name' => 'temp-backend',
+					'wikiId' => WikiMap::getCurrentWikiId(),
+					'basePath' => $this->getNewTempDirectory(),
+				] ),
+			],
+			[],
+			$this->getServiceContainer()->getMainWANObjectCache(),
+			$this->createMock( MimeAnalyzer::class )
+		) );
 	}
 
 	private function getRequestManager( int $id ): RequestManager {
@@ -105,9 +129,13 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		);
 
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->setStatus( self::STATUS_DECLINED );
+		$oldStatus = $manager->getStatus();
+		$newStatus = $oldStatus === self::STATUS_DECLINED ?
+			self::STATUS_PENDING : self::STATUS_DECLINED;
 
-		$this->assertSame( [ [ self::STATUS_DECLINED, self::STATUS_PENDING ] ], $calls );
+		$manager->setStatus( $newStatus );
+
+		$this->assertSame( [ [ $newStatus, $oldStatus ] ], $calls );
 	}
 
 	/**
@@ -122,7 +150,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		);
 
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->setStatus( self::STATUS_PENDING );
+		$manager->setStatus( $manager->getStatus() );
 
 		$this->assertSame( 0, $calls );
 	}
