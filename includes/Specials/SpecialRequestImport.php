@@ -331,7 +331,7 @@ class SpecialRequestImport extends FormSpecialPage
 	private function addChunkedUploadModule(): void {
 		$out = $this->getOutput();
 		$out->addModules( [ 'ext.importdump.chunkedupload' ] );
-		$out->addJsConfigVars( 'wgImportDumpChunkedUpload', [
+		$out->addJsConfigVars( 'wgRequestImportChunkedUpload', [
 			'maxUploadSize' => UploadBase::getMaxUploadSize( 'file' ),
 			'maxPhpUploadSize' => UploadBase::getMaxPhpUploadSize(),
 			'minChunkSize' => ApiUpload::getMinUploadChunkSize( $this->getConfig() ),
