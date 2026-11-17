@@ -13,7 +13,7 @@ use MediaWiki\Upload\UploadBase;
 use MediaWiki\Upload\UploadFromStash;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\Upload\ImportDumpUploadFromChunks;
+use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use Wikimedia\ParamValidator\ParamValidator;
 use Wikimedia\ParamValidator\TypeDef\IntegerDef;
 use Wikimedia\Rdbms\IConnectionProvider;
@@ -57,7 +57,7 @@ class ApiRequestImportUpload extends ApiBase {
 			] );
 		}
 
-		$upload = new ImportDumpUploadFromChunks( $user );
+		$upload = new RequestImportUploadFromChunks( $user, $params['type'] );
 		$fileKey = $params['filekey'];
 
 		try {
@@ -66,7 +66,7 @@ class ApiRequestImportUpload extends ApiBase {
 					$this->dieWithError( 'apierror-upload-filekeynotallowed', 'filekeynotallowed' );
 				}
 
-				$upload->initialize( ImportDumpUploadFromChunks::STASH_NAME, $chunk );
+				$upload->initialize( $upload->getStashName(), $chunk );
 				$status = $upload->tryStashFile( $user, true );
 				if ( !$status->isGood() ) {
 					$this->dieStatus( $status );
@@ -91,7 +91,11 @@ class ApiRequestImportUpload extends ApiBase {
 					$this->dieWithError( 'apierror-stashfailed-complete', 'stashfailed' );
 				}
 
-				$upload->continueChunks( ImportDumpUploadFromChunks::STASH_NAME, $fileKey, $chunk );
+				if ( ( $progress['type'] ?? null ) !== $params['type'] ) {
+					$this->dieWithError( 'importdump-apierror-type-mismatch', 'typemismatch' );
+				}
+
+				$upload->continueChunks( $upload->getStashName(), $fileKey, $chunk );
 				$status = $upload->addChunk( $chunkPath, $chunkSize, $offset );
 				if ( !$status->isGood() ) {
 					$this->dieStatus( $status );
@@ -102,6 +106,7 @@ class ApiRequestImportUpload extends ApiBase {
 				UploadBase::setSessionStatus( $user, $fileKey, [
 					'result' => 'Continue',
 					'stage' => 'uploading',
+					'type' => $params['type'],
 					'offset' => $totalSoFar,
 					'status' => Status::newGood(),
 				] );
@@ -123,7 +128,7 @@ class ApiRequestImportUpload extends ApiBase {
 		}
 	}
 
-	private function finish( ImportDumpUploadFromChunks $upload, string $fileKey ): void {
+	private function finish( RequestImportUploadFromChunks $upload, string $fileKey ): void {
 		$user = $this->getUser();
 
 		UploadBase::setSessionStatus( $user, $fileKey, [
@@ -190,10 +195,8 @@ class ApiRequestImportUpload extends ApiBase {
 			'chunk' => [
 				ParamValidator::PARAM_TYPE => 'upload',
 			],
-			'offset' => [
-				ParamValidator::PARAM_TYPE => 'integer',
-				ParamValidator::PARAM_REQUIRED => true,
-				IntegerDef::PARAM_MIN => 0,
+			'filekey' => [
+				ParamValidator::PARAM_TYPE => 'string',
 			],
 			'filesize' => [
 				ParamValidator::PARAM_TYPE => 'integer',
@@ -201,24 +204,30 @@ class ApiRequestImportUpload extends ApiBase {
 				IntegerDef::PARAM_MIN => 1,
 				IntegerDef::PARAM_MAX => UploadBase::getMaxUploadSize( 'file' ),
 			],
-			'filekey' => [
-				ParamValidator::PARAM_TYPE => 'string',
+			'offset' => [
+				ParamValidator::PARAM_TYPE => 'integer',
+				ParamValidator::PARAM_REQUIRED => true,
+				IntegerDef::PARAM_MIN => 0,
+			],
+			'type' => [
+				ParamValidator::PARAM_TYPE => RequestImportUploadFromChunks::getTypeNames(),
+				ParamValidator::PARAM_REQUIRED => true,
 			],
 		];
 	}
 
 	/** @inheritDoc */
-	public function mustBePosted(): bool {
+	public function mustBePosted(): true {
 		return true;
 	}
 
 	/** @inheritDoc */
-	public function isWriteMode(): bool {
+	public function isWriteMode(): true {
 		return true;
 	}
 
 	/** @inheritDoc */
-	public function isInternal(): bool {
+	public function isInternal(): true {
 		return true;
 	}
 
