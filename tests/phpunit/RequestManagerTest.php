@@ -31,8 +31,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 			->insertInto( 'import_requests' )
 			->ignore()
 			->row( [
-				'request_source' => 'https://importdumptest.com',
-				'request_target' => 'importdumptest',
+				'request_source' => 'https://requestimporttest.com',
+				'request_target' => 'requestimporttest',
 				'request_reason' => 'test',
 				'request_status' => self::STATUS_PENDING,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
