@@ -1,5 +1,5 @@
 ( function () {
-	const config = mw.config.get( 'wgRequestImportChunkedUpload' );
+	const config = mw.config.get( 'wgRequestImportChunkedUpload');
 	if ( !config || !window.FormData ) {
 		return;
 	}
