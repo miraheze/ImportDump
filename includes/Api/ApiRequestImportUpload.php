@@ -6,6 +6,8 @@ use MediaWiki\Api\ApiBase;
 use MediaWiki\Api\ApiMain;
 use MediaWiki\Api\ApiMessage;
 use MediaWiki\Api\ApiUpload;
+use MediaWiki\JobQueue\JobQueueGroup;
+use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
 use MediaWiki\Status\Status;
 use MediaWiki\Upload\Exception\UploadStashException;
@@ -13,6 +15,7 @@ use MediaWiki\Upload\UploadBase;
 use MediaWiki\Upload\UploadFromStash;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
+use Miraheze\ImportDump\Jobs\AssembleChunksJob;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use Wikimedia\ParamValidator\ParamValidator;
 use Wikimedia\ParamValidator\TypeDef\IntegerDef;
@@ -23,7 +26,8 @@ class ApiRequestImportUpload extends ApiBase {
 	public function __construct(
 		ApiMain $mainModule,
 		string $moduleName,
-		private readonly IConnectionProvider $connectionProvider
+		private readonly IConnectionProvider $connectionProvider,
+		private readonly JobQueueGroup $jobQueueGroup
 	) {
 		parent::__construct( $mainModule, $moduleName );
 	}
@@ -33,6 +37,17 @@ class ApiRequestImportUpload extends ApiBase {
 
 		$params = $this->extractRequestParams();
 		$user = $this->getUser();
+
+		if ( $params['checkstatus'] ) {
+			$this->checkStatus( $params );
+			return;
+		}
+
+		foreach ( [ 'offset', 'filesize' ] as $required ) {
+			if ( $params[$required] === null ) {
+				$this->dieWithError( [ 'apierror-missingparam', $required ] );
+			}
+		}
 
 		$chunk = $this->getMain()->getUpload( 'chunk' );
 		if ( !$chunk->exists() || $chunk->getError() ) {
@@ -120,12 +135,76 @@ class ApiRequestImportUpload extends ApiBase {
 				return;
 			}
 
+			if (
+				$params['async'] &&
+				$this->getConfig()->get( MainConfigNames::EnableAsyncUploads )
+			) {
+				$this->queueAssembly( $fileKey, $params );
+				return;
+			}
+
 			$this->finish( $upload, $fileKey );
 		} catch ( UploadStashException $e ) {
 			$this->dieWithException( $e, [
 				'wrap' => new ApiMessage( 'apierror-stashexception', 'stashfailed' ),
 			] );
 		}
+	}
+
+	/** @param array<string, mixed> $params */
+	private function queueAssembly( string $fileKey, array $params ): void {
+		UploadBase::setSessionStatus( $this->getUser(), $fileKey, [
+			'result' => 'Poll',
+			'stage' => 'queued',
+			'status' => Status::newGood(),
+		] );
+
+		// This has to be a lazy push. The job reads the uploadstash rows that were
+		// written in this request, so it must not be queued until after the commit.
+		$this->jobQueueGroup->lazyPush( new AssembleChunksJob( [
+			'filekey' => $fileKey,
+			'filesize' => $params['filesize'],
+			'type' => $params['type'],
+			'session' => $this->getContext()->exportSession(),
+		] ) );
+
+		$this->getResult()->addValue( null, $this->getModuleName(), [
+			'result' => 'Poll',
+			'stage' => 'queued',
+			'filekey' => $fileKey,
+		] );
+	}
+
+	/** @param array<string, mixed> $params */
+	private function checkStatus( array $params ): void {
+		$fileKey = $params['filekey'];
+		if ( $fileKey === null || !UploadFromStash::isValidKey( $fileKey ) ) {
+			$this->dieWithError( 'apierror-invalid-file-key' );
+		}
+
+		$progress = UploadBase::getSessionStatus( $this->getUser(), $fileKey );
+		if ( !$progress ) {
+			$this->dieWithError( 'apierror-upload-missingresult', 'missingresult' );
+		}
+
+		if ( !$progress['status']->isGood() ) {
+			$this->dieStatusWithCode( $progress['status'], 'stashfailed' );
+		}
+
+		$result = [
+			'result' => $progress['result'],
+			'stage' => $progress['stage'],
+		];
+
+		if ( isset( $progress['filekey'] ) ) {
+			$result['filekey'] = $progress['filekey'];
+		}
+
+		if ( isset( $progress['offset'] ) ) {
+			$result['offset'] = $progress['offset'];
+		}
+
+		$this->getResult()->addValue( null, $this->getModuleName(), $result );
 	}
 
 	private function finish( RequestImportUploadFromChunks $upload, string $fileKey ): void {
@@ -193,7 +272,6 @@ class ApiRequestImportUpload extends ApiBase {
 	public function getAllowedParams(): array {
 		$fileSize = [
 			ParamValidator::PARAM_TYPE => 'integer',
-			ParamValidator::PARAM_REQUIRED => true,
 			IntegerDef::PARAM_MIN => 1,
 		];
 
@@ -204,6 +282,14 @@ class ApiRequestImportUpload extends ApiBase {
 		}
 
 		return [
+			'async' => [
+				ParamValidator::PARAM_TYPE => 'boolean',
+				ParamValidator::PARAM_DEFAULT => false,
+			],
+			'checkstatus' => [
+				ParamValidator::PARAM_TYPE => 'boolean',
+				ParamValidator::PARAM_DEFAULT => false,
+			],
 			'chunk' => [
 				ParamValidator::PARAM_TYPE => 'upload',
 			],
@@ -213,7 +299,6 @@ class ApiRequestImportUpload extends ApiBase {
 			'filesize' => $fileSize,
 			'offset' => [
 				ParamValidator::PARAM_TYPE => 'integer',
-				ParamValidator::PARAM_REQUIRED => true,
 				IntegerDef::PARAM_MIN => 0,
 			],
 			'type' => [
