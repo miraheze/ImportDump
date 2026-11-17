@@ -130,9 +130,12 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 	}
 
 	public function testBatchSize(): void {
+		$this->assertSame( 100, $this->maintenance->getBatchSize() );
+
 		$ids = $this->addRequests();
 
-		$this->maintenance->loadWithArgv( [ '--batch-size', '1' ] );
+		$this->maintenance->setBatchSize( 1 );
+		$this->assertSame( 1, $this->maintenance->getBatchSize() );
 
 		$this->expectOutputRegex( '/Deleted 2 file\(s\)\./' );
 		$this->maintenance->execute();
