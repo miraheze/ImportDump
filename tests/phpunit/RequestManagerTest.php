@@ -9,6 +9,7 @@ use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
+use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
@@ -166,13 +167,15 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->assertStringContainsString( '/ImportDump/archive/', $manager->getArchiveFilePath() );
 
 		foreach ( [ $manager->getFilePath(), $manager->getArchiveFilePath() ] as $path ) {
-			$status = $backend->quickCreate( [
+			$this->assertStatusGood( $backend->prepare( [
+				'dir' => FileBackend::parentStoragePath( $path ),
+			] ) );
+
+			$this->assertStatusGood( $backend->quickCreate( [
 				'dst' => $path,
 				'content' => 'test',
 				'overwrite' => true,
-			] );
-
-			$this->assertStatusGood( $status );
+			] ) );
 		}
 
 		$this->assertTrue( $manager->fileExists() );
