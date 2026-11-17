@@ -13,6 +13,8 @@ class ConfigNames {
 
 	public const EnableChunkedUploads = 'ImportDumpEnableChunkedUploads';
 
+	public const FileExpiryDays = 'ImportDumpFileExpiryDays';
+
 	public const HelpUrl = 'ImportDumpHelpUrl';
 
 	public const InterwikiMap = 'ImportDumpInterwikiMap';

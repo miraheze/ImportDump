@@ -18,6 +18,7 @@ use MediaWiki\User\ActorStoreFactory;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManagerFactory;
+use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use stdClass;
@@ -51,6 +52,7 @@ class RequestManager {
 		private readonly ActorStoreFactory $actorStoreFactory,
 		private readonly IConnectionProvider $connectionProvider,
 		private readonly ExtensionRegistry $extensionRegistry,
+		private readonly HookRunner $hookRunner,
 		private readonly InterwikiLookup $interwikiLookup,
 		private readonly JobQueueGroupFactory $jobQueueGroupFactory,
 		private readonly LinkRenderer $linkRenderer,
@@ -347,6 +349,13 @@ class RequestManager {
 		return $zonePath . '/' . $fileName;
 	}
 
+	public function getArchiveFilePath(): string {
+		$localRepo = $this->repoGroup->getLocalRepo();
+		$zonePath = $localRepo->getZonePath( 'public' ) . '/ImportDump/archive';
+
+		return $zonePath . '/' . $this->getFileName();
+	}
+
 	public function getSplitFilePath(): string {
 		return FileBackend::splitStoragePath( $this->getFilePath() )[2];
 	}
@@ -363,6 +372,22 @@ class RequestManager {
 		}
 
 		return false;
+	}
+
+	public function deleteFile(): bool {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+
+		$success = true;
+		foreach ( [ $this->getFilePath(), $this->getArchiveFilePath() ] as $path ) {
+			$status = $backend->quickDelete( [
+				'src' => $path,
+				'ignoreMissingSource' => true,
+			] );
+
+			$success = $status->isOK() && $success;
+		}
+
+		return $success;
 	}
 
 	public function getFileSize(): int {
@@ -466,12 +491,18 @@ class RequestManager {
 	}
 
 	public function setStatus( string $status ): void {
+		$oldStatus = $this->getStatus();
+
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
 			->set( [ 'request_status' => $status ] )
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();
+
+		if ( $oldStatus !== $status ) {
+			$this->hookRunner->onImportDumpRequestStatusUpdate( $this, $status, $oldStatus );
+		}
 	}
 
 	public function setTarget( string $target ): void {

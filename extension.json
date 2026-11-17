@@ -18,7 +18,8 @@
 		"ImportDumpAliases": "ImportDumpAliases.php"
 	},
 	"AutoloadNamespaces": {
-		"Miraheze\\ImportDump\\": "includes/"
+		"Miraheze\\ImportDump\\": "includes/",
+		"Miraheze\\ImportDump\\Maintenance\\": "maintenance/"
 	},
 	"TestAutoloadNamespaces": {
 		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/"
@@ -209,6 +210,10 @@
 		"ImportDumpEnableChunkedUploads": {
 			"value": false,
 			"description": "Whether to upload XML files in chunks from Special:RequestImport using JavaScript. Chunks are sent to the requestimportupload API module."
+		},
+		"ImportDumpFileExpiryDays": {
+			"value": [],
+			"description": "A mapping of 'status => days' for deleting the stored XML file of an import request once it is older than that many days, by running the ExpireFiles maintenance script. Only 'complete', 'declined' and 'failed' can be used. Statuses that are not listed are never expired. Leave empty to disable. Age is counted from when the request was made."
 		},
 		"ImportDumpHelpUrl": {
 			"value": "",
