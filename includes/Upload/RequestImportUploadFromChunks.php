@@ -10,7 +10,7 @@ use MediaWiki\User\User;
 
 class RequestImportUploadFromChunks extends UploadFromChunks {
 
-	public const array TYPES = [
+	private const array TYPES = [
 		'xml' => [
 			'extension' => 'xml',
 			'mimeTypes' => [ 'application/xml', 'text/xml' ],
