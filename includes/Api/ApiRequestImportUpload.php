@@ -152,7 +152,10 @@ class ApiRequestImportUpload extends ApiBase {
 		}
 	}
 
-	/** @param array<string, mixed> $params */
+	/**
+	 * @param string $fileKey
+	 * @param array<string, mixed> $params
+	 */
 	private function queueAssembly( string $fileKey, array $params ): void {
 		UploadBase::setSessionStatus( $this->getUser(), $fileKey, [
 			'result' => 'Poll',
