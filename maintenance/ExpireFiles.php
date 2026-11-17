@@ -1,0 +1,121 @@
+<?php
+
+namespace Miraheze\ImportDump\Maintenance;
+
+use MediaWiki\Maintenance\Maintenance;
+use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\ConfigNames;
+use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\RequestStatus;
+use Wikimedia\Rdbms\IConnectionProvider;
+use Wikimedia\Timestamp\ConvertibleTimestamp;
+
+class ExpireFiles extends Maintenance {
+
+	private const array EXPIRABLE_STATUSES = [
+		RequestStatus::STATUS_COMPLETE,
+		RequestStatus::STATUS_DECLINED,
+		RequestStatus::STATUS_FAILED,
+	];
+
+	private IConnectionProvider $connectionProvider;
+	private RequestManager $requestManager;
+
+	public function __construct() {
+		parent::__construct();
+
+		$this->addDescription( 'Deletes the stored XML files of old import requests using $wgImportDumpFileExpiryDays.' );
+		$this->addOption( 'dry-run', 'List the files that would be deleted without deleting them.' );
+		$this->addOption( 'batch-size', 'The number of requests to check at a time (Defaults to 100).', false, true );
+
+		$this->requireExtension( 'ImportDump' );
+	}
+
+	private function initServices(): void {
+		$services = $this->getServiceContainer();
+		$this->connectionProvider = $services->getConnectionProvider();
+		$this->requestManager = $services->get( 'ImportDumpRequestManager' );
+	}
+
+	public function execute(): void {
+		$this->initServices();
+
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
+			$this->fatalError( 'This script must be run on the wiki that stores import requests.' );
+		}
+
+		$expiry = $this->getConfig()->get( ConfigNames::FileExpiryDays );
+		if ( !is_array( $expiry ) || $expiry === [] ) {
+			$this->output( "No expiry is configured in \$wgImportDumpFileExpiryDays. Nothing to do.\n" );
+			return;
+		}
+
+		$dryRun = $this->hasOption( 'dry-run' );
+		$batchSize = max( 1, (int)$this->getOption( 'batch-size', 100 ) );
+
+		$deleted = 0;
+		$failed = 0;
+
+		foreach ( $expiry as $status => $days ) {
+			if ( !in_array( $status, self::EXPIRABLE_STATUSES, true ) ) {
+				$this->output( "Skipping '$status'. Files for this status cannot be expired.\n" );
+				continue;
+			}
+
+			if ( (int)$days <= 0 ) {
+				continue;
+			}
+
+			$cutoff = $dbr->timestamp( (int)ConvertibleTimestamp::now( TS_UNIX ) - (int)$days * 86400 );
+			$lastId = 0;
+
+			do {
+				$ids = $dbr->newSelectQueryBuilder()
+					->select( 'request_id' )
+					->from( 'import_requests' )
+					->where( [
+						'request_status' => $status,
+						$dbr->expr( 'request_timestamp', '<', $cutoff ),
+						$dbr->expr( 'request_id', '>', $lastId ),
+					] )
+					->orderBy( 'request_id' )
+					->limit( $batchSize )
+					->caller( __METHOD__ )
+					->fetchFieldValues();
+
+				foreach ( $ids as $id ) {
+					$lastId = (int)$id;
+
+					$this->requestManager->loadFromID( $lastId );
+					if ( !$this->requestManager->fileExists() ) {
+						continue;
+					}
+
+					$fileName = $this->requestManager->getFileName();
+					if ( $dryRun ) {
+						$this->output( "Would delete $fileName (request #$lastId, $status).\n" );
+						$deleted++;
+						continue;
+					}
+
+					if ( !$this->requestManager->deleteFile() ) {
+						$this->error( "Failed to delete $fileName (request #$lastId)." );
+						$failed++;
+						continue;
+					}
+
+					$this->output( "Deleted $fileName (request #$lastId, $status).\n" );
+					$deleted++;
+				}
+			} while ( count( $ids ) === $batchSize );
+		}
+
+		$verb = $dryRun ? 'Would delete' : 'Deleted';
+		$this->output( "$verb $deleted file(s). $failed failure(s).\n" );
+	}
+}
+
+// @codeCoverageIgnoreStart
+return ExpireFiles::class;
+// @codeCoverageIgnoreEnd
