@@ -232,7 +232,7 @@
 		},
 		"ImportDumpEnableHistoryDetection": {
 			"value": false,
-			"description": "Whether to check if an uploaded dump has the full revision history of its pages, and tell handlers what was found. The result is a guess, see the message that is shown on the request. Requires the request_history column in the import_requests table."
+			"description": "Whether to check if an uploaded dump has the full revision history of its pages, and tell handlers what was found. The result is a guess, see the message that is shown on the request."
 		},
 		"ImportDumpFileExpiryDays": {
 			"value": [],
