@@ -182,6 +182,31 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	}
 
 	/**
+	 * @covers ::sendNotification
+	 */
+	public function testSystemUsersAreNeverNotified(): void {
+		$captured = [];
+		$service = $this->createMock( NotificationService::class );
+		$service->method( 'notify' )->willReturnCallback(
+			static function ( Notification $notification, RecipientSet $recipients ) use ( &$captured ): void {
+				$captured[] = $recipients;
+			}
+		);
+
+		$this->setService( 'NotificationService', $service );
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->addComment( 'Updated', User::newSystemUser( 'ImportDump Status Update' ) );
+		$manager->addComment( 'Hello', $this->getTestSysop()->getUser() );
+
+		$this->assertCount( 1, $captured );
+		$this->assertSame( [ $manager->getRequester()->getName() ], array_map(
+			static fn ( UserIdentity $user ): string => $user->getName(),
+			$captured[0]->getRecipients()
+		) );
+	}
+
+	/**
 	 * @covers ::addComment
 	 */
 	public function testSystemUsersDoNotNotifyAboutComments(): void {

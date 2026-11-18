@@ -144,6 +144,7 @@
 	"importdump-stage-textindex": "Rebuilding the search index",
 	"importdump-status-conflict": "Could not update the status of this import request because a conflict has been detected. It may have already been started or has already been completed.",
 	"importdump-status-updated": "Request $1.",
+	"importdump-status-updated-by": "Request $1 by $2.",
 	"importdump-status-updated-success": "Status successfully updated for this request.",
 	"importdump-success": "Your import request ($1) was successfully submitted. Your request will be reviewed as soon as possible.",
 	"importdump-success-locked": "This request has been successfully locked. It can no longer be edited and comments cannot be added to it.",

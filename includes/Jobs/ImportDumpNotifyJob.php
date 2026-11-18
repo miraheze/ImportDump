@@ -132,11 +132,13 @@ class ImportDumpNotifyJob extends Job
 			->inContentLanguage()
 			->text();
 
-		$comment = $this->messageLocalizer->msg( 'importdump-status-updated', mb_strtolower( $statusMessage ) )
-			->inContentLanguage()
-			->escaped();
+		$comment = $this->messageLocalizer->msg(
+			'importdump-status-updated-by',
+			mb_strtolower( $statusMessage ),
+			$user->getName()
+		)->inContentLanguage()->escaped();
 
-		$this->requestManager->addComment( $comment, $user );
+		$this->requestManager->addComment( $comment, User::newSystemUser( 'ImportDump Status Update' ) );
 		$this->requestManager->sendNotification( $comment, 'importdump-request-status-update', $user );
 		$this->requestManager->setStatus( self::STATUS_INPROGRESS );
 	}

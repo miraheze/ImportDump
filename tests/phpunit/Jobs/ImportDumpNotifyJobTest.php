@@ -70,10 +70,10 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 		return $dbw->insertId();
 	}
 
-	private function runJob( int $requestID, string $status, string $error ): void {
+	private function runJob( int $requestID, string $status, string $error, string $username ): void {
 		$job = $this->getServiceContainer()->getJobFactory()->newJob( ImportDumpNotifyJob::JOB_NAME, [
 			'requestid' => $requestID,
-			'username' => $this->getTestUser()->getUser()->getName(),
+			'username' => $username,
 			'status' => $status,
 			'joberror' => $error,
 		] );
@@ -106,7 +106,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 		] );
 
 		$id = $this->addRequest();
-		$this->runJob( $id, self::STATUS_FAILED, 'The import broke' );
+		$this->runJob( $id, self::STATUS_FAILED, 'The import broke', $this->getTestUser()->getUser()->getName() );
 
 		$this->assertSame(
 			[ 'importdump-import-failed', 'importdump-request-status-update' ],
@@ -133,7 +133,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 		$this->overrideConfigValue( ConfigNames::UsersNotifiedOnFailedImports, [] );
 
 		$id = $this->addRequest();
-		$this->runJob( $id, self::STATUS_FAILED, 'The import broke' );
+		$this->runJob( $id, self::STATUS_FAILED, 'The import broke', $this->getTestUser()->getUser()->getName() );
 
 		$this->assertNotContains( 'importdump-import-failed', $this->getTypes() );
 		$this->assertSame( self::STATUS_FAILED, $this->getRequestManager( $id )->getStatus() );
@@ -141,7 +141,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 
 	public function testCompletedImportTellsTheRequester(): void {
 		$id = $this->addRequest();
-		$this->runJob( $id, self::STATUS_COMPLETE, '' );
+		$this->runJob( $id, self::STATUS_COMPLETE, '', $this->getTestUser()->getUser()->getName() );
 
 		$this->assertSame( [ 'importdump-request-status-update' ], $this->getTypes() );
 
@@ -152,5 +152,34 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 		) );
 
 		$this->assertSame( self::STATUS_COMPLETE, $this->getRequestManager( $id )->getStatus() );
+	}
+
+	public function testStartedImportIsCommentedBySystemUserAndNamesTheActor(): void {
+		$actor = $this->getTestSysop()->getUser();
+
+		$id = $this->addRequest();
+		$this->runJob( $id, self::STATUS_INPROGRESS, '', $actor->getName() );
+
+		$comments = $this->getRequestManager( $id )->getComments();
+		$this->assertCount( 1, $comments );
+		$this->assertSame( 'ImportDump Status Update', $comments[0]['user']->getName() );
+		$this->assertStringContainsString( $actor->getName(), $comments[0]['comment'] );
+
+		$this->assertSame( [ 'importdump-request-status-update' ], $this->getTypes() );
+
+		[ $notification, $recipients ] = $this->captured[0];
+		$this->assertSame( $actor->getName(), $notification->getAgent()->getName() );
+		$this->assertSame( [ $this->getTestUser()->getUser()->getName() ], array_map(
+			static fn ( UserIdentity $user ): string => $user->getName(),
+			$recipients->getRecipients()
+		) );
+	}
+
+	public function testStartedImportByTheRequesterNotifiesNobody(): void {
+		$id = $this->addRequest();
+		$this->runJob( $id, self::STATUS_INPROGRESS, '', $this->getTestUser()->getUser()->getName() );
+
+		$this->assertSame( [], $this->captured );
+		$this->assertCount( 1, $this->getRequestManager( $id )->getComments() );
 	}
 }

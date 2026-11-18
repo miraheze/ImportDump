@@ -180,7 +180,8 @@ class RequestManager {
 		$involvedUsers = array_values( array_filter(
 			$this->getInvolvedUsers(),
 			static fn ( mixed $involved ): bool => $involved instanceof UserIdentity &&
-				$involved->getName() !== $user->getName()
+				$involved->getName() !== $user->getName() &&
+				!in_array( $involved->getName(), self::SYSTEM_USERS, true )
 		) );
 
 		if ( !$involvedUsers ) {
