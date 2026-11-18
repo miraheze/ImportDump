@@ -14,9 +14,9 @@ use Shellbox\Command\BoxedResult;
 
 /**
  * Runs the programs that unpack the formats PHP cannot read itself. A format only works when
- * the wiki names a program for it in ImportDumpExternalBinaries. The program runs in a
- * sandbox with limits on memory, time and the size of what it writes, and never sees
- * a path or a name that came from the upload.
+ * the wiki names a program for it in ImportDumpExternalBinaries, either as the path alone or as
+ * an array with the keys binary and limits. The program runs in a sandbox with limits on memory,
+ * time and the size of what it writes, and never sees a path or a name that came from the upload.
  */
 class ExternalBinaries {
 
@@ -43,9 +43,15 @@ class ExternalBinaries {
 	private const string SEVEN_ZIP_INPUT = 'input.7z';
 	private const string OUTPUT = 'output';
 
-	private const int MEMORY_LIMIT = 4294967296;
-	private const int XZ_MEMORY_LIMIT = 1073741824;
-	private const int TIME_LIMIT = 3600;
+	/**
+	 * What the limits are when the wiki does not set them. The memory is for the whole sandbox, the time
+	 * is in seconds, and the dictionary is the most memory that the unpacking itself may need.
+	 */
+	private const array DEFAULT_LIMITS = [
+		'memory' => 4294967296,
+		'time' => 3600,
+		'dictionary' => 1073741824,
+	];
 
 	/** Room that a limit on the size of a file gets, because the limit is in blocks. */
 	private const int SIZE_LIMIT_SLACK = 4096;
@@ -74,6 +80,32 @@ class ExternalBinaries {
 		return $this->getBinary( $format ) !== '' && !Shell::isDisabled();
 	}
 
+	/**
+	 * @param string $format
+	 * @return array{binary: string, memory: int, time: int, dictionary: int}
+	 */
+	public function getSettings( string $format ): array {
+		$configured = $this->options->get( ConfigNames::ExternalBinaries )[$format] ?? null;
+		if ( is_string( $configured ) ) {
+			$configured = [ 'binary' => $configured ];
+		}
+
+		if ( !is_array( $configured ) ) {
+			$configured = [];
+		}
+
+		$binary = $configured['binary'] ?? '';
+		$limits = is_array( $configured['limits'] ?? null ) ? $configured['limits'] : [];
+		$settings = [ 'binary' => is_string( $binary ) ? $binary : '' ];
+
+		foreach ( self::DEFAULT_LIMITS as $name => $default ) {
+			$value = $limits[$name] ?? null;
+			$settings[$name] = is_int( $value ) && $value > 0 ? $value : $default;
+		}
+
+		return $settings;
+	}
+
 	/** @return list<string> The MIME types of the formats that can be read. */
 	public function getMimeTypes(): array {
 		$types = [];
@@ -96,6 +128,7 @@ class ExternalBinaries {
 	public function peekXz( string $path, string $destination ): Status {
 		// Only the first bytes are read, and the program is stopped once it has written them.
 		$run = $this->run(
+			self::XZ,
 			$path,
 			self::XZ_INPUT,
 			$this->limitOutput( $this->xzCommand(), self::PEEK_LIMIT ),
@@ -134,6 +167,7 @@ class ExternalBinaries {
 	public function decompressXz( string $path, string $destination, int $maxBytes ): Status {
 		$allowed = $this->getAllowedOutput( $path, $maxBytes );
 		$run = $this->run(
+			self::XZ,
 			$path,
 			self::XZ_INPUT,
 			$this->limitOutput( $this->xzCommand(), $allowed + 1 ),
@@ -150,8 +184,8 @@ class ExternalBinaries {
 	 * @param string $path
 	 * @param string $destination A file that the listing is written to.
 	 * @param int $maxEntries
-	 * @return Status A good status with a list of arrays with the keys path, size, kind and
-	 *  encrypted as its value.
+	 * @return Status A good status with a list of arrays with the keys path, size, kind, encrypted
+	 *  and memory as its value.
 	 */
 	public function listSevenZip( string $path, string $destination, int $maxEntries ): Status {
 		$limit = $maxEntries * self::LISTING_BYTES_PER_ENTRY + self::LISTING_EXTRA_BYTES;
@@ -165,6 +199,7 @@ class ExternalBinaries {
 		);
 
 		$run = $this->run(
+			self::SEVEN_ZIP,
 			$path,
 			self::SEVEN_ZIP_INPUT,
 			$this->limitOutput( $command, $limit + 1 ),
@@ -192,6 +227,13 @@ class ExternalBinaries {
 
 		if ( count( $entries ) > $maxEntries ) {
 			return Status::newFatal( 'importdump-archive-too-many-entries', Message::numParam( $maxEntries ) );
+		}
+
+		$dictionaryLimit = $this->getSettings( self::SEVEN_ZIP )['dictionary'];
+		foreach ( $entries as $entry ) {
+			if ( $entry['memory'] > $dictionaryLimit ) {
+				return Status::newFatal( 'importdump-archive-memory', Message::sizeParam( $dictionaryLimit ) );
+			}
 		}
 
 		return Status::newGood( $entries );
@@ -222,6 +264,7 @@ class ExternalBinaries {
 		);
 
 		$run = $this->run(
+			self::SEVEN_ZIP,
 			$path,
 			self::SEVEN_ZIP_INPUT,
 			$this->limitOutput( $command, $allowed + 1 ),
@@ -238,7 +281,7 @@ class ExternalBinaries {
 	 * contains a line break could otherwise pass for another entry.
 	 *
 	 * @param string $listing
-	 * @return ?list<array{path: string, size: int, kind: string, encrypted: bool}>
+	 * @return ?list<array{path: string, size: int, kind: string, encrypted: bool, memory: int}>
 	 */
 	public function parseSevenZipListing( string $listing ): ?array {
 		$entries = [];
@@ -275,7 +318,7 @@ class ExternalBinaries {
 
 	/**
 	 * @param array<string, string> $record
-	 * @return ?array{path: string, size: int, kind: string, encrypted: bool}
+	 * @return ?array{path: string, size: int, kind: string, encrypted: bool, memory: int}
 	 */
 	private function buildSevenZipEntry( array $record ): ?array {
 		foreach ( [ 'Path', 'Size', 'Attributes', 'Encrypted' ] as $key ) {
@@ -309,12 +352,47 @@ class ExternalBinaries {
 			'size' => (int)$record['Size'],
 			'kind' => $kind,
 			'encrypted' => $record['Encrypted'] === '+',
+			'memory' => $this->getSevenZipMemory( $record['Method'] ?? '' ),
 		];
 	}
 
+	/**
+	 * Works out the memory that is needed to unpack with the methods that an entry names, such as
+	 * "LZMA2:26" or "BCJ LZMA2:96m" or "PPMD:o6:mem26". A bare number is the size as a power of two, and
+	 * a number with k, m or g after it is the size in those units. Methods that are not known to need
+	 * much memory, and anything that is not understood, count as none.
+	 *
+	 * @param string $methods
+	 * @return int The most that any of the methods needs, in bytes.
+	 */
+	private function getSevenZipMemory( string $methods ): int {
+		$most = 0;
+
+		foreach ( preg_split( '/\s+/', trim( $methods ) ) ?: [] as $method ) {
+			if ( !preg_match( '/^(?:LZMA2?:|PPMD:o\d+:mem)(\d+)([kmg]?)$/i', $method, $matches ) ) {
+				continue;
+			}
+
+			$number = (int)$matches[1];
+			$unit = strtolower( $matches[2] );
+			if ( $unit === '' ) {
+				$bytes = $number < 62 ? 1 << $number : PHP_INT_MAX;
+			} else {
+				$bytes = $number * match ( $unit ) {
+					'k' => 1024,
+					'm' => 1048576,
+					default => 1073741824,
+				};
+			}
+
+			$most = max( $most, $bytes );
+		}
+
+		return $most;
+	}
+
 	private function getBinary( string $format ): string {
-		$binary = $this->options->get( ConfigNames::ExternalBinaries )[$format] ?? '';
-		return is_string( $binary ) ? $binary : '';
+		return $this->getSettings( $format )['binary'];
 	}
 
 	private function xzCommand(): string {
@@ -322,7 +400,7 @@ class ExternalBinaries {
 			$this->getBinary( self::XZ ),
 			'--decompress',
 			'--stdout',
-			'--memlimit-decompress=' . self::XZ_MEMORY_LIMIT,
+			'--memlimit-decompress=' . $this->getSettings( self::XZ )['dictionary'],
 			'--',
 			self::XZ_INPUT
 		);
@@ -356,6 +434,7 @@ class ExternalBinaries {
 	/**
 	 * Runs a command in the sandbox with a copy of the file as its only input.
 	 *
+	 * @param string $format The format, which decides the limits.
 	 * @param string $path The file that is copied in.
 	 * @param string $inputName
 	 * @param string $command A command line that is already escaped.
@@ -364,18 +443,21 @@ class ExternalBinaries {
 	 * @return Status A good status with a BoxedResult as its value.
 	 */
 	private function run(
+		string $format,
 		string $path,
 		string $inputName,
 		string $command,
 		string $destination,
 		int $maxOutput
 	): Status {
+		$settings = $this->getSettings( $format );
+
 		try {
 			$boxed = $this->commandFactory->createBoxed()
 				->routeName( self::ROUTE_NAME )
-				->cpuTimeLimit( self::TIME_LIMIT )
-				->wallTimeLimit( self::TIME_LIMIT )
-				->memoryLimit( self::MEMORY_LIMIT )
+				->cpuTimeLimit( $settings['time'] )
+				->wallTimeLimit( $settings['time'] )
+				->memoryLimit( $settings['memory'] )
 				->fileSizeLimit( $maxOutput )
 				->disableNetwork()
 				->privateUserNamespace()

@@ -32,6 +32,7 @@
 	"importdump-apierror-type-mismatch": "API error shown when a chunk of a chunked upload uses a different type parameter than the first chunk.",
 	"importdump-archive-binary-unavailable": "Error shown when an uploaded archive needs a program that is not set up in $wgImportDumpExternalBinaries, or that could not be run.",
 	"importdump-archive-bzip2-unavailable": "Error shown when an uploaded BZIP2 file cannot be read because the bz2 PHP extension is not installed.",
+	"importdump-archive-memory": "Error shown when a 7z archive was made with settings that need more memory to unpack than $wgImportDumpExternalBinaries allows.\n\nParameters:\n* $1 - The most memory that is allowed, as a size such as \"1 GB\".",
 	"importdump-archive-not-single": "Error shown when an uploaded archive does not contain exactly one file.",
 	"importdump-archive-ratio": "Error shown when an uploaded archive expands far more than a normal file would.",
 	"importdump-archive-too-large": "Error shown when an uploaded archive expands to more than the allowed size. $1 is the allowed size.",

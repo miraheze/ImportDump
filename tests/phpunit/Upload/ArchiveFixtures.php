@@ -28,7 +28,7 @@ trait ArchiveFixtures {
 		return $this->newFile( TarFixture::build( $entries ) );
 	}
 
-	/** @param array<string, string> $binaries Format to the program that unpacks it. */
+	/** @param array<string, string|array<string, mixed>> $binaries Format to its program, or to its settings. */
 	private function newExternalBinaries( array $binaries ): ExternalBinaries {
 		return new ExternalBinaries(
 			$this->getServiceContainer()->getShellCommandFactory(),
@@ -38,7 +38,7 @@ trait ArchiveFixtures {
 		);
 	}
 
-	/** @param array<string, string> $binaries Format to the program that unpacks it. */
+	/** @param array<string, string|array<string, mixed>> $binaries Format to its program, or to its settings. */
 	private function newReader( array $binaries ): ArchiveReader {
 		return new ArchiveReader(
 			$this->newExternalBinaries( $binaries ),

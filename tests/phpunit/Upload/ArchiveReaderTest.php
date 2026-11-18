@@ -1057,4 +1057,35 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 			)
 		);
 	}
+
+	public function testSevenZipThatNeedsMoreMemoryThanAllowed(): void {
+		$reader = $this->newReader( [
+			ExternalBinaries::SEVEN_ZIP => [
+				'binary' => $this->requireBinary( ExternalBinaries::SEVEN_ZIP ),
+				'limits' => [ 'dictionary' => 1 ],
+			],
+		] );
+
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_ONE ) );
+		$this->assertStatusError(
+			'importdump-archive-memory',
+			$reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 100, self::MAX_SIZE )
+		);
+	}
+
+	public function testSevenZipWithTheSettingsAsAnArray(): void {
+		$reader = $this->newReader( [
+			ExternalBinaries::SEVEN_ZIP => [
+				'binary' => $this->requireBinary( ExternalBinaries::SEVEN_ZIP ),
+				'limits' => [ 'dictionary' => 4096, 'memory' => 2147483648, 'time' => 60 ],
+			],
+		] );
+
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_ONE ) );
+		$this->assertSame( ArchiveReader::FORMAT_SEVEN_ZIP, $reader->detectFormat( $path ) );
+
+		$status = $reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertSame( 'dump.xml', $status->getValue()[0]->name );
+	}
 }
