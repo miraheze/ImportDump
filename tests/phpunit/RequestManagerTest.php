@@ -5,6 +5,11 @@ namespace Miraheze\ImportDump\Tests;
 use MediaWiki\FileRepo\LocalRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\MainConfigNames;
+use MediaWiki\User\ActorStoreFactory;
+use MediaWiki\User\UserGroupManager;
+use MediaWiki\User\UserGroupManagerFactory;
+use MediaWiki\User\UserIdentityLookup;
+use MediaWiki\User\UserIdentityValue;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
@@ -238,33 +243,47 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		);
 	}
 
-	private function getLocalTargetManager(): RequestManager {
-		$this->getRequestManager( id: 1 )->setTarget( WikiMap::getCurrentWikiId() );
-		return $this->getRequestManager( id: 1 );
-	}
-
 	/**
 	 * @covers ::getUserGroupsFromTarget
+	 * @dataProvider provideUserGroupsFromTarget
 	 */
-	public function testGetUserGroupsFromTargetWithoutGroups(): void {
-		$manager = $this->getLocalTargetManager();
+	public function testGetUserGroupsFromTarget( ?array $groups, array $expected ): void {
+		$lookup = $this->createMock( UserIdentityLookup::class );
+		$lookup->method( 'getUserIdentityByName' )->willReturn(
+			$groups === null ? null : new UserIdentityValue( 1, 'Test user' )
+		);
+
+		$actorStoreFactory = $this->createMock( ActorStoreFactory::class );
+		$actorStoreFactory->method( 'getUserIdentityLookup' )->willReturn( $lookup );
+
+		$groupManager = $this->createMock( UserGroupManager::class );
+		$groupManager->method( 'getUserGroups' )->willReturn( $groups ?? [] );
+
+		$groupManagerFactory = $this->createMock( UserGroupManagerFactory::class );
+		$groupManagerFactory->method( 'getUserGroupManager' )->willReturn( $groupManager );
+
+		$this->setService( 'ActorStoreFactory', $actorStoreFactory );
+		$this->setService( 'UserGroupManagerFactory', $groupManagerFactory );
+
+		$manager = $this->getRequestManager( id: 1 );
 
 		$this->assertSame(
-			[ wfMessage( 'importdump-usergroups-none' )->text() ],
+			array_map(
+				static fn ( string $group ): string => $group === 'none' ?
+					wfMessage( 'importdump-usergroups-none' )->text() : $group,
+				$expected
+			),
 			$manager->getUserGroupsFromTarget()
 		);
 	}
 
-	/**
-	 * @covers ::getUserGroupsFromTarget
-	 */
-	public function testGetUserGroupsFromTargetWithGroups(): void {
-		$this->getServiceContainer()->getUserGroupManager()
-			->addUserToGroup( $this->getTestUser()->getUser(), 'bureaucrat' );
-
-		$manager = $this->getLocalTargetManager();
-
-		$this->assertSame( [ 'bureaucrat' ], $manager->getUserGroupsFromTarget() );
+	public static function provideUserGroupsFromTarget(): array {
+		return [
+			'user does not exist on the target' => [ null, [ 'none' ] ],
+			'user has no groups' => [ [], [ 'none' ] ],
+			'user has one group' => [ [ 'bureaucrat' ], [ 'bureaucrat' ] ],
+			'user has several groups' => [ [ 'bureaucrat', 'sysop' ], [ 'bureaucrat', 'sysop' ] ],
+		];
 	}
 
 	/**
