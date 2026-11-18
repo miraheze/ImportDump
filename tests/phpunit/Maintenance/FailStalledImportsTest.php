@@ -10,6 +10,7 @@ use Miraheze\ImportDump\ImportHeartbeat;
 use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
 use Miraheze\ImportDump\Maintenance\FailStalledImports;
 use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\RequestStage;
 use Miraheze\ImportDump\RequestStatus;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
@@ -90,6 +91,18 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase
 		$this->assertSame( self::STATUS_INPROGRESS, $this->getRequestManager( $alive )->getStatus() );
 		$this->assertSame( self::STATUS_INPROGRESS, $this->getRequestManager( $recent )->getStatus() );
 		$this->assertSame( self::STATUS_PENDING, $this->getRequestManager( $pending )->getStatus() );
+	}
+
+	public function testMarksImportedRequestsAsPartial(): void {
+		$id = $this->addRequest( self::STATUS_INPROGRESS, 10 );
+		$this->getRequestManager( $id )->setStage( RequestStage::STAGE_REFRESHLINKS );
+
+		$this->expectOutputRegex( '/Marked 1 import\(s\)/' );
+		$this->maintenance->execute();
+
+		$queue = $this->getServiceContainer()->getJobQueueGroup()->get( ImportDumpNotifyJob::JOB_NAME );
+		$job = $queue->pop();
+		$this->assertSame( self::STATUS_PARTIAL, $job->getParams()['status'] );
 	}
 
 	public function testDryRun(): void {

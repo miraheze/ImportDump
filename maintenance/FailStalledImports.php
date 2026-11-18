@@ -89,13 +89,17 @@ class FailStalledImports extends Maintenance {
 				}
 
 				$this->requestManager->loadFromID( $lastId );
+				$status = $this->requestManager->hasImported() ?
+					RequestStatus::STATUS_PARTIAL :
+					RequestStatus::STATUS_FAILED;
+
 				$this->jobQueueGroupFactory->makeJobQueueGroup( $dbr->getDomainID() )->push(
 					new JobSpecification(
 						ImportDumpNotifyJob::JOB_NAME,
 						[
 							'joberror' => "The import did not report progress for $hours hours.",
 							'requestid' => $lastId,
-							'status' => RequestStatus::STATUS_FAILED,
+							'status' => $status,
 							'username' => $this->requestManager->getRequester()->getName(),
 						]
 					)

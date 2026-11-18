@@ -10,6 +10,7 @@ CREATE TABLE import_requests (
   request_target VARCHAR(64) NOT NULL,
   request_reason TEXT NOT NULL,
   request_status TEXT NOT NULL,
+  request_stage VARCHAR(32) DEFAULT NULL,
   request_locked SMALLINT DEFAULT 0 NOT NULL,
   request_private SMALLINT DEFAULT 0 NOT NULL,
   PRIMARY KEY(request_id)

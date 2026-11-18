@@ -10,6 +10,7 @@ use Miraheze\ImportDump\ImportHeartbeat;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
 use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\RequestStage;
 use Miraheze\ImportDump\RequestStatus;
 use RuntimeException;
 use Wikimedia\TestingAccessWrapper;
@@ -22,7 +23,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @covers \Miraheze\ImportDump\Jobs\ImportDumpJob
  */
 class ImportDumpJobTest extends MediaWikiIntegrationTestCase
-	implements RequestStatus {
+	implements RequestStage, RequestStatus {
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -165,6 +166,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 
 		$this->assertSame( '', $notifications[1]['joberror'] );
 		$this->assertSame( $id, $notifications[1]['requestid'] );
+		$this->assertSame( self::STAGE_AFTERIMPORT, $this->getRequestManager( $id )->getStage() );
 		$this->assertFileDoesNotExist( $path );
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
 	}
@@ -207,14 +209,88 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 
 		$notifications = $this->popNotifications();
 		$this->assertSame(
-			[ self::STATUS_INPROGRESS, self::STATUS_FAILED ],
+			[ self::STATUS_INPROGRESS, self::STATUS_PARTIAL ],
 			$this->getStatuses( $notifications )
 		);
 
 		$this->assertStringContainsString( 'RuntimeException', $notifications[1]['joberror'] );
 		$this->assertStringContainsString( 'After import failed', $notifications[1]['joberror'] );
+		$this->assertSame( self::STAGE_AFTERIMPORT, $this->getRequestManager( $id )->getStage() );
 		$this->assertFileDoesNotExist( $path );
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
+	}
+
+	public function testRunFailureBeforeImportHasNoStage(): void {
+		$id = $this->addRequest();
+
+		$this->assertTrue( $this->newJob( $id )->run() );
+		$this->assertSame( [ self::STATUS_FAILED ], $this->getStatuses( $this->popNotifications() ) );
+		$this->assertSame( '', $this->getRequestManager( $id )->getStage() );
+	}
+
+	public function testRunResumesAfterImportWithoutFetchingFile(): void {
+		$this->overrideConfigValue( MainConfigNames::DisableSearchUpdate, true );
+		// Only the stages from the counts stage onwards run, so recent changes is not rebuilt.
+		$this->expectOutputRegex( '/\A(?!.*Rebuilding).*Counting articles/s' );
+
+		$fileRequested = false;
+		$afterImportCalled = false;
+		$this->setTemporaryHook( 'ImportDumpJobGetFile',
+			static function () use ( &$fileRequested ): void {
+				$fileRequested = true;
+			}
+		);
+
+		$this->setTemporaryHook( 'ImportDumpJobAfterImport',
+			static function () use ( &$afterImportCalled ): void {
+				$afterImportCalled = true;
+			}
+		);
+
+		$id = $this->addRequest();
+		$this->getRequestManager( $id )->setStage( self::STAGE_COUNTS );
+
+		$this->assertTrue( $this->newJob( $id )->run() );
+
+		$this->assertFalse( $fileRequested );
+		$this->assertTrue( $afterImportCalled );
+		$this->assertSame(
+			[ self::STATUS_INPROGRESS, self::STATUS_COMPLETE ],
+			$this->getStatuses( $this->popNotifications() )
+		);
+	}
+
+	public function testRunResumeFromLastStageOnlyRunsHook(): void {
+		$this->expectOutputString( '' );
+
+		$afterImportCalled = false;
+		$this->setTemporaryHook( 'ImportDumpJobAfterImport',
+			static function () use ( &$afterImportCalled ): void {
+				$afterImportCalled = true;
+			}
+		);
+
+		$id = $this->addRequest();
+		$this->getRequestManager( $id )->setStage( self::STAGE_AFTERIMPORT );
+
+		$this->assertTrue( $this->newJob( $id )->run() );
+		$this->assertTrue( $afterImportCalled );
+		$this->assertSame( self::STAGE_AFTERIMPORT, $this->getRequestManager( $id )->getStage() );
+	}
+
+	public function testRunResumeFailureStaysPartial(): void {
+		$this->setTemporaryHook( 'ImportDumpJobAfterImport',
+			static fn (): never => throw new RuntimeException( 'Still failing' )
+		);
+
+		$id = $this->addRequest();
+		$this->getRequestManager( $id )->setStage( self::STAGE_AFTERIMPORT );
+
+		$this->assertTrue( $this->newJob( $id )->run() );
+		$this->assertSame(
+			[ self::STATUS_INPROGRESS, self::STATUS_PARTIAL ],
+			$this->getStatuses( $this->popNotifications() )
+		);
 	}
 
 	/** @dataProvider provideChunkSizes */

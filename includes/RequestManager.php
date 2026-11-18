@@ -41,6 +41,7 @@ class RequestManager {
 
 	public const CONSTRUCTOR_OPTIONS = [
 		ConfigNames::InterwikiMap,
+		ConfigNames::MaintenanceCommand,
 		ConfigNames::ScriptCommand,
 	];
 
@@ -413,8 +414,49 @@ class RequestManager {
 		return $this->row->request_source;
 	}
 
+	public function getStage(): string {
+		return $this->row->request_stage ?? '';
+	}
+
 	public function getStatus(): string {
 		return $this->row->request_status;
+	}
+
+	public function hasImported(): bool {
+		$stage = $this->getStage();
+		return $stage !== '' && $stage !== RequestStage::STAGE_IMPORT;
+	}
+
+	/** @return string[] */
+	public function getRemainingCommands(): array {
+		$scripts = [
+			RequestStage::STAGE_SITESTATS => [ 'initSiteStats.php' => '--update' ],
+			RequestStage::STAGE_TEXTINDEX => [ 'rebuildtextindex.php' => '' ],
+			RequestStage::STAGE_RECENTCHANGES => [ 'rebuildrecentchanges.php' => '' ],
+			RequestStage::STAGE_REFRESHLINKS => [ 'refreshLinks.php' => '' ],
+			RequestStage::STAGE_COUNTS => [
+				'initEditCount.php' => '',
+				'updateArticleCount.php' => '--update',
+			],
+		];
+
+		$commands = [];
+		$remaining = array_slice(
+			RequestStage::STAGES,
+			(int)array_search( $this->getStage(), RequestStage::STAGES, true )
+		);
+
+		foreach ( $remaining as $stage ) {
+			foreach ( $scripts[$stage] ?? [] as $script => $arguments ) {
+				$commands[] = trim( str_replace(
+					[ '{IP}', '{wiki}', '{script}', '{script-name}', '{arguments}' ],
+					[ MW_INSTALL_PATH, $this->getTarget(), $script, basename( $script, '.php' ), $arguments ],
+					$this->options->get( ConfigNames::MaintenanceCommand )
+				) );
+			}
+		}
+
+		return $commands;
 	}
 
 	public function getTarget(): string {
@@ -490,12 +532,29 @@ class RequestManager {
 			->execute();
 	}
 
+	public function setStage( string $stage ): void {
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_stage' => $stage ?: null ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->row->request_stage = $stage ?: null;
+	}
+
 	public function setStatus( string $status ): void {
 		$oldStatus = $this->getStatus();
 
+		$set = [ 'request_status' => $status ];
+		if ( $status === RequestStatus::STATUS_PENDING || $status === RequestStatus::STATUS_COMPLETE ) {
+			$set['request_stage'] = null;
+			$this->row->request_stage = null;
+		}
+
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
-			->set( [ 'request_status' => $status ] )
+			->set( $set )
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();

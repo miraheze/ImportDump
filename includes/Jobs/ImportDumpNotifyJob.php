@@ -18,7 +18,7 @@ use Miraheze\ImportDump\RequestStatus;
 class ImportDumpNotifyJob extends Job
 	implements RequestStatus {
 
-	public const JOB_NAME = 'ImportDumpNotifyJob';
+	public const string JOB_NAME = 'ImportDumpNotifyJob';
 
 	private readonly MessageLocalizer $messageLocalizer;
 
@@ -32,7 +32,7 @@ class ImportDumpNotifyJob extends Job
 		private readonly ExtensionRegistry $extensionRegistry,
 		private readonly Config $config,
 		private readonly RequestManager $requestManager,
-		private readonly UserFactory $userFactory
+		private readonly UserFactory $userFactory,
 	) {
 		parent::__construct( self::JOB_NAME, $params );
 
@@ -55,8 +55,8 @@ class ImportDumpNotifyJob extends Job
 			$this->notifyComplete();
 		}
 
-		if ( $this->status === self::STATUS_FAILED ) {
-			$this->notifyFailed();
+		if ( $this->status === self::STATUS_FAILED || $this->status === self::STATUS_PARTIAL ) {
+			$this->notifyFailed( $this->status );
 		}
 
 		if ( $this->status === self::STATUS_INPROGRESS ) {
@@ -86,7 +86,7 @@ class ImportDumpNotifyJob extends Job
 		$this->requestManager->setStatus( self::STATUS_COMPLETE );
 	}
 
-	private function notifyFailed(): void {
+	private function notifyFailed( string $status ): void {
 		$notifiedUsers = array_filter(
 			array_map(
 				fn ( string $userName ): ?User => $this->userFactory->newFromName( $userName ),
@@ -119,13 +119,13 @@ class ImportDumpNotifyJob extends Job
 		}
 
 		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
-		$comment = $this->messageLocalizer->msg( 'importdump-import-failed-comment' )
+		$comment = $this->messageLocalizer->msg( "importdump-import-$status-comment" )
 			->inContentLanguage()
 			->escaped();
 
 		$this->requestManager->addComment( $comment, $commentUser );
 		$this->requestManager->sendNotification( $comment, 'importdump-request-status-update', $commentUser );
-		$this->requestManager->setStatus( self::STATUS_FAILED );
+		$this->requestManager->setStatus( $status );
 	}
 
 	private function notifyStarted(): void {

@@ -9,23 +9,25 @@ namespace Miraheze\ImportDump;
  */
 class ConfigNames {
 
-	public const EnableAutomatedJob = 'ImportDumpEnableAutomatedJob';
+	public const string EnableAutomatedJob = 'ImportDumpEnableAutomatedJob';
 
-	public const EnableChunkedUploads = 'ImportDumpEnableChunkedUploads';
+	public const string EnableChunkedUploads = 'ImportDumpEnableChunkedUploads';
 
-	public const FileExpiryDays = 'ImportDumpFileExpiryDays';
+	public const string FileExpiryDays = 'ImportDumpFileExpiryDays';
 
-	public const HelpUrl = 'ImportDumpHelpUrl';
+	public const string HelpUrl = 'ImportDumpHelpUrl';
 
-	public const InterwikiMap = 'ImportDumpInterwikiMap';
+	public const string InterwikiMap = 'ImportDumpInterwikiMap';
 
-	public const MaxUploadSize = 'ImportDumpMaxUploadSize';
+	public const string MaintenanceCommand = 'ImportDumpMaintenanceCommand';
 
-	public const ScriptCommand = 'ImportDumpScriptCommand';
+	public const string MaxUploadSize = 'ImportDumpMaxUploadSize';
 
-	public const StalledImportHours = 'ImportDumpStalledImportHours';
+	public const string ScriptCommand = 'ImportDumpScriptCommand';
 
-	public const UsersNotifiedOnAllRequests = 'ImportDumpUsersNotifiedOnAllRequests';
+	public const string StalledImportHours = 'ImportDumpStalledImportHours';
 
-	public const UsersNotifiedOnFailedImports = 'ImportDumpUsersNotifiedOnFailedImports';
+	public const string UsersNotifiedOnAllRequests = 'ImportDumpUsersNotifiedOnAllRequests';
+
+	public const string UsersNotifiedOnFailedImports = 'ImportDumpUsersNotifiedOnFailedImports';
 }
