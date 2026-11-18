@@ -365,10 +365,17 @@ class SpecialRequestImport extends FormSpecialPage
 		$out->addJsConfigVars( 'wgRequestImportChunkedUpload', [
 			'maxUploadSize' => $maxSize < PHP_INT_MAX ? $maxSize : null,
 			'maxPhpUploadSize' => $maxPhpSize,
-			'maxDirectUploadSize' => min( $maxPhpSize, UploadBase::getMaxUploadSize( 'file' ) ),
+			'maxDirectUploadSize' => $this->getMaxDirectUploadSize( $maxPhpSize ),
 			'minChunkSize' => ApiUpload::getMinUploadChunkSize( $this->getConfig() ),
 			'type' => 'xml',
 		] );
+	}
+
+	private function getMaxDirectUploadSize( int $maxPhpSize ): int {
+		$limit = min( $maxPhpSize, UploadBase::getMaxUploadSize( 'file' ) );
+		$threshold = $this->getConfig()->get( ConfigNames::ChunkedUploadThreshold );
+
+		return $threshold === null ? $limit : min( $limit, max( 1, (int)$threshold ) );
 	}
 
 	public function getLogType( string $target ): string {

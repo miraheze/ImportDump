@@ -277,6 +277,10 @@
 			"value": null,
 			"description": "Maximum total size in bytes of a file uploaded in chunks. Chunked uploads ignore $wgMaxUploadSize. Leave as null for no limit."
 		},
+		"ImportDumpChunkedUploadThreshold": {
+			"value": null,
+			"description": "Size in bytes from which files are uploaded in chunks. It can only lower the point that PHP's upload limit and $wgMaxUploadSize already set. Leave as null to chunk only the files that are too big to be uploaded at once."
+		},
 		"ImportDumpHelpUrl": {
 			"value": "",
 			"description": "Full URL. If set, adds a help URL to Special:RequestImport."

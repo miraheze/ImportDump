@@ -31,6 +31,8 @@ class ConfigNames {
 
 	public const string MaxUploadSize = 'ImportDumpMaxUploadSize';
 
+	public const string ChunkedUploadThreshold = 'ImportDumpChunkedUploadThreshold';
+
 	public const string ScriptCommand = 'ImportDumpScriptCommand';
 
 	public const string StalledImportHours = 'ImportDumpStalledImportHours';

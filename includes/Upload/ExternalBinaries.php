@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump\Upload;
 
 use Exception;
 use MediaWiki\Config\ServiceOptions;
+use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\Message\Message;
 use MediaWiki\Shell\CommandFactory;
 use MediaWiki\Shell\Shell;
@@ -390,7 +391,12 @@ class ExternalBinaries {
 			}
 
 			return Status::newGood( $boxed->execute() );
-		} catch ( Exception ) {
+		} catch ( Exception $e ) {
+			LoggerFactory::getInstance( 'ImportDump' )->error(
+				'Could not run a program to read an archive: {message}',
+				[ 'message' => $e->getMessage(), 'exception' => $e ]
+			);
+
 			return Status::newFatal( 'importdump-archive-binary-unavailable' );
 		}
 	}

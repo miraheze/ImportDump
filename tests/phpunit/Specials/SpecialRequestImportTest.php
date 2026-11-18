@@ -368,6 +368,42 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 		$this->assertLessThanOrEqual( 1000, $vars['maxDirectUploadSize'] );
 	}
 
+	/**
+	 * @covers ::addChunkedUploadModule
+	 */
+	public function testChunkedUploadThresholdLowersTheDirectLimit(): void {
+		$this->overrideConfigValues( [
+			ConfigNames::ChunkedUploadThreshold => 500,
+			MainConfigNames::MaxUploadSize => 1000,
+		] );
+
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$specialRequestImport->addChunkedUploadModule();
+
+		$vars = $this->specialRequestImport->getOutput()
+			->getJsConfigVars()['wgRequestImportChunkedUpload'];
+
+		$this->assertSame( 500, $vars['maxDirectUploadSize'] );
+	}
+
+	/**
+	 * @covers ::addChunkedUploadModule
+	 */
+	public function testChunkedUploadThresholdCannotRaiseTheDirectLimit(): void {
+		$this->overrideConfigValues( [
+			ConfigNames::ChunkedUploadThreshold => 5000,
+			MainConfigNames::MaxUploadSize => 1000,
+		] );
+
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$specialRequestImport->addChunkedUploadModule();
+
+		$vars = $this->specialRequestImport->getOutput()
+			->getJsConfigVars()['wgRequestImportChunkedUpload'];
+
+		$this->assertLessThanOrEqual( 1000, $vars['maxDirectUploadSize'] );
+	}
+
 	private function stashXml( User $user ): string {
 		$path = $this->getNewTempFile();
 		file_put_contents( $path, self::DUMP );
