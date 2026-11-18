@@ -55,7 +55,6 @@ return [
 			$services->get( 'ImportDumpHookRunner' ),
 			$services->getInterwikiLookup(),
 			$services->getJobQueueGroupFactory(),
-			$services->getLinkRenderer(),
 			$services->getNotificationService(),
 			$services->getRepoGroup(),
 			RequestContext::getMain(),

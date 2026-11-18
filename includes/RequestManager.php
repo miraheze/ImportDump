@@ -9,10 +9,8 @@ use MediaWiki\Interwiki\InterwikiLookup;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\JobQueue\JobSpecification;
 use MediaWiki\Language\MessageLocalizer;
-use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\Logging\ManualLogEntry;
 use MediaWiki\MainConfigNames;
-use MediaWiki\Message\Message;
 use MediaWiki\Notification\NotificationService;
 use MediaWiki\Notification\RecipientSet;
 use MediaWiki\Permissions\Authority;
@@ -71,7 +69,6 @@ class RequestManager {
 		private readonly HookRunner $hookRunner,
 		private readonly InterwikiLookup $interwikiLookup,
 		private readonly JobQueueGroupFactory $jobQueueGroupFactory,
-		private readonly LinkRenderer $linkRenderer,
 		private readonly NotificationService $notificationService,
 		private readonly RepoGroup $repoGroup,
 		private readonly MessageLocalizer $messageLocalizer,
@@ -123,7 +120,6 @@ class RequestManager {
 
 	public function logStatusUpdate( string $comment, string $newStatus, User $user ): void {
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
-		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
 		$logEntry = new ManualLogEntry(
 			$this->isPrivate( forced: false ) ? 'importdumpprivate' : 'importdump',
@@ -139,10 +135,8 @@ class RequestManager {
 
 		$logEntry->setParameters(
 			[
-				'4::requestLink' => Message::rawParam( $requestLink ),
-				'5::requestStatus' => mb_strtolower( $this->messageLocalizer->msg(
-					"importdump-label-$newStatus"
-				)->inContentLanguage()->text() ),
+				'4:request-link:requestID' => $this->ID,
+				'5:request-status:requestStatus' => $newStatus,
 			]
 		);
 
@@ -152,7 +146,6 @@ class RequestManager {
 
 	public function logStarted( User $user ): void {
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
-		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
 		$logEntry = new ManualLogEntry(
 			$this->isPrivate( forced: false ) ? 'importdumpprivate' : 'importdump',
@@ -165,7 +158,7 @@ class RequestManager {
 		$logEntry->setParameters(
 			[
 				'4::requestTarget' => $this->getTarget(),
-				'5::requestLink' => Message::rawParam( $requestLink ),
+				'5:request-link:requestID' => $this->ID,
 			]
 		);
 
@@ -248,7 +241,6 @@ class RequestManager {
 		$this->interwikiLookup->invalidateCache( $prefix );
 
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
-		$requestLink = $this->linkRenderer->makeLink( $requestQueueLink, "#{$this->ID}" );
 
 		$logEntry = new ManualLogEntry(
 			$this->isPrivate( forced: false ) ? 'importdumpprivate' : 'importdump',
@@ -262,7 +254,7 @@ class RequestManager {
 			[
 				'4::prefix' => $prefix,
 				'5::target' => $this->getTarget(),
-				'6::requestLink' => Message::rawParam( $requestLink ),
+				'6:request-link:requestID' => $this->ID,
 			]
 		);
 
