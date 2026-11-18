@@ -2,16 +2,21 @@
 
 namespace Miraheze\ImportDump\Tests\Jobs;
 
+use MediaWiki\Config\Config;
+use MediaWiki\Import\WikiImporterFactory;
+use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\MainConfigNames;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
+use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\ImportHeartbeat;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 use RuntimeException;
+use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
@@ -64,6 +69,61 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 		return $job;
 	}
 
+	private function newChunkedJob( int $requestID, int $chunkSize ): ImportDumpJob {
+		$services = $this->getServiceContainer();
+		$config = $services->getService( 'ImportDumpConfig' );
+		$heartbeat = $services->getService( 'ImportDumpHeartbeat' );
+		$hookRunner = $services->getService( 'ImportDumpHookRunner' );
+		$requestManager = $services->getService( 'ImportDumpRequestManager' );
+		'@phan-var Config $config';
+		'@phan-var ImportHeartbeat $heartbeat';
+		'@phan-var HookRunner $hookRunner';
+		'@phan-var RequestManager $requestManager';
+
+		return new class(
+			[
+				'requestid' => $requestID,
+				'username' => $this->getTestUser()->getUser()->getName(),
+			],
+			$services->getConnectionProvider(),
+			$config,
+			$heartbeat,
+			$hookRunner,
+			$requestManager,
+			$services->getJobQueueGroupFactory(),
+			$services->getWikiImporterFactory(),
+			$chunkSize
+		) extends ImportDumpJob {
+
+			public function __construct(
+				array $params,
+				IConnectionProvider $connectionProvider,
+				Config $config,
+				ImportHeartbeat $heartbeat,
+				HookRunner $hookRunner,
+				RequestManager $requestManager,
+				JobQueueGroupFactory $jobQueueGroupFactory,
+				WikiImporterFactory $wikiImporterFactory,
+				private readonly int $chunkSize,
+			) {
+				parent::__construct(
+					$params,
+					$connectionProvider,
+					$config,
+					$heartbeat,
+					$hookRunner,
+					$requestManager,
+					$jobQueueGroupFactory,
+					$wikiImporterFactory
+				);
+			}
+
+			protected function getRefreshLinksChunkSize(): int {
+				return $this->chunkSize;
+			}
+		};
+	}
+
 	private function getRequestManager( int $id ): RequestManager {
 		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
 		'@phan-var RequestManager $manager';
@@ -85,7 +145,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 			->get( ImportDumpNotifyJob::JOB_NAME );
 
 		$notifications = [];
-		while ( $job = $queue->pop() ) {
+		for ( $job = $queue->pop(); $job; $job = $queue->pop() ) {
 			$notifications[] = $job->getParams();
 		}
 
@@ -207,6 +267,55 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 		$this->assertStringContainsString( 'After import failed', $notifications[1]['joberror'] );
 		$this->assertFileDoesNotExist( $path );
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
+	}
+
+	/** @dataProvider provideChunkSizes */
+	public function testRefreshLinksCoversEveryPageAcrossChunks( int $chunkSize ): void {
+		$this->overrideConfigValue( MainConfigNames::DisableSearchUpdate, true );
+
+		$pageIds = [];
+		for ( $i = 1; $i <= 5; $i++ ) {
+			$status = $this->editPage( "RefreshLinksChunk$i", "[[RefreshLinksTarget$i]]" );
+			$pageIds[] = $status->getNewRevision()->getPageId();
+		}
+
+		$dbw = $this->getDb();
+		$getLinkedPages = static fn (): array => $dbw->newSelectQueryBuilder()
+			->select( 'pl_from' )
+			->from( 'pagelinks' )
+			->where( [ 'pl_from' => $pageIds ] )
+			->caller( __METHOD__ )
+			->fetchFieldValues();
+
+		$this->assertEqualsCanonicalizing( $pageIds, array_map( 'intval', $getLinkedPages() ) );
+
+		$dbw->newDeleteQueryBuilder()
+			->deleteFrom( 'pagelinks' )
+			->where( [ 'pl_from' => $pageIds ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->assertSame( [], $getLinkedPages() );
+
+		$this->setTemporaryHook( 'ImportDumpJobGetFile', $this->writeEmptyDump( ... ) );
+
+		$id = $this->addRequest();
+		$this->assertTrue( $this->newChunkedJob( $id, $chunkSize )->run() );
+
+		$this->assertEqualsCanonicalizing( $pageIds, array_map( 'intval', $getLinkedPages() ) );
+		$this->assertSame(
+			[ self::STATUS_INPROGRESS, self::STATUS_COMPLETE ],
+			$this->getStatuses( $this->popNotifications() )
+		);
+	}
+
+	public static function provideChunkSizes(): array {
+		return [
+			'one page per chunk' => [ 1 ],
+			'two pages per chunk' => [ 2 ],
+			'three pages per chunk' => [ 3 ],
+			'single chunk' => [ 1000 ],
+		];
 	}
 
 	public function testCleanupRemovesTemporaryFile(): void {
