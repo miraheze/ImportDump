@@ -14,11 +14,8 @@ use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
 use OOUI\HtmlSnippet;
 use OOUI\MessageWidget;
-use OOUI\ProgressBarWidget;
 
 class RequestViewer implements RequestStatus {
-
-	private const int VERIFICATION_REFRESH_SECONDS = 10;
 
 	public function __construct(
 		private readonly Config $config,
@@ -31,11 +28,7 @@ class RequestViewer implements RequestStatus {
 		$user = $this->context->getUser();
 		$authority = $this->context->getAuthority();
 
-		if (
-			$this->requestManager->isPrivate( forced: false ) &&
-			$user->getName() !== $this->requestManager->getRequester()->getName() &&
-			!$authority->isAllowed( 'view-private-import-requests' )
-		) {
+		if ( !$this->requestManager->isViewableBy( $authority ) ) {
 			$this->context->getOutput()->addHTML(
 				Html::errorBox( $this->context->msg( 'importdump-private' )->escaped() )
 			);
@@ -513,10 +506,14 @@ class RequestViewer implements RequestStatus {
 		return $formDescriptor;
 	}
 
-	/** Shows how far the check of the uploaded file has come, and reloads the page to update it. */
+	/** Shows how far the check of the uploaded file has come. The script keeps the bar up to date. */
 	private function addVerificationProgress(): void {
 		$out = $this->context->getOutput();
+		$out->addModules( [ 'ext.importdump.progress' ] );
+		$out->addModuleStyles( [ 'ext.importdump.progress.styles' ] );
+
 		$progress = $this->requestManager->getVerificationProgress();
+		$percent = $progress['percent'] ?? null;
 
 		// Messages that can be used here:
 		// * importdump-verification-checking
@@ -526,16 +523,27 @@ class RequestViewer implements RequestStatus {
 			'importdump-verification-' . ( $progress['stage'] ?? 'waiting' )
 		)->text();
 
-		$percent = $progress['percent'] ?? null;
 		if ( $percent !== null ) {
-			$label .= ' (' . $this->context->getLanguage()->formatNum( $percent ) . '%)';
+			$label = $this->context->msg( 'importdump-verification-label' )
+				->plaintextParams( $label )
+				->numParams( $percent )
+				->text();
 		}
 
-		$out->addMeta( 'http:refresh', (string)self::VERIFICATION_REFRESH_SECONDS );
-		$out->addHTML(
-			Html::element( 'p', [], $label ) .
-			new ProgressBarWidget( [ 'progress' => $percent ?? false ] )
-		);
+		$barAttributes = [ 'max' => 100 ];
+		if ( $percent !== null ) {
+			$barAttributes['value'] = $percent;
+		}
+
+		$out->addHTML( Html::rawElement(
+			'div',
+			[
+				'class' => 'ext-importdump-verification',
+				'data-request-id' => $this->requestManager->getID(),
+			],
+			Html::element( 'p', [ 'class' => 'ext-importdump-verification-label' ], $label ) .
+			Html::element( 'progress', $barAttributes )
+		) );
 	}
 
 	private function getStageDescriptor(): array {

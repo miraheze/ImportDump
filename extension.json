@@ -25,6 +25,12 @@
 		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/"
 	},
 	"APIModules": {
+		"requestimportprogress": {
+			"class": "Miraheze\\ImportDump\\Api\\ApiRequestImportProgress",
+			"services": [
+				"ImportDumpRequestManager"
+			]
+		},
 		"requestimportupload": {
 			"class": "Miraheze\\ImportDump\\Api\\ApiRequestImportUpload",
 			"services": [
@@ -215,6 +221,25 @@
 		},
 		"ext.importdump.oouiform.styles": {
 			"styles": "ext.importdump.oouiform.ooui.less"
+		},
+		"ext.importdump.progress": {
+			"scripts": "ext.importdump.progress.js",
+			"dependencies": [
+				"mediawiki.api",
+				"mediawiki.language"
+			],
+			"messages": [
+				"importdump-verification-checking",
+				"importdump-verification-done",
+				"importdump-verification-extracting",
+				"importdump-verification-label",
+				"importdump-verification-rejected",
+				"importdump-verification-reload",
+				"importdump-verification-waiting"
+			]
+		},
+		"ext.importdump.progress.styles": {
+			"styles": "ext.importdump.progress.less"
 		}
 	},
 	"ResourceFileModulePaths": {

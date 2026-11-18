@@ -492,4 +492,22 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$progress->set( 1, 'checking', 40 );
 		$this->assertSame( [ 'stage' => 'checking', 'percent' => 40 ], $manager->getVerificationProgress() );
 	}
+
+	/**
+	 * @covers ::isViewableBy
+	 */
+	public function testIsViewableBy(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$this->assertTrue( $manager->isViewableBy( $this->mockAnonNullAuthority() ) );
+
+		$manager->setPrivate( 1 );
+
+		$manager = $this->getRequestManager( id: 1 );
+		$this->assertFalse( $manager->isViewableBy( $this->mockAnonNullAuthority() ) );
+		$this->assertFalse( $manager->isViewableBy( $this->mockRegisteredNullAuthority() ) );
+		$this->assertTrue( $manager->isViewableBy( $this->getTestUser()->getAuthority() ) );
+		$this->assertTrue( $manager->isViewableBy(
+			$this->mockRegisteredAuthorityWithPermissions( [ 'view-private-import-requests' ] )
+		) );
+	}
 }

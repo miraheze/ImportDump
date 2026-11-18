@@ -14,6 +14,7 @@ use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\Logging\ManualLogEntry;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
+use MediaWiki\Permissions\Authority;
 use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
@@ -577,6 +578,13 @@ class RequestManager {
 
 	public function isLocked(): bool {
 		return (bool)$this->row->request_locked;
+	}
+
+	/** Private requests can only be seen by their requester and by those who may view private requests. */
+	public function isViewableBy( Authority $authority ): bool {
+		return !$this->isPrivate( forced: false ) ||
+			$authority->getUser()->getName() === $this->getRequester()->getName() ||
+			$authority->isAllowed( 'view-private-import-requests' );
 	}
 
 	public function isPrivate( bool $forced ): bool {
