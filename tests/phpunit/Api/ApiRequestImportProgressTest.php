@@ -3,7 +3,9 @@
 namespace Miraheze\ImportDump\Tests\Api;
 
 use MediaWiki\MainConfigNames;
+use MediaWiki\Permissions\SimpleAuthority;
 use MediaWiki\Tests\Api\ApiTestCase;
+use MediaWiki\User\UserIdentityValue;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\RequestStatus;
 use Miraheze\ImportDump\VerificationProgress;
@@ -97,7 +99,7 @@ class ApiRequestImportProgressTest extends ApiTestCase
 			[ 'action' => 'requestimportprogress', 'requestid' => $id ],
 			null,
 			false,
-			$this->mockAnonNullAuthority()
+			new SimpleAuthority( new UserIdentityValue( 0, '127.0.0.1' ), [] )
 		);
 	}
 
@@ -121,7 +123,10 @@ class ApiRequestImportProgressTest extends ApiTestCase
 			[ 'action' => 'requestimportprogress', 'requestid' => $id ],
 			null,
 			false,
-			$this->mockRegisteredAuthorityWithPermissions( [ 'view-private-import-requests' ] )
+			new SimpleAuthority(
+				new UserIdentityValue( 9002, 'Handler' ),
+				[ 'view-private-import-requests' ]
+			)
 		);
 
 		$this->assertSame( self::STATUS_VERIFYING, $result['requestimportprogress']['status'] );

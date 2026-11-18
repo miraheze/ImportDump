@@ -5,6 +5,7 @@ namespace Miraheze\ImportDump\Tests;
 use MediaWiki\FileRepo\LocalRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\MainConfigNames;
+use MediaWiki\Permissions\SimpleAuthority;
 use MediaWiki\User\ActorStoreFactory;
 use MediaWiki\User\UserGroupManager;
 use MediaWiki\User\UserGroupManagerFactory;
@@ -497,17 +498,22 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	 * @covers ::isViewableBy
 	 */
 	public function testIsViewableBy(): void {
+		$anon = new SimpleAuthority( new UserIdentityValue( 0, '127.0.0.1' ), [] );
+		$other = new SimpleAuthority( new UserIdentityValue( 9001, 'Other' ), [] );
+		$handler = new SimpleAuthority(
+			new UserIdentityValue( 9002, 'Handler' ),
+			[ 'view-private-import-requests' ]
+		);
+
 		$manager = $this->getRequestManager( id: 1 );
-		$this->assertTrue( $manager->isViewableBy( $this->mockAnonNullAuthority() ) );
+		$this->assertTrue( $manager->isViewableBy( $anon ) );
 
 		$manager->setPrivate( 1 );
 
 		$manager = $this->getRequestManager( id: 1 );
-		$this->assertFalse( $manager->isViewableBy( $this->mockAnonNullAuthority() ) );
-		$this->assertFalse( $manager->isViewableBy( $this->mockRegisteredNullAuthority() ) );
+		$this->assertFalse( $manager->isViewableBy( $anon ) );
+		$this->assertFalse( $manager->isViewableBy( $other ) );
 		$this->assertTrue( $manager->isViewableBy( $this->getTestUser()->getAuthority() ) );
-		$this->assertTrue( $manager->isViewableBy(
-			$this->mockRegisteredAuthorityWithPermissions( [ 'view-private-import-requests' ] )
-		) );
+		$this->assertTrue( $manager->isViewableBy( $handler ) );
 	}
 }
