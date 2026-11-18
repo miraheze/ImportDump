@@ -91,7 +91,11 @@ class RequestViewer implements RequestStatus {
 					'importdump-label-' . $this->requestManager->getStatus()
 				)->text(),
 			],
-			...$this->getStageDescriptor(),
+		];
+
+		$formDescriptor += $this->getStageDescriptor();
+
+		$formDescriptor += [
 			'reason' => [
 				'type' => 'textarea',
 				'rows' => 6,
