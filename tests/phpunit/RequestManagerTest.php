@@ -238,20 +238,31 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		);
 	}
 
+	private function getLocalTargetManager(): RequestManager {
+		$this->getRequestManager( id: 1 )->setTarget( WikiMap::getCurrentWikiId() );
+		return $this->getRequestManager( id: 1 );
+	}
+
 	/**
 	 * @covers ::getUserGroupsFromTarget
 	 */
-	public function testGetUserGroupsFromTarget(): void {
-		$none = wfMessage( 'importdump-usergroups-none' )->text();
+	public function testGetUserGroupsFromTargetWithoutGroups(): void {
+		$manager = $this->getLocalTargetManager();
 
-		$manager = $this->getRequestManager( id: 1 );
-		$manager->setTarget( WikiMap::getCurrentWikiId() );
-		$manager = $this->getRequestManager( id: 1 );
+		$this->assertSame(
+			[ wfMessage( 'importdump-usergroups-none' )->text() ],
+			$manager->getUserGroupsFromTarget()
+		);
+	}
 
-		$this->assertSame( [ $none ], $manager->getUserGroupsFromTarget() );
-
+	/**
+	 * @covers ::getUserGroupsFromTarget
+	 */
+	public function testGetUserGroupsFromTargetWithGroups(): void {
 		$this->getServiceContainer()->getUserGroupManager()
 			->addUserToGroup( $this->getTestUser()->getUser(), 'bureaucrat' );
+
+		$manager = $this->getLocalTargetManager();
 
 		$this->assertSame( [ 'bureaucrat' ], $manager->getUserGroupsFromTarget() );
 	}
