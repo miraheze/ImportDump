@@ -14,7 +14,6 @@ use Miraheze\ImportDump\RequestHistory;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
-use Miraheze\ImportDump\VerificationProgress;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
