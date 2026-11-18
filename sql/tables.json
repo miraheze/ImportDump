@@ -45,7 +45,7 @@
 				"type": "mwenum",
 				"options": { "notnull": true,
 					"CustomSchemaOptions": {
-						"enum_values": [ "complete", "declined", "failed", "inprogress", "partial", "pending", "starting" ]
+						"enum_values": [ "complete", "declined", "failed", "inprogress", "partial", "pending", "starting", "verifying" ]
 					}
 				}
 			},
@@ -54,6 +54,16 @@
 				"comment": "The last import stage that was started, or NULL if none",
 				"type": "string",
 				"options": { "notnull": false, "length": 32 }
+			},
+			{
+				"name": "request_history",
+				"comment": "Whether the dump seems to have the full revision history, or NULL if it was not checked",
+				"type": "mwenum",
+				"options": { "notnull": false,
+					"CustomSchemaOptions": {
+						"enum_values": [ "full", "partial", "unknown" ]
+					}
+				}
 			},
 			{
 				"name": "request_locked",

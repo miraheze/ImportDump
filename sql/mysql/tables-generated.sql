@@ -12,9 +12,10 @@ CREATE TABLE /*_*/import_requests (
   request_status ENUM(
     'complete', 'declined', 'failed',
     'inprogress', 'partial', 'pending',
-    'starting'
+    'starting', 'verifying'
   ) NOT NULL,
   request_stage VARCHAR(32) DEFAULT NULL,
+  request_history ENUM('full', 'partial', 'unknown') DEFAULT NULL,
   request_locked TINYINT UNSIGNED DEFAULT 0 NOT NULL,
   request_private TINYINT UNSIGNED DEFAULT 0 NOT NULL,
   INDEX request_actor_timestamp (

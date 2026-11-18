@@ -10,6 +10,8 @@ use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\FileRepo\FileRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\Html\Html;
+use MediaWiki\JobQueue\JobQueueGroup;
+use MediaWiki\JobQueue\JobSpecification;
 use MediaWiki\Logging\ManualLogEntry;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
@@ -27,7 +29,9 @@ use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
+use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use Wikimedia\Mime\MimeAnalyzer;
@@ -40,6 +44,8 @@ class SpecialRequestImport extends FormSpecialPage
 	public function __construct(
 		private readonly IConnectionProvider $connectionProvider,
 		private readonly ExtensionRegistry $extensionRegistry,
+		private readonly DumpProcessor $dumpProcessor,
+		private readonly JobQueueGroup $jobQueueGroup,
 		private readonly MimeAnalyzer $mimeAnalyzer,
 		private readonly RepoGroup $repoGroup,
 		private readonly UploadVerification $uploadVerification,
@@ -116,7 +122,7 @@ class SpecialRequestImport extends FormSpecialPage
 					'label-message' => 'importdump-label-upload-file',
 					'help-message' => 'importdump-help-upload-file',
 					'hide-if' => [ '!==', 'wpUploadSourceType', 'File' ],
-					'accept' => [ 'application/xml', 'text/xml' ],
+					'accept' => DumpProcessor::ACCEPTED_MIME_TYPES,
 				],
 				'UploadFileURL' => [
 					'type' => 'url',
@@ -132,7 +138,7 @@ class SpecialRequestImport extends FormSpecialPage
 					'type' => 'file',
 					'label-message' => 'importdump-label-upload-file',
 					'help-message' => 'importdump-help-upload-file',
-					'accept' => [ 'application/xml', 'text/xml' ],
+					'accept' => DumpProcessor::ACCEPTED_MIME_TYPES,
 				],
 			];
 		}
@@ -232,15 +238,23 @@ class SpecialRequestImport extends FormSpecialPage
 		}
 
 		$mime = $this->mimeAnalyzer->guessMimeType( $uploadBase->getTempPath() );
-		if ( $mime !== 'application/xml' && $mime !== 'text/xml' ) {
+		if ( !in_array( $mime, DumpProcessor::ACCEPTED_MIME_TYPES, true ) ) {
 			return Status::newFatal( 'filetype-mime-mismatch', 'xml', $mime );
 		}
 
-		$mimeExt = $this->mimeAnalyzer->getExtensionFromMimeTypeOrNull( $mime );
-		if ( $mimeExt !== 'xml' ) {
-			return Status::newFatal(
-				'filetype-banned-type', $mimeExt ?? 'unknown', 'xml', 1, 1
-			);
+		// Archives, and files too big to check here, are checked by a job. The request waits
+		// until then, and the file is kept apart from the ones that can be imported.
+		$verifyLater = in_array( $mime, DumpProcessor::ARCHIVE_MIME_TYPES, true ) ||
+			$uploadBase->getFileSize() > DumpProcessor::INLINE_SIZE_LIMIT;
+
+		$history = null;
+		if ( !$verifyLater ) {
+			$processed = $this->dumpProcessor->process( $uploadBase->getTempPath() );
+			if ( !$processed->isOK() ) {
+				return $processed;
+			}
+
+			$history = $processed->getValue()->history;
 		}
 
 		$repo = $this->repoGroup->getLocalRepo();
@@ -265,7 +279,7 @@ class SpecialRequestImport extends FormSpecialPage
 
 		$status = $repo->publish(
 			$file->getPath(),
-			"/ImportDump/$fileName",
+			$verifyLater ? "/ImportDump/unverified/$fileName" : "/ImportDump/$fileName",
 			"/ImportDump/archive/$fileName",
 			FileRepo::DELETE_SOURCE
 		);
@@ -281,7 +295,8 @@ class SpecialRequestImport extends FormSpecialPage
 				'request_source' => $data['source'],
 				'request_target' => $data['target'],
 				'request_reason' => $data['reason'],
-				'request_status' => self::STATUS_PENDING,
+				'request_status' => $verifyLater ? self::STATUS_VERIFYING : self::STATUS_PENDING,
+				'request_history' => $history,
 				'request_actor' => $this->getUser()->getActorId(),
 				'request_timestamp' => $timestamp,
 			] )
@@ -289,6 +304,12 @@ class SpecialRequestImport extends FormSpecialPage
 			->execute();
 
 		$requestID = (string)$dbw->insertId();
+		if ( $verifyLater ) {
+			$this->jobQueueGroup->push(
+				new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => (int)$requestID ] )
+			);
+		}
+
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', $requestID );
 
 		$requestLink = $this->getLinkRenderer()->makeLink( $requestQueueLink, "#$requestID" );
@@ -298,6 +319,12 @@ class SpecialRequestImport extends FormSpecialPage
 				$this->msg( 'importdump-success' )->rawParams( $requestLink )->escaped()
 			)
 		);
+
+		if ( $verifyLater ) {
+			$this->getOutput()->addHTML(
+				Html::noticeBox( $this->msg( 'importdump-success-verifying' )->escaped(), '' )
+			);
+		}
 
 		$logEntry = new ManualLogEntry( $this->getLogType( $data['target'] ), 'request' );
 

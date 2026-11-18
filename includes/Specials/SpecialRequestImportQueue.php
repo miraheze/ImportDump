@@ -79,6 +79,7 @@ class SpecialRequestImportQueue extends SpecialPage
 				'label-message' => 'importdump-label-status',
 				'options-messages' => [
 					'importdump-label-pending' => self::STATUS_PENDING,
+					'importdump-label-verifying' => self::STATUS_VERIFYING,
 					'importdump-label-starting' => self::STATUS_STARTING,
 					'importdump-label-inprogress' => self::STATUS_INPROGRESS,
 					'importdump-label-partial' => self::STATUS_PARTIAL,

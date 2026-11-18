@@ -13,7 +13,7 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 	private const array TYPES = [
 		'xml' => [
 			'extension' => 'xml',
-			'mimeTypes' => [ 'application/xml', 'text/xml' ],
+			'mimeTypes' => DumpProcessor::ACCEPTED_MIME_TYPES,
 		],
 	];
 
@@ -53,13 +53,13 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		return 'requestimport.' . self::TYPES[$this->type]['extension'];
 	}
 
-	/** @inheritDoc */
+	/**
+	 * @inheritDoc
+	 * The assembled file is scanned in full when the request is submitted. Scanning the
+	 * growing file after each chunk would read it again and again.
+	 */
 	protected function verifyPartialFile() {
-		$virus = MediaWikiServices::getInstance()
-			->getUploadVerification()
-			->detectVirus( $this->mTempPath );
-
-		return $virus ? [ 'uploadvirus', $virus ] : true;
+		return true;
 	}
 
 	/** @inheritDoc */

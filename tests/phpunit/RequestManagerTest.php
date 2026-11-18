@@ -13,6 +13,7 @@ use MediaWiki\User\UserIdentityValue;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
+use Miraheze\ImportDump\RequestHistory;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStage;
 use Miraheze\ImportDump\RequestStatus;
@@ -163,6 +164,22 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$manager->setStatus( $manager->getStatus() );
 
 		$this->assertSame( 0, $calls );
+	}
+
+	/**
+	 * @covers ::getHistory
+	 */
+	public function testGetHistory(): void {
+		$this->assertNull( $this->getRequestManager( id: 1 )->getHistory() );
+
+		$this->getDb()->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_history' => RequestHistory::HISTORY_PARTIAL ] )
+			->where( [ 'request_id' => 1 ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->assertSame( RequestHistory::HISTORY_PARTIAL, $this->getRequestManager( id: 1 )->getHistory() );
 	}
 
 	/**
@@ -370,6 +387,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	/**
 	 * @covers ::deleteFile
 	 * @covers ::getArchiveFilePath
+	 * @covers ::getUnverifiedFilePath
 	 */
 	public function testDeleteFile(): void {
 		$manager = $this->getRequestManager( id: 1 );
@@ -377,7 +395,10 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$this->assertStringContainsString( '/ImportDump/archive/', $manager->getArchiveFilePath() );
 
-		foreach ( [ $manager->getFilePath(), $manager->getArchiveFilePath() ] as $path ) {
+		$this->assertStringContainsString( '/ImportDump/unverified/', $manager->getUnverifiedFilePath() );
+
+		$paths = [ $manager->getFilePath(), $manager->getArchiveFilePath(), $manager->getUnverifiedFilePath() ];
+		foreach ( $paths as $path ) {
 			$this->assertStatusGood( $backend->prepare( [
 				'dir' => FileBackend::parentStoragePath( $path ),
 			] ) );
@@ -393,7 +414,80 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->assertTrue( $manager->deleteFile() );
 		$this->assertFalse( $manager->fileExists() );
 		$this->assertFalse( $backend->fileExists( [ 'src' => $manager->getArchiveFilePath() ] ) );
+		$this->assertFalse( $backend->fileExists( [ 'src' => $manager->getUnverifiedFilePath() ] ) );
 
 		$this->assertTrue( $manager->deleteFile() );
+	}
+
+	/**
+	 * @covers ::getLocalUnverifiedFile
+	 * @covers ::publishVerifiedFile
+	 * @covers ::deleteUnverifiedFile
+	 */
+	public function testPublishVerifiedFile(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$backend = $this->getServiceContainer()->getRepoGroup()->getLocalRepo()->getBackend();
+
+		$this->assertNull( $manager->getLocalUnverifiedFile() );
+
+		$unverified = $manager->getUnverifiedFilePath();
+		$this->assertStatusGood( $backend->prepare( [ 'dir' => FileBackend::parentStoragePath( $unverified ) ] ) );
+		$this->assertStatusGood( $backend->quickCreate( [ 'dst' => $unverified, 'content' => 'unverified' ] ) );
+		$this->assertSame( 'unverified', file_get_contents( $manager->getLocalUnverifiedFile()->getPath() ) );
+
+		$this->assertStatusGood( $manager->publishVerifiedFile() );
+		$this->assertTrue( $manager->fileExists() );
+		$this->assertFalse( $backend->fileExists( [ 'src' => $unverified ] ) );
+		$this->assertSame( 'unverified', $backend->getFileContents( [ 'src' => $manager->getFilePath() ] ) );
+	}
+
+	/**
+	 * @covers ::publishVerifiedFile
+	 */
+	public function testPublishVerifiedFileFromExtractedFile(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$backend = $this->getServiceContainer()->getRepoGroup()->getLocalRepo()->getBackend();
+
+		$unverified = $manager->getUnverifiedFilePath();
+		$this->assertStatusGood( $backend->prepare( [ 'dir' => FileBackend::parentStoragePath( $unverified ) ] ) );
+		$this->assertStatusGood( $backend->quickCreate( [ 'dst' => $unverified, 'content' => 'archive' ] ) );
+
+		$extracted = $this->getNewTempFile();
+		file_put_contents( $extracted, 'extracted' );
+
+		$this->assertStatusGood( $manager->publishVerifiedFile( $extracted ) );
+		$this->assertFalse( $backend->fileExists( [ 'src' => $unverified ] ) );
+		$this->assertSame( 'extracted', $backend->getFileContents( [ 'src' => $manager->getFilePath() ] ) );
+		$this->assertFileExists( $extracted );
+	}
+
+	/**
+	 * @covers ::setHistory
+	 */
+	public function testSetHistory(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setHistory( RequestHistory::HISTORY_FULL );
+		$this->assertSame( RequestHistory::HISTORY_FULL, $manager->getHistory() );
+		$this->assertSame(
+			RequestHistory::HISTORY_FULL,
+			$this->getRequestManager( id: 1 )->getHistory()
+		);
+
+		$manager->setHistory( null );
+		$this->assertNull( $this->getRequestManager( id: 1 )->getHistory() );
+	}
+
+	/**
+	 * @covers ::getVerificationProgress
+	 */
+	public function testGetVerificationProgress(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$progress = $this->getServiceContainer()->getService( 'ImportDumpVerificationProgress' );
+		'@phan-var \Miraheze\ImportDump\VerificationProgress $progress';
+
+		$this->assertNull( $manager->getVerificationProgress() );
+
+		$progress->set( 1, 'checking', 40 );
+		$this->assertSame( [ 'stage' => 'checking', 'percent' => 40 ], $manager->getVerificationProgress() );
 	}
 }

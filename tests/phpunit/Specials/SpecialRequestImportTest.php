@@ -13,9 +13,13 @@ use MediaWiki\Upload\UploadStash;
 use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
+use Miraheze\ImportDump\Jobs\VerifyDumpJob;
+use Miraheze\ImportDump\RequestStatus;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
+use Miraheze\ImportDump\Tests\Upload\ZipFixture;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use SpecialPageTestBase;
+use Wikimedia\Rdbms\SelectQueryBuilder;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
@@ -25,7 +29,13 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group medium
  * @coversDefaultClass \Miraheze\ImportDump\Specials\SpecialRequestImport
  */
-class SpecialRequestImportTest extends SpecialPageTestBase {
+class SpecialRequestImportTest extends SpecialPageTestBase
+	implements RequestStatus {
+
+	private const string DUMP = '<?xml version="1.0"?>' .
+		'<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.11/" version="0.11">' .
+		'<page><title>A</title><ns>0</ns><id>1</id><revision><id>10</id><text>a</text></revision></page>' .
+		'</mediawiki>';
 
 	private SpecialRequestImport $specialRequestImport;
 
@@ -35,6 +45,8 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		return new SpecialRequestImport(
 			$services->getConnectionProvider(),
 			$services->getExtensionRegistry(),
+			$services->getService( 'ImportDumpDumpProcessor' ),
+			$services->getJobQueueGroup(),
 			$services->getMimeAnalyzer(),
 			$services->getRepoGroup(),
 			$services->getUploadVerification(),
@@ -94,7 +106,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 
 		if ( $formData['UploadFile'] ) {
 			// Create a test file
-			file_put_contents( $formData['UploadFile'], $extraData['testfile'] ?? '<test>content</test>' );
+			file_put_contents( $formData['UploadFile'], $extraData['testfile'] ?? self::DUMP );
 		}
 
 		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
@@ -124,6 +136,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		$this->assertInstanceOf( Status::class, $status );
 		if ( !$expectedError ) {
 			$this->assertStatusGood( $status );
+			$this->assertLatestRequest( $extraData['status'] ?? self::STATUS_PENDING );
 		} else {
 			$this->assertStatusError( $expectedError, $status );
 		}
@@ -133,6 +146,21 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			$this->assertInstanceOf( Status::class, $status );
 			$this->assertStatusError( 'importdump-duplicate-request', $status );
 		}
+	}
+
+	private function assertLatestRequest( string $expectedStatus ): void {
+		$row = $this->getDb()->newSelectQueryBuilder()
+			->select( [ 'request_status', 'request_history' ] )
+			->from( 'import_requests' )
+			->orderBy( 'request_id', SelectQueryBuilder::SORT_DESC )
+			->caller( __METHOD__ )
+			->fetchRow();
+
+		$this->assertSame( $expectedStatus, $row->request_status );
+		$this->assertNull( $row->request_history );
+
+		$queued = $this->getServiceContainer()->getJobQueueGroup()->get( VerifyDumpJob::JOB_NAME )->getSize();
+		$this->assertSame( $expectedStatus === self::STATUS_VERIFYING ? 1 : 0, $queued );
 	}
 
 	public static function onSubmitDataProvider(): Generator {
@@ -147,6 +175,42 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			[
 				'mime-type' => 'application/xml',
 				'duplicate' => false,
+				'token' => true,
+			],
+			null,
+		];
+
+		yield 'zip archive' => [
+			[
+				'source' => 'http://example.com',
+				'target' => 'wikidb',
+				'reason' => 'Test reason',
+				'UploadSourceType' => 'File',
+				'UploadFile' => __DIR__ . '/testfile.xml',
+			],
+			[
+				'mime-type' => 'application/zip',
+				'duplicate' => false,
+				'testfile' => ZipFixture::build( [ 'dump.xml' => self::DUMP ] ),
+				'status' => self::STATUS_VERIFYING,
+				'token' => true,
+			],
+			null,
+		];
+
+		yield 'gzip archive' => [
+			[
+				'source' => 'http://example.com',
+				'target' => 'wikidb',
+				'reason' => 'Test reason',
+				'UploadSourceType' => 'File',
+				'UploadFile' => __DIR__ . '/testfile.xml',
+			],
+			[
+				'mime-type' => 'application/gzip',
+				'duplicate' => false,
+				'testfile' => gzencode( self::DUMP ),
+				'status' => self::STATUS_VERIFYING,
 				'token' => true,
 			],
 			null,
@@ -199,6 +263,23 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 				'token' => true,
 			],
 			'filetype-mime-mismatch',
+		];
+
+		yield 'not an export' => [
+			[
+				'source' => 'http://example.com',
+				'target' => 'wikidb',
+				'reason' => 'Test reason',
+				'UploadSourceType' => 'File',
+				'UploadFile' => __DIR__ . '/testfile.xml',
+			],
+			[
+				'mime-type' => 'application/xml',
+				'duplicate' => false,
+				'testfile' => '<?xml version="1.0"?><html/>',
+				'token' => true,
+			],
+			'importdump-xml-not-dump',
 		];
 
 		yield 'session failure' => [
@@ -287,7 +368,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 
 	private function stashXml( User $user ): string {
 		$path = $this->getNewTempFile();
-		file_put_contents( $path, "<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>" );
+		file_put_contents( $path, self::DUMP );
 
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
 		return ( new UploadStash( $repo, $user ) )->stashFile( $path, 'file' )->getFileKey();

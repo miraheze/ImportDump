@@ -14,8 +14,11 @@ use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
 use OOUI\HtmlSnippet;
 use OOUI\MessageWidget;
+use OOUI\ProgressBarWidget;
 
 class RequestViewer implements RequestStatus {
+
+	private const int VERIFICATION_REFRESH_SECONDS = 10;
 
 	public function __construct(
 		private readonly Config $config,
@@ -51,6 +54,10 @@ class RequestViewer implements RequestStatus {
 		}
 
 		$this->context->getOutput()->enableOOUI();
+
+		if ( $this->requestManager->getStatus() === self::STATUS_VERIFYING ) {
+			$this->addVerificationProgress();
+		}
 
 		$formDescriptor = [
 			'source' => [
@@ -187,7 +194,14 @@ class RequestViewer implements RequestStatus {
 			$validRequest = true;
 			$status = $this->requestManager->getStatus();
 
-			if ( $this->requestManager->hasImported() ) {
+			if ( $status === self::STATUS_VERIFYING ) {
+				$info = new MessageWidget( [
+					'label' => new HtmlSnippet( $this->context->msg( 'importdump-info-verifying' )->escaped() ),
+					'type' => 'notice',
+				] );
+
+				$validRequest = false;
+			} elseif ( $this->requestManager->hasImported() ) {
 				$info = new MessageWidget( [
 					'label' => new HtmlSnippet( $this->getImportedInfo() ),
 					'type' => 'warning',
@@ -277,6 +291,20 @@ class RequestViewer implements RequestStatus {
 				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
 					$status = self::STATUS_DECLINED;
 				}
+			}
+
+			$history = $this->requestManager->getHistory();
+			if ( $history !== null ) {
+				// Messages that can be used here:
+				// * importdump-info-history-full
+				// * importdump-info-history-partial
+				// * importdump-info-history-unknown
+				$info .= new MessageWidget( [
+					'label' => new HtmlSnippet(
+						$this->context->msg( 'importdump-info-history-' . $history )->escaped()
+					),
+					'type' => $history === RequestHistory::HISTORY_PARTIAL ? 'warning' : 'notice',
+				] );
 			}
 
 			if ( $this->requestManager->isPrivate( forced: false ) ) {
@@ -483,6 +511,31 @@ class RequestViewer implements RequestStatus {
 		}
 
 		return $formDescriptor;
+	}
+
+	/** Shows how far the check of the uploaded file has come, and reloads the page to update it. */
+	private function addVerificationProgress(): void {
+		$out = $this->context->getOutput();
+		$progress = $this->requestManager->getVerificationProgress();
+
+		// Messages that can be used here:
+		// * importdump-verification-checking
+		// * importdump-verification-extracting
+		// * importdump-verification-waiting
+		$label = $this->context->msg(
+			'importdump-verification-' . ( $progress['stage'] ?? 'waiting' )
+		)->text();
+
+		$percent = $progress['percent'] ?? null;
+		if ( $percent !== null ) {
+			$label .= ' (' . $this->context->getLanguage()->formatNum( $percent ) . '%)';
+		}
+
+		$out->addMeta( 'http:refresh', (string)self::VERIFICATION_REFRESH_SECONDS );
+		$out->addHTML(
+			Html::element( 'p', [], $label ) .
+			new ProgressBarWidget( [ 'progress' => $percent ?? false ] )
+		);
 	}
 
 	private function getStageDescriptor(): array {
@@ -730,6 +783,16 @@ class RequestViewer implements RequestStatus {
 
 		if ( isset( $formData['submit-handle'] ) ) {
 			$this->requestManager->startAtomic( __METHOD__ );
+			if (
+				$this->requestManager->getStatus() === self::STATUS_VERIFYING &&
+				isset( $formData['handle-status'] ) &&
+				!in_array( $formData['handle-status'], [ self::STATUS_DECLINED, self::STATUS_VERIFYING ], true )
+			) {
+				$this->requestManager->endAtomic( __METHOD__ );
+				$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-verifying-conflict' )->escaped() ) );
+				return;
+			}
+
 			$changes = [];
 
 			if ( $this->requestManager->isLocked() !== (bool)$formData['handle-lock'] ) {
@@ -819,6 +882,11 @@ class RequestViewer implements RequestStatus {
 		}
 
 		if ( isset( $formData['submit-start'] ) ) {
+			if ( $this->requestManager->getStatus() === self::STATUS_VERIFYING ) {
+				$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-verifying-conflict' )->escaped() ) );
+				return;
+			}
+
 			if ( $this->requestManager->getStatus() === self::STATUS_COMPLETE ) {
 				// Don't rerun a job that is already completed.
 				return;

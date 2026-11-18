@@ -60,6 +60,15 @@
 				"UserFactory"
 			],
 			"needsPage": false
+		},
+		"ImportDumpVerifyDump": {
+			"class": "Miraheze\\ImportDump\\Jobs\\VerifyDumpJob",
+			"services": [
+				"ImportDumpDumpProcessor",
+				"ImportDumpRequestManager",
+				"ImportDumpVerificationProgress"
+			],
+			"needsPage": false
 		}
 	},
 	"GroupPermissions": {
@@ -128,6 +137,8 @@
 			"services": [
 				"ConnectionProvider",
 				"ExtensionRegistry",
+				"ImportDumpDumpProcessor",
+				"JobQueueGroup",
 				"MimeAnalyzer",
 				"RepoGroup",
 				"UploadVerification",
@@ -218,9 +229,21 @@
 			"value": false,
 			"description": "Whether to upload XML files in chunks from Special:RequestImport using JavaScript. Chunks are sent to the requestimportupload API module."
 		},
+		"ImportDumpEnableHistoryDetection": {
+			"value": false,
+			"description": "Whether to check if an uploaded dump has the full revision history of its pages, and tell handlers what was found. The result is a guess, see the message that is shown on the request. Requires the request_history column in the import_requests table."
+		},
 		"ImportDumpFileExpiryDays": {
 			"value": [],
 			"description": "A mapping of 'status => days' for deleting the stored XML file of an import request once it is older than that many days, by running the ExpireFiles maintenance script. Only 'complete', 'declined' and 'failed' can be used. Statuses that are not listed are never expired. Leave empty to disable. Age is counted from when the request was made."
+		},
+		"ImportDumpMaxArchiveEntries": {
+			"value": 1000,
+			"description": "Most entries, including directories, that an uploaded archive may have."
+		},
+		"ImportDumpMaxExtractedSize": {
+			"value": 53687091200,
+			"description": "Most bytes that an uploaded archive may expand to. Archives that expand to more, or that are compressed more than 200 times, are rejected while being extracted."
 		},
 		"ImportDumpMaxUploadSize": {
 			"value": null,

@@ -7,6 +7,8 @@ use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\MediaWikiServices;
 use Miraheze\ImportDump\Hooks\HookRunner;
+use Miraheze\ImportDump\Upload\ArchiveReader;
+use Miraheze\ImportDump\Upload\DumpProcessor;
 
 // PHPUnit does not understand coverage for this file.
 // It is covered though, see ServiceWiringTest.
@@ -15,6 +17,17 @@ use Miraheze\ImportDump\Hooks\HookRunner;
 return [
 	'ImportDumpConfig' => static function ( MediaWikiServices $services ): Config {
 		return $services->getConfigFactory()->makeConfig( 'ImportDump' );
+	},
+	'ImportDumpDumpProcessor' => static function ( MediaWikiServices $services ): DumpProcessor {
+		return new DumpProcessor(
+			new ArchiveReader(),
+			new ServiceOptions(
+				DumpProcessor::CONSTRUCTOR_OPTIONS,
+				$services->get( 'ImportDumpConfig' )
+			),
+			$services->getTempFSFileFactory(),
+			$services->getUploadVerification()
+		);
 	},
 	'ImportDumpHeartbeat' => static function ( MediaWikiServices $services ): ImportHeartbeat {
 		return new ImportHeartbeat( $services->getMainObjectStash() );
@@ -39,9 +52,13 @@ return [
 			),
 			$services->getUserFactory(),
 			$services->getUserGroupManagerFactory(),
+			$services->get( 'ImportDumpVerificationProgress' ),
 			$services->has( 'ManageWikiModuleFactory' ) ?
 				$services->get( 'ManageWikiModuleFactory' ) : null
 		);
+	},
+	'ImportDumpVerificationProgress' => static function ( MediaWikiServices $services ): VerificationProgress {
+		return new VerificationProgress( $services->getMainObjectStash() );
 	},
 ];
 

@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump;
 
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Extension\Notifications\Model\Event;
+use MediaWiki\FileRepo\FileRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\Interwiki\InterwikiLookup;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
@@ -24,6 +25,7 @@ use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use stdClass;
 use Wikimedia\FileBackend\FileBackend;
+use Wikimedia\FileBackend\FSFile\FSFile;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\IDatabase;
 use Wikimedia\Rdbms\IExpression;
@@ -72,6 +74,7 @@ class RequestManager {
 		private readonly ServiceOptions $options,
 		private readonly UserFactory $userFactory,
 		private readonly UserGroupManagerFactory $userGroupManagerFactory,
+		private readonly VerificationProgress $verificationProgress,
 		private readonly ?ModuleFactory $moduleFactory
 	) {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
@@ -87,6 +90,10 @@ class RequestManager {
 			->where( [ 'request_id' => $requestID ] )
 			->caller( __METHOD__ )
 			->fetchRow();
+	}
+
+	public function getID(): int {
+		return $this->ID;
 	}
 
 	public function exists(): bool {
@@ -372,6 +379,42 @@ class RequestManager {
 		return $zonePath . '/' . $fileName;
 	}
 
+	/** Where an upload waits until the verification job has checked it. */
+	public function getUnverifiedFilePath(): string {
+		$localRepo = $this->repoGroup->getLocalRepo();
+		$zonePath = $localRepo->getZonePath( 'public' ) . '/ImportDump/unverified';
+
+		return $zonePath . '/' . $this->getFileName();
+	}
+
+	public function getLocalUnverifiedFile(): ?FSFile {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		return $backend->getLocalReference( [ 'src' => $this->getUnverifiedFilePath() ] );
+	}
+
+	public function publishVerifiedFile( ?string $extractedPath = null ): Status {
+		$fileName = $this->getFileName();
+		$status = $this->repoGroup->getLocalRepo()->publish(
+			$extractedPath ?? $this->getUnverifiedFilePath(),
+			"/ImportDump/$fileName",
+			"/ImportDump/archive/$fileName",
+			$extractedPath === null ? FileRepo::DELETE_SOURCE : 0
+		);
+
+		if ( $status->isOK() ) {
+			$this->deleteUnverifiedFile();
+		}
+
+		return $status;
+	}
+
+	public function deleteUnverifiedFile(): void {
+		$this->repoGroup->getLocalRepo()->getBackend()->quickDelete( [
+			'src' => $this->getUnverifiedFilePath(),
+			'ignoreMissingSource' => true,
+		] );
+	}
+
 	public function getArchiveFilePath(): string {
 		$localRepo = $this->repoGroup->getLocalRepo();
 		$zonePath = $localRepo->getZonePath( 'public' ) . '/ImportDump/archive';
@@ -401,7 +444,8 @@ class RequestManager {
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
 
 		$success = true;
-		foreach ( [ $this->getFilePath(), $this->getArchiveFilePath() ] as $path ) {
+		$paths = [ $this->getFilePath(), $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
+		foreach ( $paths as $path ) {
 			$status = $backend->quickDelete( [
 				'src' => $path,
 				'ignoreMissingSource' => true,
@@ -457,6 +501,16 @@ class RequestManager {
 
 	public function getSource(): string {
 		return $this->row->request_source;
+	}
+
+	/** The HISTORY_* constant from RequestHistory, or null if the dump was not checked. */
+	public function getHistory(): ?string {
+		return $this->row->request_history ?? null;
+	}
+
+	/** @return ?array{stage: string, percent: ?int} */
+	public function getVerificationProgress(): ?array {
+		return $this->verificationProgress->get( $this->ID );
 	}
 
 	public function getStage(): string {
@@ -614,6 +668,17 @@ class RequestManager {
 		if ( $oldStatus !== $status ) {
 			$this->hookRunner->onImportDumpRequestStatusUpdate( $this, $status, $oldStatus );
 		}
+	}
+
+	public function setHistory( ?string $history ): void {
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_history' => $history ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->row->request_history = $history;
 	}
 
 	public function setTarget( string $target ): void {

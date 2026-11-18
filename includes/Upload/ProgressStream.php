@@ -1,0 +1,108 @@
+<?php
+
+// phpcs:disable MediaWiki.NamingConventions.LowerCamelFunctionsName.FunctionName
+namespace Miraheze\ImportDump\Upload;
+
+use Closure;
+
+/**
+ * A read only stream that reports how much of a file was read, so that parsers
+ * that open files by themselves can show progress. Use url() to get a path for them.
+ */
+final class ProgressStream {
+
+	private const string PROTOCOL = 'importdump-progress';
+
+	/** @var array<string, array{string, Closure}> */
+	private static array $sources = [];
+
+	/** @var resource|null Set by PHP. */
+	public $context;
+
+	/** @var resource|null */
+	private $handle;
+
+	private ?Closure $callback = null;
+	private string $token = '';
+	private int $size = 0;
+	private int $read = 0;
+	private int $reported = -1;
+
+	/** @param Closure( int ): void $onProgress Called with the percentage that was read. */
+	public static function url( string $path, Closure $onProgress ): string {
+		if ( !in_array( self::PROTOCOL, stream_get_wrappers(), true ) ) {
+			stream_wrapper_register( self::PROTOCOL, self::class );
+		}
+
+		$token = bin2hex( random_bytes( 8 ) );
+		self::$sources[$token] = [ $path, $onProgress ];
+
+		return self::PROTOCOL . '://' . $token;
+	}
+
+	/** Forgets a URL that was never opened, or has been closed. */
+	public static function release( string $url ): void {
+		unset( self::$sources[substr( $url, strlen( self::PROTOCOL ) + 3 )] );
+	}
+
+	/** @return array<int|string, int>|false Some readers check that a file exists before they open it. */
+	public function url_stat( string $path, int $flags ): array|false {
+		$file = self::$sources[substr( $path, strlen( self::PROTOCOL ) + 3 )][0] ?? null;
+		return $file !== null && is_file( $file ) ? stat( $file ) : false;
+	}
+
+	public function stream_open( string $path, string $mode, int $options, ?string &$openedPath ): bool {
+		$token = substr( $path, strlen( self::PROTOCOL ) + 3 );
+		if ( !isset( self::$sources[$token] ) ) {
+			return false;
+		}
+
+		[ $file, $this->callback ] = self::$sources[$token];
+
+		$handle = fopen( $file, 'rb' );
+		if ( !$handle ) {
+			return false;
+		}
+
+		$this->handle = $handle;
+		$this->token = $token;
+		$this->size = (int)filesize( $file );
+
+		return true;
+	}
+
+	public function stream_read( int $count ): string|false {
+		$data = fread( $this->handle, $count );
+		if ( $data === false ) {
+			return false;
+		}
+
+		$this->read += strlen( $data );
+
+		$percent = $this->size > 0 ? min( 100, intdiv( $this->read * 100, $this->size ) ) : 0;
+		if ( $percent !== $this->reported ) {
+			$this->reported = $percent;
+			( $this->callback )( $percent );
+		}
+
+		return $data;
+	}
+
+	public function stream_eof(): bool {
+		return feof( $this->handle );
+	}
+
+	/** @return array<int|string, int>|false */
+	public function stream_stat(): array|false {
+		return fstat( $this->handle );
+	}
+
+	public function stream_set_option( int $option, int $arg1, ?int $arg2 ): bool {
+		return false;
+	}
+
+	public function stream_close(): void {
+		fclose( $this->handle );
+		self::release( self::PROTOCOL . '://' . $this->token );
+	}
+}
