@@ -14,6 +14,7 @@ use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
 use OOUI\HtmlSnippet;
 use OOUI\MessageWidget;
+use OOUI\ProgressBarWidget;
 
 class RequestViewer implements RequestStatus {
 
@@ -509,6 +510,7 @@ class RequestViewer implements RequestStatus {
 	/** Shows how far the check of the uploaded file has come. The script keeps the bar up to date. */
 	private function addVerificationProgress(): void {
 		$out = $this->context->getOutput();
+		$out->enableOOUI();
 		$out->addModules( [ 'ext.importdump.progress' ] );
 		$out->addModuleStyles( [ 'ext.importdump.progress.styles' ] );
 
@@ -530,10 +532,11 @@ class RequestViewer implements RequestStatus {
 				->text();
 		}
 
-		$barAttributes = [ 'max' => 100 ];
-		if ( $percent !== null ) {
-			$barAttributes['value'] = $percent;
-		}
+		$bar = new ProgressBarWidget( [
+			'progress' => $percent ?? false,
+			'id' => 'ext-importdump-verification-bar',
+		] );
+		$bar->setInfusable( true );
 
 		$out->addHTML( Html::rawElement(
 			'div',
@@ -542,7 +545,7 @@ class RequestViewer implements RequestStatus {
 				'data-request-id' => $this->requestManager->getID(),
 			],
 			Html::element( 'p', [ 'class' => 'ext-importdump-verification-label' ], $label ) .
-			Html::element( 'progress', $barAttributes )
+			$bar->toString()
 		) );
 	}
 

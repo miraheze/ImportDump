@@ -9,7 +9,7 @@
 
 	const requestId = $container.data( 'request-id' );
 	const $label = $container.find( '.ext-importdump-verification-label' );
-	const $bar = $container.find( 'progress' );
+	const bar = OO.ui.infuse( $( '#ext-importdump-verification-bar' ) );
 	const api = new mw.Api();
 
 	function showProgress( stage, percent ) {
@@ -19,12 +19,12 @@
 		// * importdump-verification-waiting
 		const text = mw.msg( 'importdump-verification-' + stage );
 		if ( percent === null ) {
-			$bar.removeAttr( 'value' );
+			bar.setProgress( false );
 			$label.text( text );
 			return;
 		}
 
-		$bar.attr( 'value', percent );
+		bar.setProgress( percent );
 		$label.text(
 			mw.msg( 'importdump-verification-label', text, mw.language.convertNumber( percent ) )
 		);
@@ -41,7 +41,7 @@
 			.attr( 'href', window.location.href )
 			.text( mw.msg( 'importdump-verification-reload' ) );
 
-		$bar.remove();
+		bar.$element.remove();
 		$label.text( mw.msg( message ) ).append( ' ', $reload );
 	}
 

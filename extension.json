@@ -226,7 +226,8 @@
 			"scripts": "ext.importdump.progress.js",
 			"dependencies": [
 				"mediawiki.api",
-				"mediawiki.language"
+				"mediawiki.language",
+				"oojs-ui-core"
 			],
 			"messages": [
 				"importdump-verification-checking",
