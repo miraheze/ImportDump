@@ -91,6 +91,7 @@ class RequestViewer implements RequestStatus {
 					'importdump-label-' . $this->requestManager->getStatus()
 				)->text(),
 			],
+			...$this->getStageDescriptor(),
 			'reason' => [
 				'type' => 'textarea',
 				'rows' => 6,
@@ -178,7 +179,12 @@ class RequestViewer implements RequestStatus {
 			$validRequest = true;
 			$status = $this->requestManager->getStatus();
 
-			if ( $this->requestManager->fileExists() ) {
+			if ( $this->requestManager->hasImported() ) {
+				$info = new MessageWidget( [
+					'label' => new HtmlSnippet( $this->getImportedInfo() ),
+					'type' => 'warning',
+				] );
+			} elseif ( $this->requestManager->fileExists() ) {
 				$fileInfo = $this->context->msg( 'importdump-info-command' )->plaintextParams(
 					$this->requestManager->getCommand()
 				)->parse();
@@ -395,7 +401,9 @@ class RequestViewer implements RequestStatus {
 					],
 					'submit-start' => [
 						'type' => 'submit',
-						'buttonlabel-message' => 'importdump-label-start-import',
+						'buttonlabel-message' => $this->requestManager->hasImported() ?
+							'importdump-label-resume-import' :
+							'importdump-label-start-import',
 						'disabled' => !$validRequest || !$validStatus,
 						'section' => 'handling',
 					],
@@ -439,6 +447,38 @@ class RequestViewer implements RequestStatus {
 		}
 
 		return $formDescriptor;
+	}
+
+	private function getStageDescriptor(): array {
+		$stage = $this->requestManager->getStage();
+		$statuses = [ self::STATUS_FAILED, self::STATUS_INPROGRESS, self::STATUS_PARTIAL ];
+		if ( !$stage || !in_array( $this->requestManager->getStatus(), $statuses, true ) ) {
+			return [];
+		}
+
+		return [
+			'stage' => [
+				'label-message' => 'importdump-label-stage',
+				'type' => 'text',
+				'readonly' => true,
+				'section' => 'details',
+				'default' => $this->context->msg( "importdump-stage-$stage" )->text(),
+			],
+		];
+	}
+
+	private function getImportedInfo(): string {
+		$stage = $this->context->msg( 'importdump-stage-' . $this->requestManager->getStage() )->text();
+		$info = $this->context->msg( 'importdump-info-already-imported', $stage )->parse();
+
+		$commands = $this->requestManager->getRemainingCommands();
+		if ( $commands ) {
+			$info .= Html::element( 'br' ) . $this->context->msg( 'importdump-info-remaining-commands' )
+				->rawParams( Html::element( 'pre', [], implode( "\n", $commands ) ) )
+				->parse();
+		}
+
+		return $info;
 	}
 
 	public function isValidComment( ?string $comment, array $alldata ): Message|true {
