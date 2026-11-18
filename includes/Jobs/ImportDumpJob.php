@@ -86,6 +86,7 @@ class ImportDumpJob extends Job
 		try {
 			$this->hookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
 
+			// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
 			$importStreamSource = $this->getImportSource( $filePath );
 			if ( !$importStreamSource ) {
 				return true;
@@ -113,7 +114,6 @@ class ImportDumpJob extends Job
 	}
 
 	private function getImportSource( string $filePath ): ?ImportStreamSource {
-		// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
 		$status = ImportStreamSource::newFromFile( $filePath );
 		if ( !$status->isGood() ) {
 			$this->jobError = "Import source for $filePath failed";
