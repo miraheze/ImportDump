@@ -262,8 +262,15 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	public function testDeletedTargetDoesNotQueryTargetDatabase(): void {
 		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [] );
 
+		$realFactory = $this->getServiceContainer()->getActorStoreFactory();
 		$actorStoreFactory = $this->createMock( ActorStoreFactory::class );
-		$actorStoreFactory->expects( $this->never() )->method( 'getUserIdentityLookup' );
+		$actorStoreFactory->method( 'getUserIdentityLookup' )->willReturnCallback(
+			function ( string|false $wikiId ) use ( $realFactory ) {
+				$this->assertNotSame( 'requestimporttest', $wikiId );
+				return $realFactory->getUserIdentityLookup( $wikiId );
+			}
+		);
+
 		$this->setService( 'ActorStoreFactory', $actorStoreFactory );
 
 		$manager = $this->getRequestManager( id: 1 );
