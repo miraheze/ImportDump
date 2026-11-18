@@ -45,9 +45,15 @@
 				"type": "mwenum",
 				"options": { "notnull": true,
 					"CustomSchemaOptions": {
-						"enum_values": [ "complete", "declined", "failed", "inprogress", "pending", "starting" ]
+						"enum_values": [ "complete", "declined", "failed", "inprogress", "partial", "pending", "starting" ]
 					}
 				}
+			},
+			{
+				"name": "request_stage",
+				"comment": "The last import stage that was started, or NULL if none",
+				"type": "string",
+				"options": { "notnull": false, "length": 32 }
 			},
 			{
 				"name": "request_locked",
