@@ -52,7 +52,6 @@ return [
 		return new RequestManager(
 			$services->getActorStoreFactory(),
 			$services->getConnectionProvider(),
-			$services->getExtensionRegistry(),
 			$services->get( 'ImportDumpHookRunner' ),
 			$services->getInterwikiLookup(),
 			$services->getJobQueueGroupFactory(),

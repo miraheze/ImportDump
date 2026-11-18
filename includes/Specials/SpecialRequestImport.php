@@ -16,7 +16,6 @@ use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
 use MediaWiki\Notification\NotificationService;
 use MediaWiki\Notification\RecipientSet;
-use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\FormSpecialPage;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
@@ -46,7 +45,6 @@ class SpecialRequestImport extends FormSpecialPage
 
 	public function __construct(
 		private readonly IConnectionProvider $connectionProvider,
-		private readonly ExtensionRegistry $extensionRegistry,
 		private readonly DumpProcessor $dumpProcessor,
 		private readonly JobQueueGroup $jobQueueGroup,
 		private readonly MimeAnalyzer $mimeAnalyzer,
@@ -380,11 +378,7 @@ class SpecialRequestImport extends FormSpecialPage
 	}
 
 	public function getLogType( string $target ): string {
-		if (
-			!$this->extensionRegistry->isLoaded( 'ManageWiki' ) ||
-			!$this->moduleFactory ||
-			!$this->moduleFactory->isEnabled( 'core' )
-		) {
+		if ( !$this->moduleFactory?->isEnabled( 'core' ) ) {
 			return 'importdump';
 		}
 

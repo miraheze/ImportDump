@@ -143,7 +143,6 @@
 			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImport",
 			"services": [
 				"ConnectionProvider",
-				"ExtensionRegistry",
 				"ImportDumpDumpProcessor",
 				"JobQueueGroup",
 				"MimeAnalyzer",

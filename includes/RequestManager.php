@@ -16,7 +16,6 @@ use MediaWiki\Message\Message;
 use MediaWiki\Notification\NotificationService;
 use MediaWiki\Notification\RecipientSet;
 use MediaWiki\Permissions\Authority;
-use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
 use MediaWiki\User\ActorStoreFactory;
@@ -69,7 +68,6 @@ class RequestManager {
 	public function __construct(
 		private readonly ActorStoreFactory $actorStoreFactory,
 		private readonly IConnectionProvider $connectionProvider,
-		private readonly ExtensionRegistry $extensionRegistry,
 		private readonly HookRunner $hookRunner,
 		private readonly InterwikiLookup $interwikiLookup,
 		private readonly JobQueueGroupFactory $jobQueueGroupFactory,
@@ -601,11 +599,7 @@ class RequestManager {
 			return true;
 		}
 
-		if (
-			!$this->extensionRegistry->isLoaded( 'ManageWiki' ) ||
-			!$this->moduleFactory ||
-			!$this->moduleFactory->isEnabled( 'core' )
-		) {
+		if ( !$this->moduleFactory?->isEnabled( 'core' ) ) {
 			return false;
 		}
 
