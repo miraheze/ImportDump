@@ -77,7 +77,6 @@ class ImportDumpJob extends Job
 			return true;
 		}
 
-		$dbw = $this->connectionProvider->getPrimaryDatabase();
 		$filePath = wfTempDir() . '/' . $this->requestManager->getFileName();
 
 		$this->running = true;
@@ -87,71 +86,16 @@ class ImportDumpJob extends Job
 		try {
 			$this->hookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
 
-			// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
-			$importStreamSource = ImportStreamSource::newFromFile( $filePath );
-			if ( !$importStreamSource->isGood() ) {
-				$this->jobError = "Import source for $filePath failed";
-				$this->setLastError( $this->jobError );
-				$this->notifyFailed();
+			$importStreamSource = $this->getImportSource( $filePath );
+			if ( !$importStreamSource ) {
 				return true;
 			}
 
-			$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
-				new JobSpecification(
-					ImportDumpNotifyJob::JOB_NAME,
-					[
-						// No errors
-						'joberror' => '',
-						'requestid' => $this->requestID,
-						'status' => self::STATUS_INPROGRESS,
-						'username' => $this->username,
-					]
-				)
-			);
+			$this->queueNotification( self::STATUS_INPROGRESS, '' );
 
-			$user = User::newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
-			$importer = $this->wikiImporterFactory->getWikiImporter(
-				$importStreamSource->value, new UltimateAuthority( $user )
-			);
-
-			$importer->disableStatisticsUpdate();
-			$importer->setNoUpdates( true );
-			$importer->setUsernamePrefix(
-				$this->requestManager->getInterwikiPrefix(),
-				true
-			);
-
-			$importer->setPageOutCallback( fn () => $this->beat( force: false ) );
-
-			$importer->doImport();
-			$this->beat( force: true );
-
-			$siteStatsInit = new SiteStatsInit();
-			$siteStatsInit->refresh();
-
-			SiteStatsUpdate::cacheUpdate( $dbw );
-
-			$maintenance = new FakeMaintenance;
-			if ( !$this->config->get( MainConfigNames::DisableSearchUpdate ) ) {
-				$rebuildText = $maintenance->createChild( RebuildTextIndex::class );
-				$rebuildText->execute();
-				$this->beat( force: true );
-			}
-
-			$rebuildRC = $maintenance->createChild( RebuildRecentchanges::class );
-			$rebuildRC->execute();
-			$this->beat( force: true );
-
-			$rebuildLinks = $maintenance->createChild( RefreshLinks::class );
-			$rebuildLinks->execute();
-			$this->beat( force: true );
-
-			$initEditCount = $maintenance->createChild( InitEditCount::class );
-			$initEditCount->execute();
-
-			$updateArticleCount = $maintenance->createChild( UpdateArticleCount::class );
-			$updateArticleCount->setOption( 'update', true );
-			$updateArticleCount->execute();
+			$this->importPages( $importStreamSource );
+			$this->updateSiteStats();
+			$this->runMaintenanceScripts();
 
 			$this->hookRunner->onImportDumpJobAfterImport( $filePath, $this->requestManager );
 		} catch ( Throwable $t ) {
@@ -161,28 +105,99 @@ class ImportDumpJob extends Job
 			$this->notifyFailed();
 			return true;
 		} finally {
-			$this->running = false;
-			$this->heartbeat->clear( $this->requestID );
-
-			if ( file_exists( $filePath ) ) {
-				unlink( $filePath );
-			}
+			$this->cleanup( $filePath );
 		}
 
-		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
-			new JobSpecification(
-				ImportDumpNotifyJob::JOB_NAME,
-				[
-					// No errors
-					'joberror' => '',
-					'requestid' => $this->requestID,
-					'status' => self::STATUS_COMPLETE,
-					'username' => $this->username,
-				]
-			)
+		$this->queueNotification( self::STATUS_COMPLETE, '' );
+		return true;
+	}
+
+	private function getImportSource( string $filePath ): ?ImportStreamSource {
+		// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
+		$status = ImportStreamSource::newFromFile( $filePath );
+		if ( !$status->isGood() ) {
+			$this->jobError = "Import source for $filePath failed";
+			$this->setLastError( $this->jobError );
+			$this->notifyFailed();
+			return null;
+		}
+
+		return $status->value;
+	}
+
+	private function importPages( ImportStreamSource $importStreamSource ): void {
+		$user = User::newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
+		$importer = $this->wikiImporterFactory->getWikiImporter(
+			$importStreamSource, new UltimateAuthority( $user )
 		);
 
-		return true;
+		$importer->disableStatisticsUpdate();
+		$importer->setNoUpdates( true );
+		$importer->setUsernamePrefix(
+			$this->requestManager->getInterwikiPrefix(),
+			true
+		);
+
+		$importer->setPageOutCallback( fn () => $this->beat( force: false ) );
+
+		$importer->doImport();
+		$this->beat( force: true );
+	}
+
+	private function updateSiteStats(): void {
+		$siteStatsInit = new SiteStatsInit();
+		$siteStatsInit->refresh();
+
+		SiteStatsUpdate::cacheUpdate( $this->connectionProvider->getPrimaryDatabase() );
+	}
+
+	private function runMaintenanceScripts(): void {
+		$maintenance = new FakeMaintenance;
+
+		$this->rebuildTextIndex( $maintenance );
+		$this->rebuildRecentChanges( $maintenance );
+		$this->refreshLinks( $maintenance );
+		$this->updateCounts( $maintenance );
+	}
+
+	private function rebuildTextIndex( FakeMaintenance $maintenance ): void {
+		if ( $this->config->get( MainConfigNames::DisableSearchUpdate ) ) {
+			return;
+		}
+
+		$rebuildText = $maintenance->createChild( RebuildTextIndex::class );
+		$rebuildText->execute();
+		$this->beat( force: true );
+	}
+
+	private function rebuildRecentChanges( FakeMaintenance $maintenance ): void {
+		$rebuildRC = $maintenance->createChild( RebuildRecentchanges::class );
+		$rebuildRC->execute();
+		$this->beat( force: true );
+	}
+
+	private function refreshLinks( FakeMaintenance $maintenance ): void {
+		$rebuildLinks = $maintenance->createChild( RefreshLinks::class );
+		$rebuildLinks->execute();
+		$this->beat( force: true );
+	}
+
+	private function updateCounts( FakeMaintenance $maintenance ): void {
+		$initEditCount = $maintenance->createChild( InitEditCount::class );
+		$initEditCount->execute();
+
+		$updateArticleCount = $maintenance->createChild( UpdateArticleCount::class );
+		$updateArticleCount->setOption( 'update', true );
+		$updateArticleCount->execute();
+	}
+
+	private function cleanup( string $filePath ): void {
+		$this->running = false;
+		$this->heartbeat->clear( $this->requestID );
+
+		if ( file_exists( $filePath ) ) {
+			unlink( $filePath );
+		}
 	}
 
 	private function beat( bool $force ): void {
@@ -224,13 +239,17 @@ class ImportDumpJob extends Job
 	}
 
 	private function notifyFailed(): void {
+		$this->queueNotification( self::STATUS_FAILED, $this->jobError );
+	}
+
+	private function queueNotification( string $status, string $error ): void {
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
-					'joberror' => $this->jobError,
+					'joberror' => $error,
 					'requestid' => $this->requestID,
-					'status' => self::STATUS_FAILED,
+					'status' => $status,
 					'username' => $this->username,
 				]
 			)
