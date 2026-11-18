@@ -103,8 +103,8 @@ class ExternalBinaries {
 			return $run;
 		}
 
-		/** @var BoxedResult $received */
 		$received = $run->getValue();
+		'@phan-var BoxedResult $received';
 
 		// The program is ended by the pipe that closes once enough bytes were read, which is not an error.
 		if (
@@ -405,8 +405,9 @@ class ExternalBinaries {
 			return $run;
 		}
 
-		/** @var BoxedResult $result */
 		$result = $run->getValue();
+		'@phan-var BoxedResult $result';
+
 		$size = $result->wasReceived( self::OUTPUT ) && file_exists( $destination ) ?
 			(int)filesize( $destination ) : 0;
 
