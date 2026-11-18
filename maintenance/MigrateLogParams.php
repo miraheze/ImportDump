@@ -199,3 +199,7 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 		return $map;
 	}
 }
+
+// @codeCoverageIgnoreStart
+return MigrateLogParams::class;
+// @codeCoverageIgnoreEnd
