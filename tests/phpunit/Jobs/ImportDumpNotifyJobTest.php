@@ -31,9 +31,12 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->overrideConfigValue( MainConfigNames::VirtualDomainsMapping, [
-			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
-			'virtual-interwiki' => [ 'db' => WikiMap::getCurrentWikiId() ],
+		$this->overrideConfigValues( [
+			MainConfigNames::LocalDatabases => [ WikiMap::getCurrentWikiId() ],
+			MainConfigNames::VirtualDomainsMapping => [
+				'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
+				'virtual-interwiki' => [ 'db' => WikiMap::getCurrentWikiId() ],
+			],
 		] );
 
 		$this->captured = [];
