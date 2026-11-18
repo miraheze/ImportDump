@@ -16,6 +16,9 @@ return [
 	'ImportDumpConfig' => static function ( MediaWikiServices $services ): Config {
 		return $services->getConfigFactory()->makeConfig( 'ImportDump' );
 	},
+	'ImportDumpHeartbeat' => static function ( MediaWikiServices $services ): ImportHeartbeat {
+		return new ImportHeartbeat( $services->getMainObjectStash() );
+	},
 	'ImportDumpHookRunner' => static function ( MediaWikiServices $services ): HookRunner {
 		return new HookRunner( $services->getHookContainer() );
 	},
