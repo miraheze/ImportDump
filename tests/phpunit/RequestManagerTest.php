@@ -8,6 +8,7 @@ use MediaWiki\MainConfigNames;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\RequestStage;
 use Miraheze\ImportDump\RequestStatus;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
@@ -21,7 +22,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @coversDefaultClass \Miraheze\ImportDump\RequestManager
  */
 class RequestManagerTest extends MediaWikiIntegrationTestCase
-	implements RequestStatus {
+	implements RequestStage, RequestStatus {
 
 	public function addDBDataOnce(): void {
 		$this->overrideConfigValue( MainConfigNames::VirtualDomainsMapping, [
@@ -154,6 +155,68 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$manager->setStatus( $manager->getStatus() );
 
 		$this->assertSame( 0, $calls );
+	}
+
+	/**
+	 * @covers ::getStage
+	 * @covers ::hasImported
+	 * @covers ::setStage
+	 */
+	public function testStage(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setStage( '' );
+		$this->assertSame( '', $manager->getStage() );
+		$this->assertFalse( $manager->hasImported() );
+
+		$manager->setStage( self::STAGE_IMPORT );
+		$this->assertSame( self::STAGE_IMPORT, $manager->getStage() );
+		$this->assertFalse( $manager->hasImported() );
+
+		$manager->setStage( self::STAGE_SITESTATS );
+		$this->assertTrue( $manager->hasImported() );
+
+		$this->assertSame( self::STAGE_SITESTATS, $this->getRequestManager( id: 1 )->getStage() );
+	}
+
+	/**
+	 * @covers ::setStatus
+	 * @dataProvider provideStatusesThatClearStage
+	 */
+	public function testSetStatusClearsStage( string $status, bool $cleared ): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setStage( self::STAGE_REFRESHLINKS );
+		$manager->setStatus( $status );
+
+		$this->assertSame(
+			$cleared ? '' : self::STAGE_REFRESHLINKS,
+			$this->getRequestManager( id: 1 )->getStage()
+		);
+	}
+
+	public static function provideStatusesThatClearStage(): array {
+		return [
+			'pending' => [ self::STATUS_PENDING, true ],
+			'complete' => [ self::STATUS_COMPLETE, true ],
+			'partial' => [ self::STATUS_PARTIAL, false ],
+			'failed' => [ self::STATUS_FAILED, false ],
+		];
+	}
+
+	/**
+	 * @covers ::getRemainingCommands
+	 */
+	public function testGetRemainingCommands(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setStage( self::STAGE_REFRESHLINKS );
+
+		$commands = $manager->getRemainingCommands();
+		$this->assertCount( 3, $commands );
+		$this->assertStringContainsString( 'refreshLinks.php --wiki=requestimporttest', $commands[0] );
+		$this->assertStringContainsString( 'initEditCount.php', $commands[1] );
+		$this->assertStringContainsString( 'updateArticleCount.php --update', $commands[2] );
+
+		$manager->setStage( self::STAGE_AFTERIMPORT );
+		$this->assertSame( [], $manager->getRemainingCommands() );
 	}
 
 	/**
