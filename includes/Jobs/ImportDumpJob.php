@@ -189,7 +189,7 @@ class ImportDumpJob extends Job
 				->from( 'page' )
 				->where( $dbr->expr( 'page_id', '>=', $start ?? 0 ) )
 				->orderBy( 'page_id' )
-				->offset( self::REFRESH_LINKS_CHUNK_SIZE )
+				->offset( $this->getRefreshLinksChunkSize() )
 				->caller( __METHOD__ )
 				->fetchField();
 
@@ -216,6 +216,10 @@ class ImportDumpJob extends Job
 		$updateArticleCount = $maintenance->createChild( UpdateArticleCount::class );
 		$updateArticleCount->setOption( 'update', true );
 		$updateArticleCount->execute();
+	}
+
+	protected function getRefreshLinksChunkSize(): int {
+		return self::REFRESH_LINKS_CHUNK_SIZE;
 	}
 
 	private function cleanup( string $filePath ): void {
