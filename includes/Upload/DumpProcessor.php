@@ -91,6 +91,8 @@ class DumpProcessor implements RequestHistory {
 	}
 
 	/**
+	 * @param string $path
+	 * @param string $format
 	 * @param ?Closure( string, ?int ): void $onProgress
 	 * @return Status A good status with a TempFSFile as its value.
 	 */
@@ -128,6 +130,7 @@ class DumpProcessor implements RequestHistory {
 	}
 
 	/**
+	 * @param string $path
 	 * @param ?Closure( string, ?int ): void $onProgress
 	 * @return Status A good status with one of the HISTORY_* constants as its value,
 	 *  or null if history detection is off.
