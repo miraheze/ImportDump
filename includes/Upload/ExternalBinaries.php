@@ -52,6 +52,9 @@ class ExternalBinaries {
 	private const int LISTING_BYTES_PER_ENTRY = 8192;
 	private const int LISTING_EXTRA_BYTES = 65536;
 
+	/** Names the commands for the people who run the sandbox. */
+	private const string ROUTE_NAME = 'importdump-archive';
+
 	/** What a shell reports for a program that was ended because nothing reads its output anymore. */
 	private const int SIGPIPE_EXIT_CODE = 141;
 
@@ -368,6 +371,7 @@ class ExternalBinaries {
 	): Status {
 		try {
 			$boxed = $this->commandFactory->createBoxed()
+				->routeName( self::ROUTE_NAME )
 				->cpuTimeLimit( self::TIME_LIMIT )
 				->wallTimeLimit( self::TIME_LIMIT )
 				->memoryLimit( self::MEMORY_LIMIT )
