@@ -5,8 +5,12 @@ namespace Miraheze\ImportDump\Tests;
 use MediaWiki\FileRepo\LocalRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\MainConfigNames;
+use MediaWiki\Notification\Notification;
+use MediaWiki\Notification\NotificationService;
+use MediaWiki\Notification\RecipientSet;
 use MediaWiki\Permissions\SimpleAuthority;
 use MediaWiki\User\ActorStoreFactory;
+use MediaWiki\User\User;
 use MediaWiki\User\UserGroupManager;
 use MediaWiki\User\UserGroupManagerFactory;
 use MediaWiki\User\UserIdentityLookup;
@@ -14,6 +18,7 @@ use MediaWiki\User\UserIdentityValue;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
+use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\RequestHistory;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStage;
@@ -123,6 +128,68 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$manager->addComment( 'Test', $this->getTestUser()->getUser() );
 		$this->assertCount( 1, $manager->getComments() );
+	}
+
+	/**
+	 * @covers ::sendNotification
+	 * @covers ::addComment
+	 */
+	public function testCommentNotifiesTheOthersInvolved(): void {
+		$captured = [];
+		$service = $this->createMock( NotificationService::class );
+		$service->method( 'notify' )->willReturnCallback(
+			static function ( Notification $notification, RecipientSet $recipients ) use ( &$captured ): void {
+				$captured[] = [ $notification, $recipients ];
+			}
+		);
+
+		$this->setService( 'NotificationService', $service );
+
+		$manager = $this->getRequestManager( id: 1 );
+		$requester = $manager->getRequester();
+		$commenter = $this->getTestSysop()->getUser();
+
+		$manager->addComment( 'Hello', $commenter );
+
+		$this->assertCount( 1, $captured );
+		[ $notification, $recipients ] = $captured[0];
+
+		$this->assertInstanceOf( RequestNotification::class, $notification );
+		$this->assertSame( 'importdump-request-comment', $notification->getType() );
+		$this->assertSame( $commenter->getName(), $notification->getAgent()->getName() );
+		$this->assertSame( [ $requester->getName() ], array_map(
+			static fn ( $user ): string => $user->getName(),
+			$recipients->getRecipients()
+		) );
+
+		$properties = $notification->getProperties();
+		$this->assertSame( 1, $properties['request-id'] );
+		$this->assertSame( 'Hello', $properties['comment'] );
+		$this->assertStringContainsString( 'RequestImportQueue/1', $properties['request-url'] );
+	}
+
+	/**
+	 * @covers ::sendNotification
+	 */
+	public function testNoNotificationWhenNobodyElseIsInvolved(): void {
+		$service = $this->createMock( NotificationService::class );
+		$service->expects( $this->never() )->method( 'notify' );
+		$this->setService( 'NotificationService', $service );
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->addComment( 'Note to self', $manager->getRequester() );
+	}
+
+	/**
+	 * @covers ::addComment
+	 */
+	public function testSystemUsersDoNotNotifyAboutComments(): void {
+		$service = $this->createMock( NotificationService::class );
+		$service->expects( $this->never() )->method( 'notify' );
+		$this->setService( 'NotificationService', $service );
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->addComment( 'Updated', User::newSystemUser( 'ImportDump Status Update' ) );
 	}
 
 	/**

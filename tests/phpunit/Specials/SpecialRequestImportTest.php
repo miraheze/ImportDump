@@ -6,6 +6,9 @@ use Generator;
 use MediaWiki\Context\DerivativeContext;
 use MediaWiki\Exception\UserNotLoggedIn;
 use MediaWiki\MainConfigNames;
+use MediaWiki\Notification\Notification;
+use MediaWiki\Notification\NotificationService;
+use MediaWiki\Notification\RecipientSet;
 use MediaWiki\Request\FauxRequest;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
@@ -14,6 +17,7 @@ use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
+use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\RequestStatus;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
@@ -41,6 +45,12 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 
 	/** @inheritDoc */
 	protected function newSpecialPage(): SpecialRequestImport {
+		return $this->newSpecialPageWithNotifications(
+			$this->getServiceContainer()->getNotificationService()
+		);
+	}
+
+	private function newSpecialPageWithNotifications( NotificationService $notifications ): SpecialRequestImport {
 		$services = $this->getServiceContainer();
 		return new SpecialRequestImport(
 			$services->getConnectionProvider(),
@@ -48,6 +58,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 			$services->getService( 'ImportDumpDumpProcessor' ),
 			$services->getJobQueueGroup(),
 			$services->getMimeAnalyzer(),
+			$notifications,
 			$services->getRepoGroup(),
 			$services->getUploadVerification(),
 			$services->getUserFactory(),
@@ -590,5 +601,62 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 	 */
 	public function testGetRestriction(): void {
 		$this->assertSame( 'request-import', $this->specialRequestImport->getRestriction() );
+	}
+
+	/**
+	 * @covers ::sendNotifications
+	 */
+	public function testSendNotificationsOnlyReachesThoseWhoMayHandleRequests(): void {
+		$this->setGroupPermissions( 'sysop', 'handle-import-requests', true );
+		$this->overrideConfigValue( ConfigNames::UsersNotifiedOnAllRequests, [
+			$this->getTestSysop()->getUser()->getName(),
+			$this->getTestUser()->getUser()->getName(),
+			'Nobody that exists',
+		] );
+
+		$captured = [];
+		$service = $this->createMock( NotificationService::class );
+		$service->method( 'notify' )->willReturnCallback(
+			static function ( Notification $notification, RecipientSet $recipients ) use ( &$captured ): void {
+				$captured[] = [ $notification, $recipients ];
+			}
+		);
+
+		$requester = $this->getMutableTestUser()->getUser();
+		$this->newSpecialPageWithNotifications( $service )
+			->sendNotifications( 'A reason', '12', 'wikidb', $requester );
+
+		$this->assertCount( 1, $captured );
+		[ $notification, $recipients ] = $captured[0];
+
+		$this->assertInstanceOf( RequestNotification::class, $notification );
+		$this->assertSame( 'importdump-new-request', $notification->getType() );
+		$this->assertSame( $requester->getName(), $notification->getAgent()->getName() );
+		$this->assertSame( [ $this->getTestSysop()->getUser()->getName() ], array_map(
+			static fn ( $user ): string => $user->getName(),
+			$recipients->getRecipients()
+		) );
+
+		$properties = $notification->getProperties();
+		$this->assertSame( '12', $properties['request-id'] );
+		$this->assertSame( 'A reason', $properties['reason'] );
+		$this->assertSame( $requester->getName(), $properties['requester'] );
+		$this->assertSame( 'wikidb', $properties['target'] );
+		$this->assertStringContainsString( 'RequestImportQueue/12', $properties['request-url'] );
+	}
+
+	/**
+	 * @covers ::sendNotifications
+	 */
+	public function testSendNotificationsWithNobodyToNotify(): void {
+		$this->overrideConfigValue( ConfigNames::UsersNotifiedOnAllRequests, [
+			$this->getTestUser()->getUser()->getName(),
+		] );
+
+		$service = $this->createMock( NotificationService::class );
+		$service->expects( $this->never() )->method( 'notify' );
+
+		$this->newSpecialPageWithNotifications( $service )
+			->sendNotifications( 'A reason', '12', 'wikidb', $this->getMutableTestUser()->getUser() );
 	}
 }

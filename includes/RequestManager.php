@@ -3,7 +3,6 @@
 namespace Miraheze\ImportDump;
 
 use MediaWiki\Config\ServiceOptions;
-use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\FileRepo\FileRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\Interwiki\InterwikiLookup;
@@ -14,6 +13,8 @@ use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\Logging\ManualLogEntry;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
+use MediaWiki\Notification\NotificationService;
+use MediaWiki\Notification\RecipientSet;
 use MediaWiki\Permissions\Authority;
 use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\SpecialPage;
@@ -24,6 +25,7 @@ use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManagerFactory;
 use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
+use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use stdClass;
 use Wikimedia\FileBackend\FileBackend;
@@ -71,6 +73,7 @@ class RequestManager {
 		private readonly InterwikiLookup $interwikiLookup,
 		private readonly JobQueueGroupFactory $jobQueueGroupFactory,
 		private readonly LinkRenderer $linkRenderer,
+		private readonly NotificationService $notificationService,
 		private readonly RepoGroup $repoGroup,
 		private readonly MessageLocalizer $messageLocalizer,
 		private readonly ServiceOptions $options,
@@ -114,10 +117,7 @@ class RequestManager {
 			->caller( __METHOD__ )
 			->execute();
 
-		if (
-			$this->extensionRegistry->isLoaded( 'Echo' ) &&
-			!in_array( $user->getName(), self::SYSTEM_USERS, true )
-		) {
+		if ( !in_array( $user->getName(), self::SYSTEM_USERS, true ) ) {
 			$this->sendNotification( $comment, 'importdump-request-comment', $user );
 		}
 	}
@@ -180,18 +180,18 @@ class RequestManager {
 			array_diff( $this->getInvolvedUsers(), [ $user ] )
 		) );
 
-		foreach ( $involvedUsers as $receiver ) {
-			Event::create( [
-				'type' => $type,
-				'extra' => [
-					'request-id' => $this->ID,
-					'request-url' => $requestLink,
-					'comment' => $comment,
-					'notifyAgent' => true,
-				],
-				'agent' => $receiver,
-			] );
+		if ( !$involvedUsers ) {
+			return;
 		}
+
+		$this->notificationService->notify(
+			new RequestNotification( $type, $user, [
+				'request-id' => $this->ID,
+				'request-url' => $requestLink,
+				'comment' => $comment,
+			] ),
+			new RecipientSet( $involvedUsers )
+		);
 	}
 
 	public function getComments(): array {

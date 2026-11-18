@@ -60,9 +60,9 @@
 		"ImportDumpNotifyJob": {
 			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpNotifyJob",
 			"services": [
-				"ExtensionRegistry",
 				"ImportDumpConfig",
 				"ImportDumpRequestManager",
+				"NotificationService",
 				"UserFactory"
 			],
 			"needsPage": false
@@ -147,6 +147,7 @@
 				"ImportDumpDumpProcessor",
 				"JobQueueGroup",
 				"MimeAnalyzer",
+				"NotificationService",
 				"RepoGroup",
 				"UploadVerification",
 				"UserFactory"
@@ -303,11 +304,11 @@
 		},
 		"ImportDumpUsersNotifiedOnAllRequests": {
 			"value": [],
-			"description": "Array of usernames to send email notifications to for all requests. Users listed here must have a verified email address on their account. This doesn't do anything if the Echo extension is not installed."
+			"description": "Array of usernames to send email notifications to for all requests. Users listed here must have a verified email address on their account. Notifications are sent through the notification system of MediaWiki, so they are only delivered if an extension that handles notifications, such as Echo, is installed."
 		},
 		"ImportDumpUsersNotifiedOnFailedImports": {
 			"value": [],
-			"description": "Array of usernames to send email notifications to for failed imports. Users listed here must have a verified email address on their account. This doesn't do anything if the Echo extension is not installed or if $wgImportDumpEnableAutomatedJob is not enabled."
+			"description": "Array of usernames to send email notifications to for failed imports. Users listed here must have a verified email address on their account. Notifications are sent through the notification system of MediaWiki, so they are only delivered if an extension that handles notifications, such as Echo, is installed. This doesn't do anything if $wgImportDumpEnableAutomatedJob is not enabled."
 		}
 	},
 	"ConfigRegistry": {

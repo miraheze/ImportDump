@@ -57,6 +57,7 @@ return [
 			$services->getInterwikiLookup(),
 			$services->getJobQueueGroupFactory(),
 			$services->getLinkRenderer(),
+			$services->getNotificationService(),
 			$services->getRepoGroup(),
 			RequestContext::getMain(),
 			new ServiceOptions(

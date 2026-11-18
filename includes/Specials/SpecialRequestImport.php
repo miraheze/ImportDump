@@ -6,7 +6,6 @@ use MediaWiki\Api\ApiUpload;
 use MediaWiki\Exception\ErrorPageError;
 use MediaWiki\Exception\PermissionsError;
 use MediaWiki\Exception\UserBlockedError;
-use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\FileRepo\FileRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\Html\Html;
@@ -15,6 +14,8 @@ use MediaWiki\JobQueue\JobSpecification;
 use MediaWiki\Logging\ManualLogEntry;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
+use MediaWiki\Notification\NotificationService;
+use MediaWiki\Notification\RecipientSet;
 use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\FormSpecialPage;
 use MediaWiki\SpecialPage\SpecialPage;
@@ -30,6 +31,7 @@ use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
+use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\RequestStatus;
 use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
@@ -47,6 +49,7 @@ class SpecialRequestImport extends FormSpecialPage
 		private readonly DumpProcessor $dumpProcessor,
 		private readonly JobQueueGroup $jobQueueGroup,
 		private readonly MimeAnalyzer $mimeAnalyzer,
+		private readonly NotificationService $notificationService,
 		private readonly RepoGroup $repoGroup,
 		private readonly UploadVerification $uploadVerification,
 		private readonly UserFactory $userFactory,
@@ -342,11 +345,8 @@ class SpecialRequestImport extends FormSpecialPage
 		$logID = $logEntry->insert( $dbw );
 		$logEntry->publish( $logID );
 
-		if (
-			$this->extensionRegistry->isLoaded( 'Echo' ) &&
-			$this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests )
-		) {
-			$this->sendNotifications( $data['reason'], $this->getUser()->getName(), $requestID, $data['target'] );
+		if ( $this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests ) ) {
+			$this->sendNotifications( $data['reason'], $requestID, $data['target'], $this->getUser() );
 		}
 
 		return Status::newGood();
@@ -397,9 +397,9 @@ class SpecialRequestImport extends FormSpecialPage
 
 	public function sendNotifications(
 		string $reason,
-		string $requester,
 		string $requestID,
-		string $target
+		string $target,
+		User $requester
 	): void {
 		$notifiedUsers = array_filter(
 			array_map(
@@ -408,31 +408,28 @@ class SpecialRequestImport extends FormSpecialPage
 			)
 		);
 
-		$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', $requestID )->getFullURL();
-		foreach ( $notifiedUsers as $receiver ) {
-			if (
-				!$receiver->isAllowed( 'handle-import-requests' ) ||
-				(
-					$this->getLogType( $target ) === 'importdumpprivate' &&
-					!$receiver->isAllowed( 'view-private-import-requests' )
-				)
-			) {
-				continue;
-			}
+		$isPrivate = $this->getLogType( $target ) === 'importdumpprivate';
+		$receivers = array_values( array_filter(
+			$notifiedUsers,
+			static fn ( User $receiver ): bool => $receiver->isAllowed( 'handle-import-requests' ) &&
+				( !$isPrivate || $receiver->isAllowed( 'view-private-import-requests' ) )
+		) );
 
-			Event::create( [
-				'type' => 'importdump-new-request',
-				'extra' => [
-					'request-id' => $requestID,
-					'request-url' => $requestLink,
-					'reason' => $reason,
-					'requester' => $requester,
-					'target' => $target,
-					'notifyAgent' => true,
-				],
-				'agent' => $receiver,
-			] );
+		if ( !$receivers ) {
+			return;
 		}
+
+		$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', $requestID )->getFullURL();
+		$this->notificationService->notify(
+			new RequestNotification( 'importdump-new-request', $requester, [
+				'request-id' => $requestID,
+				'request-url' => $requestLink,
+				'reason' => $reason,
+				'requester' => $requester->getName(),
+				'target' => $target,
+			] ),
+			new RecipientSet( $receivers )
+		);
 	}
 
 	public function isValidDatabase( ?string $target ): Message|true {

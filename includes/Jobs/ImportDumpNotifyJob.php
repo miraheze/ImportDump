@@ -4,14 +4,15 @@ namespace Miraheze\ImportDump\Jobs;
 
 use MediaWiki\Config\Config;
 use MediaWiki\Context\RequestContext;
-use MediaWiki\Extension\Notifications\Model\Event;
 use MediaWiki\JobQueue\Job;
 use MediaWiki\Language\MessageLocalizer;
-use MediaWiki\Registration\ExtensionRegistry;
+use MediaWiki\Notification\NotificationService;
+use MediaWiki\Notification\RecipientSet;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use Miraheze\ImportDump\ConfigNames;
+use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 
@@ -29,9 +30,9 @@ class ImportDumpNotifyJob extends Job
 
 	public function __construct(
 		array $params,
-		private readonly ExtensionRegistry $extensionRegistry,
 		private readonly Config $config,
 		private readonly RequestManager $requestManager,
+		private readonly NotificationService $notificationService,
 		private readonly UserFactory $userFactory,
 	) {
 		parent::__construct( self::JOB_NAME, $params );
@@ -46,10 +47,6 @@ class ImportDumpNotifyJob extends Job
 
 	/** @inheritDoc */
 	public function run(): true {
-		if ( !$this->extensionRegistry->isLoaded( 'Echo' ) ) {
-			return true;
-		}
-
 		$this->requestManager->loadFromID( $this->requestID );
 		if ( $this->status === self::STATUS_COMPLETE ) {
 			$this->notifyComplete();
@@ -94,31 +91,26 @@ class ImportDumpNotifyJob extends Job
 			)
 		);
 
-		$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', (string)$this->requestID )->getFullURL();
-		foreach ( $notifiedUsers as $receiver ) {
-			if (
-				!$receiver->isAllowed( 'handle-import-requests' ) ||
-				(
-					$this->requestManager->isPrivate( forced: false ) &&
-					!$receiver->isAllowed( 'view-private-import-requests' )
-				)
-			) {
-				continue;
-			}
+		$isPrivate = $this->requestManager->isPrivate( forced: false );
+		$receivers = array_values( array_filter(
+			$notifiedUsers,
+			static fn ( User $receiver ): bool => $receiver->isAllowed( 'handle-import-requests' ) &&
+				( !$isPrivate || $receiver->isAllowed( 'view-private-import-requests' ) )
+		) );
 
-			Event::create( [
-				'type' => 'importdump-import-failed',
-				'extra' => [
+		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
+		if ( $receivers ) {
+			$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', (string)$this->requestID )->getFullURL();
+			$this->notificationService->notify(
+				new RequestNotification( 'importdump-import-failed', $commentUser, [
 					'request-id' => $this->requestID,
 					'request-url' => $requestLink,
 					'reason' => $this->jobError,
-					'notifyAgent' => true,
-				],
-				'agent' => $receiver,
-			] );
+				] ),
+				new RecipientSet( $receivers )
+			);
 		}
 
-		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
 		$comment = $this->messageLocalizer->msg( "importdump-import-$status-comment" )
 			->inContentLanguage()
 			->escaped();
