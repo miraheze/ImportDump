@@ -77,35 +77,139 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 		return $heartbeat;
 	}
 
-	private function assertFailureQueued(): void {
-		$this->assertSame( 1, $this->getServiceContainer()->getJobQueueGroup()
-			->get( ImportDumpNotifyJob::JOB_NAME )->getSize() );
+	/**
+	 * @return array[] The params of every queued notification, in queue order.
+	 */
+	private function popNotifications(): array {
+		$queue = $this->getServiceContainer()->getJobQueueGroup()
+			->get( ImportDumpNotifyJob::JOB_NAME );
+
+		$notifications = [];
+		while ( $job = $queue->pop() ) {
+			$notifications[] = $job->getParams();
+		}
+
+		return $notifications;
+	}
+
+	/**
+	 * @param array[] $notifications
+	 * @return string[]
+	 */
+	private function getStatuses( array $notifications ): array {
+		return array_column( $notifications, 'status' );
+	}
+
+	private function writeEmptyDump( string $filePath ): void {
+		file_put_contents( $filePath,
+			'<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.11/" version="0.11" xml:lang="en">' .
+			'<siteinfo><sitename>Test</sitename></siteinfo></mediawiki>'
+		);
 	}
 
 	public function testRunReportsFailureWhenFileFetchThrows(): void {
-		$this->setTemporaryHook( 'ImportDumpJobGetFile', static function (): void {
-			throw new RuntimeException( 'Download failed' );
-		} );
+		$this->setTemporaryHook( 'ImportDumpJobGetFile',
+			static fn (): never => throw new RuntimeException( 'Download failed' )
+		);
 
 		$id = $this->addRequest();
 		$job = $this->newJob( $id );
 
 		$this->assertTrue( $job->run() );
-		$this->assertFailureQueued();
+
+		$notifications = $this->popNotifications();
+		$this->assertSame( [ self::STATUS_FAILED ], $this->getStatuses( $notifications ) );
+		$this->assertStringContainsString( 'Download failed', $notifications[0]['joberror'] );
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
 	}
 
-	public function testRunReportsFailureWhenSourceIsMissing(): void {
+	public function testGetImportSourceReportsFailureWhenSourceIsMissing(): void {
 		$id = $this->addRequest();
 		$job = $this->newJob( $id );
 
 		$this->assertTrue( $job->run() );
 		$this->assertStringContainsString( 'Import source', $job->getLastError() );
-		$this->assertFailureQueued();
+
+		$notifications = $this->popNotifications();
+		$this->assertSame( [ self::STATUS_FAILED ], $this->getStatuses( $notifications ) );
+		$this->assertStringContainsString( 'Import source', $notifications[0]['joberror'] );
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
 	}
 
-	public function testRunRemovesTemporaryFile(): void {
+	public function testRunCompletesEmptyDump(): void {
+		$this->overrideConfigValue( MainConfigNames::DisableSearchUpdate, true );
+
+		$afterImportCalled = false;
+		$this->setTemporaryHook( 'ImportDumpJobGetFile', $this->writeEmptyDump( ... ) );
+		$this->setTemporaryHook( 'ImportDumpJobAfterImport',
+			static function () use ( &$afterImportCalled ): void {
+				$afterImportCalled = true;
+			}
+		);
+
+		$id = $this->addRequest();
+		$path = wfTempDir() . '/' . $this->getRequestManager( $id )->getFileName();
+
+		$this->assertTrue( $this->newJob( $id )->run() );
+		$this->assertTrue( $afterImportCalled );
+
+		$notifications = $this->popNotifications();
+		$this->assertSame(
+			[ self::STATUS_INPROGRESS, self::STATUS_COMPLETE ],
+			$this->getStatuses( $notifications )
+		);
+
+		$this->assertSame( '', $notifications[1]['joberror'] );
+		$this->assertSame( $id, $notifications[1]['requestid'] );
+		$this->assertFileDoesNotExist( $path );
+		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
+	}
+
+	public function testRunBeatsBeforeAfterImportHook(): void {
+		$this->overrideConfigValue( MainConfigNames::DisableSearchUpdate, true );
+
+		$id = $this->addRequest();
+		$alive = null;
+
+		$this->setTemporaryHook( 'ImportDumpJobGetFile', $this->writeEmptyDump( ... ) );
+		$this->setTemporaryHook( 'ImportDumpJobAfterImport',
+			function () use ( $id, &$alive ): void {
+				$alive = $this->getHeartbeat()->isAlive( $id );
+			}
+		);
+
+		$this->newJob( $id )->run();
+
+		$this->assertTrue( $alive );
+		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
+	}
+
+	public function testRunReportsFailureWhenAfterImportHookThrows(): void {
+		$this->overrideConfigValue( MainConfigNames::DisableSearchUpdate, true );
+
+		$this->setTemporaryHook( 'ImportDumpJobGetFile', $this->writeEmptyDump( ... ) );
+		$this->setTemporaryHook( 'ImportDumpJobAfterImport',
+			static fn (): never => throw new RuntimeException( 'After import failed' )
+		);
+
+		$id = $this->addRequest();
+		$path = wfTempDir() . '/' . $this->getRequestManager( $id )->getFileName();
+
+		$this->assertTrue( $this->newJob( $id )->run() );
+
+		$notifications = $this->popNotifications();
+		$this->assertSame(
+			[ self::STATUS_INPROGRESS, self::STATUS_FAILED ],
+			$this->getStatuses( $notifications )
+		);
+
+		$this->assertStringContainsString( 'RuntimeException', $notifications[1]['joberror'] );
+		$this->assertStringContainsString( 'After import failed', $notifications[1]['joberror'] );
+		$this->assertFileDoesNotExist( $path );
+		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
+	}
+
+	public function testCleanupRemovesTemporaryFile(): void {
 		$id = $this->addRequest();
 		$path = wfTempDir() . '/' . $this->getRequestManager( $id )->getFileName();
 
@@ -122,7 +226,6 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 		$this->getRequestManager( $id )->setStatus( self::STATUS_COMPLETE );
 
 		$this->assertTrue( $this->newJob( $id )->run() );
-		$this->assertSame( 0, $this->getServiceContainer()->getJobQueueGroup()
-			->get( ImportDumpNotifyJob::JOB_NAME )->getSize() );
+		$this->assertSame( [], $this->popNotifications() );
 	}
 }
