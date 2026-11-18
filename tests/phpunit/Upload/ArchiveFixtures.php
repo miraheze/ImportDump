@@ -15,4 +15,9 @@ trait ArchiveFixtures {
 	private function newZip( array $entries ): string {
 		return $this->newFile( ZipFixture::build( $entries ) );
 	}
+
+	/** @param array<string, string> $entries Entry name to contents. Names ending in a slash are directories. */
+	private function newTar( array $entries ): string {
+		return $this->newFile( TarFixture::build( $entries ) );
+	}
 }

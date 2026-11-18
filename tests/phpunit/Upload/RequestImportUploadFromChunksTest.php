@@ -154,6 +154,13 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 			null,
 		];
 
+		yield 'tar archive' => [
+			TarFixture::build( [ 'dump.xml' => "<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>" ] ),
+			null,
+			UploadBase::OK,
+			null,
+		];
+
 		yield 'gzip archive' => [
 			gzencode( "<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>" ),
 			null,

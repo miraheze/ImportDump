@@ -13,6 +13,7 @@ use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\RequestHistory;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Tests\Upload\TarFixture;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
@@ -131,6 +132,8 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 		yield 'xml' => [ static fn (): string => self::DUMP ];
 		yield 'zip' => [ static fn (): string => ZipFixture::build( [ 'dump.xml' => self::DUMP ] ) ];
 		yield 'gzip' => [ static fn (): string => gzencode( self::DUMP ) ];
+		yield 'tar' => [ static fn (): string => TarFixture::build( [ 'dump.xml' => self::DUMP ] ) ];
+		yield 'tar.gz' => [ static fn (): string => gzencode( TarFixture::build( [ 'dump.xml' => self::DUMP ] ) ) ];
 	}
 
 	public function testValidUploadWithoutHistoryDetection(): void {

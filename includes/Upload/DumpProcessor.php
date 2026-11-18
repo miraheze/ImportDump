@@ -13,7 +13,8 @@ use XMLReader;
 
 /**
  * Unpacks and checks an uploaded dump. The upload may be a MediaWiki XML export,
- * or a ZIP or GZIP archive that holds exactly one.
+ * or a ZIP, TAR, GZIP or BZIP2 archive that holds exactly one. A TAR can be compressed with
+ * GZIP or BZIP2.
  */
 class DumpProcessor implements RequestHistory {
 
@@ -25,7 +26,13 @@ class DumpProcessor implements RequestHistory {
 
 	public const array XML_MIME_TYPES = [ 'application/xml', 'text/xml' ];
 
-	public const array ARCHIVE_MIME_TYPES = [ 'application/zip', 'application/gzip', 'application/x-gzip' ];
+	public const array ARCHIVE_MIME_TYPES = [
+		'application/zip',
+		'application/gzip',
+		'application/x-bzip2',
+		'application/x-gzip',
+		'application/x-tar',
+	];
 
 	public const array ACCEPTED_MIME_TYPES = [ ...self::XML_MIME_TYPES, ...self::ARCHIVE_MIME_TYPES ];
 
@@ -103,10 +110,16 @@ class DumpProcessor implements RequestHistory {
 	 * @return Status A good status with a TempFSFile as its value.
 	 */
 	private function extract( string $path, string $format, ?Closure $onProgress ): Status {
+		// Reading the list of a compressed TAR can take as long as extracting it.
+		if ( $onProgress ) {
+			$onProgress( self::STAGE_EXTRACTING, null );
+		}
+
 		$listed = $this->archiveReader->listFiles(
 			$path,
 			$format,
-			(int)$this->options->get( ConfigNames::MaxArchiveEntries )
+			(int)$this->options->get( ConfigNames::MaxArchiveEntries ),
+			(int)$this->options->get( ConfigNames::MaxExtractedSize )
 		);
 
 		if ( !$listed->isOK() ) {

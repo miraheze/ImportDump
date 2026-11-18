@@ -227,7 +227,8 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		);
 
 		$this->assertStatusGood( $status );
-		$this->assertSame( [ DumpProcessor::STAGE_EXTRACTING, 100 ], $calls[1] );
+		$this->assertSame( [ DumpProcessor::STAGE_EXTRACTING, null ], $calls[0] );
+		$this->assertContains( [ DumpProcessor::STAGE_EXTRACTING, 100 ], $calls );
 		$this->assertSame( [ DumpProcessor::STAGE_CHECKING, 100 ], end( $calls ) );
 	}
 
@@ -299,6 +300,86 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		$this->assertStatusError( 'importdump-xml-invalid', $status );
 	}
 
+	public function testTar(): void {
+		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
+		$status = $this->process( $this->newTar( [ './' => '', './any name.txt' => $xml ] ) );
+		$this->assertStatusGood( $status );
+
+		$dump = $status->getValue();
+		$this->assertTrue( $dump->wasExtracted() );
+		$this->assertSame( self::HISTORY_FULL, $dump->history );
+		$this->assertSame( $xml, file_get_contents( $dump->path ) );
+	}
+
+	public function testGzippedTar(): void {
+		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
+		$status = $this->process( $this->newFile( gzencode( TarFixture::build( [ 'dump.xml' => $xml ] ) ) ) );
+		$this->assertStatusGood( $status );
+
+		$dump = $status->getValue();
+		$this->assertTrue( $dump->wasExtracted() );
+		$this->assertSame( $xml, file_get_contents( $dump->path ) );
+	}
+
+	public function testBzip2(): void {
+		if ( !function_exists( 'bzcompress' ) ) {
+			$this->markTestSkipped( 'The bz2 extension is not installed.' );
+		}
+
+		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
+		$status = $this->process( $this->newFile( bzcompress( $xml ) ) );
+		$this->assertStatusGood( $status );
+		$this->assertSame( $xml, file_get_contents( $status->getValue()->path ) );
+	}
+
+	public function testProgressOfTar(): void {
+		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
+
+		$calls = [];
+		$status = $this->newProcessor( self::MAX_SIZE, true )->process(
+			$this->newTar( [ 'dump.xml' => $xml ] ),
+			static function ( string $stage, ?int $percent ) use ( &$calls ): void {
+				$calls[] = [ $stage, $percent ];
+			}
+		);
+
+		$this->assertStatusGood( $status );
+		$this->assertSame( [ DumpProcessor::STAGE_EXTRACTING, null ], $calls[0] );
+		$this->assertContains( [ DumpProcessor::STAGE_EXTRACTING, 100 ], $calls );
+		$this->assertSame( [ DumpProcessor::STAGE_CHECKING, 100 ], end( $calls ) );
+	}
+
+	public function testTarWithSeveralFiles(): void {
+		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
+		$status = $this->process( $this->newTar( [ 'a.xml' => $xml, 'b.xml' => $xml ] ) );
+		$this->assertStatusError( 'importdump-archive-not-single', $status );
+	}
+
+	public function testTarWithOnlyDirectories(): void {
+		$status = $this->process( $this->newTar( [ 'folder/' => '', 'other/' => '' ] ) );
+		$this->assertStatusError( 'importdump-archive-not-single', $status );
+	}
+
+	public function testTarWithLink(): void {
+		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
+		$tar = TarFixture::finish(
+			TarFixture::entry( 'dump.xml', $xml, '0' ) . TarFixture::link( 'link', 'dump.xml', '2' )
+		);
+
+		$this->assertStatusError( 'importdump-archive-unsafe', $this->process( $this->newFile( $tar ) ) );
+	}
+
+	public function testTarWithInvalidXml(): void {
+		$status = $this->process( $this->newTar( [ 'dump.xml' => 'content' ] ) );
+		$this->assertStatusError( 'importdump-xml-invalid', $status );
+	}
+
+	public function testTarWithNestedArchive(): void {
+		$inner = TarFixture::build( [ 'dump.xml' => self::dump( self::page( 1, [ 10 => 0 ] ) ) ] );
+		$status = $this->process( $this->newTar( [ 'inner.tar' => $inner ] ) );
+		$this->assertStatusError( 'importdump-xml-invalid', $status );
+	}
+
 	public function testArchiveExpandingPastTheLimit(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
 		$processor = $this->newProcessor( strlen( $xml ) - 1, true );
@@ -311,6 +392,16 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		$this->assertStatusError(
 			'importdump-archive-too-large',
 			$processor->process( $this->newZip( [ 'dump.xml' => $xml ] ), null )
+		);
+
+		$this->assertStatusError(
+			'importdump-archive-too-large',
+			$processor->process( $this->newTar( [ 'dump.xml' => $xml ] ), null )
+		);
+
+		$this->assertStatusError(
+			'importdump-archive-too-large',
+			$processor->process( $this->newFile( gzencode( TarFixture::build( [ 'dump.xml' => $xml ] ) ) ), null )
 		);
 	}
 

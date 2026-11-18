@@ -18,6 +18,8 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 	use ArchiveFixtures;
 
+	private const int MAX_SIZE = 1048576;
+
 	private ArchiveReader $reader;
 
 	protected function setUp(): void {
@@ -32,6 +34,18 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 			$this->reader->detectFormat( $this->newFile( gzencode( 'content' ) ) )
 		);
 
+		$this->assertSame(
+			ArchiveReader::FORMAT_TAR,
+			$this->reader->detectFormat( $this->newTar( [ 'a' => 'b' ] ) )
+		);
+
+		$this->assertSame(
+			ArchiveReader::FORMAT_BZIP2,
+			$this->reader->detectFormat( $this->newFile( "BZh9\x31\x41\x59\x26\x53\x59" . 'data' ) )
+		);
+
+		$this->assertNull( $this->reader->detectFormat( $this->newFile( 'BZh0' . "\x31\x41\x59\x26\x53\x59" ) ) );
+		$this->assertNull( $this->reader->detectFormat( $this->newFile( 'BZh9 but not bzip2' ) ) );
 		$this->assertNull( $this->reader->detectFormat( $this->newFile( '<mediawiki/>' ) ) );
 		$this->assertNull( $this->reader->detectFormat( $this->newFile( '' ) ) );
 	}
@@ -71,7 +85,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 			'other.xml' => 'two',
 		] );
 
-		$status = $this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100 );
+		$status = $this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100, self::MAX_SIZE );
 		$this->assertStatusGood( $status );
 
 		$entries = $status->getValue();
@@ -85,7 +99,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	public function testListFilesGzip(): void {
 		$path = $this->newFile( gzencode( 'content' ) );
 
-		$status = $this->reader->listFiles( $path, ArchiveReader::FORMAT_GZIP, 100 );
+		$status = $this->reader->listFiles( $path, ArchiveReader::FORMAT_GZIP, 100, self::MAX_SIZE );
 		$this->assertStatusGood( $status );
 		$this->assertCount( 1, $status->getValue() );
 		$this->assertNull( $status->getValue()[0]->size );
@@ -96,7 +110,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$path = $this->newZip( [ '../dump.xml' => 'content' ] );
 		$this->assertStatusError(
 			'importdump-archive-unsafe',
-			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100 )
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100, self::MAX_SIZE )
 		);
 	}
 
@@ -110,7 +124,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusError(
 			'importdump-archive-unsafe',
-			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100 )
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100, self::MAX_SIZE )
 		);
 	}
 
@@ -122,7 +136,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$zip->setExternalAttributesName( 'dump.xml', ZipArchive::OPSYS_UNIX, 0100644 << 16 );
 		$zip->close();
 
-		$this->assertStatusGood( $this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100 ) );
+		$this->assertStatusGood( $this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100, self::MAX_SIZE ) );
 	}
 
 	public function testListFilesEncrypted(): void {
@@ -138,7 +152,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusError(
 			'importdump-archive-unsafe',
-			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100 )
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100, self::MAX_SIZE )
 		);
 	}
 
@@ -152,7 +166,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusError(
 			'importdump-archive-unsafe',
-			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 10 )
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 10, self::MAX_SIZE )
 		);
 	}
 
@@ -164,7 +178,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusError(
 			'importdump-archive-unreadable',
-			$this->reader->listFiles( $this->newFile( $contents ), ArchiveReader::FORMAT_ZIP, 10 )
+			$this->reader->listFiles( $this->newFile( $contents ), ArchiveReader::FORMAT_ZIP, 10, self::MAX_SIZE )
 		);
 	}
 
@@ -172,7 +186,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	public function testListFilesInvalidGzipHeader( string $header ): void {
 		$this->assertStatusError(
 			'importdump-archive-unreadable',
-			$this->reader->listFiles( $this->newFile( $header ), ArchiveReader::FORMAT_GZIP, 10 )
+			$this->reader->listFiles( $this->newFile( $header ), ArchiveReader::FORMAT_GZIP, 10, self::MAX_SIZE )
 		);
 	}
 
@@ -186,7 +200,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$path = $this->newZip( [ 'a' => '1', 'b' => '2', 'c' => '3' ] );
 		$this->assertStatusError(
 			'importdump-archive-too-many-entries',
-			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 2 )
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 2, self::MAX_SIZE )
 		);
 	}
 
@@ -194,13 +208,13 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$path = $this->newFile( "PK\x03\x04 this is not a zip file" );
 		$this->assertStatusError(
 			'importdump-archive-unreadable',
-			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100 )
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100, self::MAX_SIZE )
 		);
 	}
 
 	public function testExtractZip(): void {
 		$path = $this->newZip( [ 'dump.xml' => str_repeat( 'content ', 1000 ) ] );
-		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100 )->getValue()[0];
+		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100, self::MAX_SIZE )->getValue()[0];
 		$destination = $this->getNewTempFile();
 
 		$percentages = [];
@@ -223,7 +237,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 	public function testExtractGzip(): void {
 		$path = $this->newFile( gzencode( str_repeat( 'content ', 1000 ) ) );
-		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_GZIP, 100 )->getValue()[0];
+		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_GZIP, 100, self::MAX_SIZE )->getValue()[0];
 		$destination = $this->getNewTempFile();
 
 		$percentages = [];
@@ -246,14 +260,14 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 	public function testExtractTooLarge(): void {
 		$zip = $this->newZip( [ 'dump.xml' => str_repeat( 'content ', 1000 ) ] );
-		$entry = $this->reader->listFiles( $zip, ArchiveReader::FORMAT_ZIP, 100 )->getValue()[0];
+		$entry = $this->reader->listFiles( $zip, ArchiveReader::FORMAT_ZIP, 100, self::MAX_SIZE )->getValue()[0];
 		$this->assertStatusError(
 			'importdump-archive-too-large',
 			$this->reader->extractTo( $zip, ArchiveReader::FORMAT_ZIP, $entry, $this->getNewTempFile(), 100, null )
 		);
 
 		$gzip = $this->newFile( gzencode( str_repeat( 'content ', 1000 ) ) );
-		$entry = $this->reader->listFiles( $gzip, ArchiveReader::FORMAT_GZIP, 100 )->getValue()[0];
+		$entry = $this->reader->listFiles( $gzip, ArchiveReader::FORMAT_GZIP, 100, self::MAX_SIZE )->getValue()[0];
 		$destination = $this->getNewTempFile();
 		$this->assertStatusError(
 			'importdump-archive-too-large',
@@ -265,7 +279,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 	public function testExtractExtremeCompressionRatio(): void {
 		$path = $this->newFile( gzencode( str_repeat( 'a', 4 * 1048576 ) ) );
-		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_GZIP, 100 )->getValue()[0];
+		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_GZIP, 100, self::MAX_SIZE )->getValue()[0];
 
 		$destination = $this->getNewTempFile();
 		$this->assertStatusError(
@@ -281,6 +295,415 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$this->assertStatusError(
 			'importdump-archive-unreadable',
 			$this->reader->extractTo( $path, ArchiveReader::FORMAT_ZIP, $entry, $this->getNewTempFile(), 1048576, null )
+		);
+	}
+
+	public function testListFilesTar(): void {
+		$path = $this->newTar( [
+			'./' => '',
+			'./folder/' => '',
+			'./folder/dump.xml' => 'one',
+		] );
+
+		$status = $this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+
+		$entries = $status->getValue();
+		$this->assertCount( 1, $entries );
+		$this->assertSame( 'folder/dump.xml', $entries[0]->name );
+		$this->assertSame( 3, $entries[0]->size );
+		$this->assertSame( filesize( $path ), $entries[0]->compressedSize );
+	}
+
+	public function testListFilesTarSkipsMacMetadata(): void {
+		$path = $this->newTar( [
+			'dump.xml' => 'one',
+			'._dump.xml' => 'metadata',
+			'__MACOSX/' => '',
+			'__MACOSX/._dump.xml' => 'metadata',
+		] );
+
+		$status = $this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertCount( 1, $status->getValue() );
+	}
+
+	public function testListFilesTarWithoutEndMarker(): void {
+		$path = $this->newFile( substr( TarFixture::build( [ 'dump.xml' => 'one' ] ), 0, -1024 ) );
+
+		$status = $this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertCount( 1, $status->getValue() );
+	}
+
+	public function testListFilesTarStopsAtSecondFile(): void {
+		$path = $this->newTar( [ 'one.xml' => 'one', 'two.xml' => 'two', 'three.xml' => 'three' ] );
+
+		$status = $this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertCount( 2, $status->getValue() );
+	}
+
+	public function testListFilesCompressedTar(): void {
+		$tar = TarFixture::build( [ 'dump.xml' => 'one' ] );
+
+		$status = $this->reader->listFiles(
+			$this->newFile( gzencode( $tar ) ),
+			ArchiveReader::FORMAT_GZIP,
+			100,
+			self::MAX_SIZE
+		);
+
+		$this->assertStatusGood( $status );
+		$this->assertSame( 'dump.xml', $status->getValue()[0]->name );
+		$this->assertSame( 3, $status->getValue()[0]->size );
+	}
+
+	public function testListFilesTarEntryTypes(): void {
+		$entries = [
+			'hard link' => TarFixture::link( 'dump.xml', 'other', '1' ),
+			'symbolic link' => TarFixture::link( 'dump.xml', 'other', '2' ),
+			'character device' => TarFixture::link( 'dump.xml', '', '3' ),
+			'block device' => TarFixture::link( 'dump.xml', '', '4' ),
+			'fifo' => TarFixture::link( 'dump.xml', '', '6' ),
+			'contiguous file' => TarFixture::entry( 'dump.xml', 'content', '7' ),
+			'GNU sparse file' => TarFixture::entry( 'dump.xml', 'content', 'S' ),
+			'unknown type' => TarFixture::entry( 'dump.xml', 'content', 'Q' ),
+		];
+
+		foreach ( $entries as $label => $entry ) {
+			$path = $this->newFile( TarFixture::finish( TarFixture::entry( 'ok.xml', 'ok', '0' ) . $entry ) );
+			$this->assertStatusError(
+				'importdump-archive-unsafe',
+				$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE ),
+				$label
+			);
+		}
+	}
+
+	/** @dataProvider provideUnsafeTarNames */
+	public function testListFilesTarUnsafeName( string $name ): void {
+		$path = $this->newTar( [ $name => 'content' ] );
+		$this->assertStatusError(
+			'importdump-archive-unsafe',
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE )
+		);
+	}
+
+	public static function provideUnsafeTarNames(): Generator {
+		yield 'parent directory' => [ '../dump.xml' ];
+		yield 'parent directory in the middle' => [ 'folder/../../dump.xml' ];
+		yield 'absolute path' => [ '/etc/passwd' ];
+		yield 'backslash' => [ 'folder\\dump.xml' ];
+		yield 'empty part' => [ 'folder//dump.xml' ];
+		yield 'only a dot' => [ '.' ];
+	}
+
+	public function testListFilesTarUnsafeDirectoryName(): void {
+		$path = $this->newTar( [ '../folder/' => '', 'dump.xml' => 'content' ] );
+		$this->assertStatusError(
+			'importdump-archive-unsafe',
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE )
+		);
+	}
+
+	public function testListFilesTarLongNames(): void {
+		$name = str_repeat( 'a', 150 ) . '/dump.xml';
+
+		$gnu = $this->newFile(
+			TarFixture::finish( TarFixture::longName( $name ) . TarFixture::entry( 'x', 'one', '0' ) )
+		);
+
+		$status = $this->reader->listFiles( $gnu, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertSame( $name, $status->getValue()[0]->name );
+
+		$pax = $this->newFile(
+			TarFixture::finish( TarFixture::pax( [ 'path' => $name ] ) . TarFixture::entry( 'x', 'one', '0' ) )
+		);
+
+		$status = $this->reader->listFiles( $pax, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertSame( $name, $status->getValue()[0]->name );
+	}
+
+	public function testListFilesTarLongNameIsChecked(): void {
+		$path = $this->newFile(
+			TarFixture::finish( TarFixture::longName( '../dump.xml' ) . TarFixture::entry( 'x', 'one', '0' ) )
+		);
+
+		$this->assertStatusError(
+			'importdump-archive-unsafe',
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE )
+		);
+	}
+
+	public function testListFilesTarSparsePax(): void {
+		$path = $this->newFile( TarFixture::finish(
+			TarFixture::pax( [ 'GNU.sparse.major' => '1' ] ) . TarFixture::entry( 'dump.xml', 'one', '0' )
+		) );
+
+		$this->assertStatusError(
+			'importdump-archive-unsafe',
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE )
+		);
+	}
+
+	public function testListFilesTarBinarySize(): void {
+		$path = $this->newFile( TarFixture::finish( TarFixture::entryWithBinarySize( 'dump.xml', 'content' ) ) );
+
+		$status = $this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertSame( 7, $status->getValue()[0]->size );
+	}
+
+	public function testListFilesTarTooManyEntries(): void {
+		$path = $this->newTar( [ 'a/' => '', 'b/' => '', 'dump.xml' => 'content' ] );
+		$this->assertStatusError(
+			'importdump-archive-too-many-entries',
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 2, self::MAX_SIZE )
+		);
+	}
+
+	public function testListFilesTarTooLarge(): void {
+		$path = $this->newTar( [ 'dump.xml' => str_repeat( 'a', 1000 ) ] );
+		$this->assertStatusError(
+			'importdump-archive-too-large',
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, 999 )
+		);
+	}
+
+	public function testListFilesTarTooLargeTogether(): void {
+		$path = $this->newTar( [ 'dump.xml' => str_repeat( 'a', 600 ), '._dump.xml' => str_repeat( 'a', 600 ) ] );
+		$this->assertStatusError(
+			'importdump-archive-too-large',
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, 1000 )
+		);
+	}
+
+	public function testListFilesTarExtremeCompressionRatio(): void {
+		$tar = TarFixture::build( [ 'dump.xml' => str_repeat( 'a', 4 * 1048576 ) ] );
+		$path = $this->newFile( gzencode( $tar ) );
+
+		$this->assertStatusError(
+			'importdump-archive-ratio',
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_GZIP, 100, PHP_INT_MAX )
+		);
+	}
+
+	public function testListFilesTarDamaged(): void {
+		$tar = TarFixture::build( [ 'dump.xml' => 'content' ] );
+
+		$badChecksum = $tar;
+		$badChecksum[3] = 'Z';
+
+		$cases = [
+			'wrong checksum' => $badChecksum,
+			'cut off in the data' => substr( $tar, 0, 520 ),
+			'cut off in the header' => substr( $tar, 0, 300 ),
+			'cut off in the second header' => substr( TarFixture::build( [ 'a' => 'b', 'c' => 'd' ] ), 0, 1300 ),
+		];
+
+		foreach ( $cases as $label => $bytes ) {
+			$path = $this->newFile( $bytes );
+			$format = $this->reader->detectFormat( $path );
+			if ( $format !== ArchiveReader::FORMAT_TAR ) {
+				// The header was cut off so far that the file does not look like a TAR anymore.
+				$this->assertNull( $format, $label );
+				continue;
+			}
+
+			$status = $this->reader->listFiles( $path, $format, 100, self::MAX_SIZE );
+			$this->assertStatusError( 'importdump-archive-unreadable', $status, $label );
+		}
+	}
+
+	public function testListFilesTarWithOnlyPadding(): void {
+		$path = $this->newFile( TarFixture::finish( '' ) );
+		$this->assertNull( $this->reader->detectFormat( $path ) );
+	}
+
+	public function testExtractTar(): void {
+		$path = $this->newTar( [
+			'a.xml' => 'first',
+			'folder/' => '',
+			'folder/dump.xml' => str_repeat( 'content ', 1000 ),
+		] );
+		$status = $this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE );
+		$entry = $status->getValue()[1];
+		$this->assertSame( 'folder/dump.xml', $entry->name );
+
+		$destination = $this->getNewTempFile();
+		$percentages = [];
+		$status = $this->reader->extractTo(
+			$path,
+			ArchiveReader::FORMAT_TAR,
+			$entry,
+			$destination,
+			self::MAX_SIZE,
+			static function ( ?int $percent ) use ( &$percentages ): void {
+				$percentages[] = $percent;
+			}
+		);
+
+		$this->assertStatusGood( $status );
+		$this->assertSame( str_repeat( 'content ', 1000 ), file_get_contents( $destination ) );
+		$this->assertSame( 0, $percentages[0] );
+		$this->assertSame( 100, end( $percentages ) );
+	}
+
+	public function testExtractCompressedTar(): void {
+		$tar = TarFixture::build( [ 'dump.xml' => str_repeat( 'content ', 1000 ) ] );
+		$path = $this->newFile( gzencode( $tar ) );
+		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_GZIP, 100, self::MAX_SIZE )->getValue()[0];
+		$destination = $this->getNewTempFile();
+
+		$status = $this->reader->extractTo(
+			$path,
+			ArchiveReader::FORMAT_GZIP,
+			$entry,
+			$destination,
+			self::MAX_SIZE,
+			null
+		);
+
+		$this->assertStatusGood( $status );
+		$this->assertSame( str_repeat( 'content ', 1000 ), file_get_contents( $destination ) );
+	}
+
+	public function testExtractTarTooLarge(): void {
+		$path = $this->newTar( [ 'dump.xml' => str_repeat( 'a', 1000 ) ] );
+		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE )->getValue()[0];
+
+		$this->assertStatusError(
+			'importdump-archive-too-large',
+			$this->reader->extractTo( $path, ArchiveReader::FORMAT_TAR, $entry, $this->getNewTempFile(), 999, null )
+		);
+	}
+
+	public function testExtractTarEntryThatIsNotThere(): void {
+		$path = $this->newTar( [ 'dump.xml' => 'content' ] );
+
+		$this->assertStatusError(
+			'importdump-archive-unreadable',
+			$this->reader->extractTo(
+				$path,
+				ArchiveReader::FORMAT_TAR,
+				new ArchiveEntry( 5, 'dump.xml', 7, 10 ),
+				$this->getNewTempFile(),
+				self::MAX_SIZE,
+				null
+			)
+		);
+
+		$this->assertStatusError(
+			'importdump-archive-unreadable',
+			$this->reader->extractTo(
+				$path,
+				ArchiveReader::FORMAT_TAR,
+				new ArchiveEntry( 0, 'other.xml', 7, 10 ),
+				$this->getNewTempFile(),
+				self::MAX_SIZE,
+				null
+			)
+		);
+	}
+
+	public function testExtractTarThatWasCutOff(): void {
+		$path = $this->newFile( substr( TarFixture::build( [ 'dump.xml' => str_repeat( 'a', 2000 ) ] ), 0, 1000 ) );
+
+		$this->assertStatusError(
+			'importdump-archive-unreadable',
+			$this->reader->extractTo(
+				$path,
+				ArchiveReader::FORMAT_TAR,
+				new ArchiveEntry( 0, 'dump.xml', 2000, filesize( $path ) ),
+				$this->getNewTempFile(),
+				self::MAX_SIZE,
+				null
+			)
+		);
+	}
+
+	public function testBzip2WithoutTheExtension(): void {
+		if ( function_exists( 'bzopen' ) ) {
+			$this->markTestSkipped( 'The bz2 extension is installed.' );
+		}
+
+		$path = $this->newFile( "BZh9\x31\x41\x59\x26\x53\x59" . 'data' );
+		$this->assertStatusError(
+			'importdump-archive-bzip2-unavailable',
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_BZIP2, 100, self::MAX_SIZE )
+		);
+	}
+
+	public function testBzip2(): void {
+		if ( !function_exists( 'bzcompress' ) ) {
+			$this->markTestSkipped( 'The bz2 extension is not installed.' );
+		}
+
+		$path = $this->newFile( bzcompress( str_repeat( 'content ', 1000 ) ) );
+		$this->assertSame( ArchiveReader::FORMAT_BZIP2, $this->reader->detectFormat( $path ) );
+
+		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_BZIP2, 100, self::MAX_SIZE )->getValue()[0];
+		$this->assertSame( '', $entry->name );
+		$this->assertNull( $entry->size );
+
+		$destination = $this->getNewTempFile();
+		$status = $this->reader->extractTo(
+			$path,
+			ArchiveReader::FORMAT_BZIP2,
+			$entry,
+			$destination,
+			self::MAX_SIZE,
+			null
+		);
+
+		$this->assertStatusGood( $status );
+		$this->assertSame( str_repeat( 'content ', 1000 ), file_get_contents( $destination ) );
+	}
+
+	public function testCompressedTarWithBzip2(): void {
+		if ( !function_exists( 'bzcompress' ) ) {
+			$this->markTestSkipped( 'The bz2 extension is not installed.' );
+		}
+
+		$path = $this->newFile( bzcompress( TarFixture::build( [ 'dump.xml' => 'content' ] ) ) );
+		$status = $this->reader->listFiles( $path, ArchiveReader::FORMAT_BZIP2, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertSame( 'dump.xml', $status->getValue()[0]->name );
+
+		$destination = $this->getNewTempFile();
+		$this->assertStatusGood( $this->reader->extractTo(
+			$path,
+			ArchiveReader::FORMAT_BZIP2,
+			$status->getValue()[0],
+			$destination,
+			self::MAX_SIZE,
+			null
+		) );
+
+		$this->assertSame( 'content', file_get_contents( $destination ) );
+	}
+
+	public function testBzip2ExtremeCompressionRatio(): void {
+		if ( !function_exists( 'bzcompress' ) ) {
+			$this->markTestSkipped( 'The bz2 extension is not installed.' );
+		}
+
+		$path = $this->newFile( bzcompress( str_repeat( 'a', 8 * 1048576 ) ) );
+		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_BZIP2, 100, self::MAX_SIZE )->getValue()[0];
+
+		$this->assertStatusError(
+			'importdump-archive-ratio',
+			$this->reader->extractTo(
+				$path,
+				ArchiveReader::FORMAT_BZIP2,
+				$entry,
+				$this->getNewTempFile(),
+				PHP_INT_MAX,
+				null
+			)
 		);
 	}
 }

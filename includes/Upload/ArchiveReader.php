@@ -8,9 +8,10 @@ use MediaWiki\Status\Status;
 use ZipArchive;
 
 /**
- * Reads ZIP and GZIP archives without trusting what is in them. Entry names are checked and
- * returned but never used to build a path, and every entry is streamed into a destination
- * chosen by the caller, within a size limit.
+ * Reads ZIP, TAR, GZIP and BZIP2 archives without trusting what is in them. A GZIP or BZIP2 file
+ * holds either a single file or a TAR. Entry names are checked and returned but never used to
+ * build a path, and every entry is streamed into a destination chosen by the caller, within
+ * a size limit.
  */
 final class ArchiveReader {
 
@@ -18,10 +19,17 @@ final class ArchiveReader {
 
 	public const string FORMAT_GZIP = 'gzip';
 
-	private const int COPY_CHUNK_SIZE = 1048576;
+	public const string FORMAT_BZIP2 = 'bzip2';
 
-	private const int MAX_COMPRESSION_RATIO = 200;
-	private const int RATIO_CHECK_AFTER = 1048576;
+	public const string FORMAT_TAR = 'tar';
+
+	public const int COPY_CHUNK_SIZE = 1048576;
+
+	public const int MAX_COMPRESSION_RATIO = 200;
+	public const int RATIO_CHECK_AFTER = 1048576;
+
+	private const string BZIP2_BLOCK_MAGIC = "\x31\x41\x59\x26\x53\x59";
+	private const string BZIP2_EMPTY_MAGIC = "\x17\x72\x45\x38\x50\x90";
 
 	private const int MAX_NAME_LENGTH = 1024;
 
@@ -38,12 +46,14 @@ final class ArchiveReader {
 			return null;
 		}
 
-		$magic = (string)fread( $handle, 4 );
+		$magic = TarReader::readUpTo( $handle, TarReader::BLOCK_SIZE );
 		fclose( $handle );
 
 		return match ( true ) {
 			str_starts_with( $magic, "PK\x03\x04" ) => self::FORMAT_ZIP,
 			str_starts_with( $magic, "\x1f\x8b" ) => self::FORMAT_GZIP,
+			$this->isBzip2Header( $magic ) => self::FORMAT_BZIP2,
+			$this->isTarHeader( $magic ) => self::FORMAT_TAR,
 			default => null,
 		};
 	}
@@ -77,13 +87,29 @@ final class ArchiveReader {
 	 * Anything else that is not a plain file, such as a link or an encrypted entry,
 	 * makes the whole archive unacceptable.
 	 *
+	 * @param string $path The archive.
+	 * @param string $format One of the FORMAT_* constants.
+	 * @param int $maxEntries Most entries, including directories, that the archive may have.
+	 * @param int $maxSize Most bytes that the files of a TAR may have together.
 	 * @return Status A good status with a list of ArchiveEntry as its value.
 	 */
-	public function listFiles( string $path, string $format, int $maxEntries ): Status {
-		if ( $format === self::FORMAT_GZIP ) {
-			return $this->hasValidGzipHeader( $path ) ?
-				Status::newGood( [ new ArchiveEntry( 0, '', null, (int)filesize( $path ) ) ] ) :
-				Status::newFatal( 'importdump-archive-unreadable' );
+	public function listFiles( string $path, string $format, int $maxEntries, int $maxSize ): Status {
+		if ( $format === self::FORMAT_GZIP || $format === self::FORMAT_BZIP2 ) {
+			if ( $format === self::FORMAT_BZIP2 && !function_exists( 'bzopen' ) ) {
+				return Status::newFatal( 'importdump-archive-bzip2-unavailable' );
+			}
+
+			if ( $format === self::FORMAT_GZIP && !$this->hasValidGzipHeader( $path ) ) {
+				return Status::newFatal( 'importdump-archive-unreadable' );
+			}
+
+			return $this->containsTar( $path, $format ) ?
+				$this->listTar( $path, $format, $maxEntries, $maxSize ) :
+				Status::newGood( [ new ArchiveEntry( 0, '', null, (int)filesize( $path ) ) ] );
+		}
+
+		if ( $format === self::FORMAT_TAR ) {
+			return $this->listTar( $path, $format, $maxEntries, $maxSize );
 		}
 
 		$zip = $this->openZip( $path );
@@ -160,12 +186,16 @@ final class ArchiveReader {
 			return Status::newFatal( 'importdump-archive-ratio' );
 		}
 
+		if ( $this->isTarEntry( $format, $entry ) ) {
+			return $this->extractTar( $path, $format, $entry, $destination, $maxSize, $onProgress );
+		}
+
 		$zip = null;
 		if ( $format === self::FORMAT_ZIP ) {
 			$zip = $this->openZip( $path );
 			$input = $zip ? $zip->getStreamIndex( $entry->index ) : false;
 		} else {
-			$input = gzopen( $path, 'rb' );
+			$input = $this->openStream( $path, $format );
 		}
 
 		$output = $input ? fopen( $destination, 'wb' ) : false;
@@ -242,6 +272,166 @@ final class ArchiveReader {
 		}
 
 		return Status::newGood();
+	}
+
+	private function isTarEntry( string $format, ArchiveEntry $entry ): bool {
+		return $format === self::FORMAT_TAR ||
+			( ( $format === self::FORMAT_GZIP || $format === self::FORMAT_BZIP2 ) && $entry->name !== '' );
+	}
+
+	/**
+	 * Opens a file for reading its contents, decompressed if it is compressed.
+	 *
+	 * @param string $path
+	 * @param string $format
+	 * @return resource|false
+	 */
+	private function openStream( string $path, string $format ) {
+		return match ( $format ) {
+			self::FORMAT_GZIP => gzopen( $path, 'rb' ),
+			self::FORMAT_BZIP2 => function_exists( 'bzopen' ) ? bzopen( $path, 'r' ) : false,
+			default => fopen( $path, 'rb' ),
+		};
+	}
+
+	/** Whether what comes out of a compressed file is a TAR. Only the start of it is read. */
+	private function containsTar( string $path, string $format ): bool {
+		$input = $this->openStream( $path, $format );
+		if ( !$input ) {
+			return false;
+		}
+
+		$block = TarReader::readUpTo( $input, TarReader::BLOCK_SIZE );
+		fclose( $input );
+
+		return $this->isTarHeader( $block );
+	}
+
+	private function isTarHeader( string $block ): bool {
+		return strlen( $block ) === TarReader::BLOCK_SIZE && substr( $block, 257, 5 ) === TarReader::MAGIC;
+	}
+
+	private function isBzip2Header( string $header ): bool {
+		if ( strlen( $header ) < 10 || !str_starts_with( $header, 'BZh' ) || !ctype_digit( $header[3] ) ) {
+			return false;
+		}
+
+		return $header[3] !== '0' &&
+			in_array( substr( $header, 4, 6 ), [ self::BZIP2_BLOCK_MAGIC, self::BZIP2_EMPTY_MAGIC ], true );
+	}
+
+	/** Lists the regular files of a TAR, whether or not it is compressed. */
+	private function listTar( string $path, string $format, int $maxEntries, int $maxSize ): Status {
+		$input = $this->openStream( $path, $format );
+		if ( !$input ) {
+			return Status::newFatal( 'importdump-archive-unreadable' );
+		}
+
+		try {
+			$reader = new TarReader( $input, (int)filesize( $path ), $maxEntries, $maxSize );
+			$entries = [];
+
+			while ( true ) {
+				$next = $reader->next();
+				if ( !$next->isOK() ) {
+					return $next;
+				}
+
+				$tarEntry = $next->getValue();
+				if ( $tarEntry === null ) {
+					return Status::newGood( $entries );
+				}
+
+				$name = $this->normalizeTarName( $tarEntry->name );
+				if ( $tarEntry->isDirectory ) {
+					if ( $name !== '' && !$this->isSafeName( $name ) ) {
+						return Status::newFatal( 'importdump-archive-unsafe' );
+					}
+
+					continue;
+				}
+
+				if ( !$this->isSafeName( $name ) ) {
+					return Status::newFatal( 'importdump-archive-unsafe' );
+				}
+
+				if ( $this->isMetadata( $name ) ) {
+					continue;
+				}
+
+				$entries[] = new ArchiveEntry( $tarEntry->index, $name, $tarEntry->size, (int)filesize( $path ) );
+
+				// An archive with more than one file is not accepted, so there is no need to read on.
+				if ( count( $entries ) > 1 ) {
+					return Status::newGood( $entries );
+				}
+			}
+		} finally {
+			fclose( $input );
+		}
+	}
+
+	private function extractTar(
+		string $path,
+		string $format,
+		ArchiveEntry $entry,
+		string $destination,
+		int $maxSize,
+		?Closure $onProgress
+	): Status {
+		$input = $this->openStream( $path, $format );
+		$output = $input ? fopen( $destination, 'wb' ) : false;
+		if ( !$input || !$output ) {
+			if ( $input ) {
+				fclose( $input );
+			}
+
+			return Status::newFatal( 'importdump-archive-unreadable' );
+		}
+
+		try {
+			$reader = new TarReader( $input, (int)filesize( $path ), PHP_INT_MAX, $maxSize );
+
+			do {
+				$next = $reader->next();
+				if ( !$next->isOK() ) {
+					return $next;
+				}
+
+				$tarEntry = $next->getValue();
+			} while ( $tarEntry !== null && $tarEntry->index !== $entry->index );
+
+			if (
+				$tarEntry === null ||
+				$tarEntry->isDirectory ||
+				$this->normalizeTarName( $tarEntry->name ) !== $entry->name
+			) {
+				return Status::newFatal( 'importdump-archive-unreadable' );
+			}
+
+			if ( $onProgress ) {
+				$onProgress( $tarEntry->size ? 0 : null );
+			}
+
+			return $reader->copyBody( $tarEntry, $output, $onProgress );
+		} finally {
+			fclose( $input );
+			fclose( $output );
+		}
+	}
+
+	/** Tools often write names such as ./dump.xml. The dot is not part of the name. */
+	private function normalizeTarName( string $name ): string {
+		while ( str_starts_with( $name, './' ) ) {
+			$name = substr( $name, 2 );
+		}
+
+		return $name === '.' ? '' : $name;
+	}
+
+	/** Files that macOS adds next to the ones that were archived. */
+	private function isMetadata( string $name ): bool {
+		return str_starts_with( $name, '__MACOSX/' ) || str_starts_with( basename( $name ), '._' );
 	}
 
 	/** Opens a ZIP and makes libzip compare the central directory with the local headers. */
