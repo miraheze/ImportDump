@@ -102,7 +102,9 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 	 * @dataProvider onSubmitDataProvider
 	 */
 	public function testOnSubmit( array $formData, array $extraData, ?string $expectedError ): void {
-		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
+		// The stored file is named after the timestamp, and the files of earlier data sets are
+		// still there, so every data set needs a timestamp of its own.
+		ConvertibleTimestamp::setFakeTime( 1700000000 + crc32( (string)$this->dataName() ) % 1000000 );
 
 		if ( $formData['UploadFile'] ) {
 			// Create a test file
@@ -276,7 +278,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 			[
 				'mime-type' => 'application/xml',
 				'duplicate' => false,
-				'testfile' => '<?xml version="1.0"?><html/>',
+				'testfile' => '<?xml version="1.0"?><other/>',
 				'token' => true,
 			],
 			'importdump-xml-not-dump',

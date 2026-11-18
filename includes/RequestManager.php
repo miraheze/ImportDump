@@ -389,7 +389,7 @@ class RequestManager {
 
 	public function getLocalUnverifiedFile(): ?FSFile {
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
-		return $backend->getLocalReference( [ 'src' => $this->getUnverifiedFilePath() ] );
+		return $backend->getLocalReference( [ 'src' => $this->getUnverifiedFilePath() ] ) ?: null;
 	}
 
 	/** Moves the unverified file itself to where the import reads it from. */
