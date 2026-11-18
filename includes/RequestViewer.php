@@ -249,18 +249,35 @@ class RequestViewer implements RequestStatus {
 				}
 			}
 
-			$info .= new MessageWidget( [
-				'label' => new HtmlSnippet(
-						$this->context->msg( 'importdump-info-groups',
-							$this->requestManager->getRequester()->getName(),
-							$this->requestManager->getTarget(),
-							$this->context->getLanguage()->commaList(
-								$this->requestManager->getUserGroupsFromTarget()
-							)
-						)->escaped(),
-					),
-				'type' => 'notice',
-			] );
+			$targetExists = $this->requestManager->targetExists();
+			if ( $targetExists ) {
+				$info .= new MessageWidget( [
+					'label' => new HtmlSnippet(
+							$this->context->msg( 'importdump-info-groups',
+								$this->requestManager->getRequester()->getName(),
+								$this->requestManager->getTarget(),
+								$this->context->getLanguage()->commaList(
+									$this->requestManager->getUserGroupsFromTarget()
+								)
+							)->escaped(),
+						),
+					'type' => 'notice',
+				] );
+			} else {
+				$info .= new MessageWidget( [
+					'label' => new HtmlSnippet(
+							$this->context->msg( 'importdump-info-target-missing',
+								$this->requestManager->getTarget()
+							)->escaped()
+						),
+					'type' => 'error',
+				] );
+
+				$validRequest = false;
+				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
+					$status = self::STATUS_DECLINED;
+				}
+			}
 
 			if ( $this->requestManager->isPrivate( forced: false ) ) {
 				$info .= new MessageWidget( [
@@ -297,7 +314,7 @@ class RequestViewer implements RequestStatus {
 				}
 			}
 
-			if ( !$this->requestManager->getInterwikiPrefix() ) {
+			if ( $targetExists && !$this->requestManager->getInterwikiPrefix() ) {
 				$info .= new MessageWidget( [
 					'label' => new HtmlSnippet(
 							$this->context->msg( 'importdump-info-no-interwiki-prefix',
@@ -361,6 +378,7 @@ class RequestViewer implements RequestStatus {
 			}
 
 			if (
+				$targetExists &&
 				!$this->requestManager->getInterwikiPrefix() &&
 				$authority->isAllowed( 'handle-import-request-interwiki' )
 			) {

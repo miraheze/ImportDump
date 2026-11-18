@@ -56,6 +56,7 @@
 	"importdump-info-request-private": "This request is marked as private. It is not publicly viewable.",
 	"importdump-info-requester-blocked": "The requester ($1) has been blocked on this wiki ($2).",
 	"importdump-info-requester-locked": "The requester ($1) has been locked. This request should be declined.",
+	"importdump-info-target-missing": "The target wiki ($1) no longer exists, so this request cannot be imported.",
 	"importdump-interwiki-failed": "Interwiki prefix was not added to $1. It might already be present, or another error occured.",
 	"importdump-interwiki-success": "Interwiki prefix successfully added to $1.",
 	"importdump-invalid-interwiki-url": "The provided interwiki URL is not valid.",
