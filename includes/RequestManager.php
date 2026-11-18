@@ -11,6 +11,7 @@ use MediaWiki\JobQueue\JobSpecification;
 use MediaWiki\Language\MessageLocalizer;
 use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\Logging\ManualLogEntry;
+use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
 use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\SpecialPage;
@@ -51,6 +52,7 @@ class RequestManager {
 		ConfigNames::InterwikiMap,
 		ConfigNames::MaintenanceCommand,
 		ConfigNames::ScriptCommand,
+		MainConfigNames::LocalDatabases,
 	];
 
 	private IDatabase $dbw;
@@ -259,25 +261,31 @@ class RequestManager {
 		return true;
 	}
 
+	public function targetExists(): bool {
+		return in_array( $this->getTarget(), $this->options->get( MainConfigNames::LocalDatabases ), true );
+	}
+
 	public function getInterwikiPrefix(): string {
-		$dbr = $this->connectionProvider->getReplicaDatabase( $this->getTarget() );
 		$sourceHost = parse_url( $this->getSource(), PHP_URL_HOST );
 		if ( !$sourceHost ) {
 			return '';
 		}
 
 		$sourceHost = '://' . $sourceHost;
-		$row = $dbr->newSelectQueryBuilder()
-			->select( 'iw_prefix' )
-			->from( 'interwiki' )
-			->where( $dbr->expr( 'iw_url', IExpression::LIKE,
-				new LikeValue( $dbr->anyString(), $sourceHost, $dbr->anyString() )
-			) )
-			->caller( __METHOD__ )
-			->fetchRow();
+		if ( $this->targetExists() ) {
+			$dbr = $this->connectionProvider->getReplicaDatabase( $this->getTarget() );
+			$row = $dbr->newSelectQueryBuilder()
+				->select( 'iw_prefix' )
+				->from( 'interwiki' )
+				->where( $dbr->expr( 'iw_url', IExpression::LIKE,
+					new LikeValue( $dbr->anyString(), $sourceHost, $dbr->anyString() )
+				) )
+				->caller( __METHOD__ )
+				->fetchRow();
 
-		if ( $row->iw_prefix ?? '' ) {
-			return $row->iw_prefix;
+			if ( $row->iw_prefix ?? '' ) {
+				return $row->iw_prefix;
+			}
 		}
 
 		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-interwiki' );
@@ -335,6 +343,10 @@ class RequestManager {
 
 	/** @return string[] */
 	public function getUserGroupsFromTarget(): array {
+		if ( !$this->targetExists() ) {
+			return [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
+		}
+
 		$userName = $this->getRequester()->getName();
 		$remoteUser = $this->actorStoreFactory
 			->getUserIdentityLookup( $this->getTarget() )
@@ -506,6 +518,11 @@ class RequestManager {
 
 	public function isPrivate( bool $forced ): bool {
 		if ( !$forced && $this->row->request_private ) {
+			return true;
+		}
+
+		// The privacy of a deleted wiki cannot be known, so assume it was private.
+		if ( !$this->targetExists() ) {
 			return true;
 		}
 
