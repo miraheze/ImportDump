@@ -43,17 +43,27 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		return $this->newProcessor( self::MAX_SIZE, true )->process( $path, null );
 	}
 
-	/** @param array<int, int> $revisions Revision ID to parent revision ID, or 0 if it has none. */
+	/**
+	 * @param int $id
+	 * @param array<int, int> $revisions Revision ID to parent revision ID, or 0 if it has none.
+	 */
 	private static function page( int $id, array $revisions ): string {
 		return self::buildPage( $id, $revisions, true );
 	}
 
-	/** @param array<int, int> $revisions Revision ID to parent revision ID, or 0 if it has none. */
+	/**
+	 * @param int $id
+	 * @param array<int, int> $revisions Revision ID to parent revision ID, or 0 if it has none.
+	 */
 	private static function pageWithoutParents( int $id, array $revisions ): string {
 		return self::buildPage( $id, $revisions, false );
 	}
 
-	/** @param array<int, int> $revisions Revision ID to parent revision ID, or 0 if it has none. */
+	/**
+	 * @param int $id
+	 * @param array<int, int> $revisions Revision ID to parent revision ID, or 0 if it has none.
+	 * @param bool $withParents Whether each revision names its parent.
+	 */
 	private static function buildPage( int $id, array $revisions, bool $withParents ): string {
 		$xml = "<page><title>Page $id</title><ns>0</ns><id>$id</id>";
 		foreach ( $revisions as $revisionId => $parentId ) {
