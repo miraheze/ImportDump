@@ -344,9 +344,11 @@ class RequestManager {
 			return [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
 		}
 
-		return $this->userGroupManagerFactory
+		$groups = $this->userGroupManagerFactory
 			->getUserGroupManager( $this->getTarget() )
 			->getUserGroups( $remoteUser );
+
+		return $groups ?: [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
 	}
 
 	public function getFilePath(): string {
