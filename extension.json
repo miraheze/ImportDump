@@ -238,9 +238,6 @@
 				"importdump-verification-reload",
 				"importdump-verification-waiting"
 			]
-		},
-		"ext.importdump.progress.styles": {
-			"styles": "ext.importdump.progress.less"
 		}
 	},
 	"ResourceFileModulePaths": {

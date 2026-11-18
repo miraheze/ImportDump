@@ -512,7 +512,6 @@ class RequestViewer implements RequestStatus {
 		$out = $this->context->getOutput();
 		$out->enableOOUI();
 		$out->addModules( [ 'ext.importdump.progress' ] );
-		$out->addModuleStyles( [ 'ext.importdump.progress.styles' ] );
 
 		$progress = $this->requestManager->getVerificationProgress();
 		$percent = $progress['percent'] ?? null;
