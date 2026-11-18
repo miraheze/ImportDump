@@ -132,7 +132,13 @@ final class ArchiveReader {
 	 * Streams one entry into a file. Stops as soon as more than $maxSize bytes come out,
 	 * or when the data expands far more than a normal file would.
 	 *
+	 * @param string $path The archive.
+	 * @param string $format One of the FORMAT_* constants.
+	 * @param ArchiveEntry $entry The entry to extract.
+	 * @param string $destination The file to write it to.
+	 * @param int $maxSize Most bytes that may be written.
 	 * @param ?Closure( ?int ): void $onProgress Called with the percentage done, or null if it is not known.
+	 * @return Status
 	 */
 	public function extractTo(
 		string $path,
@@ -188,7 +194,10 @@ final class ArchiveReader {
 	/**
 	 * @param resource $input
 	 * @param resource $output
+	 * @param ArchiveEntry $entry
+	 * @param int $maxSize
 	 * @param ?Closure( ?int ): void $onProgress
+	 * @return Status
 	 */
 	private function copy( $input, $output, ArchiveEntry $entry, int $maxSize, ?Closure $onProgress ): Status {
 		$maxRatioSize = max( 1, $entry->compressedSize ) * self::MAX_COMPRESSION_RATIO;
