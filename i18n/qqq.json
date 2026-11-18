@@ -60,6 +60,7 @@
 	"importdump-info-request-private": "Message that is displayed on the 'handling' section of Special:RequestImportQueue when viewing a request that is private.",
 	"importdump-info-requester-blocked": "Message that is displayed on the 'handling' section of Special:RequestImportQueue when the requester has been blocked on the current wiki. $1 is the requester's username; $2 is the current wiki's ID.",
 	"importdump-info-requester-locked": "Message that is displayed on the 'handling' section of Special:RequestImportQueue when the requester has been locked. $1 is the requester's username.",
+	"importdump-info-target-missing": "Error shown to handlers on a request when its target wiki has been deleted. $1 is the database name of the target wiki.",
 	"importdump-interwiki-failed": "Error message displayed when submitting the interwiki table changes fails. $1 is the target database name.",
 	"importdump-interwiki-success": "Success message displayed when submitting the interwiki table changes successfully. $1 is the target database name.",
 	"importdump-invalid-interwiki-url": "Status message displayed when invalid URL was entered for the 'url' field for adding interwiki.",
