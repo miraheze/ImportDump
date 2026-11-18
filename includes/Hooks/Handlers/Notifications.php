@@ -2,9 +2,7 @@
 
 namespace Miraheze\ImportDump\Hooks\Handlers;
 
-use MediaWiki\Extension\Notifications\AttributeManager;
 use MediaWiki\Extension\Notifications\Hooks\BeforeCreateEchoEventHook;
-use MediaWiki\Extension\Notifications\UserLocator;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\Notifications\EchoImportFailedPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoNewRequestPresentationModel;
@@ -53,49 +51,33 @@ class Notifications implements BeforeCreateEchoEventHook {
 		];
 
 		$notifications['importdump-import-failed'] = [
-			AttributeManager::ATTR_LOCATORS => [
-				[ [ UserLocator::class, 'locateEventAgent' ] ],
-			],
 			'category' => 'importdump-import-failed',
 			'group' => 'positive',
 			'section' => 'alert',
-			'canNotifyAgent' => true,
 			'presentation-model' => EchoImportFailedPresentationModel::class,
 			'immediate' => true,
 		];
 
 		$notifications['importdump-new-request'] = [
-			AttributeManager::ATTR_LOCATORS => [
-				[ [ UserLocator::class, 'locateEventAgent' ] ],
-			],
 			'category' => 'importdump-new-request',
 			'group' => 'positive',
 			'section' => 'alert',
-			'canNotifyAgent' => true,
 			'presentation-model' => EchoNewRequestPresentationModel::class,
 			'immediate' => true,
 		];
 
 		$notifications['importdump-request-comment'] = [
-			AttributeManager::ATTR_LOCATORS => [
-				[ [ UserLocator::class, 'locateEventAgent' ] ],
-			],
 			'category' => 'importdump-request-comment',
 			'group' => 'positive',
 			'section' => 'alert',
-			'canNotifyAgent' => true,
 			'presentation-model' => EchoRequestCommentPresentationModel::class,
 			'immediate' => true,
 		];
 
 		$notifications['importdump-request-status-update'] = [
-			AttributeManager::ATTR_LOCATORS => [
-				[ [ UserLocator::class, 'locateEventAgent' ] ],
-			],
 			'category' => 'importdump-request-status-update',
 			'group' => 'positive',
 			'section' => 'alert',
-			'canNotifyAgent' => true,
 			'presentation-model' => EchoRequestStatusUpdatePresentationModel::class,
 			'immediate' => true,
 		];

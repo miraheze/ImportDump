@@ -916,21 +916,21 @@ class RequestViewer implements RequestStatus {
 			->inContentLanguage()
 			->text();
 
-		$comment = $this->context->msg( 'importdump-status-updated', mb_strtolower( $statusMessage ) )
-			->inContentLanguage()
-			->escaped();
+		$comment = $this->context->msg(
+			'importdump-status-updated-by',
+			mb_strtolower( $statusMessage ),
+			$user->getName()
+		)->inContentLanguage()->escaped();
 
 		if ( $formData['handle-comment'] ) {
-			$commentUser = User::newSystemUser( 'ImportDump Status Update' );
-
-			$comment .= "\n" . $this->context->msg( 'importdump-comment-given', $user->getName() )
+			$comment .= "\n" . $this->context->msg( 'importdump-status-comment-given' )
 				->inContentLanguage()
 				->escaped();
 
 			$comment .= ' ' . $formData['handle-comment'];
 		}
 
-		$this->requestManager->addComment( $comment, $commentUser ?? $user );
+		$this->requestManager->addComment( $comment, User::newSystemUser( 'ImportDump Status Update' ) );
 		$this->requestManager->logStatusUpdate(
 			$formData['handle-comment'], $formData['handle-status'], $user
 		);
