@@ -58,6 +58,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	protected function setUp(): void {
 		parent::setUp();
 
+		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [ 'requestimporttest' ] );
+
 		$this->setService( 'RepoGroup', new RepoGroup(
 			[
 				'class' => LocalRepo::class,
@@ -241,6 +243,38 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 			],
 			$manager->getRemainingCommands()
 		);
+	}
+
+	/**
+	 * @covers ::targetExists
+	 */
+	public function testTargetExists(): void {
+		$this->assertTrue( $this->getRequestManager( id: 1 )->targetExists() );
+
+		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [] );
+		$this->assertFalse( $this->getRequestManager( id: 1 )->targetExists() );
+	}
+
+	/**
+	 * @covers ::getUserGroupsFromTarget
+	 * @covers ::isPrivate
+	 */
+	public function testDeletedTargetDoesNotQueryTargetDatabase(): void {
+		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [] );
+
+		$actorStoreFactory = $this->createMock( ActorStoreFactory::class );
+		$actorStoreFactory->expects( $this->never() )->method( 'getUserIdentityLookup' );
+		$this->setService( 'ActorStoreFactory', $actorStoreFactory );
+
+		$manager = $this->getRequestManager( id: 1 );
+
+		$this->assertSame(
+			[ wfMessage( 'importdump-usergroups-none' )->text() ],
+			$manager->getUserGroupsFromTarget()
+		);
+
+		$this->assertTrue( $manager->isPrivate( forced: false ) );
+		$this->assertTrue( $manager->isPrivate( forced: true ) );
 	}
 
 	/**
