@@ -13,7 +13,6 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 	private const array TYPES = [
 		'xml' => [
 			'extension' => 'xml',
-			'mimeTypes' => [ 'application/xml', 'text/xml' ],
 		],
 	];
 
@@ -53,13 +52,13 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		return 'requestimport.' . self::TYPES[$this->type]['extension'];
 	}
 
-	/** @inheritDoc */
+	/**
+	 * @inheritDoc
+	 * The assembled file is scanned in full when the request is submitted. Scanning the
+	 * growing file after each chunk would read it again and again.
+	 */
 	protected function verifyPartialFile() {
-		$virus = MediaWikiServices::getInstance()
-			->getUploadVerification()
-			->detectVirus( $this->mTempPath );
-
-		return $virus ? [ 'uploadvirus', $virus ] : true;
+		return true;
 	}
 
 	/** @inheritDoc */
@@ -76,12 +75,14 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 			];
 		}
 
-		$mime = MediaWikiServices::getInstance()
-			->getMimeAnalyzer()
-			->guessMimeType( $this->getTempPath() );
+		$services = MediaWikiServices::getInstance();
+		$mime = $services->getMimeAnalyzer()->guessMimeType( $this->getTempPath() );
 
 		$definition = self::TYPES[$this->type];
-		if ( !in_array( $mime, $definition['mimeTypes'], true ) ) {
+		$processor = $services->getService( 'ImportDumpDumpProcessor' );
+		'@phan-var DumpProcessor $processor';
+
+		if ( !in_array( $mime, $processor->getAcceptedMimeTypes(), true ) ) {
 			return [
 				'status' => self::VERIFICATION_ERROR,
 				'details' => [ 'filetype-mime-mismatch', $definition['extension'], $mime ],

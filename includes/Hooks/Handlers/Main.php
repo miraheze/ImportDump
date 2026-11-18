@@ -15,7 +15,7 @@ class Main implements
 {
 
 	public function __construct(
-		private readonly IConnectionProvider $connectionProvider
+		private readonly IConnectionProvider $connectionProvider,
 	) {
 	}
 

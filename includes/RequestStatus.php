@@ -17,4 +17,6 @@ interface RequestStatus {
 	public const string STATUS_PENDING = 'pending';
 
 	public const string STATUS_STARTING = 'starting';
+
+	public const string STATUS_VERIFYING = 'verifying';
 }

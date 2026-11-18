@@ -1,0 +1,26 @@
+<?php
+
+namespace Miraheze\ImportDump\Upload;
+
+use Wikimedia\FileBackend\FSFile\TempFSFile;
+
+final readonly class DumpResult {
+
+	/**
+	 * @param string $path The XML file that will be imported.
+	 * @param ?string $history One of the RequestHistory::HISTORY_* constants, or null if history
+	 *  detection is off.
+	 * @param ?TempFSFile $tempFile The file that was extracted from an archive, if there was one.
+	 *  It is deleted when this object is destroyed.
+	 */
+	public function __construct(
+		public string $path,
+		public ?string $history,
+		private ?TempFSFile $tempFile,
+	) {
+	}
+
+	public function wasExtracted(): bool {
+		return $this->tempFile !== null;
+	}
+}

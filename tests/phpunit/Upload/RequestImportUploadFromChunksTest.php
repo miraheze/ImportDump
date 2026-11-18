@@ -147,6 +147,27 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 			null,
 		];
 
+		yield 'zip archive' => [
+			ZipFixture::build( [ 'dump.xml' => "<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>" ] ),
+			null,
+			UploadBase::OK,
+			null,
+		];
+
+		yield 'tar archive' => [
+			TarFixture::build( [ 'dump.xml' => "<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>" ] ),
+			null,
+			UploadBase::OK,
+			null,
+		];
+
+		yield 'gzip archive' => [
+			gzencode( "<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>" ),
+			null,
+			UploadBase::OK,
+			null,
+		];
+
 		yield 'empty file' => [
 			'',
 			null,
@@ -172,28 +193,16 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * @covers ::verifyPartialFile
 	 */
-	public function testVerifyPartialFileAllowsXmlTags(): void {
+	public function testVerifyPartialFileDoesNotScan(): void {
+		$verification = $this->createMock( UploadVerification::class );
+		$verification->expects( $this->never() )->method( 'detectVirus' );
+		$this->setService( 'UploadVerification', $verification );
+
 		$path = $this->newFile( '<page><title>Test</title><script>x</script></page>' );
 		$upload = $this->newUpload( type: 'xml' );
 		$upload->initializePathInfo( $upload->getStashName(), $path, filesize( $path ) );
 
 		$wrapper = TestingAccessWrapper::newFromObject( $upload );
 		$this->assertTrue( $wrapper->verifyPartialFile() );
-	}
-
-	/**
-	 * @covers ::verifyPartialFile
-	 */
-	public function testVerifyPartialFileDetectsVirus(): void {
-		$verification = $this->createMock( UploadVerification::class );
-		$verification->method( 'detectVirus' )->willReturn( 'TestVirus' );
-		$this->setService( 'UploadVerification', $verification );
-
-		$path = $this->newFile( '<page></page>' );
-		$upload = $this->newUpload( type: 'xml' );
-		$upload->initializePathInfo( $upload->getStashName(), $path, filesize( $path ) );
-
-		$wrapper = TestingAccessWrapper::newFromObject( $upload );
-		$this->assertSame( [ 'uploadvirus', 'TestVirus' ], $wrapper->verifyPartialFile() );
 	}
 }

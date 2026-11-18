@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump;
 
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Extension\Notifications\Model\Event;
+use MediaWiki\FileRepo\FileRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\Interwiki\InterwikiLookup;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
@@ -13,8 +14,10 @@ use MediaWiki\Linker\LinkRenderer;
 use MediaWiki\Logging\ManualLogEntry;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
+use MediaWiki\Permissions\Authority;
 use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\SpecialPage\SpecialPage;
+use MediaWiki\Status\Status;
 use MediaWiki\User\ActorStoreFactory;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
@@ -24,6 +27,7 @@ use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use stdClass;
 use Wikimedia\FileBackend\FileBackend;
+use Wikimedia\FileBackend\FSFile\FSFile;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\IDatabase;
 use Wikimedia\Rdbms\IExpression;
@@ -72,7 +76,8 @@ class RequestManager {
 		private readonly ServiceOptions $options,
 		private readonly UserFactory $userFactory,
 		private readonly UserGroupManagerFactory $userGroupManagerFactory,
-		private readonly ?ModuleFactory $moduleFactory
+		private readonly VerificationProgress $verificationProgress,
+		private readonly ?ModuleFactory $moduleFactory,
 	) {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
 	}
@@ -87,6 +92,10 @@ class RequestManager {
 			->where( [ 'request_id' => $requestID ] )
 			->caller( __METHOD__ )
 			->fetchRow();
+	}
+
+	public function getID(): int {
+		return $this->ID;
 	}
 
 	public function exists(): bool {
@@ -372,6 +381,51 @@ class RequestManager {
 		return $zonePath . '/' . $fileName;
 	}
 
+	public function getUnverifiedFilePath(): string {
+		$localRepo = $this->repoGroup->getLocalRepo();
+		$zonePath = $localRepo->getZonePath( 'public' ) . '/ImportDump/unverified';
+
+		return $zonePath . '/' . $this->getFileName();
+	}
+
+	public function getLocalUnverifiedFile(): ?FSFile {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		return $backend->getLocalReference( [ 'src' => $this->getUnverifiedFilePath() ] ) ?: null;
+	}
+
+	/** Moves the unverified file itself to where the import reads it from. */
+	public function publishUnverifiedFile(): Status {
+		return $this->publishVerified( $this->getUnverifiedFilePath(), FileRepo::DELETE_SOURCE );
+	}
+
+	/** Publishes a file that was extracted from the unverified file, which is then removed. */
+	public function publishExtractedFile( string $extractedPath ): Status {
+		return $this->publishVerified( $extractedPath, 0 );
+	}
+
+	private function publishVerified( string $source, int $flags ): Status {
+		$fileName = $this->getFileName();
+		$status = $this->repoGroup->getLocalRepo()->publish(
+			$source,
+			"/ImportDump/$fileName",
+			"/ImportDump/archive/$fileName",
+			$flags
+		);
+
+		if ( $status->isOK() ) {
+			$this->deleteUnverifiedFile();
+		}
+
+		return $status;
+	}
+
+	public function deleteUnverifiedFile(): void {
+		$this->repoGroup->getLocalRepo()->getBackend()->quickDelete( [
+			'src' => $this->getUnverifiedFilePath(),
+			'ignoreMissingSource' => true,
+		] );
+	}
+
 	public function getArchiveFilePath(): string {
 		$localRepo = $this->repoGroup->getLocalRepo();
 		$zonePath = $localRepo->getZonePath( 'public' ) . '/ImportDump/archive';
@@ -401,7 +455,8 @@ class RequestManager {
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
 
 		$success = true;
-		foreach ( [ $this->getFilePath(), $this->getArchiveFilePath() ] as $path ) {
+		$paths = [ $this->getFilePath(), $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
+		foreach ( $paths as $path ) {
 			$status = $backend->quickDelete( [
 				'src' => $path,
 				'ignoreMissingSource' => true,
@@ -459,6 +514,15 @@ class RequestManager {
 		return $this->row->request_source;
 	}
 
+	public function getHistory(): ?string {
+		return $this->row->request_history ?? null;
+	}
+
+	/** @return ?array{stage: string, percent: ?int} */
+	public function getVerificationProgress(): ?array {
+		return $this->verificationProgress->get( $this->ID );
+	}
+
 	public function getStage(): string {
 		return $this->row->request_stage ?? '';
 	}
@@ -514,6 +578,13 @@ class RequestManager {
 
 	public function isLocked(): bool {
 		return (bool)$this->row->request_locked;
+	}
+
+	/** Private requests can only be seen by their requester and by those who may view private requests. */
+	public function isViewableBy( Authority $authority ): bool {
+		return !$this->isPrivate( forced: false ) ||
+			$authority->getUser()->getName() === $this->getRequester()->getName() ||
+			$authority->isAllowed( 'view-private-import-requests' );
 	}
 
 	public function isPrivate( bool $forced ): bool {
@@ -614,6 +685,17 @@ class RequestManager {
 		if ( $oldStatus !== $status ) {
 			$this->hookRunner->onImportDumpRequestStatusUpdate( $this, $status, $oldStatus );
 		}
+	}
+
+	public function setHistory( ?string $history ): void {
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_history' => $history ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->row->request_history = $history;
 	}
 
 	public function setTarget( string $target ): void {

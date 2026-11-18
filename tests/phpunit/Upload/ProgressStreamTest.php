@@ -1,0 +1,96 @@
+<?php
+
+namespace Miraheze\ImportDump\Tests\Upload;
+
+use MediaWikiIntegrationTestCase;
+use Miraheze\ImportDump\Upload\ProgressStream;
+use Wikimedia\AtEase\AtEase;
+use XMLReader;
+
+/**
+ * @group ImportDump
+ * @group medium
+ * @covers \Miraheze\ImportDump\Upload\ProgressStream
+ */
+class ProgressStreamTest extends MediaWikiIntegrationTestCase {
+
+	private function newFile( string $contents ): string {
+		$path = $this->getNewTempFile();
+		file_put_contents( $path, $contents );
+		return $path;
+	}
+
+	public function testReadsFileAndReportsProgress(): void {
+		$contents = str_repeat( 'content ', 5000 );
+		$percentages = [];
+
+		$url = ProgressStream::url(
+			$this->newFile( $contents ),
+			static function ( int $percent ) use ( &$percentages ): void {
+				$percentages[] = $percent;
+			}
+		);
+
+		$this->assertSame( $contents, file_get_contents( $url ) );
+		$this->assertSame( 100, end( $percentages ) );
+
+		$sorted = $percentages;
+		sort( $sorted );
+		$this->assertSame( $sorted, $percentages );
+	}
+
+	public function testXmlReaderCanOpenIt(): void {
+		$percentages = [];
+		$url = ProgressStream::url(
+			$this->newFile( '<root><child>text</child></root>' ),
+			static function ( int $percent ) use ( &$percentages ): void {
+				$percentages[] = $percent;
+			}
+		);
+
+		$reader = new XMLReader();
+		$this->assertTrue( $reader->open( $url, null, LIBXML_NONET ) );
+
+		$elements = 0;
+		while ( $reader->read() ) {
+			if ( $reader->nodeType === XMLReader::ELEMENT ) {
+				$elements++;
+			}
+		}
+
+		$reader->close();
+
+		$this->assertSame( 2, $elements );
+		$this->assertSame( 100, end( $percentages ) );
+	}
+
+	public function testEmptyFile(): void {
+		$url = ProgressStream::url( $this->newFile( '' ), static function ( int $percent ): void {
+		} );
+
+		$this->assertSame( '', file_get_contents( $url ) );
+	}
+
+	public function testUnknownUrlCannotBeOpened(): void {
+		ProgressStream::url( $this->newFile( 'content' ), static function ( int $percent ): void {
+		} );
+
+		$this->assertFalse( AtEase::quietCall( 'file_get_contents', 'importdump-progress://unknown' ) );
+	}
+
+	public function testReleasedUrlCannotBeOpened(): void {
+		$url = ProgressStream::url( $this->newFile( 'content' ), static function ( int $percent ): void {
+		} );
+
+		ProgressStream::release( $url );
+		$this->assertFalse( AtEase::quietCall( 'file_get_contents', $url ) );
+	}
+
+	public function testUrlCannotBeOpenedTwice(): void {
+		$url = ProgressStream::url( $this->newFile( 'content' ), static function ( int $percent ): void {
+		} );
+
+		$this->assertSame( 'content', file_get_contents( $url ) );
+		$this->assertFalse( AtEase::quietCall( 'file_get_contents', $url ) );
+	}
+}

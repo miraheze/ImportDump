@@ -13,6 +13,10 @@ class ConfigNames {
 
 	public const string EnableChunkedUploads = 'ImportDumpEnableChunkedUploads';
 
+	public const string EnableHistoryDetection = 'ImportDumpEnableHistoryDetection';
+
+	public const string ExternalBinaries = 'ImportDumpExternalBinaries';
+
 	public const string FileExpiryDays = 'ImportDumpFileExpiryDays';
 
 	public const string HelpUrl = 'ImportDumpHelpUrl';
@@ -21,7 +25,13 @@ class ConfigNames {
 
 	public const string MaintenanceCommand = 'ImportDumpMaintenanceCommand';
 
+	public const string MaxArchiveEntries = 'ImportDumpMaxArchiveEntries';
+
+	public const string MaxExtractedSize = 'ImportDumpMaxExtractedSize';
+
 	public const string MaxUploadSize = 'ImportDumpMaxUploadSize';
+
+	public const string ChunkedUploadThreshold = 'ImportDumpChunkedUploadThreshold';
 
 	public const string ScriptCommand = 'ImportDumpScriptCommand';
 
