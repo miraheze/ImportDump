@@ -239,6 +239,46 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	}
 
 	/**
+	 * @covers ::getFileExpiryDays
+	 * @covers ::isPastFileExpiry
+	 * @covers ::hasFileExpired
+	 * @dataProvider provideFileExpiry
+	 */
+	public function testFileExpiry(
+		string $status,
+		array $config,
+		int $daysElapsed,
+		int $expectedDays,
+		bool $expectedPast
+	): void {
+		$this->overrideConfigValue( ConfigNames::FileExpiryDays, $config );
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setStatus( $status );
+
+		ConvertibleTimestamp::setFakeTime(
+			(int)wfTimestamp( TS_UNIX, $manager->getTimestamp() ) + $daysElapsed * 86400
+		);
+
+		$this->assertSame( $expectedDays, $manager->getFileExpiryDays() );
+		$this->assertSame( $expectedPast, $manager->isPastFileExpiry() );
+
+		// The file does not exist in this test.
+		$this->assertSame( $expectedPast, $manager->hasFileExpired() );
+	}
+
+	public static function provideFileExpiry(): array {
+		return [
+			'past the retention period' => [ self::STATUS_COMPLETE, [ self::STATUS_COMPLETE => 7 ], 8, 7, true ],
+			'exactly at the retention period' => [ self::STATUS_FAILED, [ self::STATUS_FAILED => 3 ], 3, 3, true ],
+			'within the retention period' => [ self::STATUS_COMPLETE, [ self::STATUS_COMPLETE => 7 ], 6, 7, false ],
+			'status is not configured' => [ self::STATUS_DECLINED, [ self::STATUS_COMPLETE => 7 ], 30, 0, false ],
+			'status that never expires' => [ self::STATUS_PARTIAL, [ self::STATUS_PARTIAL => 1 ], 30, 0, false ],
+			'nothing configured' => [ self::STATUS_COMPLETE, [], 30, 0, false ],
+		];
+	}
+
+	/**
 	 * @covers ::deleteFile
 	 * @covers ::getArchiveFilePath
 	 */
