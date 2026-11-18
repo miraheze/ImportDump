@@ -6,17 +6,10 @@ use MediaWiki\Maintenance\Maintenance;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStatus;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 class ExpireFiles extends Maintenance {
-
-	private const array EXPIRABLE_STATUSES = [
-		RequestStatus::STATUS_COMPLETE,
-		RequestStatus::STATUS_DECLINED,
-		RequestStatus::STATUS_FAILED,
-	];
 
 	private IConnectionProvider $connectionProvider;
 	private RequestManager $requestManager;
@@ -61,7 +54,7 @@ class ExpireFiles extends Maintenance {
 		$failed = 0;
 
 		foreach ( $expiry as $status => $days ) {
-			if ( !in_array( $status, self::EXPIRABLE_STATUSES, true ) ) {
+			if ( !in_array( $status, RequestManager::EXPIRABLE_STATUSES, true ) ) {
 				$this->output( "Skipping '$status'. Files for this status cannot be expired.\n" );
 				continue;
 			}
