@@ -214,7 +214,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->assertCount( 3, $commands );
 		$this->assertStringContainsString( 'refreshLinks.php --wiki=requestimporttest', $commands[0] );
 		$this->assertStringContainsString( 'initEditCount.php', $commands[1] );
-		$this->assertStringContainsString( 'updateArticleCount.php --update', $commands[2] );
+		$this->assertStringContainsString( 'updateArticleCount.php --wiki=requestimporttest --update', $commands[2] );
 
 		$manager->setStage( self::STAGE_AFTERIMPORT );
 		$this->assertSame( [], $manager->getRemainingCommands() );
