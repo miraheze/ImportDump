@@ -26,6 +26,7 @@
 	"echo-pref-tooltip-importdump-request-status-update": "Notify me when the status is updated for an import request that I have participated on.",
 	"importdump-apierror-chunking-disabled": "Chunked uploads are not enabled for ImportDump on this wiki.",
 	"importdump-apierror-type-mismatch": "This type of file cannot be added to the upload in progress.",
+	"importdump-archive-binary-unavailable": "This kind of archive cannot be read because the server is not set up for it.",
 	"importdump-archive-bzip2-unavailable": "BZIP2 files cannot be read because this server does not support them.",
 	"importdump-archive-not-single": "The archive must contain exactly one file.",
 	"importdump-archive-ratio": "The archive is compressed too much to be accepted.",

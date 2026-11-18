@@ -8,8 +8,8 @@ use MediaWiki\Status\Status;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\RequestHistory;
-use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
+use Miraheze\ImportDump\Upload\ExternalBinaries;
 use Miraheze\ImportDump\Upload\DumpResult;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 
@@ -26,9 +26,10 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 
 	private const int MAX_SIZE = 1048576;
 
-	private function newProcessor( int $maxSize, bool $detectHistory ): DumpProcessor {
+	/** @param array<string, string> $binaries Format to the program that unpacks it. */
+	private function newProcessor( int $maxSize, bool $detectHistory, array $binaries ): DumpProcessor {
 		return new DumpProcessor(
-			new ArchiveReader(),
+			$this->newReader( $binaries ),
 			new ServiceOptions( DumpProcessor::CONSTRUCTOR_OPTIONS, [
 				ConfigNames::EnableHistoryDetection => $detectHistory,
 				ConfigNames::MaxArchiveEntries => 100,
@@ -40,7 +41,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 	}
 
 	private function process( string $path ): Status {
-		return $this->newProcessor( self::MAX_SIZE, true )->process( $path, null );
+		return $this->newProcessor( self::MAX_SIZE, true, [] )->process( $path, null );
 	}
 
 	/**
@@ -185,7 +186,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
 
 		$calls = [];
-		$status = $this->newProcessor( self::MAX_SIZE, true )->process(
+		$status = $this->newProcessor( self::MAX_SIZE, true, [] )->process(
 			$this->newFile( $xml ),
 			static function ( string $stage, ?int $percent ) use ( &$calls ): void {
 				$calls[] = [ $stage, $percent ];
@@ -219,7 +220,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
 
 		$calls = [];
-		$status = $this->newProcessor( self::MAX_SIZE, true )->process(
+		$status = $this->newProcessor( self::MAX_SIZE, true, [] )->process(
 			$this->newZip( [ 'dump.xml' => $xml ] ),
 			static function ( string $stage, ?int $percent ) use ( &$calls ): void {
 				$calls[] = [ $stage, $percent ];
@@ -336,7 +337,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
 
 		$calls = [];
-		$status = $this->newProcessor( self::MAX_SIZE, true )->process(
+		$status = $this->newProcessor( self::MAX_SIZE, true, [] )->process(
 			$this->newTar( [ 'dump.xml' => $xml ] ),
 			static function ( string $stage, ?int $percent ) use ( &$calls ): void {
 				$calls[] = [ $stage, $percent ];
@@ -382,7 +383,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 
 	public function testArchiveExpandingPastTheLimit(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
-		$processor = $this->newProcessor( strlen( $xml ) - 1, true );
+		$processor = $this->newProcessor( strlen( $xml ) - 1, true, [] );
 
 		$this->assertStatusError(
 			'importdump-archive-too-large',
@@ -407,14 +408,44 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 
 	public function testHistoryDetectionOff(): void {
 		$xml = self::dump( self::page( 1, [ 12 => 11 ] ) );
-		$status = $this->newProcessor( self::MAX_SIZE, false )->process( $this->newFile( $xml ), null );
+		$status = $this->newProcessor( self::MAX_SIZE, false, [] )->process( $this->newFile( $xml ), null );
 
 		$this->assertStatusGood( $status );
 		$this->assertNull( $status->getValue()->history );
 	}
 
 	public function testHistoryDetectionOffStillRejectsInvalidXml(): void {
-		$status = $this->newProcessor( self::MAX_SIZE, false )->process( $this->newFile( 'content' ), null );
+		$status = $this->newProcessor( self::MAX_SIZE, false, [] )->process( $this->newFile( 'content' ), null );
 		$this->assertStatusError( 'importdump-xml-invalid', $status );
+	}
+
+	public function testMimeTypesFollowTheConfiguredPrograms(): void {
+		$plain = $this->newProcessor( self::MAX_SIZE, true, [] );
+		$this->assertNotContains( 'application/x-xz', $plain->getAcceptedMimeTypes() );
+		$this->assertNotContains( 'application/x-7z-compressed', $plain->getArchiveMimeTypes() );
+		$this->assertContains( 'application/zip', $plain->getArchiveMimeTypes() );
+		$this->assertContains( 'text/xml', $plain->getAcceptedMimeTypes() );
+
+		$both = $this->newProcessor( self::MAX_SIZE, true, [
+			ExternalBinaries::XZ => '/not/installed/xz',
+			ExternalBinaries::SEVEN_ZIP => '/not/installed/7z',
+		] );
+
+		foreach ( [ 'application/x-xz', 'application/x-7z-compressed' ] as $type ) {
+			$this->assertContains( $type, $both->getAcceptedMimeTypes() );
+			$this->assertContains( $type, $both->getArchiveMimeTypes() );
+		}
+	}
+
+	public function testXzAndSevenZipAreProcessed(): void {
+		$processor = $this->newProcessor( self::MAX_SIZE, false, [
+			ExternalBinaries::XZ => $this->requireBinary( ExternalBinaries::XZ ),
+			ExternalBinaries::SEVEN_ZIP => $this->requireBinary( ExternalBinaries::SEVEN_ZIP ),
+		] );
+
+		foreach ( [ ExternalFixtures::XZ_XML, ExternalFixtures::SEVEN_ZIP_ONE ] as $fixture ) {
+			$status = $processor->process( $this->newFile( ExternalFixtures::decode( $fixture ) ), null );
+			$this->assertStatusError( 'importdump-xml-not-dump', $status );
+		}
 	}
 }

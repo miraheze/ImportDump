@@ -15,6 +15,8 @@ class ConfigNames {
 
 	public const string EnableHistoryDetection = 'ImportDumpEnableHistoryDetection';
 
+	public const string ExternalBinaries = 'ImportDumpExternalBinaries';
+
 	public const string FileExpiryDays = 'ImportDumpFileExpiryDays';
 
 	public const string HelpUrl = 'ImportDumpHelpUrl';

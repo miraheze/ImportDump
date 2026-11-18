@@ -5,13 +5,14 @@ namespace Miraheze\ImportDump\Upload;
 use Closure;
 use MediaWiki\Message\Message;
 use MediaWiki\Status\Status;
+use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use ZipArchive;
 
 /**
- * Reads ZIP, TAR, GZIP and BZIP2 archives without trusting what is in them. A GZIP or BZIP2 file
- * holds either a single file or a TAR. Entry names are checked and returned but never used to
- * build a path, and every entry is streamed into a destination chosen by the caller, within
- * a size limit.
+ * Reads ZIP, TAR, GZIP and BZIP2 archives, and XZ and 7z archives if the wiki has the programs
+ * for them, without trusting what is in them. A GZIP, BZIP2 or XZ file holds either a single
+ * file or a TAR. Entry names are checked and returned but never used to build a path, and every
+ * entry is streamed into a destination chosen by the caller, within a size limit.
  */
 final class ArchiveReader {
 
@@ -23,6 +24,10 @@ final class ArchiveReader {
 
 	public const string FORMAT_TAR = 'tar';
 
+	public const string FORMAT_XZ = 'xz';
+
+	public const string FORMAT_SEVEN_ZIP = '7z';
+
 	public const int COPY_CHUNK_SIZE = 1048576;
 
 	public const int MAX_COMPRESSION_RATIO = 200;
@@ -30,6 +35,11 @@ final class ArchiveReader {
 
 	private const string BZIP2_BLOCK_MAGIC = "\x31\x41\x59\x26\x53\x59";
 	private const string BZIP2_EMPTY_MAGIC = "\x17\x72\x45\x38\x50\x90";
+	private const string XZ_MAGIC = "\xFD7zXZ\x00";
+	private const string SEVEN_ZIP_MAGIC = "7z\xBC\xAF\x27\x1C";
+
+	/** Room for the headers of a TAR that is unpacked from a file, on top of what its files may have. */
+	private const int TAR_HEADER_ALLOWANCE = 67108864;
 
 	private const int MAX_NAME_LENGTH = 1024;
 
@@ -39,6 +49,17 @@ final class ArchiveReader {
 
 	private const int UNIX_TYPE_MASK = 0170000;
 	private const int UNIX_REGULAR_FILE = 0100000;
+
+	public function __construct(
+		private readonly ExternalBinaries $externalBinaries,
+		private readonly TempFSFileFactory $tempFSFileFactory,
+	) {
+	}
+
+	/** @return list<string> The MIME types of the formats that need a program, if they can be read. */
+	public function getExternalMimeTypes(): array {
+		return $this->externalBinaries->getMimeTypes();
+	}
 
 	public function detectFormat( string $path ): ?string {
 		$handle = fopen( $path, 'rb' );
@@ -54,6 +75,10 @@ final class ArchiveReader {
 			str_starts_with( $magic, "\x1f\x8b" ) => self::FORMAT_GZIP,
 			$this->isBzip2Header( $magic ) => self::FORMAT_BZIP2,
 			$this->isTarHeader( $magic ) => self::FORMAT_TAR,
+			str_starts_with( $magic, self::XZ_MAGIC ) && $this->externalBinaries->isEnabled( ExternalBinaries::XZ ) =>
+				self::FORMAT_XZ,
+			str_starts_with( $magic, self::SEVEN_ZIP_MAGIC ) &&
+				$this->externalBinaries->isEnabled( ExternalBinaries::SEVEN_ZIP ) => self::FORMAT_SEVEN_ZIP,
 			default => null,
 		};
 	}
@@ -94,6 +119,14 @@ final class ArchiveReader {
 	 * @return Status A good status with a list of ArchiveEntry as its value.
 	 */
 	public function listFiles( string $path, string $format, int $maxEntries, int $maxSize ): Status {
+		if ( $format === self::FORMAT_XZ ) {
+			return $this->listXz( $path, $maxEntries, $maxSize );
+		}
+
+		if ( $format === self::FORMAT_SEVEN_ZIP ) {
+			return $this->listSevenZip( $path, $maxEntries );
+		}
+
 		if ( $format === self::FORMAT_GZIP || $format === self::FORMAT_BZIP2 ) {
 			if ( $format === self::FORMAT_BZIP2 && !function_exists( 'bzopen' ) ) {
 				return Status::newFatal( 'importdump-archive-bzip2-unavailable' );
@@ -184,6 +217,14 @@ final class ArchiveReader {
 			$entry->size > max( 1, $entry->compressedSize ) * self::MAX_COMPRESSION_RATIO
 		) {
 			return Status::newFatal( 'importdump-archive-ratio' );
+		}
+
+		if ( $format === self::FORMAT_XZ ) {
+			return $this->extractXz( $path, $entry, $destination, $maxSize, $onProgress );
+		}
+
+		if ( $format === self::FORMAT_SEVEN_ZIP ) {
+			return $this->extractSevenZip( $path, $entry, $destination, $maxSize, $onProgress );
 		}
 
 		if ( $this->isTarEntry( $format, $entry ) ) {
@@ -280,9 +321,161 @@ final class ArchiveReader {
 		return Status::newGood();
 	}
 
+	/** Lists an XZ file, which holds a single file or a TAR. */
+	private function listXz( string $path, int $maxEntries, int $maxSize ): Status {
+		if ( !$this->externalBinaries->isEnabled( ExternalBinaries::XZ ) ) {
+			return Status::newFatal( 'importdump-archive-binary-unavailable' );
+		}
+
+		$temp = $this->tempFSFileFactory->newTempFSFile( 'importdump-xz', 'tmp' );
+		if ( !$temp ) {
+			return Status::newFatal( 'importdump-archive-unreadable' );
+		}
+
+		$peek = $this->externalBinaries->peekXz( $path, $temp->getPath() );
+		if ( !$peek->isOK() ) {
+			return $peek;
+		}
+
+		if ( !$this->isTarHeader( $peek->getValue() ) ) {
+			return Status::newGood( [ new ArchiveEntry( 0, '', null, (int)filesize( $path ) ) ] );
+		}
+
+		$unpacked = $this->externalBinaries->decompressXz(
+			$path,
+			$temp->getPath(),
+			$maxSize + self::TAR_HEADER_ALLOWANCE
+		);
+
+		if ( !$unpacked->isOK() ) {
+			return $unpacked;
+		}
+
+		return $this->listTar( $temp->getPath(), self::FORMAT_TAR, $maxEntries, $maxSize );
+	}
+
+	private function extractXz(
+		string $path,
+		ArchiveEntry $entry,
+		string $destination,
+		int $maxSize,
+		?Closure $onProgress
+	): Status {
+		if ( !$this->externalBinaries->isEnabled( ExternalBinaries::XZ ) ) {
+			return Status::newFatal( 'importdump-archive-binary-unavailable' );
+		}
+
+		if ( $onProgress ) {
+			$onProgress( null );
+		}
+
+		if ( $entry->name === '' ) {
+			$unpacked = $this->externalBinaries->decompressXz( $path, $destination, $maxSize );
+			if ( $unpacked->isOK() && $onProgress ) {
+				$onProgress( 100 );
+			}
+
+			return $unpacked->isOK() ? Status::newGood() : $unpacked;
+		}
+
+		$temp = $this->tempFSFileFactory->newTempFSFile( 'importdump-xz', 'tmp' );
+		if ( !$temp ) {
+			return Status::newFatal( 'importdump-archive-unreadable' );
+		}
+
+		$unpacked = $this->externalBinaries->decompressXz(
+			$path,
+			$temp->getPath(),
+			$maxSize + self::TAR_HEADER_ALLOWANCE
+		);
+
+		if ( !$unpacked->isOK() ) {
+			return $unpacked;
+		}
+
+		return $this->extractTar( $temp->getPath(), self::FORMAT_TAR, $entry, $destination, $maxSize, $onProgress );
+	}
+
+	/** Lists the files of a 7z archive. */
+	private function listSevenZip( string $path, int $maxEntries ): Status {
+		if ( !$this->externalBinaries->isEnabled( ExternalBinaries::SEVEN_ZIP ) ) {
+			return Status::newFatal( 'importdump-archive-binary-unavailable' );
+		}
+
+		$temp = $this->tempFSFileFactory->newTempFSFile( 'importdump-7z', 'tmp' );
+		if ( !$temp ) {
+			return Status::newFatal( 'importdump-archive-unreadable' );
+		}
+
+		$listed = $this->externalBinaries->listSevenZip( $path, $temp->getPath(), $maxEntries );
+		if ( !$listed->isOK() ) {
+			return $listed;
+		}
+
+		$entries = [];
+		foreach ( $listed->getValue() as $index => $record ) {
+			if ( $record['kind'] === ExternalBinaries::KIND_DIRECTORY ) {
+				if ( !$this->isSafeName( $record['path'] ) ) {
+					return Status::newFatal( 'importdump-archive-unsafe' );
+				}
+
+				continue;
+			}
+
+			if ( $record['kind'] !== ExternalBinaries::KIND_FILE || $record['encrypted'] ) {
+				return Status::newFatal( 'importdump-archive-unsafe' );
+			}
+
+			if ( !$this->isSafeName( $record['path'] ) || str_ends_with( $record['path'], '/' ) ) {
+				return Status::newFatal( 'importdump-archive-unsafe' );
+			}
+
+			if ( $this->isMetadata( $record['path'] ) ) {
+				continue;
+			}
+
+			$entries[] = new ArchiveEntry( $index, $record['path'], $record['size'], (int)filesize( $path ) );
+		}
+
+		return Status::newGood( $entries );
+	}
+
+	private function extractSevenZip(
+		string $path,
+		ArchiveEntry $entry,
+		string $destination,
+		int $maxSize,
+		?Closure $onProgress
+	): Status {
+		if ( !$this->externalBinaries->isEnabled( ExternalBinaries::SEVEN_ZIP ) ) {
+			return Status::newFatal( 'importdump-archive-binary-unavailable' );
+		}
+
+		if ( $onProgress ) {
+			$onProgress( null );
+		}
+
+		$unpacked = $this->externalBinaries->extractSevenZip( $path, $entry->name, $destination, $maxSize );
+		if ( !$unpacked->isOK() ) {
+			return $unpacked;
+		}
+
+		// The archive says how big the file is, so anything else means it was not what was listed.
+		if ( $entry->size !== null && $unpacked->getValue() !== $entry->size ) {
+			return Status::newFatal( 'importdump-archive-unreadable' );
+		}
+
+		if ( $onProgress ) {
+			$onProgress( 100 );
+		}
+
+		return Status::newGood();
+	}
+
 	private function isTarEntry( string $format, ArchiveEntry $entry ): bool {
-		return $format === self::FORMAT_TAR ||
-			( ( $format === self::FORMAT_GZIP || $format === self::FORMAT_BZIP2 ) && $entry->name !== '' );
+		return $format === self::FORMAT_TAR || (
+			in_array( $format, [ self::FORMAT_GZIP, self::FORMAT_BZIP2 ], true ) && $entry->name !== ''
+		);
 	}
 
 	/**

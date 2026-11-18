@@ -6,6 +6,7 @@ use Generator;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\Upload\ArchiveEntry;
 use Miraheze\ImportDump\Upload\ArchiveReader;
+use Miraheze\ImportDump\Upload\ExternalBinaries;
 use ZipArchive;
 
 /**
@@ -24,7 +25,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
-		$this->reader = new ArchiveReader();
+		$this->reader = $this->newReader( [] );
 	}
 
 	public function testDetectFormat(): void {
@@ -702,6 +703,356 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 				$entry,
 				$this->getNewTempFile(),
 				PHP_INT_MAX,
+				null
+			)
+		);
+	}
+
+	public function testDetectFormatOfProgramFormats(): void {
+		$xz = $this->newFile( ExternalFixtures::decode( ExternalFixtures::XZ_XML ) );
+		$sevenZip = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_ONE ) );
+
+		$this->assertNull( $this->reader->detectFormat( $xz ) );
+		$this->assertNull( $this->reader->detectFormat( $sevenZip ) );
+
+		$onlyXz = $this->newReader( [ ExternalBinaries::XZ => '/not/installed/xz' ] );
+		$this->assertSame( ArchiveReader::FORMAT_XZ, $onlyXz->detectFormat( $xz ) );
+		$this->assertNull( $onlyXz->detectFormat( $sevenZip ) );
+
+		$onlySevenZip = $this->newReader( [ ExternalBinaries::SEVEN_ZIP => '/not/installed/7z' ] );
+		$this->assertNull( $onlySevenZip->detectFormat( $xz ) );
+		$this->assertSame( ArchiveReader::FORMAT_SEVEN_ZIP, $onlySevenZip->detectFormat( $sevenZip ) );
+
+		$empty = $this->newReader( [ ExternalBinaries::XZ => '' ] );
+		$this->assertNull( $empty->detectFormat( $xz ) );
+	}
+
+	public function testExternalMimeTypes(): void {
+		$this->assertSame( [], $this->reader->getExternalMimeTypes() );
+
+		$reader = $this->newReader( [
+			ExternalBinaries::XZ => '/not/installed/xz',
+			ExternalBinaries::SEVEN_ZIP => '/not/installed/7z',
+		] );
+
+		$this->assertSame(
+			[ 'application/x-xz', 'application/x-7z-compressed' ],
+			$reader->getExternalMimeTypes()
+		);
+	}
+
+	public function testProgramThatCannotBeRun(): void {
+		$reader = $this->newReader( [ ExternalBinaries::SEVEN_ZIP => '/not/installed/7z' ] );
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_ONE ) );
+
+		$this->assertStatusError(
+			'importdump-archive-unreadable',
+			$reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 100, self::MAX_SIZE )
+		);
+	}
+
+	public function testProgramFormatsThatAreNotTurnedOn(): void {
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::XZ_XML ) );
+		$this->assertStatusError(
+			'importdump-archive-binary-unavailable',
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_XZ, 100, self::MAX_SIZE )
+		);
+
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_ONE ) );
+		$this->assertStatusError(
+			'importdump-archive-binary-unavailable',
+			$this->reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 100, self::MAX_SIZE )
+		);
+
+		$this->assertStatusError(
+			'importdump-archive-binary-unavailable',
+			$this->reader->extractTo(
+				$path,
+				ArchiveReader::FORMAT_SEVEN_ZIP,
+				new ArchiveEntry( 0, 'dump.xml', 28, 100 ),
+				$this->getNewTempFile(),
+				self::MAX_SIZE,
+				null
+			)
+		);
+	}
+
+	public function testXz(): void {
+		$reader = $this->newReader( [ ExternalBinaries::XZ => $this->requireBinary( ExternalBinaries::XZ ) ] );
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::XZ_XML ) );
+		$this->assertSame( ArchiveReader::FORMAT_XZ, $reader->detectFormat( $path ) );
+
+		$status = $reader->listFiles( $path, ArchiveReader::FORMAT_XZ, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertCount( 1, $status->getValue() );
+		$this->assertSame( '', $status->getValue()[0]->name );
+
+		$destination = $this->getNewTempFile();
+		$percentages = [];
+		$extracted = $reader->extractTo(
+			$path,
+			ArchiveReader::FORMAT_XZ,
+			$status->getValue()[0],
+			$destination,
+			self::MAX_SIZE,
+			static function ( ?int $percent ) use ( &$percentages ): void {
+				$percentages[] = $percent;
+			}
+		);
+
+		$this->assertStatusGood( $extracted );
+		$this->assertSame( ExternalFixtures::XML, file_get_contents( $destination ) );
+		$this->assertSame( [ null, 100 ], $percentages );
+	}
+
+	public function testXzTar(): void {
+		$reader = $this->newReader( [ ExternalBinaries::XZ => $this->requireBinary( ExternalBinaries::XZ ) ] );
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::XZ_TAR ) );
+
+		$status = $reader->listFiles( $path, ArchiveReader::FORMAT_XZ, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertCount( 1, $status->getValue() );
+		$this->assertSame( 'dump.xml', $status->getValue()[0]->name );
+		$this->assertSame( 28, $status->getValue()[0]->size );
+
+		$destination = $this->getNewTempFile();
+		$extracted = $reader->extractTo(
+			$path,
+			ArchiveReader::FORMAT_XZ,
+			$status->getValue()[0],
+			$destination,
+			self::MAX_SIZE,
+			null
+		);
+
+		$this->assertStatusGood( $extracted );
+		$this->assertSame( ExternalFixtures::XML, file_get_contents( $destination ) );
+	}
+
+	public function testXzTarWithSeveralFiles(): void {
+		$reader = $this->newReader( [ ExternalBinaries::XZ => $this->requireBinary( ExternalBinaries::XZ ) ] );
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::XZ_TAR_TWO_FILES ) );
+
+		$status = $reader->listFiles( $path, ArchiveReader::FORMAT_XZ, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertCount( 2, $status->getValue() );
+	}
+
+	public function testXzTarWithLink(): void {
+		$reader = $this->newReader( [ ExternalBinaries::XZ => $this->requireBinary( ExternalBinaries::XZ ) ] );
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::XZ_TAR_LINK ) );
+
+		$this->assertStatusError(
+			'importdump-archive-unsafe',
+			$reader->listFiles( $path, ArchiveReader::FORMAT_XZ, 100, self::MAX_SIZE )
+		);
+	}
+
+	public function testXzExpandingPastTheLimits(): void {
+		$reader = $this->newReader( [ ExternalBinaries::XZ => $this->requireBinary( ExternalBinaries::XZ ) ] );
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::XZ_ZEROS ) );
+		$entry = new ArchiveEntry( 0, '', null, (int)filesize( $path ) );
+
+		$this->assertStatusError(
+			'importdump-archive-ratio',
+			$reader->extractTo(
+				$path,
+				ArchiveReader::FORMAT_XZ,
+				$entry,
+				$this->getNewTempFile(),
+				PHP_INT_MAX,
+				null
+			)
+		);
+
+		$this->assertStatusError(
+			'importdump-archive-too-large',
+			$reader->extractTo( $path, ArchiveReader::FORMAT_XZ, $entry, $this->getNewTempFile(), 100, null )
+		);
+	}
+
+	public function testXzThatWasCutOff(): void {
+		$reader = $this->newReader( [ ExternalBinaries::XZ => $this->requireBinary( ExternalBinaries::XZ ) ] );
+		$xz = ExternalFixtures::decode( ExternalFixtures::XZ_XML );
+		$path = $this->newFile( substr( $xz, 0, strlen( $xz ) - 20 ) );
+
+		$status = $reader->listFiles( $path, ArchiveReader::FORMAT_XZ, 100, self::MAX_SIZE );
+		if ( $status->isOK() ) {
+			$status = $reader->extractTo(
+				$path,
+				ArchiveReader::FORMAT_XZ,
+				$status->getValue()[0],
+				$this->getNewTempFile(),
+				self::MAX_SIZE,
+				null
+			);
+		}
+
+		$this->assertStatusError( 'importdump-archive-unreadable', $status );
+	}
+
+	public function testSevenZip(): void {
+		$reader = $this->newReader( [
+			ExternalBinaries::SEVEN_ZIP => $this->requireBinary( ExternalBinaries::SEVEN_ZIP ),
+		] );
+
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_ONE ) );
+		$this->assertSame( ArchiveReader::FORMAT_SEVEN_ZIP, $reader->detectFormat( $path ) );
+
+		$status = $reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertCount( 1, $status->getValue() );
+		$this->assertSame( 'dump.xml', $status->getValue()[0]->name );
+		$this->assertSame( 28, $status->getValue()[0]->size );
+
+		$destination = $this->getNewTempFile();
+		$percentages = [];
+		$extracted = $reader->extractTo(
+			$path,
+			ArchiveReader::FORMAT_SEVEN_ZIP,
+			$status->getValue()[0],
+			$destination,
+			self::MAX_SIZE,
+			static function ( ?int $percent ) use ( &$percentages ): void {
+				$percentages[] = $percent;
+			}
+		);
+
+		$this->assertStatusGood( $extracted );
+		$this->assertSame( ExternalFixtures::XML, file_get_contents( $destination ) );
+		$this->assertSame( [ null, 100 ], $percentages );
+	}
+
+	public function testSevenZipInADirectory(): void {
+		$reader = $this->newReader( [
+			ExternalBinaries::SEVEN_ZIP => $this->requireBinary( ExternalBinaries::SEVEN_ZIP ),
+		] );
+
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_DIRECTORY ) );
+		$status = $reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertCount( 1, $status->getValue() );
+		$this->assertSame( 'd/dump.xml', $status->getValue()[0]->name );
+
+		$destination = $this->getNewTempFile();
+		$this->assertStatusGood( $reader->extractTo(
+			$path,
+			ArchiveReader::FORMAT_SEVEN_ZIP,
+			$status->getValue()[0],
+			$destination,
+			self::MAX_SIZE,
+			null
+		) );
+
+		$this->assertSame( ExternalFixtures::XML, file_get_contents( $destination ) );
+	}
+
+	public function testSevenZipSkipsMacMetadata(): void {
+		$reader = $this->newReader( [
+			ExternalBinaries::SEVEN_ZIP => $this->requireBinary( ExternalBinaries::SEVEN_ZIP ),
+		] );
+
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_MACOS ) );
+		$status = $reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertCount( 1, $status->getValue() );
+		$this->assertSame( 'dump.xml', $status->getValue()[0]->name );
+	}
+
+	public function testSevenZipWithSeveralFiles(): void {
+		$reader = $this->newReader( [
+			ExternalBinaries::SEVEN_ZIP => $this->requireBinary( ExternalBinaries::SEVEN_ZIP ),
+		] );
+
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_TWO_FILES ) );
+		$status = $reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+		$this->assertCount( 2, $status->getValue() );
+
+		$this->assertStatusError(
+			'importdump-archive-too-many-entries',
+			$reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 2, self::MAX_SIZE )
+		);
+	}
+
+	/** @dataProvider provideUnacceptableSevenZipArchives */
+	public function testSevenZipThatIsNotAcceptable( string $fixture, string $error ): void {
+		$reader = $this->newReader( [
+			ExternalBinaries::SEVEN_ZIP => $this->requireBinary( ExternalBinaries::SEVEN_ZIP ),
+		] );
+
+		$path = $this->newFile( ExternalFixtures::decode( $fixture ) );
+		$this->assertStatusError(
+			$error,
+			$reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 100, self::MAX_SIZE )
+		);
+	}
+
+	public static function provideUnacceptableSevenZipArchives(): Generator {
+		yield 'symbolic link' => [ ExternalFixtures::SEVEN_ZIP_LINK, 'importdump-archive-unsafe' ];
+		yield 'encrypted file' => [ ExternalFixtures::SEVEN_ZIP_ENCRYPTED, 'importdump-archive-unsafe' ];
+		yield 'encrypted headers' => [ ExternalFixtures::SEVEN_ZIP_ENCRYPTED_HEADERS, 'importdump-archive-unreadable' ];
+	}
+
+	public function testSevenZipExpandingPastTheLimits(): void {
+		$reader = $this->newReader( [
+			ExternalBinaries::SEVEN_ZIP => $this->requireBinary( ExternalBinaries::SEVEN_ZIP ),
+		] );
+
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_ZEROS ) );
+		$entry = new ArchiveEntry( 0, 'zeros8.xml', null, (int)filesize( $path ) );
+
+		$this->assertStatusError(
+			'importdump-archive-ratio',
+			$reader->extractTo(
+				$path,
+				ArchiveReader::FORMAT_SEVEN_ZIP,
+				$entry,
+				$this->getNewTempFile(),
+				PHP_INT_MAX,
+				null
+			)
+		);
+
+		$this->assertStatusError(
+			'importdump-archive-too-large',
+			$reader->extractTo( $path, ArchiveReader::FORMAT_SEVEN_ZIP, $entry, $this->getNewTempFile(), 100, null )
+		);
+	}
+
+	public function testSevenZipEntryThatIsNotThere(): void {
+		$reader = $this->newReader( [
+			ExternalBinaries::SEVEN_ZIP => $this->requireBinary( ExternalBinaries::SEVEN_ZIP ),
+		] );
+
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_ONE ) );
+		$this->assertStatusError(
+			'importdump-archive-unreadable',
+			$reader->extractTo(
+				$path,
+				ArchiveReader::FORMAT_SEVEN_ZIP,
+				new ArchiveEntry( 0, 'other.xml', 28, (int)filesize( $path ) ),
+				$this->getNewTempFile(),
+				self::MAX_SIZE,
+				null
+			)
+		);
+	}
+
+	public function testSevenZipEntryThatIsNotAsBigAsListed(): void {
+		$reader = $this->newReader( [
+			ExternalBinaries::SEVEN_ZIP => $this->requireBinary( ExternalBinaries::SEVEN_ZIP ),
+		] );
+
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_ONE ) );
+		$this->assertStatusError(
+			'importdump-archive-unreadable',
+			$reader->extractTo(
+				$path,
+				ArchiveReader::FORMAT_SEVEN_ZIP,
+				new ArchiveEntry( 0, 'dump.xml', 27, (int)filesize( $path ) ),
+				$this->getNewTempFile(),
+				self::MAX_SIZE,
 				null
 			)
 		);

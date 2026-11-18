@@ -14,7 +14,7 @@ use XMLReader;
 /**
  * Unpacks and checks an uploaded dump. The upload may be a MediaWiki XML export,
  * or a ZIP, TAR, GZIP or BZIP2 archive that holds exactly one. A TAR can be compressed with
- * GZIP or BZIP2.
+ * GZIP or BZIP2. XZ and 7z archives are read too if the wiki has set up the programs for them.
  */
 class DumpProcessor implements RequestHistory {
 
@@ -26,6 +26,7 @@ class DumpProcessor implements RequestHistory {
 
 	public const array XML_MIME_TYPES = [ 'application/xml', 'text/xml' ];
 
+	/** The archives that PHP can read itself. */
 	public const array ARCHIVE_MIME_TYPES = [
 		'application/zip',
 		'application/gzip',
@@ -33,8 +34,6 @@ class DumpProcessor implements RequestHistory {
 		'application/x-gzip',
 		'application/x-tar',
 	];
-
-	public const array ACCEPTED_MIME_TYPES = [ ...self::XML_MIME_TYPES, ...self::ARCHIVE_MIME_TYPES ];
 
 	/** Plain XML files up to this many bytes are checked while a request is submitted. */
 	public const int INLINE_SIZE_LIMIT = 67108864;
@@ -64,6 +63,16 @@ class DumpProcessor implements RequestHistory {
 		private readonly UploadVerification $uploadVerification,
 	) {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
+	}
+
+	/** @return list<string> The MIME types of all the archives that can be read on this wiki. */
+	public function getArchiveMimeTypes(): array {
+		return [ ...self::ARCHIVE_MIME_TYPES, ...$this->archiveReader->getExternalMimeTypes() ];
+	}
+
+	/** @return list<string> The MIME types of everything that can be uploaded on this wiki. */
+	public function getAcceptedMimeTypes(): array {
+		return [ ...self::XML_MIME_TYPES, ...$this->getArchiveMimeTypes() ];
 	}
 
 	/**

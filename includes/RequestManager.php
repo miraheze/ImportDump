@@ -77,7 +77,7 @@ class RequestManager {
 		private readonly UserFactory $userFactory,
 		private readonly UserGroupManagerFactory $userGroupManagerFactory,
 		private readonly VerificationProgress $verificationProgress,
-		private readonly ?ModuleFactory $moduleFactory
+		private readonly ?ModuleFactory $moduleFactory,
 	) {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
 	}

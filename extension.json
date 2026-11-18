@@ -257,6 +257,10 @@
 			"value": false,
 			"description": "Whether to check if an uploaded dump has the full revision history of its pages, and tell handlers what was found. The result is a guess, see the message that is shown on the request."
 		},
+		"ImportDumpExternalBinaries": {
+			"value": [],
+			"description": "A mapping of 'format => path to a program' that turns on the archive formats that PHP cannot read itself. The formats are 'xz', for XZ files and TAR files compressed with XZ, and '7z', for 7z archives. Each needs the program that unpacks it, for example [ 'xz' => '/usr/bin/xz', '7z' => '/usr/bin/7zz' ]. The programs run through the shell command settings of MediaWiki, so they are sandboxed if $wgShellRestrictionMethod is set up, and they only ever get a copy of the uploaded file. Formats that are not listed are not accepted. Leave empty to turn all of them off."
+		},
 		"ImportDumpFileExpiryDays": {
 			"value": [],
 			"description": "A mapping of 'status => days' for deleting the stored XML file of an import request once it is older than that many days, by running the ExpireFiles maintenance script. Only 'complete', 'declined' and 'failed' can be used. Statuses that are not listed are never expired. Leave empty to disable. Age is counted from when the request was made."

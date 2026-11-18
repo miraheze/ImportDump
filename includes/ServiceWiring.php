@@ -9,6 +9,7 @@ use MediaWiki\MediaWikiServices;
 use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
+use Miraheze\ImportDump\Upload\ExternalBinaries;
 
 // PHPUnit does not understand coverage for this file.
 // It is covered though, see ServiceWiringTest.
@@ -20,13 +21,25 @@ return [
 	},
 	'ImportDumpDumpProcessor' => static function ( MediaWikiServices $services ): DumpProcessor {
 		return new DumpProcessor(
-			new ArchiveReader(),
+			new ArchiveReader(
+				$services->get( 'ImportDumpExternalBinaries' ),
+				$services->getTempFSFileFactory()
+			),
 			new ServiceOptions(
 				DumpProcessor::CONSTRUCTOR_OPTIONS,
 				$services->get( 'ImportDumpConfig' )
 			),
 			$services->getTempFSFileFactory(),
 			$services->getUploadVerification()
+		);
+	},
+	'ImportDumpExternalBinaries' => static function ( MediaWikiServices $services ): ExternalBinaries {
+		return new ExternalBinaries(
+			$services->getShellCommandFactory(),
+			new ServiceOptions(
+				ExternalBinaries::CONSTRUCTOR_OPTIONS,
+				$services->get( 'ImportDumpConfig' )
+			)
 		);
 	},
 	'ImportDumpHeartbeat' => static function ( MediaWikiServices $services ): ImportHeartbeat {

@@ -122,7 +122,7 @@ class SpecialRequestImport extends FormSpecialPage
 					'label-message' => 'importdump-label-upload-file',
 					'help-message' => 'importdump-help-upload-file',
 					'hide-if' => [ '!==', 'wpUploadSourceType', 'File' ],
-					'accept' => DumpProcessor::ACCEPTED_MIME_TYPES,
+					'accept' => $this->dumpProcessor->getAcceptedMimeTypes(),
 				],
 				'UploadFileURL' => [
 					'type' => 'url',
@@ -138,7 +138,7 @@ class SpecialRequestImport extends FormSpecialPage
 					'type' => 'file',
 					'label-message' => 'importdump-label-upload-file',
 					'help-message' => 'importdump-help-upload-file',
-					'accept' => DumpProcessor::ACCEPTED_MIME_TYPES,
+					'accept' => $this->dumpProcessor->getAcceptedMimeTypes(),
 				],
 			];
 		}
@@ -238,13 +238,13 @@ class SpecialRequestImport extends FormSpecialPage
 		}
 
 		$mime = $this->mimeAnalyzer->guessMimeType( $uploadBase->getTempPath() );
-		if ( !in_array( $mime, DumpProcessor::ACCEPTED_MIME_TYPES, true ) ) {
+		if ( !in_array( $mime, $this->dumpProcessor->getAcceptedMimeTypes(), true ) ) {
 			return Status::newFatal( 'filetype-mime-mismatch', 'xml', $mime );
 		}
 
 		// Archives, and files too big to check here, are checked by a job. The request waits
 		// until then, and the file is kept apart from the ones that can be imported.
-		$verifyLater = in_array( $mime, DumpProcessor::ARCHIVE_MIME_TYPES, true ) ||
+		$verifyLater = in_array( $mime, $this->dumpProcessor->getArchiveMimeTypes(), true ) ||
 			$uploadBase->getFileSize() > DumpProcessor::INLINE_SIZE_LIMIT;
 
 		$history = null;

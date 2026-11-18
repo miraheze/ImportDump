@@ -21,7 +21,7 @@ class RequestViewer implements RequestStatus {
 	public function __construct(
 		private readonly Config $config,
 		private readonly IContextSource $context,
-		private readonly RequestManager $requestManager
+		private readonly RequestManager $requestManager,
 	) {
 	}
 

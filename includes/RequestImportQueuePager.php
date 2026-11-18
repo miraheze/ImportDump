@@ -19,7 +19,7 @@ class RequestImportQueuePager extends TablePager
 		private readonly UserFactory $userFactory,
 		private readonly string $requester,
 		private readonly string $status,
-		private readonly string $target
+		private readonly string $target,
 	) {
 		parent::__construct( $context, $linkRenderer );
 		$this->mDb = $connectionProvider->getReplicaDatabase( 'virtual-importdump' );

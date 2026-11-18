@@ -15,7 +15,7 @@ use Wikimedia\Rdbms\IConnectionProvider;
 class Notifications implements BeforeCreateEchoEventHook {
 
 	public function __construct(
-		private readonly IConnectionProvider $connectionProvider
+		private readonly IConnectionProvider $connectionProvider,
 	) {
 	}
 

@@ -13,7 +13,6 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 	private const array TYPES = [
 		'xml' => [
 			'extension' => 'xml',
-			'mimeTypes' => DumpProcessor::ACCEPTED_MIME_TYPES,
 		],
 	];
 
@@ -76,12 +75,14 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 			];
 		}
 
-		$mime = MediaWikiServices::getInstance()
-			->getMimeAnalyzer()
-			->guessMimeType( $this->getTempPath() );
+		$services = MediaWikiServices::getInstance();
+		$mime = $services->getMimeAnalyzer()->guessMimeType( $this->getTempPath() );
 
 		$definition = self::TYPES[$this->type];
-		if ( !in_array( $mime, $definition['mimeTypes'], true ) ) {
+		$processor = $services->getService( 'ImportDumpDumpProcessor' );
+		'@phan-var DumpProcessor $processor';
+
+		if ( !in_array( $mime, $processor->getAcceptedMimeTypes(), true ) ) {
 			return [
 				'status' => self::VERIFICATION_ERROR,
 				'details' => [ 'filetype-mime-mismatch', $definition['extension'], $mime ],
