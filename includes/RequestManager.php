@@ -41,6 +41,7 @@ class RequestManager {
 
 	public const CONSTRUCTOR_OPTIONS = [
 		ConfigNames::InterwikiMap,
+		ConfigNames::MaintenanceCommand,
 		ConfigNames::ScriptCommand,
 	];
 
@@ -428,13 +429,15 @@ class RequestManager {
 
 	/** @return string[] */
 	public function getRemainingCommands(): array {
-		$wiki = $this->getTarget();
 		$scripts = [
-			RequestStage::STAGE_SITESTATS => [ 'initSiteStats.php --update' ],
-			RequestStage::STAGE_TEXTINDEX => [ 'rebuildtextindex.php' ],
-			RequestStage::STAGE_RECENTCHANGES => [ 'rebuildrecentchanges.php' ],
-			RequestStage::STAGE_REFRESHLINKS => [ 'refreshLinks.php' ],
-			RequestStage::STAGE_COUNTS => [ 'initEditCount.php', 'updateArticleCount.php --update' ],
+			RequestStage::STAGE_SITESTATS => [ 'initSiteStats.php' => '--update' ],
+			RequestStage::STAGE_TEXTINDEX => [ 'rebuildtextindex.php' => '' ],
+			RequestStage::STAGE_RECENTCHANGES => [ 'rebuildrecentchanges.php' => '' ],
+			RequestStage::STAGE_REFRESHLINKS => [ 'refreshLinks.php' => '' ],
+			RequestStage::STAGE_COUNTS => [
+				'initEditCount.php' => '',
+				'updateArticleCount.php' => '--update',
+			],
 		];
 
 		$commands = [];
@@ -444,8 +447,12 @@ class RequestManager {
 		);
 
 		foreach ( $remaining as $stage ) {
-			foreach ( $scripts[$stage] ?? [] as $script ) {
-				$commands[] = 'php ' . MW_INSTALL_PATH . "/maintenance/$script --wiki=$wiki";
+			foreach ( $scripts[$stage] ?? [] as $script => $arguments ) {
+				$commands[] = trim( str_replace(
+					[ '{IP}', '{wiki}', '{script}', '{script-name}', '{arguments}' ],
+					[ MW_INSTALL_PATH, $this->getTarget(), $script, basename( $script, '.php' ), $arguments ],
+					$this->options->get( ConfigNames::MaintenanceCommand )
+				) );
 			}
 		}
 
