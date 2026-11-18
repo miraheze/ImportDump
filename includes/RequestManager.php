@@ -29,6 +29,7 @@ use Wikimedia\Rdbms\IExpression;
 use Wikimedia\Rdbms\LikeValue;
 use Wikimedia\Rdbms\Platform\ISQLPlatform;
 use Wikimedia\Rdbms\SelectQueryBuilder;
+use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 class RequestManager {
 
@@ -39,7 +40,14 @@ class RequestManager {
 		'RequestImport Status Update',
 	];
 
+	public const array EXPIRABLE_STATUSES = [
+		RequestStatus::STATUS_COMPLETE,
+		RequestStatus::STATUS_DECLINED,
+		RequestStatus::STATUS_FAILED,
+	];
+
 	public const CONSTRUCTOR_OPTIONS = [
+		ConfigNames::FileExpiryDays,
 		ConfigNames::InterwikiMap,
 		ConfigNames::MaintenanceCommand,
 		ConfigNames::ScriptCommand,
@@ -389,6 +397,29 @@ class RequestManager {
 		}
 
 		return $success;
+	}
+
+	public function getFileExpiryDays(): int {
+		if ( !in_array( $this->getStatus(), self::EXPIRABLE_STATUSES, true ) ) {
+			return 0;
+		}
+
+		$expiry = $this->options->get( ConfigNames::FileExpiryDays );
+		return is_array( $expiry ) ? (int)( $expiry[$this->getStatus()] ?? 0 ) : 0;
+	}
+
+	public function isPastFileExpiry(): bool {
+		$days = $this->getFileExpiryDays();
+		if ( $days <= 0 ) {
+			return false;
+		}
+
+		$expires = (int)wfTimestamp( TS_UNIX, $this->getTimestamp() ) + $days * 86400;
+		return $expires <= (int)ConvertibleTimestamp::now( TS_UNIX );
+	}
+
+	public function hasFileExpired(): bool {
+		return $this->isPastFileExpiry() && !$this->fileExists();
 	}
 
 	public function getFileSize(): int {
