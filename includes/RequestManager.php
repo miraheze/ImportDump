@@ -33,7 +33,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 class RequestManager {
 
-	private const SYSTEM_USERS = [
+	private const array SYSTEM_USERS = [
 		'ImportDump Extension',
 		'ImportDump Status Update',
 		'RequestImport Extension',
@@ -46,7 +46,7 @@ class RequestManager {
 		RequestStatus::STATUS_FAILED,
 	];
 
-	public const CONSTRUCTOR_OPTIONS = [
+	public const array CONSTRUCTOR_OPTIONS = [
 		ConfigNames::FileExpiryDays,
 		ConfigNames::InterwikiMap,
 		ConfigNames::MaintenanceCommand,
@@ -591,6 +591,8 @@ class RequestManager {
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();
+
+		$this->row->request_status = $status;
 
 		if ( $oldStatus !== $status ) {
 			$this->hookRunner->onImportDumpRequestStatusUpdate( $this, $status, $oldStatus );
