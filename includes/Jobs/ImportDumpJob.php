@@ -22,6 +22,7 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\ImportHeartbeat;
 use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\RequestStage;
 use Miraheze\ImportDump\RequestStatus;
 use RebuildRecentchanges;
 use RebuildTextIndex;
@@ -31,7 +32,7 @@ use UpdateArticleCount;
 use Wikimedia\Rdbms\IConnectionProvider;
 
 class ImportDumpJob extends Job
-	implements RequestStatus {
+	implements RequestStage, RequestStatus {
 
 	public const string JOB_NAME = 'ImportDumpJob';
 
@@ -49,6 +50,7 @@ class ImportDumpJob extends Job
 
 	private bool $running = false;
 	private int $lastBeat = 0;
+	private string $startStage = self::STAGE_IMPORT;
 	private int $refreshLinksChunkSize = 1000;
 
 	public function __construct(
@@ -78,6 +80,7 @@ class ImportDumpJob extends Job
 			return true;
 		}
 
+		$this->startStage = $this->requestManager->getStage() ?: self::STAGE_IMPORT;
 		$filePath = wfTempDir() . '/' . $this->requestManager->getFileName();
 
 		$this->running = true;
@@ -85,21 +88,27 @@ class ImportDumpJob extends Job
 		$this->beat( force: true );
 
 		try {
-			$this->hookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
+			$importStreamSource = null;
+			if ( $this->startStage === self::STAGE_IMPORT ) {
+				$this->hookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
 
-			// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
-			$importStreamSource = $this->getImportSource( $filePath );
-			if ( !$importStreamSource ) {
-				return true;
+				// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
+				$importStreamSource = $this->getImportSource( $filePath );
+				if ( !$importStreamSource ) {
+					return true;
+				}
 			}
 
 			$this->queueNotification( self::STATUS_INPROGRESS, '' );
 
-			$this->importPages( $importStreamSource );
+			if ( $importStreamSource ) {
+				$this->enterStage( self::STAGE_IMPORT );
+				$this->importPages( $importStreamSource );
+			}
+
 			$this->updateSiteStats();
 			$this->runMaintenanceScripts();
-
-			$this->hookRunner->onImportDumpJobAfterImport( $filePath, $this->requestManager );
+			$this->runAfterImport( $filePath );
 		} catch ( Throwable $t ) {
 			// We want to handle any potential errors gracefully.
 			MWExceptionHandler::rollbackPrimaryChangesAndLog( $t );
@@ -146,6 +155,10 @@ class ImportDumpJob extends Job
 	}
 
 	private function updateSiteStats(): void {
+		if ( !$this->enterStage( self::STAGE_SITESTATS ) ) {
+			return;
+		}
+
 		$siteStatsInit = new SiteStatsInit();
 		$siteStatsInit->refresh();
 
@@ -162,7 +175,10 @@ class ImportDumpJob extends Job
 	}
 
 	private function rebuildTextIndex( FakeMaintenance $maintenance ): void {
-		if ( $this->config->get( MainConfigNames::DisableSearchUpdate ) ) {
+		if (
+			$this->config->get( MainConfigNames::DisableSearchUpdate ) ||
+			!$this->enterStage( self::STAGE_TEXTINDEX )
+		) {
 			return;
 		}
 
@@ -172,12 +188,20 @@ class ImportDumpJob extends Job
 	}
 
 	private function rebuildRecentChanges( FakeMaintenance $maintenance ): void {
+		if ( !$this->enterStage( self::STAGE_RECENTCHANGES ) ) {
+			return;
+		}
+
 		$rebuildRC = $maintenance->createChild( RebuildRecentchanges::class );
 		$rebuildRC->execute();
 		$this->beat( force: true );
 	}
 
 	private function refreshLinks( FakeMaintenance $maintenance ): void {
+		if ( !$this->enterStage( self::STAGE_REFRESHLINKS ) ) {
+			return;
+		}
+
 		$dbr = $this->connectionProvider->getReplicaDatabase();
 
 		// Run in page ID ranges so we can beat between them. RefreshLinks can
@@ -210,12 +234,31 @@ class ImportDumpJob extends Job
 	}
 
 	private function updateCounts( FakeMaintenance $maintenance ): void {
+		if ( !$this->enterStage( self::STAGE_COUNTS ) ) {
+			return;
+		}
+
 		$initEditCount = $maintenance->createChild( InitEditCount::class );
 		$initEditCount->execute();
 
 		$updateArticleCount = $maintenance->createChild( UpdateArticleCount::class );
 		$updateArticleCount->setOption( 'update', true );
 		$updateArticleCount->execute();
+	}
+
+	private function runAfterImport( string $filePath ): void {
+		$this->enterStage( self::STAGE_AFTERIMPORT );
+		$this->hookRunner->onImportDumpJobAfterImport( $filePath, $this->requestManager );
+	}
+
+	private function enterStage( string $stage ): bool {
+		$order = array_flip( self::STAGES );
+		if ( $order[$stage] < $order[$this->startStage] ) {
+			return false;
+		}
+
+		$this->requestManager->setStage( $stage );
+		return true;
 	}
 
 	private function cleanup( string $filePath ): void {
@@ -266,7 +309,8 @@ class ImportDumpJob extends Job
 	}
 
 	private function notifyFailed(): void {
-		$this->queueNotification( self::STATUS_FAILED, $this->jobError );
+		$status = $this->requestManager->hasImported() ? self::STATUS_PARTIAL : self::STATUS_FAILED;
+		$this->queueNotification( $status, $this->jobError );
 	}
 
 	private function queueNotification( string $status, string $error ): void {
