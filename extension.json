@@ -43,6 +43,7 @@
 			"services": [
 				"ConnectionProvider",
 				"ImportDumpConfig",
+				"ImportDumpHeartbeat",
 				"ImportDumpHookRunner",
 				"ImportDumpRequestManager",
 				"JobQueueGroupFactory",
@@ -236,6 +237,10 @@
 		"ImportDumpScriptCommand": {
 			"value": "php {IP}/maintenance/importDump.php --wiki={wiki} --username-prefix=\"{username-prefix}\" {file-path}",
 			"description": "Generated maintenance script command to use. If $wgImportDumpEnableAutomatedJob is enabled, this is not displayed unless the status is 'failed'."
+		},
+		"ImportDumpStalledImportHours": {
+			"value": null,
+			"description": "Number of hours without any sign of progress after which an import that is 'in progress' is treated as stalled by the FailStalledImports maintenance script, which marks it as failed. The import job reports progress about once a minute while pages are imported. Leave as null to disable."
 		},
 		"ImportDumpUsersNotifiedOnAllRequests": {
 			"value": [],
