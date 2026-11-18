@@ -284,7 +284,7 @@ final class ArchiveReader {
 	 *
 	 * @param string $path
 	 * @param string $format
-	 * @return resource|false
+	 * @return mixed A stream resource, or false if the file could not be opened.
 	 */
 	private function openStream( string $path, string $format ): mixed {
 		return match ( $format ) {
