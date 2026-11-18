@@ -118,7 +118,7 @@ final class ProgressStream {
 	 * @param int $arg1 @phan-unused-param
 	 * @param ?int $arg2 @phan-unused-param
 	 */
-	public function stream_set_option( int $option, int $arg1, ?int $arg2 ): bool {
+	public function stream_set_option( int $option, int $arg1, ?int $arg2 ): false {
 		return false;
 	}
 
