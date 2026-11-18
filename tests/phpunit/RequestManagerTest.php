@@ -239,6 +239,24 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	}
 
 	/**
+	 * @covers ::getUserGroupsFromTarget
+	 */
+	public function testGetUserGroupsFromTarget(): void {
+		$none = wfMessage( 'importdump-usergroups-none' )->text();
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setTarget( WikiMap::getCurrentWikiId() );
+		$manager = $this->getRequestManager( id: 1 );
+
+		$this->assertSame( [ $none ], $manager->getUserGroupsFromTarget() );
+
+		$this->getServiceContainer()->getUserGroupManager()
+			->addUserToGroup( $this->getTestUser()->getUser(), 'bureaucrat' );
+
+		$this->assertSame( [ 'bureaucrat' ], $manager->getUserGroupsFromTarget() );
+	}
+
+	/**
 	 * @covers ::getFileExpiryDays
 	 * @covers ::isPastFileExpiry
 	 * @covers ::hasFileExpired
