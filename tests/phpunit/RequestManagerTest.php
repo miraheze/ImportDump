@@ -513,7 +513,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$manager = $this->getRequestManager( id: 1 );
 		$this->assertFalse( $manager->isViewableBy( $anon ) );
 		$this->assertFalse( $manager->isViewableBy( $other ) );
-		$this->assertTrue( $manager->isViewableBy( $this->getTestUser()->getAuthority() ) );
+		$this->assertTrue( $manager->isViewableBy( $manager->getRequester() ) );
 		$this->assertTrue( $manager->isViewableBy( $handler ) );
 	}
 }
