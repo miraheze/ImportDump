@@ -29,17 +29,25 @@ use Wikimedia\Rdbms\IExpression;
 use Wikimedia\Rdbms\LikeValue;
 use Wikimedia\Rdbms\Platform\ISQLPlatform;
 use Wikimedia\Rdbms\SelectQueryBuilder;
+use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 class RequestManager {
 
-	private const SYSTEM_USERS = [
+	private const array SYSTEM_USERS = [
 		'ImportDump Extension',
 		'ImportDump Status Update',
 		'RequestImport Extension',
 		'RequestImport Status Update',
 	];
 
-	public const CONSTRUCTOR_OPTIONS = [
+	public const array EXPIRABLE_STATUSES = [
+		RequestStatus::STATUS_COMPLETE,
+		RequestStatus::STATUS_DECLINED,
+		RequestStatus::STATUS_FAILED,
+	];
+
+	public const array CONSTRUCTOR_OPTIONS = [
+		ConfigNames::FileExpiryDays,
 		ConfigNames::InterwikiMap,
 		ConfigNames::MaintenanceCommand,
 		ConfigNames::ScriptCommand,
@@ -336,9 +344,11 @@ class RequestManager {
 			return [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
 		}
 
-		return $this->userGroupManagerFactory
+		$groups = $this->userGroupManagerFactory
 			->getUserGroupManager( $this->getTarget() )
 			->getUserGroups( $remoteUser );
+
+		return $groups ?: [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
 	}
 
 	public function getFilePath(): string {
@@ -389,6 +399,29 @@ class RequestManager {
 		}
 
 		return $success;
+	}
+
+	public function getFileExpiryDays(): int {
+		if ( !in_array( $this->getStatus(), self::EXPIRABLE_STATUSES, true ) ) {
+			return 0;
+		}
+
+		$expiry = $this->options->get( ConfigNames::FileExpiryDays );
+		return is_array( $expiry ) ? (int)( $expiry[$this->getStatus()] ?? 0 ) : 0;
+	}
+
+	public function isPastFileExpiry(): bool {
+		$days = $this->getFileExpiryDays();
+		if ( $days <= 0 ) {
+			return false;
+		}
+
+		$expires = (int)wfTimestamp( TS_UNIX, $this->getTimestamp() ) + $days * 86400;
+		return $expires <= (int)ConvertibleTimestamp::now( TS_UNIX );
+	}
+
+	public function hasFileExpired(): bool {
+		return $this->isPastFileExpiry() && !$this->fileExists();
 	}
 
 	public function getFileSize(): int {
@@ -558,6 +591,8 @@ class RequestManager {
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();
+
+		$this->row->request_status = $status;
 
 		if ( $oldStatus !== $status ) {
 			$this->hookRunner->onImportDumpRequestStatusUpdate( $this, $status, $oldStatus );

@@ -50,6 +50,7 @@
 	"importdump-import-started": "Message displayed when the import is successfully started.",
 	"importdump-info-already-imported": "Notice shown on Special:RequestImportQueue to handlers when the pages were already imported but the job stopped later. $1 is the name of the step that it stopped at.",
 	"importdump-info-command": "The generated command that is displayed on the 'handling' section of Special:RequestImportQueue. $1 is the generated command.",
+	"importdump-info-file-expired": "Message shown on a request when its uploaded file no longer exists and the request is older than the retention period set in $wgImportDumpFileExpiryDays. $1 is the number of days; $2 is the lowercase status of the request.",
 	"importdump-info-filesize": "The file size for the uploaded XML file. $1 is the file size.",
 	"importdump-info-groups": "User groups that the requester has on the target wiki. Displayed on the 'handling' section of Special:RequestImportQueue.\n* $1 is the requester's username\n* $2 is the target wiki's database name\n* $3 is the comma-separated list of user groups",
 	"importdump-info-interwiki": "The information displayed on the 'handling' section of Special:RequestImportQueue, when there is no interwiki prefix present, and you have the necessary rights to insert a prefix. $1 is the target database name.",

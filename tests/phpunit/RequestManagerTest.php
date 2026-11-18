@@ -5,6 +5,11 @@ namespace Miraheze\ImportDump\Tests;
 use MediaWiki\FileRepo\LocalRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\MainConfigNames;
+use MediaWiki\User\ActorStoreFactory;
+use MediaWiki\User\UserGroupManager;
+use MediaWiki\User\UserGroupManagerFactory;
+use MediaWiki\User\UserIdentityLookup;
+use MediaWiki\User\UserIdentityValue;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
@@ -236,6 +241,89 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 			],
 			$manager->getRemainingCommands()
 		);
+	}
+
+	/**
+	 * @covers ::getUserGroupsFromTarget
+	 * @dataProvider provideUserGroupsFromTarget
+	 */
+	public function testGetUserGroupsFromTarget( ?array $groups, array $expected ): void {
+		$lookup = $this->createMock( UserIdentityLookup::class );
+		$lookup->method( 'getUserIdentityByName' )->willReturn(
+			$groups === null ? null : new UserIdentityValue( 1, 'Test user' )
+		);
+
+		$actorStoreFactory = $this->createMock( ActorStoreFactory::class );
+		$actorStoreFactory->method( 'getUserIdentityLookup' )->willReturn( $lookup );
+
+		$groupManager = $this->createMock( UserGroupManager::class );
+		$groupManager->method( 'getUserGroups' )->willReturn( $groups ?? [] );
+
+		$groupManagerFactory = $this->createMock( UserGroupManagerFactory::class );
+		$groupManagerFactory->method( 'getUserGroupManager' )->willReturn( $groupManager );
+
+		$this->setService( 'ActorStoreFactory', $actorStoreFactory );
+		$this->setService( 'UserGroupManagerFactory', $groupManagerFactory );
+
+		$manager = $this->getRequestManager( id: 1 );
+
+		$this->assertSame(
+			array_map(
+				static fn ( string $group ): string => $group === 'none' ?
+					wfMessage( 'importdump-usergroups-none' )->text() : $group,
+				$expected
+			),
+			$manager->getUserGroupsFromTarget()
+		);
+	}
+
+	public static function provideUserGroupsFromTarget(): array {
+		return [
+			'user does not exist on the target' => [ null, [ 'none' ] ],
+			'user has no groups' => [ [], [ 'none' ] ],
+			'user has one group' => [ [ 'bureaucrat' ], [ 'bureaucrat' ] ],
+			'user has several groups' => [ [ 'bureaucrat', 'sysop' ], [ 'bureaucrat', 'sysop' ] ],
+		];
+	}
+
+	/**
+	 * @covers ::getFileExpiryDays
+	 * @covers ::isPastFileExpiry
+	 * @covers ::hasFileExpired
+	 * @dataProvider provideFileExpiry
+	 */
+	public function testFileExpiry(
+		string $status,
+		array $config,
+		int $daysElapsed,
+		int $expectedDays,
+		bool $expectedPast
+	): void {
+		$this->overrideConfigValue( ConfigNames::FileExpiryDays, $config );
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setStatus( $status );
+
+		ConvertibleTimestamp::setFakeTime(
+			(int)wfTimestamp( TS_UNIX, $manager->getTimestamp() ) + $daysElapsed * 86400
+		);
+
+		$this->assertSame( $expectedDays, $manager->getFileExpiryDays() );
+		$this->assertSame( $expectedPast, $manager->isPastFileExpiry() );
+
+		// The file does not exist in this test.
+		$this->assertSame( $expectedPast, $manager->hasFileExpired() );
+	}
+
+	public static function provideFileExpiry(): array {
+		return [
+			'past the retention period' => [ self::STATUS_COMPLETE, [ self::STATUS_COMPLETE => 7 ], 8, 7, true ],
+			'exactly at the retention period' => [ self::STATUS_FAILED, [ self::STATUS_FAILED => 3 ], 3, 3, true ],
+			'within the retention period' => [ self::STATUS_COMPLETE, [ self::STATUS_COMPLETE => 7 ], 6, 7, false ],
+			'status is not configured' => [ self::STATUS_DECLINED, [ self::STATUS_COMPLETE => 7 ], 30, 0, false ],
+			'status that never expires' => [ self::STATUS_PARTIAL, [ self::STATUS_PARTIAL => 1 ], 30, 0, false ],
+			'nothing configured' => [ self::STATUS_COMPLETE, [], 30, 0, false ],
+		];
 	}
 
 	/**

@@ -46,6 +46,10 @@ class RequestViewer implements RequestStatus {
 			);
 		}
 
+		if ( !$authority->isAllowed( 'handle-import-requests' ) && $this->requestManager->hasFileExpired() ) {
+			$this->context->getOutput()->addHTML( Html::noticeBox( $this->getExpiredInfo(), '' ) );
+		}
+
 		$this->context->getOutput()->enableOOUI();
 
 		$formDescriptor = [
@@ -219,6 +223,16 @@ class RequestViewer implements RequestStatus {
 					'label' => new HtmlSnippet( $fileInfo ),
 					'type' => 'notice',
 				] );
+			} elseif ( $this->requestManager->isPastFileExpiry() ) {
+				$info = new MessageWidget( [
+					'label' => new HtmlSnippet( $this->getExpiredInfo() ),
+					'type' => 'notice',
+				] );
+
+				$validRequest = false;
+				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
+					$status = self::STATUS_DECLINED;
+				}
 			} else {
 				$info = new MessageWidget( [
 					'label' => new HtmlSnippet(
@@ -469,6 +483,17 @@ class RequestViewer implements RequestStatus {
 				'default' => $this->context->msg( "importdump-stage-$stage" )->text(),
 			],
 		];
+	}
+
+	private function getExpiredInfo(): string {
+		$status = mb_strtolower(
+			$this->context->msg( 'importdump-label-' . $this->requestManager->getStatus() )->text()
+		);
+
+		return $this->context->msg( 'importdump-info-file-expired' )
+			->numParams( $this->requestManager->getFileExpiryDays() )
+			->params( $status )
+			->escaped();
 	}
 
 	private function getImportedInfo(): string {
