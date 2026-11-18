@@ -2,21 +2,17 @@
 
 namespace Miraheze\ImportDump\Tests\Jobs;
 
-use MediaWiki\Config\Config;
-use MediaWiki\Import\WikiImporterFactory;
-use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\MainConfigNames;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\ImportHeartbeat;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 use RuntimeException;
-use Wikimedia\Rdbms\IConnectionProvider;
+use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
@@ -68,61 +64,6 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 
 		$this->assertInstanceOf( ImportDumpJob::class, $job );
 		return $job;
-	}
-
-	private function newChunkedJob( int $requestID, int $chunkSize ): ImportDumpJob {
-		$services = $this->getServiceContainer();
-		$config = $services->getService( 'ImportDumpConfig' );
-		$heartbeat = $services->getService( 'ImportDumpHeartbeat' );
-		$hookRunner = $services->getService( 'ImportDumpHookRunner' );
-		$requestManager = $services->getService( 'ImportDumpRequestManager' );
-		'@phan-var Config $config';
-		'@phan-var ImportHeartbeat $heartbeat';
-		'@phan-var HookRunner $hookRunner';
-		'@phan-var RequestManager $requestManager';
-
-		return new class(
-			[
-				'requestid' => $requestID,
-				'username' => $this->getTestUser()->getUser()->getName(),
-			],
-			$services->getConnectionProvider(),
-			$config,
-			$heartbeat,
-			$hookRunner,
-			$requestManager,
-			$services->getJobQueueGroupFactory(),
-			$services->getWikiImporterFactory(),
-			$chunkSize
-		) extends ImportDumpJob {
-
-			public function __construct(
-				array $params,
-				IConnectionProvider $connectionProvider,
-				Config $config,
-				ImportHeartbeat $heartbeat,
-				HookRunner $hookRunner,
-				RequestManager $requestManager,
-				JobQueueGroupFactory $jobQueueGroupFactory,
-				WikiImporterFactory $wikiImporterFactory,
-				private readonly int $chunkSize,
-			) {
-				parent::__construct(
-					$params,
-					$connectionProvider,
-					$config,
-					$heartbeat,
-					$hookRunner,
-					$requestManager,
-					$jobQueueGroupFactory,
-					$wikiImporterFactory
-				);
-			}
-
-			protected function getRefreshLinksChunkSize(): int {
-				return $this->chunkSize;
-			}
-		};
 	}
 
 	private function getRequestManager( int $id ): RequestManager {
@@ -301,7 +242,9 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 		$this->setTemporaryHook( 'ImportDumpJobGetFile', $this->writeEmptyDump( ... ) );
 
 		$id = $this->addRequest();
-		$this->assertTrue( $this->newChunkedJob( $id, $chunkSize )->run() );
+		$job = $this->newJob( $id );
+		TestingAccessWrapper::newFromObject( $job )->refreshLinksChunkSize = $chunkSize;
+		$this->assertTrue( $job->run() );
 
 		$this->assertEqualsCanonicalizing( $pageIds, array_map( 'intval', $getLinkedPages() ) );
 		$this->assertSame(
