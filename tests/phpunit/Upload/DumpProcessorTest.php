@@ -26,7 +26,6 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 
 	private const int MAX_SIZE = 1048576;
 
-	/** @param array<string, string> $binaries Format to the program that unpacks it. */
 	private function newProcessor( int $maxSize, bool $detectHistory, array $binaries ): DumpProcessor {
 		return new DumpProcessor(
 			$this->newReader( $binaries ),
