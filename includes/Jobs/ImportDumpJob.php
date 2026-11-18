@@ -36,6 +36,7 @@ class ImportDumpJob extends Job
 	public const string JOB_NAME = 'ImportDumpJob';
 
 	private const int HEARTBEAT_INTERVAL = 60;
+	private const int REFRESH_LINKS_CHUNK_SIZE = 1000;
 	private const int MEMORY_RESERVE = 2097152;
 	private const int FATAL_ERRORS = E_ERROR | E_PARSE | E_CORE_ERROR |
 		E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
@@ -177,9 +178,35 @@ class ImportDumpJob extends Job
 	}
 
 	private function refreshLinks( FakeMaintenance $maintenance ): void {
-		$rebuildLinks = $maintenance->createChild( RefreshLinks::class );
-		$rebuildLinks->execute();
-		$this->beat( force: true );
+		$dbr = $this->connectionProvider->getReplicaDatabase();
+
+		// Run in page ID ranges so we can beat between them. RefreshLinks can
+		// take a long time to run so we need to check if its still running.
+		$start = null;
+		do {
+			$next = $dbr->newSelectQueryBuilder()
+				->select( 'page_id' )
+				->from( 'page' )
+				->where( $dbr->expr( 'page_id', '>=', $start ?? 0 ) )
+				->orderBy( 'page_id' )
+				->offset( self::REFRESH_LINKS_CHUNK_SIZE )
+				->caller( __METHOD__ )
+				->fetchField();
+
+			$refreshLinks = $maintenance->createChild( RefreshLinks::class );
+			if ( $start !== null ) {
+				$refreshLinks->setArg( 0, (string)$start );
+			}
+
+			if ( $next !== false ) {
+				$refreshLinks->setOption( 'e', (string)( (int)$next - 1 ) );
+			}
+
+			$refreshLinks->execute();
+			$this->beat( force: true );
+
+			$start = $next === false ? null : (int)$next;
+		} while ( $start !== null );
 	}
 
 	private function updateCounts( FakeMaintenance $maintenance ): void {
