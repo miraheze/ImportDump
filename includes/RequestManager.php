@@ -379,7 +379,6 @@ class RequestManager {
 		return $zonePath . '/' . $fileName;
 	}
 
-	/** Where an upload waits until the verification job has checked it. */
 	public function getUnverifiedFilePath(): string {
 		$localRepo = $this->repoGroup->getLocalRepo();
 		$zonePath = $localRepo->getZonePath( 'public' ) . '/ImportDump/unverified';
@@ -503,7 +502,6 @@ class RequestManager {
 		return $this->row->request_source;
 	}
 
-	/** The HISTORY_* constant from RequestHistory, or null if the dump was not checked. */
 	public function getHistory(): ?string {
 		return $this->row->request_history ?? null;
 	}
