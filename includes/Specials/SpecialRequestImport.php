@@ -249,7 +249,7 @@ class SpecialRequestImport extends FormSpecialPage
 
 		$history = null;
 		if ( !$verifyLater ) {
-			$processed = $this->dumpProcessor->process( $uploadBase->getTempPath() );
+			$processed = $this->dumpProcessor->process( $uploadBase->getTempPath(), null );
 			if ( !$processed->isOK() ) {
 				return $processed;
 			}

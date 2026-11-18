@@ -62,7 +62,7 @@ class DumpProcessor implements RequestHistory {
 	 *  the percentage done, which is null when it is not known.
 	 * @return Status A good status with a DumpResult as its value.
 	 */
-	public function process( string $path, ?Closure $onProgress = null ): Status {
+	public function process( string $path, ?Closure $onProgress ): Status {
 		$tempFile = null;
 		$xmlPath = $path;
 

@@ -61,9 +61,9 @@ class VerifyDumpJob extends Job implements RequestStatus {
 
 		/** @var DumpResult $result */
 		$result = $status->getValue();
-		$published = $this->requestManager->publishVerifiedFile(
-			$result->wasExtracted() ? $result->path : null
-		);
+		$published = $result->wasExtracted() ?
+			$this->requestManager->publishExtractedFile( $result->path ) :
+			$this->requestManager->publishUnverifiedFile();
 
 		if ( !$published->isOK() ) {
 			$this->reject( $published );

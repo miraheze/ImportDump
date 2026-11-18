@@ -421,7 +421,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 	/**
 	 * @covers ::getLocalUnverifiedFile
-	 * @covers ::publishVerifiedFile
+	 * @covers ::publishUnverifiedFile
+	 * @covers ::publishVerified
 	 * @covers ::deleteUnverifiedFile
 	 */
 	public function testPublishVerifiedFile(): void {
@@ -435,14 +436,15 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->assertStatusGood( $backend->quickCreate( [ 'dst' => $unverified, 'content' => 'unverified' ] ) );
 		$this->assertSame( 'unverified', file_get_contents( $manager->getLocalUnverifiedFile()->getPath() ) );
 
-		$this->assertStatusGood( $manager->publishVerifiedFile() );
+		$this->assertStatusGood( $manager->publishUnverifiedFile() );
 		$this->assertTrue( $manager->fileExists() );
 		$this->assertFalse( $backend->fileExists( [ 'src' => $unverified ] ) );
 		$this->assertSame( 'unverified', $backend->getFileContents( [ 'src' => $manager->getFilePath() ] ) );
 	}
 
 	/**
-	 * @covers ::publishVerifiedFile
+	 * @covers ::publishExtractedFile
+	 * @covers ::publishVerified
 	 */
 	public function testPublishVerifiedFileFromExtractedFile(): void {
 		$manager = $this->getRequestManager( id: 1 );
@@ -455,7 +457,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$extracted = $this->getNewTempFile();
 		file_put_contents( $extracted, 'extracted' );
 
-		$this->assertStatusGood( $manager->publishVerifiedFile( $extracted ) );
+		$this->assertStatusGood( $manager->publishExtractedFile( $extracted ) );
 		$this->assertFalse( $backend->fileExists( [ 'src' => $unverified ] ) );
 		$this->assertSame( 'extracted', $backend->getFileContents( [ 'src' => $manager->getFilePath() ] ) );
 		$this->assertFileExists( $extracted );

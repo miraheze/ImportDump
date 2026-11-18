@@ -391,13 +391,23 @@ class RequestManager {
 		return $backend->getLocalReference( [ 'src' => $this->getUnverifiedFilePath() ] );
 	}
 
-	public function publishVerifiedFile( ?string $extractedPath = null ): Status {
+	/** Moves the unverified file itself to where the import reads it from. */
+	public function publishUnverifiedFile(): Status {
+		return $this->publishVerified( $this->getUnverifiedFilePath(), FileRepo::DELETE_SOURCE );
+	}
+
+	/** Publishes a file that was extracted from the unverified file, which is then removed. */
+	public function publishExtractedFile( string $extractedPath ): Status {
+		return $this->publishVerified( $extractedPath, 0 );
+	}
+
+	private function publishVerified( string $source, int $flags ): Status {
 		$fileName = $this->getFileName();
 		$status = $this->repoGroup->getLocalRepo()->publish(
-			$extractedPath ?? $this->getUnverifiedFilePath(),
+			$source,
 			"/ImportDump/$fileName",
 			"/ImportDump/archive/$fileName",
-			$extractedPath === null ? FileRepo::DELETE_SOURCE : 0
+			$flags
 		);
 
 		if ( $status->isOK() ) {

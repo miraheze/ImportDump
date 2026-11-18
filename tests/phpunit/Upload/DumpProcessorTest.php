@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump\Tests\Upload;
 
 use Generator;
 use MediaWiki\Config\ServiceOptions;
+use MediaWiki\Status\Status;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\RequestHistory;
@@ -25,7 +26,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 
 	private const int MAX_SIZE = 1048576;
 
-	private function newProcessor( int $maxSize = self::MAX_SIZE, bool $detectHistory = true ): DumpProcessor {
+	private function newProcessor( int $maxSize, bool $detectHistory ): DumpProcessor {
 		return new DumpProcessor(
 			new ArchiveReader(),
 			new ServiceOptions( DumpProcessor::CONSTRUCTOR_OPTIONS, [
@@ -38,8 +39,22 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		);
 	}
 
+	private function process( string $path ): Status {
+		return $this->newProcessor( self::MAX_SIZE, true )->process( $path, null );
+	}
+
 	/** @param array<int, int> $revisions Revision ID to parent revision ID, or 0 if it has none. */
-	private static function page( int $id, array $revisions, bool $withParents = true ): string {
+	private static function page( int $id, array $revisions ): string {
+		return self::buildPage( $id, $revisions, true );
+	}
+
+	/** @param array<int, int> $revisions Revision ID to parent revision ID, or 0 if it has none. */
+	private static function pageWithoutParents( int $id, array $revisions ): string {
+		return self::buildPage( $id, $revisions, false );
+	}
+
+	/** @param array<int, int> $revisions Revision ID to parent revision ID, or 0 if it has none. */
+	private static function buildPage( int $id, array $revisions, bool $withParents ): string {
 		$xml = "<page><title>Page $id</title><ns>0</ns><id>$id</id>";
 		foreach ( $revisions as $revisionId => $parentId ) {
 			$xml .= "<revision><id>$revisionId</id>";
@@ -62,7 +77,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 
 	/** @dataProvider provideHistory */
 	public function testHistory( string $xml, string $expected ): void {
-		$status = $this->newProcessor()->process( $this->newFile( $xml ) );
+		$status = $this->process( $this->newFile( $xml ) );
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
@@ -105,7 +120,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		];
 
 		yield 'revisions that do not name their parent' => [
-			self::dump( self::page( 1, [ 10 => 0, 11 => 10 ], withParents: false ) ),
+			self::dump( self::pageWithoutParents( 1, [ 10 => 0, 11 => 10 ] ) ),
 			self::HISTORY_UNKNOWN,
 		];
 
@@ -122,7 +137,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 	public function testInvalidXml( string $xml, string $expectedError ): void {
 		$this->assertStatusError(
 			$expectedError,
-			$this->newProcessor()->process( $this->newFile( $xml ) )
+			$this->process( $this->newFile( $xml ) )
 		);
 	}
 
@@ -148,7 +163,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 	}
 
 	public function testEmptyFile(): void {
-		$status = $this->newProcessor()->process( $this->newFile( '' ) );
+		$status = $this->process( $this->newFile( '' ) );
 		$this->assertStatusNotGood( $status );
 	}
 
@@ -156,7 +171,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
 
 		$calls = [];
-		$status = $this->newProcessor()->process(
+		$status = $this->newProcessor( self::MAX_SIZE, true )->process(
 			$this->newFile( $xml ),
 			static function ( string $stage, ?int $percent ) use ( &$calls ): void {
 				$calls[] = [ $stage, $percent ];
@@ -173,7 +188,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 
 	public function testZipWithOneFile(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
-		$status = $this->newProcessor()->process( $this->newZip( [ 'any name.txt' => $xml ] ) );
+		$status = $this->process( $this->newZip( [ 'any name.txt' => $xml ] ) );
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
@@ -190,7 +205,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
 
 		$calls = [];
-		$status = $this->newProcessor()->process(
+		$status = $this->newProcessor( self::MAX_SIZE, true )->process(
 			$this->newZip( [ 'dump.xml' => $xml ] ),
 			static function ( string $stage, ?int $percent ) use ( &$calls ): void {
 				$calls[] = [ $stage, $percent ];
@@ -204,7 +219,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 
 	public function testZipIgnoresDirectoriesAndMacMetadata(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
-		$status = $this->newProcessor()->process( $this->newZip( [
+		$status = $this->process( $this->newZip( [
 			'folder/' => '',
 			'folder/dump.xml' => $xml,
 			'__MACOSX/folder/._dump.xml' => 'junk',
@@ -216,7 +231,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 
 	public function testZipWithSeveralFiles(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
-		$status = $this->newProcessor()->process(
+		$status = $this->process(
 			$this->newZip( [ 'a.xml' => $xml, 'b.xml' => $xml ] )
 		);
 
@@ -224,7 +239,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 	}
 
 	public function testZipWithOnlyDirectories(): void {
-		$status = $this->newProcessor()->process(
+		$status = $this->process(
 			$this->newZip( [ 'folder/' => '', 'other/' => '' ] )
 		);
 
@@ -233,13 +248,13 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 
 	public function testZipWithUnsafeName(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
-		$status = $this->newProcessor()->process( $this->newZip( [ '../dump.xml' => $xml ] ) );
+		$status = $this->process( $this->newZip( [ '../dump.xml' => $xml ] ) );
 		$this->assertStatusError( 'importdump-archive-unsafe', $status );
 	}
 
 	public function testZipWithNestedArchive(): void {
 		$inner = $this->newZip( [ 'dump.xml' => self::dump( self::page( 1, [ 10 => 0 ] ) ) ] );
-		$status = $this->newProcessor()->process(
+		$status = $this->process(
 			$this->newZip( [ 'inner.zip' => file_get_contents( $inner ) ] )
 		);
 
@@ -247,7 +262,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 	}
 
 	public function testCorruptZip(): void {
-		$status = $this->newProcessor()->process(
+		$status = $this->process(
 			$this->newFile( "PK\x03\x04 this is not a zip file" )
 		);
 
@@ -256,7 +271,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 
 	public function testGzip(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
-		$status = $processor->process( $this->newFile( gzencode( $xml ) ) );
+		$status = $processor->process( $this->newFile( gzencode( $xml ) ), null );
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
@@ -266,35 +281,35 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 	}
 
 	public function testGzipWithInvalidXml(): void {
-		$status = $this->newProcessor()->process( $this->newFile( gzencode( 'content' ) ) );
+		$status = $this->process( $this->newFile( gzencode( 'content' ) ) );
 		$this->assertStatusError( 'importdump-xml-invalid', $status );
 	}
 
 	public function testArchiveExpandingPastTheLimit(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
-		$processor = $this->newProcessor( maxSize: strlen( $xml ) - 1 );
+		$processor = $this->newProcessor( strlen( $xml ) - 1, true );
 
 		$this->assertStatusError(
 			'importdump-archive-too-large',
-			$processor->process( $this->newFile( gzencode( $xml ) ) )
+			$processor->process( $this->newFile( gzencode( $xml ) ), null )
 		);
 
 		$this->assertStatusError(
 			'importdump-archive-too-large',
-			$processor->process( $this->newZip( [ 'dump.xml' => $xml ] ) )
+			$processor->process( $this->newZip( [ 'dump.xml' => $xml ] ), null )
 		);
 	}
 
 	public function testHistoryDetectionOff(): void {
 		$xml = self::dump( self::page( 1, [ 12 => 11 ] ) );
-		$status = $this->newProcessor( detectHistory: false )->process( $this->newFile( $xml ) );
+		$status = $this->newProcessor( self::MAX_SIZE, false )->process( $this->newFile( $xml ), null );
 
 		$this->assertStatusGood( $status );
 		$this->assertNull( $status->getValue()->history );
 	}
 
 	public function testHistoryDetectionOffStillRejectsInvalidXml(): void {
-		$status = $this->newProcessor( detectHistory: false )->process( $this->newFile( 'content' ) );
+		$status = $this->newProcessor( self::MAX_SIZE, false )->process( $this->newFile( 'content' ), null );
 		$this->assertStatusError( 'importdump-xml-invalid', $status );
 	}
 }
