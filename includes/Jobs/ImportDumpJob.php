@@ -18,7 +18,9 @@ use MediaWiki\Maintenance\FakeMaintenance;
 use MediaWiki\Permissions\UltimateAuthority;
 use MediaWiki\SiteStats\SiteStatsInit;
 use MediaWiki\User\User;
+use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Hooks\HookRunner;
+use Miraheze\ImportDump\ImportHeartbeat;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 use RebuildRecentchanges;
@@ -31,7 +33,12 @@ use Wikimedia\Rdbms\IConnectionProvider;
 class ImportDumpJob extends Job
 	implements RequestStatus {
 
-	public const JOB_NAME = 'ImportDumpJob';
+	public const string JOB_NAME = 'ImportDumpJob';
+
+	private const int HEARTBEAT_INTERVAL = 60;
+	private const int MEMORY_RESERVE = 2097152;
+	private const int FATAL_ERRORS = E_ERROR | E_PARSE | E_CORE_ERROR |
+		E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
 
 	private readonly MessageLocalizer $messageLocalizer;
 
@@ -40,14 +47,18 @@ class ImportDumpJob extends Job
 
 	private string $jobError;
 
+	private bool $running = false;
+	private int $lastBeat = 0;
+
 	public function __construct(
 		array $params,
 		private readonly IConnectionProvider $connectionProvider,
 		private readonly Config $config,
+		private readonly ImportHeartbeat $heartbeat,
 		private readonly HookRunner $hookRunner,
 		private readonly RequestManager $requestManager,
 		private readonly JobQueueGroupFactory $jobQueueGroupFactory,
-		private readonly WikiImporterFactory $wikiImporterFactory
+		private readonly WikiImporterFactory $wikiImporterFactory,
 	) {
 		parent::__construct( self::JOB_NAME, $params );
 
@@ -69,31 +80,35 @@ class ImportDumpJob extends Job
 		$dbw = $this->connectionProvider->getPrimaryDatabase();
 		$filePath = wfTempDir() . '/' . $this->requestManager->getFileName();
 
-		$this->hookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
-
-		// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
-		$importStreamSource = ImportStreamSource::newFromFile( $filePath );
-		if ( !$importStreamSource->isGood() ) {
-			$this->jobError = "Import source for $filePath failed";
-			$this->setLastError( $this->jobError );
-			$this->notifyFailed();
-			return true;
-		}
-
-		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
-			new JobSpecification(
-				ImportDumpNotifyJob::JOB_NAME,
-				[
-					// No errors
-					'joberror' => '',
-					'requestid' => $this->requestID,
-					'status' => self::STATUS_INPROGRESS,
-					'username' => $this->username,
-				]
-			)
-		);
+		$this->running = true;
+		$this->registerShutdownHandler();
+		$this->beat( force: true );
 
 		try {
+			$this->hookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
+
+			// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
+			$importStreamSource = ImportStreamSource::newFromFile( $filePath );
+			if ( !$importStreamSource->isGood() ) {
+				$this->jobError = "Import source for $filePath failed";
+				$this->setLastError( $this->jobError );
+				$this->notifyFailed();
+				return true;
+			}
+
+			$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
+				new JobSpecification(
+					ImportDumpNotifyJob::JOB_NAME,
+					[
+						// No errors
+						'joberror' => '',
+						'requestid' => $this->requestID,
+						'status' => self::STATUS_INPROGRESS,
+						'username' => $this->username,
+					]
+				)
+			);
+
 			$user = User::newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
 			$importer = $this->wikiImporterFactory->getWikiImporter(
 				$importStreamSource->value, new UltimateAuthority( $user )
@@ -106,7 +121,10 @@ class ImportDumpJob extends Job
 				true
 			);
 
+			$importer->setPageOutCallback( fn () => $this->beat( force: false ) );
+
 			$importer->doImport();
+			$this->beat( force: true );
 
 			$siteStatsInit = new SiteStatsInit();
 			$siteStatsInit->refresh();
@@ -117,13 +135,16 @@ class ImportDumpJob extends Job
 			if ( !$this->config->get( MainConfigNames::DisableSearchUpdate ) ) {
 				$rebuildText = $maintenance->createChild( RebuildTextIndex::class );
 				$rebuildText->execute();
+				$this->beat( force: true );
 			}
 
 			$rebuildRC = $maintenance->createChild( RebuildRecentchanges::class );
 			$rebuildRC->execute();
+			$this->beat( force: true );
 
 			$rebuildLinks = $maintenance->createChild( RefreshLinks::class );
 			$rebuildLinks->execute();
+			$this->beat( force: true );
 
 			$initEditCount = $maintenance->createChild( InitEditCount::class );
 			$initEditCount->execute();
@@ -139,6 +160,13 @@ class ImportDumpJob extends Job
 			$this->jobError = $this->getLogMessage( $t );
 			$this->notifyFailed();
 			return true;
+		} finally {
+			$this->running = false;
+			$this->heartbeat->clear( $this->requestID );
+
+			if ( file_exists( $filePath ) ) {
+				unlink( $filePath );
+			}
 		}
 
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
@@ -155,6 +183,44 @@ class ImportDumpJob extends Job
 		);
 
 		return true;
+	}
+
+	private function beat( bool $force ): void {
+		$now = time();
+		if ( !$force && $now - $this->lastBeat < self::HEARTBEAT_INTERVAL ) {
+			return;
+		}
+
+		$this->lastBeat = $now;
+
+		$hours = $this->config->get( ConfigNames::StalledImportHours );
+		$ttl = max( 1, (int)( $hours ?: 24 ) ) * 3600;
+
+		$this->heartbeat->beat( $this->requestID, $ttl );
+	}
+
+	private function registerShutdownHandler(): void {
+		$reserve = str_repeat( ' ', self::MEMORY_RESERVE );
+
+		register_shutdown_function( function () use ( &$reserve ): void {
+			if ( !$this->running ) {
+				return;
+			}
+
+			$this->running = false;
+			$reserve = null;
+
+			$error = error_get_last();
+			$this->jobError = $error !== null && ( $error['type'] & self::FATAL_ERRORS ) ?
+				'Fatal error: ' . $error['message'] :
+				'The import job was stopped before it finished.';
+
+			try {
+				$this->notifyFailed();
+			} catch ( Throwable ) {
+				// Nothing else can be done during shutdown.
+			}
+		} );
 	}
 
 	private function notifyFailed(): void {
