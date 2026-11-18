@@ -23,6 +23,8 @@ class ConfigNames {
 
 	public const ScriptCommand = 'ImportDumpScriptCommand';
 
+	public const StalledImportHours = 'ImportDumpStalledImportHours';
+
 	public const UsersNotifiedOnAllRequests = 'ImportDumpUsersNotifiedOnAllRequests';
 
 	public const UsersNotifiedOnFailedImports = 'ImportDumpUsersNotifiedOnFailedImports';
