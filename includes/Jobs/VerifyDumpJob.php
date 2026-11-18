@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump\Jobs;
 
 use MediaWiki\Context\RequestContext;
 use MediaWiki\JobQueue\Job;
+use MediaWiki\Language\FormatterFactory;
 use MediaWiki\Language\MessageLocalizer;
 use MediaWiki\Status\Status;
 use MediaWiki\User\User;
@@ -25,6 +26,7 @@ class VerifyDumpJob extends Job implements RequestStatus {
 
 	public function __construct(
 		array $params,
+		private readonly FormatterFactory $formatterFactory,
 		private readonly DumpProcessor $dumpProcessor,
 		private readonly RequestManager $requestManager,
 		private readonly VerificationProgress $progress,
@@ -59,8 +61,8 @@ class VerifyDumpJob extends Job implements RequestStatus {
 			return true;
 		}
 
-		/** @var DumpResult $result */
 		$result = $status->getValue();
+		'@phan-var DumpResult $result';
 		$published = $result->wasExtracted() ?
 			$this->requestManager->publishExtractedFile( $result->path ) :
 			$this->requestManager->publishUnverifiedFile();
@@ -82,7 +84,10 @@ class VerifyDumpJob extends Job implements RequestStatus {
 		$this->progress->clear( $this->requestManager->getID() );
 
 		$user = User::newSystemUser( 'ImportDump Status Update' );
-		$reason = $status->getMessage( false, false, 'en' )->inContentLanguage()->text();
+		$reason = $this->formatterFactory->getStatusFormatter( $this->messageLocalizer )
+			->getMessage( $status, [] )
+			->inContentLanguage()
+			->text();
 		$comment = $this->messageLocalizer->msg( 'importdump-verification-failed', $reason )
 			->inContentLanguage()
 			->escaped();

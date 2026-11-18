@@ -45,12 +45,24 @@ final class ProgressStream {
 		unset( self::$sources[substr( $url, strlen( self::PROTOCOL ) + 3 )] );
 	}
 
-	/** @return array<int|string, int>|false Some readers check that a file exists before they open it. */
+	/**
+	 * Some readers check that a file exists before they open it.
+	 *
+	 * @param string $path
+	 * @param int $flags @phan-unused-param
+	 * @return array<int|string, int>|false
+	 */
 	public function url_stat( string $path, int $flags ): array|false {
 		$file = self::$sources[substr( $path, strlen( self::PROTOCOL ) + 3 )][0] ?? null;
 		return $file !== null && is_file( $file ) ? stat( $file ) : false;
 	}
 
+	/**
+	 * @param string $path
+	 * @param string $mode @phan-unused-param
+	 * @param int $options @phan-unused-param
+	 * @param ?string &$openedPath
+	 */
 	public function stream_open( string $path, string $mode, int $options, ?string &$openedPath ): bool {
 		$token = substr( $path, strlen( self::PROTOCOL ) + 3 );
 		if ( !isset( self::$sources[$token] ) ) {
@@ -97,6 +109,11 @@ final class ProgressStream {
 		return fstat( $this->handle );
 	}
 
+	/**
+	 * @param int $option @phan-unused-param
+	 * @param int $arg1 @phan-unused-param
+	 * @param ?int $arg2 @phan-unused-param
+	 */
 	public function stream_set_option( int $option, int $arg1, ?int $arg2 ): bool {
 		return false;
 	}

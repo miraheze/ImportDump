@@ -100,6 +100,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 		$services = $this->getServiceContainer();
 		$job = new VerifyDumpJob(
 			[ 'requestid' => $manager->getID() ],
+			$services->getFormatterFactory(),
 			$services->getService( 'ImportDumpDumpProcessor' ),
 			$manager,
 			$services->getService( 'ImportDumpVerificationProgress' )

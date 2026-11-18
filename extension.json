@@ -64,6 +64,7 @@
 		"ImportDumpVerifyDump": {
 			"class": "Miraheze\\ImportDump\\Jobs\\VerifyDumpJob",
 			"services": [
+				"FormatterFactory",
 				"ImportDumpDumpProcessor",
 				"ImportDumpRequestManager",
 				"ImportDumpVerificationProgress"

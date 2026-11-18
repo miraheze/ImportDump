@@ -155,7 +155,6 @@ final class ArchiveReader {
 		}
 
 		$zip = null;
-		$input = false;
 		if ( $format === self::FORMAT_ZIP ) {
 			$zip = $this->openZip( $path );
 			$input = $zip ? $zip->getStreamIndex( $entry->index ) : false;
@@ -193,6 +192,7 @@ final class ArchiveReader {
 	 */
 	private function copy( $input, $output, ArchiveEntry $entry, int $maxSize, ?Closure $onProgress ): Status {
 		$maxRatioSize = max( 1, $entry->compressedSize ) * self::MAX_COMPRESSION_RATIO;
+		$declaredSize = $entry->size ?? 0;
 
 		$total = 0;
 		$reported = 0;
@@ -219,8 +219,8 @@ final class ArchiveReader {
 				return Status::newFatal( 'importdump-archive-unreadable' );
 			}
 
-			if ( $onProgress && $entry->size ) {
-				$percent = min( 100, intdiv( $total * 100, $entry->size ) );
+			if ( $onProgress && $declaredSize > 0 ) {
+				$percent = min( 100, intdiv( $total * 100, $declaredSize ) );
 				if ( $percent !== $reported ) {
 					$reported = $percent;
 					$onProgress( $percent );

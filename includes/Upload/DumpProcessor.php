@@ -182,57 +182,48 @@ class DumpProcessor implements RequestHistory {
 				return Status::newFatal( 'importdump-xml-doctype' );
 			}
 
+			$skipChildren = false;
 			if ( $reader->nodeType === XMLReader::END_ELEMENT ) {
 				if ( $reader->depth === 1 && $reader->localName === 'page' && $tracked ) {
 					$pagesWithGaps += $this->hasMissingParent( $revisionIds, $parentIds ) ? 1 : 0;
 				}
+			} elseif ( $reader->nodeType === XMLReader::ELEMENT ) {
+				$depth = $reader->depth;
+				$name = $reader->localName;
 
-				$more = $reader->read();
-				continue;
-			}
-
-			if ( $reader->nodeType !== XMLReader::ELEMENT ) {
-				$more = $reader->read();
-				continue;
-			}
-
-			$depth = $reader->depth;
-			$name = $reader->localName;
-
-			if ( $depth === 0 ) {
-				if ( $name !== 'mediawiki' || !str_starts_with( $reader->namespaceURI, self::EXPORT_NAMESPACE ) ) {
-					return Status::newFatal( 'importdump-xml-not-dump' );
-				}
-
-				$sawRoot = true;
-				$more = $reader->read();
-			} elseif ( $depth === 1 && $name === 'page' ) {
-				$pages++;
-				$revisionIds = [];
-				$parentIds = [];
-				$tracked = $detectHistory;
-				$more = $reader->read();
-			} elseif ( $depth === 2 && $name === 'revision' ) {
-				$more = $reader->read();
-			} else {
-				if ( $detectHistory && $depth === 3 && ( $name === 'id' || $name === 'parentid' ) ) {
-					$id = (int)$reader->readString();
-					if ( $name === 'parentid' ) {
-						$sawParent = true;
+				if ( $depth === 0 ) {
+					if ( $name !== 'mediawiki' || !str_starts_with( $reader->namespaceURI, self::EXPORT_NAMESPACE ) ) {
+						return Status::newFatal( 'importdump-xml-not-dump' );
 					}
 
-					if ( count( $revisionIds ) + count( $parentIds ) >= self::MAX_TRACKED_REVISIONS ) {
-						$tracked = false;
-					} elseif ( $name === 'id' ) {
-						$revisionIds[$id] = true;
-					} else {
-						$parentIds[] = $id;
-					}
-				}
+					$sawRoot = true;
+				} elseif ( $depth === 1 && $name === 'page' ) {
+					$pages++;
+					$revisionIds = [];
+					$parentIds = [];
+					$tracked = $detectHistory;
+				} elseif ( $depth !== 2 || $name !== 'revision' ) {
+					if ( $detectHistory && $depth === 3 && ( $name === 'id' || $name === 'parentid' ) ) {
+						$id = (int)$reader->readString();
+						if ( $name === 'parentid' ) {
+							$sawParent = true;
+						}
 
-				// Skips everything else, including the text of a revision.
-				$more = $reader->next();
+						if ( count( $revisionIds ) + count( $parentIds ) >= self::MAX_TRACKED_REVISIONS ) {
+							$tracked = false;
+						} elseif ( $name === 'id' ) {
+							$revisionIds[$id] = true;
+						} else {
+							$parentIds[] = $id;
+						}
+					}
+
+					// Skips everything else, including the text of a revision.
+					$skipChildren = true;
+				}
 			}
+
+			$more = $skipChildren ? $reader->next() : $reader->read();
 		}
 
 		foreach ( libxml_get_errors() as $error ) {
