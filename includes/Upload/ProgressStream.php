@@ -28,7 +28,11 @@ final class ProgressStream {
 	private int $read = 0;
 	private int $reported = -1;
 
-	/** @param Closure( int ): void $onProgress Called with the percentage that was read. */
+	/**
+	 * @param string $path The file that will be read.
+	 * @param Closure( int ): void $onProgress Called with the percentage that was read.
+	 * @return string
+	 */
 	public static function url( string $path, Closure $onProgress ): string {
 		if ( !in_array( self::PROTOCOL, stream_get_wrappers(), true ) ) {
 			stream_wrapper_register( self::PROTOCOL, self::class );
