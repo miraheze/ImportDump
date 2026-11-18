@@ -16,11 +16,11 @@ final class ProgressStream {
 	/** @var array<string, array{string, Closure}> */
 	private static array $sources = [];
 
-	/** @var resource|null Set by PHP. */
-	public $context;
+	/** @var mixed A stream context resource or null. Set by PHP. */
+	public mixed $context = null;
 
-	/** @var resource|null */
-	private $handle;
+	/** @var mixed The stream resource of the file, or null while it is not open. */
+	private mixed $handle = null;
 
 	private ?Closure $callback = null;
 	private string $token = '';

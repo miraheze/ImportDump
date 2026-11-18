@@ -44,13 +44,13 @@ final class TarReader {
 	private bool $ended = false;
 
 	/**
-	 * @param resource $stream A stream that can be read, such as an uncompressed tar.
+	 * @param mixed $stream A stream resource that can be read, such as an uncompressed tar.
 	 * @param int $compressedSize Size of the file that the stream is read from.
 	 * @param int $maxEntries Most headers that may be read.
 	 * @param int $maxBodyBytes Most bytes that the data of all entries together may have.
 	 */
 	public function __construct(
-		private $stream,
+		private mixed $stream,
 		private readonly int $compressedSize,
 		private readonly int $maxEntries,
 		private readonly int $maxBodyBytes,
@@ -60,11 +60,11 @@ final class TarReader {
 	/**
 	 * Reads up to $length bytes, which is fewer only at the end of the stream.
 	 *
-	 * @param resource $stream
+	 * @param mixed $stream A stream resource that can be read.
 	 * @param int $length
 	 * @return string
 	 */
-	public static function readUpTo( $stream, int $length ): string {
+	public static function readUpTo( mixed $stream, int $length ): string {
 		$data = '';
 		while ( strlen( $data ) < $length && !feof( $stream ) ) {
 			$chunk = fread( $stream, $length - strlen( $data ) );
@@ -191,11 +191,11 @@ final class TarReader {
 	 * Writes the data of an entry that was just returned by next() into a file.
 	 *
 	 * @param TarEntry $entry
-	 * @param resource $output
+	 * @param mixed $output A stream resource that can be written to.
 	 * @param ?Closure( ?int ): void $onProgress Called with the percentage that is done.
 	 * @return Status
 	 */
-	public function copyBody( TarEntry $entry, $output, ?Closure $onProgress ): Status {
+	public function copyBody( TarEntry $entry, mixed $output, ?Closure $onProgress ): Status {
 		$remaining = $entry->size;
 		$reported = 0;
 

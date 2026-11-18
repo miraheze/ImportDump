@@ -222,14 +222,20 @@ final class ArchiveReader {
 	}
 
 	/**
-	 * @param resource $input
-	 * @param resource $output
+	 * @param mixed $input A stream resource that can be read.
+	 * @param mixed $output A stream resource that can be written to.
 	 * @param ArchiveEntry $entry
 	 * @param int $maxSize
 	 * @param ?Closure( ?int ): void $onProgress
 	 * @return Status
 	 */
-	private function copy( $input, $output, ArchiveEntry $entry, int $maxSize, ?Closure $onProgress ): Status {
+	private function copy(
+		mixed $input,
+		mixed $output,
+		ArchiveEntry $entry,
+		int $maxSize,
+		?Closure $onProgress
+	): Status {
 		$maxRatioSize = max( 1, $entry->compressedSize ) * self::MAX_COMPRESSION_RATIO;
 		$declaredSize = $entry->size ?? 0;
 
