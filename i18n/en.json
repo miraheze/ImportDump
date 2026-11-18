@@ -46,6 +46,7 @@
 	"importdump-import-started": "Import successfully started.",
 	"importdump-info-already-imported": "The dump was already imported, but the job stopped during the '''$1''' step. Do not import the dump again. Starting the job will continue from that step.",
 	"importdump-info-command": "'''Command for this import:''' <code>$1</code>",
+	"importdump-info-file-expired": "The uploaded file for this request was automatically deleted because $2 requests are only kept for {{PLURAL:$1|$1 day|$1 days}}. If the import is still needed, submit a new request.",
 	"importdump-info-filesize": "'''File size for this import:''' $1",
 	"importdump-info-groups": "User groups that $1 has on $2: $3",
 	"importdump-info-interwiki": "Add an interwiki prefix to the local interwiki table of $1 with the below fields. Please ensure the values are correct before submitting.",
