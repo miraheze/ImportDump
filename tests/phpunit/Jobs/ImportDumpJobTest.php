@@ -140,6 +140,8 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 
 	public function testRunCompletesEmptyDump(): void {
 		$this->overrideConfigValue( MainConfigNames::DisableSearchUpdate, true );
+		// The maintenance scripts print their progress.
+		$this->expectOutputRegex( '/Done/' );
 
 		$afterImportCalled = false;
 		$this->setTemporaryHook( 'ImportDumpJobGetFile', $this->writeEmptyDump( ... ) );
@@ -169,6 +171,8 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 
 	public function testRunBeatsBeforeAfterImportHook(): void {
 		$this->overrideConfigValue( MainConfigNames::DisableSearchUpdate, true );
+		// The maintenance scripts print their progress.
+		$this->expectOutputRegex( '/Done/' );
 
 		$id = $this->addRequest();
 		$alive = null;
@@ -188,6 +192,8 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 
 	public function testRunReportsFailureWhenAfterImportHookThrows(): void {
 		$this->overrideConfigValue( MainConfigNames::DisableSearchUpdate, true );
+		// The maintenance scripts print their progress.
+		$this->expectOutputRegex( '/Done/' );
 
 		$this->setTemporaryHook( 'ImportDumpJobGetFile', $this->writeEmptyDump( ... ) );
 		$this->setTemporaryHook( 'ImportDumpJobAfterImport',
@@ -214,6 +220,8 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 	/** @dataProvider provideChunkSizes */
 	public function testRefreshLinksCoversEveryPageAcrossChunks( int $chunkSize ): void {
 		$this->overrideConfigValue( MainConfigNames::DisableSearchUpdate, true );
+		// The maintenance scripts print their progress.
+		$this->expectOutputRegex( '/Done/' );
 
 		$pageIds = [];
 		for ( $i = 1; $i <= 5; $i++ ) {
