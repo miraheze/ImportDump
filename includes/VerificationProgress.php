@@ -17,7 +17,11 @@ class VerificationProgress {
 	) {
 	}
 
-	/** @param ?int $percent The percentage done, or null if it is not known. */
+	/**
+	 * @param int $requestID
+	 * @param string $stage
+	 * @param ?int $percent The percentage done, or null if it is not known.
+	 */
 	public function set( int $requestID, string $stage, ?int $percent ): void {
 		$this->stash->set(
 			$this->getKey( $requestID ),
