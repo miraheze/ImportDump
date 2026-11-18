@@ -234,6 +234,10 @@
 			"value": [],
 			"description": "A mapping of 'domain => interwiki prefix' for multi-level interwiki prefix generation for --username-prefix."
 		},
+		"ImportDumpMaintenanceCommand": {
+			"value": "php {IP}/maintenance/{script} --wiki={wiki} {arguments}",
+			"description": "Generated command to use for each of the maintenance scripts that still need to be run when an import stopped after its pages were already imported. {script} is the script file name, such as refreshLinks.php, {script-name} is the same without .php, and {arguments} is any arguments the script needs."
+		},
 		"ImportDumpScriptCommand": {
 			"value": "php {IP}/maintenance/importDump.php --wiki={wiki} --username-prefix=\"{username-prefix}\" {file-path}",
 			"description": "Generated maintenance script command to use. If $wgImportDumpEnableAutomatedJob is enabled, this is not displayed unless the status is 'failed'."
