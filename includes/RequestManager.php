@@ -23,6 +23,7 @@ use MediaWiki\User\ActorStoreFactory;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserGroupManagerFactory;
+use MediaWiki\User\UserIdentity;
 use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
@@ -174,10 +175,12 @@ class RequestManager {
 		$logEntry->publish( $logID );
 	}
 
-	public function sendNotification( string $comment, string $type, User $user ): void {
+	public function sendNotification( string $comment, string $type, UserIdentity $user ): void {
 		$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', (string)$this->ID )->getFullURL();
 		$involvedUsers = array_values( array_filter(
-			array_diff( $this->getInvolvedUsers(), [ $user ] )
+			$this->getInvolvedUsers(),
+			static fn ( mixed $involved ): bool => $involved instanceof UserIdentity &&
+				$involved->getName() !== $user->getName()
 		) );
 
 		if ( !$involvedUsers ) {

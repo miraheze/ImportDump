@@ -13,6 +13,7 @@ use MediaWiki\User\ActorStoreFactory;
 use MediaWiki\User\User;
 use MediaWiki\User\UserGroupManager;
 use MediaWiki\User\UserGroupManagerFactory;
+use MediaWiki\User\UserIdentity;
 use MediaWiki\User\UserIdentityLookup;
 use MediaWiki\User\UserIdentityValue;
 use MediaWiki\WikiMap\WikiMap;
@@ -158,7 +159,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->assertSame( 'importdump-request-comment', $notification->getType() );
 		$this->assertSame( $commenter->getName(), $notification->getAgent()->getName() );
 		$this->assertSame( [ $requester->getName() ], array_map(
-			static fn ( $user ): string => $user->getName(),
+			static fn ( UserIdentity $user ): string => $user->getName(),
 			$recipients->getRecipients()
 		) );
 

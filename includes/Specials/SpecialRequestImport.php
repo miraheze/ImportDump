@@ -28,6 +28,7 @@ use MediaWiki\Upload\UploadStash;
 use MediaWiki\Upload\UploadVerification;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
+use MediaWiki\User\UserIdentity;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
@@ -399,7 +400,7 @@ class SpecialRequestImport extends FormSpecialPage
 		string $reason,
 		string $requestID,
 		string $target,
-		User $requester
+		UserIdentity $requester
 	): void {
 		$notifiedUsers = array_filter(
 			array_map(

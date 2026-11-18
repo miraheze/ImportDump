@@ -6,6 +6,7 @@ use MediaWiki\MainConfigNames;
 use MediaWiki\Notification\Notification;
 use MediaWiki\Notification\NotificationService;
 use MediaWiki\Notification\RecipientSet;
+use MediaWiki\User\UserIdentity;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
@@ -113,7 +114,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 		$this->assertInstanceOf( RequestNotification::class, $notification );
 		$this->assertSame( 'ImportDump Status Update', $notification->getAgent()->getName() );
 		$this->assertSame( [ $sysop->getName() ], array_map(
-			static fn ( $user ): string => $user->getName(),
+			static fn ( UserIdentity $user ): string => $user->getName(),
 			$recipients->getRecipients()
 		) );
 
@@ -143,7 +144,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 
 		[ $notification, $recipients ] = $this->captured[0];
 		$this->assertSame( [ $this->getTestUser()->getUser()->getName() ], array_map(
-			static fn ( $user ): string => $user->getName(),
+			static fn ( UserIdentity $user ): string => $user->getName(),
 			$recipients->getRecipients()
 		) );
 

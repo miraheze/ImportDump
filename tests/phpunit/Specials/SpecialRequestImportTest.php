@@ -14,6 +14,7 @@ use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
 use MediaWiki\Upload\UploadStash;
 use MediaWiki\User\User;
+use MediaWiki\User\UserIdentity;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
@@ -633,7 +634,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 		$this->assertSame( 'importdump-new-request', $notification->getType() );
 		$this->assertSame( $requester->getName(), $notification->getAgent()->getName() );
 		$this->assertSame( [ $this->getTestSysop()->getUser()->getName() ], array_map(
-			static fn ( $user ): string => $user->getName(),
+			static fn ( UserIdentity $user ): string => $user->getName(),
 			$recipients->getRecipients()
 		) );
 
