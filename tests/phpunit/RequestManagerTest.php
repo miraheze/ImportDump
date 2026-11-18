@@ -7,6 +7,7 @@ use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\MainConfigNames;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
+use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStage;
 use Miraheze\ImportDump\RequestStatus;
@@ -217,6 +218,24 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$manager->setStage( self::STAGE_AFTERIMPORT );
 		$this->assertSame( [], $manager->getRemainingCommands() );
+	}
+
+	/**
+	 * @covers ::getRemainingCommands
+	 */
+	public function testGetRemainingCommandsUsesConfiguredCommand(): void {
+		$this->overrideConfigValue( ConfigNames::MaintenanceCommand, 'mwscript {script-name} {wiki} {arguments}' );
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setStage( self::STAGE_COUNTS );
+
+		$this->assertSame(
+			[
+				'mwscript initEditCount requestimporttest',
+				'mwscript updateArticleCount requestimporttest --update',
+			],
+			$manager->getRemainingCommands()
+		);
 	}
 
 	/**
