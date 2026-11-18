@@ -9,8 +9,8 @@ use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\RequestHistory;
 use Miraheze\ImportDump\Upload\DumpProcessor;
-use Miraheze\ImportDump\Upload\ExternalBinaries;
 use Miraheze\ImportDump\Upload\DumpResult;
+use Miraheze\ImportDump\Upload\ExternalBinaries;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 
 /**
