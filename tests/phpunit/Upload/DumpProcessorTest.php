@@ -81,8 +81,12 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 	}
 
 	private static function dump( string $pages ): string {
-		return '<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.11/" version="0.11" xml:lang="en">' .
-			'<siteinfo><sitename>Test</sitename></siteinfo>' . $pages . '</mediawiki>';
+		return self::dumpWithVersion( $pages, '0.11' );
+	}
+
+	private static function dumpWithVersion( string $pages, string $version ): string {
+		return '<mediawiki xmlns="http://www.mediawiki.org/xml/export-' . $version . '/" version="' . $version .
+			'" xml:lang="en"><siteinfo><sitename>Test</sitename></siteinfo>' . $pages . '</mediawiki>';
 	}
 
 	/** @dataProvider provideHistory */
@@ -129,8 +133,8 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 			self::HISTORY_PARTIAL,
 		];
 
-		yield 'revisions that do not name their parent' => [
-			self::dump( self::pageWithoutParents( 1, [ 10 => 0, 11 => 10 ] ) ),
+		yield 'old schema that does not name parents' => [
+			self::dumpWithVersion( self::pageWithoutParents( 1, [ 10 => 0, 11 => 10 ] ), '0.6' ),
 			self::HISTORY_UNKNOWN,
 		];
 
@@ -281,7 +285,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 
 	public function testGzip(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
-		$status = $processor->process( $this->newFile( gzencode( $xml ) ), null );
+		$status = $this->process( $this->newFile( gzencode( $xml ) ) );
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();

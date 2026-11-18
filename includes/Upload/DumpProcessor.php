@@ -41,6 +41,12 @@ class DumpProcessor implements RequestHistory {
 	/** Share of pages with a missing parent revision above which the history is called partial. */
 	private const float PARTIAL_HISTORY_THRESHOLD = 0.05;
 
+	/**
+	 * Exports from this schema version on name the parent of every revision that has one,
+	 * so a dump without any parent IDs only has first revisions.
+	 */
+	private const string PARENT_ID_SCHEMA_VERSION = '0.10';
+
 	/** Pages with more revisions than this are left out of the history check. */
 	private const int MAX_TRACKED_REVISIONS = 1000000;
 
@@ -172,6 +178,7 @@ class DumpProcessor implements RequestHistory {
 		$detectHistory = (bool)$this->options->get( ConfigNames::EnableHistoryDetection );
 		$sawRoot = false;
 		$sawParent = false;
+		$schemaNamesParents = false;
 		$pages = 0;
 		$pagesWithGaps = 0;
 
@@ -200,6 +207,11 @@ class DumpProcessor implements RequestHistory {
 					}
 
 					$sawRoot = true;
+					$schemaNamesParents = version_compare(
+						(string)$reader->getAttribute( 'version' ),
+						self::PARENT_ID_SCHEMA_VERSION,
+						'>='
+					);
 				} elseif ( $depth === 1 && $name === 'page' ) {
 					$pages++;
 					$revisionIds = [];
@@ -244,7 +256,9 @@ class DumpProcessor implements RequestHistory {
 		}
 
 		return Status::newGood(
-			$detectHistory ? $this->classifyHistory( $sawParent, $pages, $pagesWithGaps ) : null
+			$detectHistory ?
+				$this->classifyHistory( $sawParent, $schemaNamesParents, $pages, $pagesWithGaps ) :
+				null
 		);
 	}
 
@@ -262,10 +276,16 @@ class DumpProcessor implements RequestHistory {
 		return false;
 	}
 
-	private function classifyHistory( bool $sawParent, int $pages, int $pagesWithGaps ): string {
+	private function classifyHistory(
+		bool $sawParent,
+		bool $schemaNamesParents,
+		int $pages,
+		int $pagesWithGaps
+	): string {
 		if ( !$sawParent ) {
-			// Exports from before MediaWiki 1.25 do not name the parent revision.
-			return self::HISTORY_UNKNOWN;
+			// Older exports never name the parent revision, so nothing can be said. Newer ones
+			// leave it out only for first revisions, which means that no page has more than one.
+			return $schemaNamesParents ? self::HISTORY_FULL : self::HISTORY_UNKNOWN;
 		}
 
 		return $pagesWithGaps / $pages > self::PARTIAL_HISTORY_THRESHOLD ?
