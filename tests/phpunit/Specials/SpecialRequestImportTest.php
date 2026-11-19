@@ -6,6 +6,7 @@ use Generator;
 use MediaWiki\Context\DerivativeContext;
 use MediaWiki\Exception\UserNotLoggedIn;
 use MediaWiki\MainConfigNames;
+use MediaWiki\Message\Message;
 use MediaWiki\Notification\Notification;
 use MediaWiki\Notification\NotificationService;
 use MediaWiki\Notification\RecipientSet;
@@ -571,6 +572,47 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 		// We should now have them
 		$this->assertArrayHasKey( 'UploadSourceType', $formFields );
 		$this->assertArrayHasKey( 'UploadFileURL', $formFields );
+	}
+
+	/**
+	 * @return list<Message>
+	 */
+	private function getUploadHelp(): array {
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$help = $specialRequestImport->getFormFields()['UploadFile']['help-messages'];
+		$this->assertContainsOnlyInstancesOf( Message::class, $help );
+
+		return $help;
+	}
+
+	/**
+	 * @covers ::getUploadHelp
+	 */
+	public function testUploadHelpListsTheArchiveTypesThatAreSetUp(): void {
+		$help = $this->getUploadHelp();
+
+		$this->assertSame( 'importdump-help-upload-file', $help[0]->getKey() );
+		$this->assertSame( 'importdump-help-upload-file-types', $help[1]->getKey() );
+		$this->assertSame( [
+			'ZIP, TAR, GZIP and BZIP2',
+			'.tar.gz, .tgz and .tar.bz2',
+		], $help[1]->getParams() );
+	}
+
+	/**
+	 * @covers ::getUploadHelp
+	 */
+	public function testUploadHelpOnlyMentionsHistoryWhenItIsChecked(): void {
+		$keys = static fn ( array $help ): array => array_map(
+			static fn ( Message $message ): string => $message->getKey(),
+			$help
+		);
+
+		$this->overrideConfigValue( ConfigNames::EnableHistoryDetection, false );
+		$this->assertNotContains( 'importdump-help-upload-file-history', $keys( $this->getUploadHelp() ) );
+
+		$this->overrideConfigValue( ConfigNames::EnableHistoryDetection, true );
+		$this->assertContains( 'importdump-help-upload-file-history', $keys( $this->getUploadHelp() ) );
 	}
 
 	/**
