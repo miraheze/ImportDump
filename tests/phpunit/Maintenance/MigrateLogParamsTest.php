@@ -10,6 +10,7 @@ use MediaWiki\Tests\Maintenance\MaintenanceBaseTestCase;
 use MediaWiki\Title\TitleValue;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\Maintenance\MigrateLogParams;
+use Wikimedia\TestingAccessWrapper;
 
 /**
  * @group ImportDump
@@ -52,8 +53,10 @@ class MigrateLogParamsTest extends MaintenanceBaseTestCase {
 			->caller( __METHOD__ )
 			->fetchField();
 
+		// @phan-suppress-next-line SecurityCheck-PHPSerializeInjection Classes are not allowed
 		$params = LogEntryBase::extractParams( (string)$blob );
 		$this->assertIsArray( $params );
+		'@phan-var array<string, mixed> $params';
 
 		return $params;
 	}
@@ -158,7 +161,9 @@ class MigrateLogParamsTest extends MaintenanceBaseTestCase {
 			] );
 		}
 
-		$this->maintenance->setBatchSize( 1 );
+		$maintenance = $this->maintenance;
+		'@phan-var TestingAccessWrapper $maintenance';
+		$maintenance->setBatchSize( 1 );
 
 		$this->expectOutputRegex( '/Migrated 3 log entries/' );
 		$this->maintenance->execute();

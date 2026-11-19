@@ -25,6 +25,7 @@ use Miraheze\ImportDump\RequestHistory;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStage;
 use Miraheze\ImportDump\RequestStatus;
+use stdClass;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
@@ -152,6 +153,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$params = [];
 		foreach ( $rows as $row ) {
+			'@phan-var stdClass $row';
+			// @phan-suppress-next-line SecurityCheck-PHPSerializeInjection Classes are not allowed
 			$params[$row->log_action] = LogEntryBase::extractParams( $row->log_params );
 		}
 
