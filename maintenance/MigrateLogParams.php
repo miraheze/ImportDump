@@ -59,10 +59,13 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 				->fetchResultSet();
 
 			$count = 0;
+			$this->beginTransactionRound( __METHOD__ );
+
 			foreach ( $res as $row ) {
 				$count++;
 				$lastID = (int)$row->log_id;
 
+				// @phan-suppress-next-line SecurityCheck-PHPSerializeInjection Classes are not allowed
 				$params = LogEntryBase::extractParams( (string)$row->log_params );
 				if ( !is_array( $params ) || !$this->needsMigration( $params ) ) {
 					continue;
@@ -79,7 +82,7 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 				$migrated++;
 			}
 
-			$this->waitForReplication();
+			$this->commitTransactionRound( __METHOD__ );
 		} while ( $count >= $batchSize );
 
 		$this->output(

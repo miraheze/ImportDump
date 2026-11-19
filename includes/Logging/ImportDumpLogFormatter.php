@@ -22,7 +22,6 @@ class ImportDumpLogFormatter extends LogFormatter {
 		};
 	}
 
-	/** @return array{raw: string}|string */
 	private function formatRequestLink( int $requestID ): ScalarParam|string {
 		$title = SpecialPage::getTitleFor( 'RequestImportQueue', (string)$requestID );
 		$link = $this->makePageLink( $title, [], "#$requestID" );
