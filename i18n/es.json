@@ -24,7 +24,6 @@
 	"echo-category-title-importdump-request-comment": "Comentario añadido a una solicitud de volcado de importación",
 	"echo-category-title-importdump-request-status-update": "Estado actualizado para una solicitud de volcado de importación",
 	"importdump-button-copy": "(copiar al portapapeles)",
-	"importdump-comment-given": "Comentario hecho por $1:",
 	"importdump-comment-success": "Comentario añadido con éxito a esta solicitud.",
 	"importdump-desc": "Una extensión diseñada para automatizar las solicitudes de importación de usuarios.",
 	"importdump-duplicate-request": "No se puede enviar esta solicitud. Es demasiado similar a una solicitud ya abierta.",

@@ -18,7 +18,6 @@
 	"echo-pref-tooltip-importdump-request-comment": "내가 참여한 가져오기 요청에 댓글이 달리면 알립니다.",
 	"echo-pref-tooltip-importdump-request-status-update": "내가 참여한 가져오기 요청의 상태가 업데이트되면 알립니다.",
 	"importdump-button-copy": "(클립보드에 복사)",
-	"importdump-comment-given": "$1님의 의견:",
 	"importdump-comment-success": "이 요청에 의견이 성공적으로 추가되었습니다.",
 	"importdump-desc": "사용자 가져오기 요청을 자동화하도록 설계된 확장 기능입니다.",
 	"importdump-duplicate-comment": "이전 요청과 동일한 의견을 다시 제출할 수 없습니다.",

@@ -23,7 +23,6 @@
 	"echo-pref-tooltip-importdump-request-comment": "Katıldığım bir içe aktarma isteğinde yorum olduğunda beni bilgilendir.",
 	"echo-pref-tooltip-importdump-request-status-update": "Katıldığım bir içe aktarma talebinin durumu güncellendiğinde bana hatırlatma gönder.",
 	"importdump-button-copy": "(Panoya Kopyala)",
-	"importdump-comment-given": "$1 tarafından yapılmış yorum:",
 	"importdump-comment-success": "Bu talebe başarılı bir şekilde yorum eklendi.",
 	"importdump-desc": "Kullanıcı içe aktarma isteklerini otomatikleştirmek için tasarlanmış bir uzantı.",
 	"importdump-duplicate-comment": "Önceki isteğinizle aynı yorumu yeniden gönderemezsiniz.",

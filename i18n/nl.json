@@ -17,7 +17,6 @@
 	"echo-pref-tooltip-importdump-request-comment": "Mij op de hoogte stellen als er een reactie is op een importaanvraag waaraan ik heb deelgenomen.",
 	"echo-pref-tooltip-importdump-request-status-update": "Laat me weten wanneer de status is bijgewerkt voor een importaanvraag waaraan ik heb deelgenomen.",
 	"importdump-button-copy": "(Naar klembord kopiëren)",
-	"importdump-comment-given": "Opmerking geplaatst door $1:",
 	"importdump-comment-success": "De opmerking is toegevoegd aan deze aanvraag.",
 	"importdump-desc": "Een uitbreiding die is ontworpen om importaanvragen van gebruikers te automatiseren.",
 	"importdump-duplicate-comment": "Het is niet mogelijk opnieuw dezelfde opmerking in te dienen als uw eerdere verzoek.",

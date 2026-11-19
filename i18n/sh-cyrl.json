@@ -14,7 +14,6 @@
 	"echo-pref-tooltip-importdump-request-comment": "Обавијести ме када постоји коментар на захтјев за увоз у којем сам учествовао.",
 	"echo-pref-tooltip-importdump-request-status-update": "Обавијести ме када се промијени статус захтјева за складишни извадак увоза у којем сам учествовао.",
 	"importdump-button-copy": "(Копирај у међуспремник)",
-	"importdump-comment-given": "Коментар дао $1:",
 	"importdump-comment-success": "Коментар је упјешно додан овом захтјеву.",
 	"importdump-desc": "Додатак намијењен аутоматизацији корисничких захтјева за увоз.",
 	"importdump-duplicate-request": "Није могуће послати овај захтјев. Превише је сличан већ отвореном захтјеву.",

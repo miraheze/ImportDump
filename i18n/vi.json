@@ -20,7 +20,6 @@
 	"echo-pref-tooltip-importdump-request-comment": "Thông báo cho tôi khi có bình luận về yêu cầu nhập mà tôi đã tham gia.",
 	"echo-pref-tooltip-importdump-request-status-update": "Thông báo cho tôi khi trạng thái được cập nhật cho yêu cầu nhập mà tôi đã tham gia.",
 	"importdump-button-copy": "(Sao chép vào khay nhớ tạm)",
-	"importdump-comment-given": "Bình luận được đưa ra bởi $1:",
 	"importdump-comment-success": "Bình luận đã được thêm thành công vào yêu cầu này.",
 	"importdump-desc": "Tiện ích mở rộng được thiết kế để tự động hóa các yêu cầu nhập của người dùng.",
 	"importdump-duplicate-comment": "Không thể gửi lại bình luận giống như yêu cầu trước đó của bạn.",

@@ -17,7 +17,6 @@
 	"echo-pref-tooltip-importdump-request-comment": "Obavještava vas kad postoji komentar na zahtjev za uvoz u kojem ste učestvovali.",
 	"echo-pref-tooltip-importdump-request-status-update": "Obavještava vas kada se promijeni status zahtjeva za uvoz u kojem ste učestvovali",
 	"importdump-button-copy": "(Kopiraj u međuspremnik)",
-	"importdump-comment-given": "Komentar dao je $1:",
 	"importdump-comment-success": "Komentar je upješno dodan ovom zahtjevu.",
 	"importdump-desc": "Dodatak namijenjen automatizaciji korisničkih zahtjeva za uvoz.",
 	"importdump-duplicate-comment": "Nije moguće ponovo poslati isti komentar kao vaš prethodni zahtjev.",

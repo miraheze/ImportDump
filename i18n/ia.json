@@ -15,7 +15,6 @@
 	"echo-pref-tooltip-importdump-request-comment": "Notificar me si il ha un commento sur un requesta de importation al qual io ha participate.",
 	"echo-pref-tooltip-importdump-request-status-update": "Notificar me quando le stato es actualisate pro un requesta de importation al qual io ha participate.",
 	"importdump-button-copy": "(Copiar al area de transferentia)",
-	"importdump-comment-given": "Commento lassate per $1:",
 	"importdump-comment-success": "Le commento ha essite addite a iste requesta.",
 	"importdump-desc": "Un extension concipite pro automatisar le requestas de importation de usatores.",
 	"importdump-duplicate-comment": "Impossibile resubmitter le mesme commento que illo in tu requesta previe.",

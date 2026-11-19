@@ -13,7 +13,6 @@
 	"action-view-private-import-requests": "عرض طلبات الاستيراد الخاصة",
 	"echo-category-title-importdump-new-request": "طلب استيراد جديد",
 	"echo-category-title-importdump-request-comment": "تمت إضافة تعليق إلى طلب الاستيراد",
-	"importdump-comment-given": "تم تقديم التعليق بواسطة $1:",
 	"importdump-desc": "ملحق مصمم لأتمتة طلبات استيراد المستخدمين.",
 	"importdump-duplicate-request": "غير قادر على تقديم هذا الطلب. إنه مشابه لطلب مفتوح بالفعل.",
 	"importdump-header-comment-withtimestamp": "التعليق مقدم من $1 بسعر $2",

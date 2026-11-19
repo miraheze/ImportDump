@@ -15,7 +15,6 @@
 	"echo-pref-tooltip-importdump-request-comment": "Giv mig besked når der er en kommentar til en importanmodning som jeg har deltaget i.",
 	"echo-pref-tooltip-importdump-request-status-update": "Giv mig besked når status for en importanmodning som jeg har deltaget i opdateres.",
 	"importdump-button-copy": "(Kopier til udklipsholder)",
-	"importdump-comment-given": "Kommentar givet af $1:",
 	"importdump-comment-success": "Kommentar tilføjet til denne anmodning med succes.",
 	"importdump-desc": "En udvidelse designet til at automatisere brugerimportanmodninger.",
 	"importdump-duplicate-comment": "Det er ikke muligt at indsende den samme kommentar som din forrige anmodning.",

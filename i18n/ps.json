@@ -16,7 +16,6 @@
 	"echo-pref-tooltip-importdump-request-comment": "د هغه رالېږدونې غوښتنې په اړه چې ما پکې گډون کړی، د څرگندونې پرمهال دې ماته خبر راکړل شي.",
 	"echo-pref-tooltip-importdump-request-status-update": "هغه د رالېږدونې غوښتنه چې ما پکې گډون کړی، کله چې هم‌مهالېږي؛ نو ماته دې خبر راکړل شي.",
 	"importdump-button-copy": "(ټينگدړې ته لمېسل)",
-	"importdump-comment-given": "د $1 له‌خوا ورکړل شوې څرگندونه:",
 	"importdump-comment-success": "دې غوښتنې ته په برياليتوب سره څرگندونه ورگډه شوه.",
 	"importdump-desc": "يو شاتاړی چې د کارن رالېږدونې غوښتنو خپلکاري کولو لپاره سکښتل شوې.",
 	"importdump-duplicate-comment": "ستاسو د پخوانۍ غوښتنې په څېر څرگندونه بيا نشي سپارلی.",

@@ -25,7 +25,6 @@
 	"echo-pref-tooltip-importdump-request-comment": "当我参与的导入申请收到备注时通知我。",
 	"echo-pref-tooltip-importdump-request-status-update": "当我参与的导入申请状态更新时通知我。",
 	"importdump-button-copy": "（复制到剪贴板）",
-	"importdump-comment-given": "$1的备注：",
 	"importdump-comment-success": "已成功添加备注到该申请。",
 	"importdump-desc": "可自动处理用户导入申请的扩展。",
 	"importdump-duplicate-comment": "无法重新提交与您上次申请相同的备注。",

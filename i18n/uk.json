@@ -20,7 +20,6 @@
 	"echo-pref-tooltip-importdump-request-comment": "Сповістити мене, коли є коментар до запиту на імпорт, у якому я брав участь.",
 	"echo-pref-tooltip-importdump-request-status-update": "Сповістити мене, коли статус запиту на імпорт, в якому я беру участь, буде оновлено.",
 	"importdump-button-copy": "(Копіювати до буферу обміну)",
-	"importdump-comment-given": "Коментар надано $1:",
 	"importdump-comment-success": "Коментар успішно додано до цього запиту.",
 	"importdump-desc": "Розширення, призначене для автоматизації запитів користувачів на імпорт.",
 	"importdump-duplicate-request": "Неможливо надіслати цей запит. Він занадто схожий на вже відкритий запит.",

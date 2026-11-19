@@ -8,7 +8,6 @@
 	"action-view-private-import-requests": "peržiūrėti privačius importavimo prašymus",
 	"echo-pref-tooltip-importdump-request-comment": "Pranešti man, kai yra importo užklausos, kurioje dalyvavau, komentaras.",
 	"importdump-button-copy": "(Kopijuoti į iškarpinę)",
-	"importdump-comment-given": "$1 komentaras:",
 	"importdump-comment-success": "Komentaras sėkmingai pridėtas prie šios užklausos.",
 	"importdump-desc": "Plėtinys, skirtas automatizuoti naudotojų importavimo užklausas.",
 	"importdump-duplicate-request": "Nepavyko pateikti šios užklausos. Tai per daug panašu į jau atidarytą užklausą.",

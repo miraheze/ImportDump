@@ -16,7 +16,6 @@
 	"echo-pref-tooltip-importdump-request-comment": "जब आयात हेतु मेरे भाग लिए हुए किसी अनुरोध में कोई टिप्पणी हो तब मुझे सूचित करें।",
 	"echo-pref-tooltip-importdump-request-status-update": "जब आयात हेतु मेरे भाग लिए हुए किसी अनुरोध की स्थिति अपडेट की जाए तब मुझे सूचित करें।",
 	"importdump-button-copy": "(क्लिपबोर्ड को कॉपी करें)",
-	"importdump-comment-given": "$1 द्वारा टिप्पणी:",
 	"importdump-comment-success": "इस अनुरोध पर टिप्पणी सफलतापूर्वक जोड़ दी गई है।",
 	"importdump-desc": "सदस्यों द्वारा किए गए आयात हेतु अनुरोधों को स्वचालित करने के लिए डिज़ाइन किया गया एक एक्सटेंशन।",
 	"importdump-duplicate-comment": "आपके पिछले अनुरोध के समान टिप्पणी पुनः प्रस्तुत नहीं की जा सकी।",
