@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump\Tests\Logging;
 
 use MediaWiki\Logging\DatabaseLogEntry;
 use MediaWiki\Logging\ManualLogEntry;
+use MediaWiki\MainConfigNames;
 use MediaWiki\Title\TitleValue;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\Logging\ImportDumpLogFormatter;
@@ -20,7 +21,7 @@ class ImportDumpLogFormatterTest extends MediaWikiIntegrationTestCase {
 		parent::setUp();
 
 		$this->setUserLang( 'en' );
-		$this->setContentLang( 'en' );
+		$this->overrideConfigValue( MainConfigNames::LanguageCode, 'en' );
 	}
 
 	private function newFormatter( string $type, string $action, array $params ): ImportDumpLogFormatter {
@@ -30,14 +31,11 @@ class ImportDumpLogFormatterTest extends MediaWikiIntegrationTestCase {
 		$entry->setParameters( $params );
 
 		$logID = $entry->insert( $this->getDb() );
-		$row = $this->getDb()->newSelectQueryBuilder()
-			->queryInfo( DatabaseLogEntry::getSelectQueryData() )
-			->where( [ 'log_id' => $logID ] )
-			->caller( __METHOD__ )
-			->fetchRow();
+		$logEntry = DatabaseLogEntry::newFromId( $logID, $this->getDb() );
+		$this->assertNotNull( $logEntry );
 
 		$formatter = $this->getServiceContainer()->getLogFormatterFactory()
-			->newFromEntry( DatabaseLogEntry::newFromRow( $row ) );
+			->newFromEntry( $logEntry );
 
 		$this->assertInstanceOf( ImportDumpLogFormatter::class, $formatter );
 		return $formatter;
