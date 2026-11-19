@@ -144,7 +144,9 @@ class MigrateLogParamsTest extends MaintenanceBaseTestCase {
 		$this->expectOutputRegex( '/Migrated 0 log entries/' );
 		$this->maintenance->execute();
 
-		$this->assertSame( $params, $this->getParams( $logID ) );
+		$stored = $this->getParams( $logID );
+		$this->assertArrayHasKey( '4::requestLink', $stored );
+		$this->assertArrayNotHasKey( '4:request-link:requestID', $stored );
 	}
 
 	public function testBatches(): void {

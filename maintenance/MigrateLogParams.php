@@ -174,7 +174,13 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 				continue;
 			}
 
-			$html = is_array( $value ) ? (string)( $value['raw'] ?? '' ) : (string)$value;
+			// Old entries hold a ScalarParam, which unserializes to an incomplete class.
+			$html = match ( true ) {
+				is_array( $value ) => (string)( $value['raw'] ?? '' ),
+				is_object( $value ) => (string)( ( (array)$value )['value'] ?? '' ),
+				default => (string)$value,
+			};
+
 			if ( preg_match( '/#(\d+)\s*<\/a>/', $html, $matches ) ) {
 				return (int)$matches[1];
 			}

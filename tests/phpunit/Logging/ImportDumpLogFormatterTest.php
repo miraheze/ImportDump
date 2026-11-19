@@ -52,7 +52,10 @@ class ImportDumpLogFormatterTest extends MediaWikiIntegrationTestCase {
 		$html = $formatter->getActionText();
 		$this->assertStringContainsString( 'RequestImportQueue/7', $html );
 		$this->assertStringContainsString( '>#7</a>', $html );
-		$this->assertStringContainsString( "to 'in progress'", $html );
+		$this->assertStringContainsString(
+			"to 'in progress'",
+			html_entity_decode( $html, ENT_QUOTES )
+		);
 	}
 
 	public function testPlainTextHasNoHtml(): void {
@@ -68,7 +71,7 @@ class ImportDumpLogFormatterTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testUnknownStatusIsShownAsStored(): void {
-		$formatter = $this->newFormatter( 'importdumpprivate', 'statusupdate', [
+		$formatter = $this->newFormatter( 'importdump', 'statusupdate', [
 			'4:request-link:requestID' => 7,
 			'5:request-status:requestStatus' => 'something else',
 		] );
