@@ -8,6 +8,7 @@ use MediaWiki\Status\Status;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\RequestHistory;
+use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\DumpResult;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
@@ -434,6 +435,25 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 			$this->assertContains( $type, $both->getAcceptedMimeTypes() );
 			$this->assertContains( $type, $both->getArchiveMimeTypes() );
 		}
+	}
+
+	public function testArchiveFormatsFollowTheConfiguredPrograms(): void {
+		$this->assertSame( [
+			ArchiveReader::FORMAT_ZIP,
+			ArchiveReader::FORMAT_TAR,
+			ArchiveReader::FORMAT_GZIP,
+			ArchiveReader::FORMAT_BZIP2,
+		], $this->newProcessor( self::MAX_SIZE, true, [] )->getArchiveFormats() );
+
+		$formats = $this->newProcessor( self::MAX_SIZE, true, [
+			ExternalBinaries::XZ => '/not/installed/xz',
+			ExternalBinaries::SEVEN_ZIP => '/not/installed/7z',
+		] )->getArchiveFormats();
+
+		$this->assertSame(
+			[ ArchiveReader::FORMAT_XZ, ArchiveReader::FORMAT_SEVEN_ZIP ],
+			array_slice( $formats, 4 )
+		);
 	}
 
 	public function testXzAndSevenZipAreProcessed(): void {
