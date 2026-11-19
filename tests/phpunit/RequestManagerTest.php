@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump\Tests;
 
 use MediaWiki\FileRepo\LocalRepo;
 use MediaWiki\FileRepo\RepoGroup;
+use MediaWiki\Logging\LogEntryBase;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Notification\Notification;
 use MediaWiki\Notification\NotificationService;
@@ -129,6 +130,40 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$manager->addComment( 'Test', $this->getTestUser()->getUser() );
 		$this->assertCount( 1, $manager->getComments() );
+	}
+
+	/**
+	 * @covers ::logStatusUpdate
+	 * @covers ::logStarted
+	 */
+	public function testLogsStoreRequestDataInsteadOfRenderedText(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$user = $this->getTestUser()->getUser();
+
+		$manager->logStatusUpdate( 'Done', self::STATUS_COMPLETE, $user );
+		$manager->logStarted( $user );
+
+		$rows = $this->getDb()->newSelectQueryBuilder()
+			->select( [ 'log_action', 'log_params' ] )
+			->from( 'logging' )
+			->where( [ 'log_type' => 'importdump' ] )
+			->caller( __METHOD__ )
+			->fetchResultSet();
+
+		$params = [];
+		foreach ( $rows as $row ) {
+			$params[$row->log_action] = LogEntryBase::extractParams( $row->log_params );
+		}
+
+		$this->assertSame( [
+			'4:request-link:requestID' => 1,
+			'5:request-status:requestStatus' => self::STATUS_COMPLETE,
+		], $params['statusupdate'] );
+
+		$this->assertSame( [
+			'4::requestTarget' => 'requestimporttest',
+			'5:request-link:requestID' => 1,
+		], $params['started'] );
 	}
 
 	/**

@@ -90,8 +90,8 @@
 		"view-private-import-requests"
 	],
 	"LogActionsHandlers": {
-		"importdump/*": "MediaWiki\\Logging\\LogFormatter",
-		"importdumpprivate/*": "MediaWiki\\Logging\\LogFormatter"
+		"importdump/*": "Miraheze\\ImportDump\\Logging\\ImportDumpLogFormatter",
+		"importdumpprivate/*": "Miraheze\\ImportDump\\Logging\\ImportDumpLogFormatter"
 	},
 	"LogHeaders": {
 		"importdump": "importdump-log-header",

@@ -3,6 +3,7 @@
 namespace Miraheze\ImportDump\Hooks\Handlers;
 
 use MediaWiki\Installer\Hook\LoadExtensionSchemaUpdatesHook;
+use Miraheze\ImportDump\Maintenance\MigrateLogParams;
 
 class Installer implements LoadExtensionSchemaUpdatesHook {
 
@@ -18,5 +19,7 @@ class Installer implements LoadExtensionSchemaUpdatesHook {
 			"$dir/$dbType/tables-generated.sql",
 			true,
 		] );
+
+		$updater->addPostDatabaseUpdateMaintenance( MigrateLogParams::class );
 	}
 }
