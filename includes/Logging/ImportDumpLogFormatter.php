@@ -5,6 +5,7 @@ namespace Miraheze\ImportDump\Logging;
 use MediaWiki\Logging\LogFormatter;
 use MediaWiki\Message\Message;
 use MediaWiki\SpecialPage\SpecialPage;
+use Wikimedia\Message\ScalarParam;
 
 class ImportDumpLogFormatter extends LogFormatter {
 
@@ -22,7 +23,7 @@ class ImportDumpLogFormatter extends LogFormatter {
 	}
 
 	/** @return array{raw: string}|string */
-	private function formatRequestLink( int $requestID ): array|string {
+	private function formatRequestLink( int $requestID ): ScalarParam|string {
 		$title = SpecialPage::getTitleFor( 'RequestImportQueue', (string)$requestID );
 		$link = $this->makePageLink( $title, [], "#$requestID" );
 
