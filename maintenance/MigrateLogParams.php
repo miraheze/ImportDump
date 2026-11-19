@@ -8,6 +8,7 @@ use MediaWiki\RecentChanges\RecentChange;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\RequestStatus;
 use ReflectionClass;
+use stdClass;
 use Wikimedia\Rdbms\IDatabase;
 
 class MigrateLogParams extends LoggedUpdateMaintenance {
@@ -62,6 +63,7 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 			$this->beginTransactionRound( __METHOD__ );
 
 			foreach ( $res as $row ) {
+				'@phan-var stdClass $row';
 				$count++;
 				$lastID = (int)$row->log_id;
 
@@ -174,19 +176,34 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 				continue;
 			}
 
-			// Old entries hold a ScalarParam, which unserializes to an incomplete class.
-			$html = match ( true ) {
-				is_array( $value ) => (string)( $value['raw'] ?? '' ),
-				is_object( $value ) => (string)( ( (array)$value )['value'] ?? '' ),
-				default => (string)$value,
-			};
-
-			if ( preg_match( '/#(\d+)\s*<\/a>/', $html, $matches ) ) {
+			if ( preg_match( '/#(\d+)\s*<\/a>/', $this->getText( $value ), $matches ) ) {
 				return (int)$matches[1];
 			}
 		}
 
 		return null;
+	}
+
+	/**
+	 * Old entries hold a ScalarParam, which unserializes to an incomplete class.
+	 * Its value is a protected property, so the array key has a prefix.
+	 */
+	private function getText( mixed $value ): string {
+		if ( is_array( $value ) ) {
+			return (string)( $value['raw'] ?? '' );
+		}
+
+		if ( !is_object( $value ) ) {
+			return (string)$value;
+		}
+
+		foreach ( (array)$value as $key => $property ) {
+			if ( is_string( $property ) && str_ends_with( (string)$key, 'value' ) ) {
+				return $property;
+			}
+		}
+
+		return '';
 	}
 
 	/**
