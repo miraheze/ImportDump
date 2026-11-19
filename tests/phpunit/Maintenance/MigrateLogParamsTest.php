@@ -32,9 +32,6 @@ class MigrateLogParamsTest extends MaintenanceBaseTestCase {
 		] );
 	}
 
-	/**
-	 * @param array<string, mixed> $params
-	 */
 	private function addLog( string $type, string $action, int $requestID, array $params ): int {
 		$entry = new ManualLogEntry( $type, $action );
 		$entry->setPerformer( $this->getTestUser()->getUser() );

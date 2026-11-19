@@ -23,9 +23,6 @@ class ImportDumpLogFormatterTest extends MediaWikiIntegrationTestCase {
 		$this->setContentLang( 'en' );
 	}
 
-	/**
-	 * @param array<string, mixed> $params
-	 */
 	private function newFormatter( string $type, string $action, array $params ): ImportDumpLogFormatter {
 		$entry = new ManualLogEntry( $type, $action );
 		$entry->setPerformer( $this->getTestUser()->getUser() );

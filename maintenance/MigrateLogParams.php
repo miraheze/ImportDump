@@ -93,10 +93,6 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 		return true;
 	}
 
-	/**
-	 * @param array<string|int, mixed> $params
-	 * @param array<string, string> $statuses
-	 */
 	private function convert(
 		array $params,
 		int $requestID,
@@ -163,7 +159,11 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 		return false;
 	}
 
-	/** @param array<string|int, mixed> $params */
+	/**
+	 * @param string $title
+	 * @param array<string|int, mixed> $params
+	 * @return int|null
+	 */
 	private function getRequestID( string $title, array $params ): ?int {
 		if ( preg_match( '!/(\d+)$!', $title, $matches ) ) {
 			return (int)$matches[1];
