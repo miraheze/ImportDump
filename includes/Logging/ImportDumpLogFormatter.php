@@ -3,6 +3,7 @@
 namespace Miraheze\ImportDump\Logging;
 
 use MediaWiki\Logging\LogFormatter;
+use MediaWiki\Message\Message;
 use MediaWiki\SpecialPage\SpecialPage;
 
 class ImportDumpLogFormatter extends LogFormatter {
