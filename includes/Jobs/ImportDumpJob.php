@@ -31,7 +31,6 @@ use RefreshLinks;
 use Throwable;
 use UpdateArticleCount;
 use Wikimedia\Rdbms\IConnectionProvider;
-use Wikimedia\Rdbms\SelectQueryBuilder;
 
 class ImportDumpJob extends Job
 	implements RequestStage, RequestStatus {
@@ -228,12 +227,14 @@ class ImportDumpJob extends Job
 
 		$dbr = $this->connectionProvider->getReplicaDatabase();
 
-		$lastPageID = (int)$dbr->newSelectQueryBuilder()
-			->select( 'page_id' )
+		$total = $dbr->newSelectQueryBuilder()
+			->select( 'COUNT(*)' )
 			->from( 'page' )
-			->orderBy( 'page_id', SelectQueryBuilder::SORT_DESC )
 			->caller( __METHOD__ )
 			->fetchField();
+
+		$total = (int)$total;
+		$batches = 0;
 
 		// Run in page ID ranges so we can beat between them. RefreshLinks can
 		// take a long time to run so we need to check if its still running.
@@ -260,11 +261,13 @@ class ImportDumpJob extends Job
 			$refreshLinks->execute();
 			$this->beat( force: true );
 
-			if ( $lastPageID > 0 ) {
+			$batches++;
+			if ( $total > 0 ) {
+				$done = $next === false ? $total : min( $total, $batches * $this->refreshLinksChunkSize );
 				$this->requestManager->setImportPercent(
-					$next === false ? 100 : min( 99, intdiv( (int)$next * 100, $lastPageID ) ),
-					done: null,
-					total: null
+					$next === false ? 100 : min( 99, intdiv( $done * 100, $total ) ),
+					$done,
+					$total
 				);
 			}
 
