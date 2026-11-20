@@ -75,7 +75,7 @@ class MigrateEchoTypes extends LoggedUpdateMaintenance {
 			return 0;
 		}
 
-		$provider = $this->getServiceContainer()->getExtensionRegistry()->get(
+		$provider = $this->getServiceContainer()->get(
 			'GlobalPreferences.GlobalPreferencesConnectionProvider'
 		);
 
