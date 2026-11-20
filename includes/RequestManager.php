@@ -76,6 +76,7 @@ class RequestManager {
 		private readonly ServiceOptions $options,
 		private readonly UserFactory $userFactory,
 		private readonly UserGroupManagerFactory $userGroupManagerFactory,
+		private readonly ImportProgress $importProgress,
 		private readonly VerificationProgress $verificationProgress,
 		private readonly ?ModuleFactory $moduleFactory,
 	) {
@@ -642,6 +643,20 @@ class RequestManager {
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();
+	}
+
+	public function setImportPercent( int $percent ): void {
+		$this->importProgress->set( $this->ID, $this->getStage(), $percent );
+	}
+
+	/** The percentage of the current stage that is done, or null if it is not known. */
+	public function getImportPercent(): ?int {
+		$progress = $this->importProgress->get( $this->ID );
+		if ( $progress === null || $progress['stage'] !== $this->getStage() ) {
+			return null;
+		}
+
+		return $progress['percent'];
 	}
 
 	public function setStage( string $stage ): void {

@@ -24,12 +24,14 @@ use Miraheze\ImportDump\ImportHeartbeat;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStage;
 use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Upload\PageCounter;
 use RebuildRecentchanges;
 use RebuildTextIndex;
 use RefreshLinks;
 use Throwable;
 use UpdateArticleCount;
 use Wikimedia\Rdbms\IConnectionProvider;
+use Wikimedia\Rdbms\SelectQueryBuilder;
 
 class ImportDumpJob extends Job
 	implements RequestStage, RequestStatus {
@@ -103,7 +105,7 @@ class ImportDumpJob extends Job
 
 			if ( $importStreamSource ) {
 				$this->enterStage( self::STAGE_IMPORT );
-				$this->importPages( $importStreamSource );
+				$this->importPages( $importStreamSource, $filePath );
 			}
 
 			$this->updateSiteStats();
@@ -135,7 +137,7 @@ class ImportDumpJob extends Job
 		return $status->value;
 	}
 
-	private function importPages( ImportStreamSource $importStreamSource ): void {
+	private function importPages( ImportStreamSource $importStreamSource, string $filePath ): void {
 		$user = User::newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
 		$importer = $this->wikiImporterFactory->getWikiImporter(
 			$importStreamSource, new UltimateAuthority( $user )
@@ -148,9 +150,28 @@ class ImportDumpJob extends Job
 			true
 		);
 
-		$importer->setPageOutCallback( fn () => $this->beat( force: false ) );
+		$total = PageCounter::count( $filePath );
+		$done = 0;
+		$lastUpdate = 0;
+
+		$importer->setPageOutCallback( function () use ( $total, &$done, &$lastUpdate ): void {
+			$this->beat( force: false );
+			$done++;
+
+			$now = time();
+			if ( !$total || $now === $lastUpdate ) {
+				return;
+			}
+
+			$lastUpdate = $now;
+			$this->requestManager->setImportPercent( min( 99, intdiv( $done * 100, $total ) ) );
+		} );
 
 		$importer->doImport();
+		if ( $total ) {
+			$this->requestManager->setImportPercent( 100 );
+		}
+
 		$this->beat( force: true );
 	}
 
@@ -204,6 +225,13 @@ class ImportDumpJob extends Job
 
 		$dbr = $this->connectionProvider->getReplicaDatabase();
 
+		$lastPageID = (int)$dbr->newSelectQueryBuilder()
+			->select( 'page_id' )
+			->from( 'page' )
+			->orderBy( 'page_id', SelectQueryBuilder::SORT_DESC )
+			->caller( __METHOD__ )
+			->fetchField();
+
 		// Run in page ID ranges so we can beat between them. RefreshLinks can
 		// take a long time to run so we need to check if its still running.
 		$start = null;
@@ -228,6 +256,12 @@ class ImportDumpJob extends Job
 
 			$refreshLinks->execute();
 			$this->beat( force: true );
+
+			if ( $lastPageID > 0 ) {
+				$this->requestManager->setImportPercent(
+					$next === false ? 100 : min( 99, intdiv( (int)$next * 100, $lastPageID ) )
+				);
+			}
 
 			$start = $next === false ? null : (int)$next;
 		} while ( $start !== null );

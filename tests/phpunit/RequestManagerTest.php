@@ -627,6 +627,25 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	}
 
 	/**
+	 * @covers ::getImportPercent
+	 * @covers ::setImportPercent
+	 */
+	public function testImportPercentBelongsToTheCurrentStage(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setStage( self::STAGE_IMPORT );
+		$this->assertNull( $manager->getImportPercent() );
+
+		$manager->setImportPercent( 40 );
+		$this->assertSame( 40, $manager->getImportPercent() );
+
+		$manager->setStage( self::STAGE_SITESTATS );
+		$this->assertNull( $manager->getImportPercent() );
+
+		$manager->setImportPercent( 100 );
+		$this->assertSame( 100, $manager->getImportPercent() );
+	}
+
+	/**
 	 * @covers ::retryVerification
 	 */
 	public function testRetryVerification(): void {

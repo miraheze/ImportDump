@@ -49,8 +49,11 @@ class RequestViewer implements RequestStatus {
 
 		$this->context->getOutput()->enableOOUI();
 
-		if ( $this->requestManager->getStatus() === self::STATUS_VERIFYING ) {
+		$requestStatus = $this->requestManager->getStatus();
+		if ( $requestStatus === self::STATUS_VERIFYING ) {
 			$this->addVerificationProgress();
+		} elseif ( $requestStatus === self::STATUS_STARTING || $requestStatus === self::STATUS_INPROGRESS ) {
+			$this->addImportProgress();
 		}
 
 		$formDescriptor = [
@@ -554,6 +557,51 @@ class RequestViewer implements RequestStatus {
 				'data-request-id' => $this->requestManager->getID(),
 			],
 			Html::element( 'p', [ 'class' => 'ext-importdump-verification-label' ], $label ) .
+			$bar->toString()
+		) );
+	}
+
+	/** Shows which stage the import is on and how far it has come. The script keeps the bar up to date. */
+	private function addImportProgress(): void {
+		$out = $this->context->getOutput();
+		$out->enableOOUI();
+		$out->addModules( [ 'ext.importdump.importprogress' ] );
+
+		$stage = $this->requestManager->getStage();
+		$percent = $this->requestManager->getImportPercent();
+		$position = array_search( $stage, self::STAGES, true );
+
+		if ( $position === false ) {
+			$label = $this->context->msg( 'importdump-import-waiting' )->text();
+		} else {
+			// Messages that can be used here:
+			// * importdump-import-step
+			// * importdump-import-step-percent
+			$message = $this->context->msg(
+				$percent === null ? 'importdump-import-step' : 'importdump-import-step-percent'
+			)->numParams( $position + 1, count( self::STAGES ) )
+				->params( $this->context->msg( 'importdump-stage-' . $stage )->text() );
+
+			if ( $percent !== null ) {
+				$message->numParams( $percent );
+			}
+
+			$label = $message->text();
+		}
+
+		$bar = new ProgressBarWidget( [
+			'progress' => $position === false ? false : ( $percent ?? false ),
+			'id' => 'ext-importdump-import-bar',
+		] );
+		$bar->setInfusable( true );
+
+		$out->addHTML( Html::rawElement(
+			'div',
+			[
+				'class' => 'ext-importdump-import',
+				'data-request-id' => $this->requestManager->getID(),
+			],
+			Html::element( 'p', [ 'class' => 'ext-importdump-import-label' ], $label ) .
 			$bar->toString()
 		) );
 	}

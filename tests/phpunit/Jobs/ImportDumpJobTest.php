@@ -335,6 +335,10 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 			[ self::STATUS_INPROGRESS, self::STATUS_COMPLETE ],
 			$this->getStatuses( $this->popNotifications() )
 		);
+
+		$progress = $this->getServiceContainer()->getService( 'ImportDumpImportProgress' );
+		'@phan-var \Miraheze\ImportDump\ImportProgress $progress';
+		$this->assertSame( [ 'stage' => self::STAGE_REFRESHLINKS, 'percent' => 100 ], $progress->get( $id ) );
 	}
 
 	public static function provideChunkSizes(): array {
