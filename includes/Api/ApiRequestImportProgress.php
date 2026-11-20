@@ -34,6 +34,7 @@ class ApiRequestImportProgress extends ApiBase {
 		if ( $status === RequestStatus::STATUS_STARTING || $status === RequestStatus::STATUS_INPROGRESS ) {
 			$stage = $this->requestManager->getStage();
 			$position = array_search( $stage, RequestStage::STAGES, true );
+			$pages = $this->requestManager->getImportPages();
 
 			$this->getResult()->addValue( null, $this->getModuleName(), [
 				'status' => $status,
@@ -41,6 +42,8 @@ class ApiRequestImportProgress extends ApiBase {
 				'step' => $position === false ? 0 : $position + 1,
 				'steps' => count( RequestStage::STAGES ),
 				'percent' => $this->requestManager->getImportPercent(),
+				'done' => $pages['done'] ?? null,
+				'total' => $pages['total'] ?? null,
 			] );
 
 			return;

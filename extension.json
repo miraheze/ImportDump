@@ -212,16 +212,6 @@
 				"importdump-chunkedupload-progress"
 			]
 		},
-		"ext.importdump.oouiform": {
-			"scripts": "ext.importdump.oouiform.ooui.js",
-			"dependencies": [
-				"mediawiki.storage",
-				"oojs-ui-widgets"
-			]
-		},
-		"ext.importdump.oouiform.styles": {
-			"styles": "ext.importdump.oouiform.ooui.less"
-		},
 		"ext.importdump.importprogress": {
 			"scripts": "ext.importdump.importprogress.js",
 			"dependencies": [
@@ -232,11 +222,13 @@
 			"messages": [
 				"importdump-import-finished",
 				"importdump-import-step",
+				"importdump-import-step-pages",
 				"importdump-import-step-percent",
 				"importdump-import-stopped",
 				"importdump-import-waiting",
 				"importdump-stage-afterimport",
 				"importdump-stage-counts",
+				"importdump-stage-download",
 				"importdump-stage-import",
 				"importdump-stage-recentchanges",
 				"importdump-stage-refreshlinks",
@@ -244,6 +236,16 @@
 				"importdump-stage-textindex",
 				"importdump-verification-reload"
 			]
+		},
+		"ext.importdump.oouiform": {
+			"scripts": "ext.importdump.oouiform.ooui.js",
+			"dependencies": [
+				"mediawiki.storage",
+				"oojs-ui-widgets"
+			]
+		},
+		"ext.importdump.oouiform.styles": {
+			"styles": "ext.importdump.oouiform.ooui.less"
 		},
 		"ext.importdump.progress": {
 			"scripts": "ext.importdump.progress.js",

@@ -17,15 +17,21 @@ class ImportProgress {
 	) {
 	}
 
-	public function set( int $requestID, string $stage, int $percent ): void {
+	public function set(
+		int $requestID,
+		string $stage,
+		int $percent,
+		?int $done,
+		?int $total
+	): void {
 		$this->stash->set(
 			$this->getKey( $requestID ),
-			[ 'stage' => $stage, 'percent' => $percent ],
+			[ 'stage' => $stage, 'percent' => $percent, 'done' => $done, 'total' => $total ],
 			self::TTL
 		);
 	}
 
-	/** @return ?array{stage: string, percent: int} */
+	/** @return ?array{stage: string, percent: int, done: ?int, total: ?int} */
 	public function get( int $requestID ): ?array {
 		$value = $this->stash->get( $this->getKey( $requestID ) );
 		return is_array( $value ) ? $value : null;

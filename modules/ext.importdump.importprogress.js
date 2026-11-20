@@ -12,7 +12,7 @@
 	const bar = OO.ui.infuse( $( '#ext-importdump-import-bar' ) );
 	const api = new mw.Api();
 
-	function showProgress( stage, step, steps, percent ) {
+	function showProgress( stage, step, steps, percent, done, total ) {
 		if ( !stage ) {
 			bar.setProgress( false );
 			$label.text( mw.msg( 'importdump-import-waiting' ) );
@@ -22,6 +22,7 @@
 		// Messages that can be used here:
 		// * importdump-stage-afterimport
 		// * importdump-stage-counts
+		// * importdump-stage-download
 		// * importdump-stage-import
 		// * importdump-stage-recentchanges
 		// * importdump-stage-refreshlinks
@@ -38,6 +39,19 @@
 		}
 
 		bar.setProgress( percent );
+		if ( done !== null && total !== null ) {
+			$label.text( mw.msg(
+				'importdump-import-step-pages',
+				stepNumber,
+				stepCount,
+				name,
+				mw.language.convertNumber( done ),
+				mw.language.convertNumber( total ),
+				mw.language.convertNumber( percent )
+			) );
+			return;
+		}
+
 		$label.text( mw.msg(
 			'importdump-import-step-percent',
 			stepNumber,
@@ -78,7 +92,14 @@
 				return;
 			}
 
-			showProgress( result.stage, result.step, result.steps, result.percent );
+			showProgress(
+				result.stage,
+				result.step,
+				result.steps,
+				result.percent,
+				result.done,
+				result.total
+			);
 			setTimeout( () => poll( 0 ), pollInterval );
 		}, () => {
 			if ( failures + 1 < maxFailures ) {

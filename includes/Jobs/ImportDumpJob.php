@@ -166,12 +166,13 @@ class ImportDumpJob extends Job
 			}
 
 			$lastUpdate = $now;
-			$this->requestManager->setImportPercent( min( 99, intdiv( $done * 100, $total ) ) );
+			$pages = min( $done, $total );
+			$this->requestManager->setImportPercent( intdiv( $pages * 100, $total ), $pages, $total );
 		} );
 
 		$importer->doImport();
 		if ( $total ) {
-			$this->requestManager->setImportPercent( 100 );
+			$this->requestManager->setImportPercent( 100, $total, $total );
 		}
 
 		$this->beat( force: true );
@@ -261,7 +262,9 @@ class ImportDumpJob extends Job
 
 			if ( $lastPageID > 0 ) {
 				$this->requestManager->setImportPercent(
-					$next === false ? 100 : min( 99, intdiv( (int)$next * 100, $lastPageID ) )
+					$next === false ? 100 : min( 99, intdiv( (int)$next * 100, $lastPageID ) ),
+					done: null,
+					total: null
 				);
 			}
 

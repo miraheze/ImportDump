@@ -569,6 +569,7 @@ class RequestViewer implements RequestStatus {
 
 		$stage = $this->requestManager->getStage();
 		$percent = $this->requestManager->getImportPercent();
+		$pages = $this->requestManager->getImportPages();
 		$position = array_search( $stage, RequestStage::STAGES, true );
 
 		if ( $position === false ) {
@@ -576,13 +577,18 @@ class RequestViewer implements RequestStatus {
 		} else {
 			// Messages that can be used here:
 			// * importdump-import-step
+			// * importdump-import-step-pages
 			// * importdump-import-step-percent
-			$message = $this->context->msg(
-				$percent === null ? 'importdump-import-step' : 'importdump-import-step-percent'
-			)->numParams( $position + 1, count( RequestStage::STAGES ) )
+			$message = $this->context->msg( match ( true ) {
+				$percent === null => 'importdump-import-step',
+				$pages !== null => 'importdump-import-step-pages',
+				default => 'importdump-import-step-percent',
+			} )->numParams( $position + 1, count( RequestStage::STAGES ) )
 				->params( $this->context->msg( 'importdump-stage-' . $stage )->text() );
 
-			if ( $percent !== null ) {
+			if ( $percent !== null && $pages !== null ) {
+				$message->numParams( $pages['done'], $pages['total'], $percent );
+			} elseif ( $percent !== null ) {
 				$message->numParams( $percent );
 			}
 

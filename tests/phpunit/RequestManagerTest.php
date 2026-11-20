@@ -630,6 +630,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	}
 
 	/**
+	 * @covers ::getImportPages
 	 * @covers ::getImportPercent
 	 * @covers ::setImportPercent
 	 */
@@ -638,13 +639,20 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$manager->setStage( self::STAGE_IMPORT );
 		$this->assertNull( $manager->getImportPercent() );
 
-		$manager->setImportPercent( 40 );
+		$this->assertNull( $manager->getImportPages() );
+
+		$manager->setImportPercent( 40, done: null, total: null );
 		$this->assertSame( 40, $manager->getImportPercent() );
+		$this->assertNull( $manager->getImportPages() );
+
+		$manager->setImportPercent( 40, 400, 1000 );
+		$this->assertSame( [ 'done' => 400, 'total' => 1000 ], $manager->getImportPages() );
 
 		$manager->setStage( self::STAGE_SITESTATS );
 		$this->assertNull( $manager->getImportPercent() );
+		$this->assertNull( $manager->getImportPages() );
 
-		$manager->setImportPercent( 100 );
+		$manager->setImportPercent( 100, done: null, total: null );
 		$this->assertSame( 100, $manager->getImportPercent() );
 	}
 

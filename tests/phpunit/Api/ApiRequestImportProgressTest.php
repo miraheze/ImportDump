@@ -84,7 +84,7 @@ class ApiRequestImportProgressTest extends ApiTestCase
 
 		[ $result ] = $this->doApiRequest( [ 'action' => 'requestimportprogress', 'requestid' => $id ] );
 		$this->assertSame(
-			[ 'status' => self::STATUS_STARTING, 'stage' => '', 'step' => 0, 'steps' => 8, 'percent' => null ],
+			[ 'status' => self::STATUS_STARTING, 'stage' => '', 'step' => 0, 'steps' => 8, 'percent' => null, 'done' => null, 'total' => null ],
 			$result['requestimportprogress']
 		);
 	}
@@ -105,14 +105,23 @@ class ApiRequestImportProgressTest extends ApiTestCase
 				'step' => 4,
 				'steps' => 8,
 				'percent' => null,
+				'done' => null,
+				'total' => null,
 			],
 			$result['requestimportprogress']
 		);
 
-		$manager->setImportPercent( 55 );
+		$manager->setImportPercent( 55, done: null, total: null );
 
 		[ $result ] = $this->doApiRequest( [ 'action' => 'requestimportprogress', 'requestid' => $id ] );
 		$this->assertSame( 55, $result['requestimportprogress']['percent'] );
+		$this->assertNull( $result['requestimportprogress']['done'] );
+
+		$manager->setImportPercent( 42, 1200, 2850 );
+
+		[ $result ] = $this->doApiRequest( [ 'action' => 'requestimportprogress', 'requestid' => $id ] );
+		$this->assertSame( 1200, $result['requestimportprogress']['done'] );
+		$this->assertSame( 2850, $result['requestimportprogress']['total'] );
 	}
 
 	public function testFinished(): void {

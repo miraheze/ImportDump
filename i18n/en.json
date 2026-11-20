@@ -58,6 +58,7 @@
 	"importdump-import-partial-comment": "The XML was imported, but a later step failed. Staff have been notified and will finish the remaining steps.",
 	"importdump-import-started": "Import successfully started.",
 	"importdump-import-step": "Step $1 of $2: $3",
+	"importdump-import-step-pages": "Step $1 of $2: $3 ($4 of $5, $6%)",
 	"importdump-import-step-percent": "Step $1 of $2: $3 ($4%)",
 	"importdump-import-stopped": "The import is no longer running.",
 	"importdump-import-waiting": "Waiting for the import to start",
