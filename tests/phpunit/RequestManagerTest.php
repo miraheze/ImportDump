@@ -20,6 +20,7 @@ use MediaWiki\User\UserIdentityValue;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
+use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\RequestHistory;
 use Miraheze\ImportDump\RequestManager;
@@ -623,6 +624,28 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$progress->set( 1, 'checking', 40 );
 		$this->assertSame( [ 'stage' => 'checking', 'percent' => 40 ], $manager->getVerificationProgress() );
+	}
+
+	/**
+	 * @covers ::retryVerification
+	 */
+	public function testRetryVerification(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$progress = $this->getServiceContainer()->getService( 'ImportDumpVerificationProgress' );
+		'@phan-var \Miraheze\ImportDump\VerificationProgress $progress';
+
+		$progress->set( 1, 'checking', 40 );
+
+		$manager->retryVerification();
+
+		$this->assertNull( $manager->getVerificationProgress() );
+
+		$queue = $this->getServiceContainer()->getJobQueueGroup()->get( VerifyDumpJob::JOB_NAME );
+		$this->assertSame( 1, $queue->getSize() );
+
+		$job = $queue->pop();
+		$this->assertInstanceOf( VerifyDumpJob::class, $job );
+		$this->assertSame( 1, $job->getParams()['requestid'] );
 	}
 
 	/**

@@ -502,6 +502,16 @@ class RequestViewer implements RequestStatus {
 					],
 				];
 			}
+
+			if ( $status === self::STATUS_VERIFYING ) {
+				$formDescriptor += [
+					'submit-verify' => [
+						'type' => 'submit',
+						'buttonlabel-message' => 'importdump-label-retry-verification',
+						'section' => 'handling',
+					],
+				];
+			}
 		}
 
 		return $formDescriptor;
@@ -788,6 +798,20 @@ class RequestViewer implements RequestStatus {
 				)->escaped() )
 			);
 
+			return;
+		}
+
+		if ( isset( $formData['submit-verify'] ) ) {
+			if ( $this->requestManager->getStatus() !== self::STATUS_VERIFYING ) {
+				$out->addHTML(
+					Html::errorBox( $this->context->msg( 'importdump-verification-not-needed' )->escaped() )
+				);
+
+				return;
+			}
+
+			$this->requestManager->retryVerification();
+			$out->addHTML( Html::successBox( $this->context->msg( 'importdump-verification-retried' )->escaped() ) );
 			return;
 		}
 

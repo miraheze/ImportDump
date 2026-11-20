@@ -23,6 +23,7 @@ use MediaWiki\User\UserGroupManagerFactory;
 use MediaWiki\User\UserIdentity;
 use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
+use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use stdClass;
@@ -695,6 +696,13 @@ class RequestManager {
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();
+	}
+
+	public function retryVerification(): void {
+		$this->verificationProgress->clear( $this->ID );
+		$this->jobQueueGroupFactory->makeJobQueueGroup()->push(
+			new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => $this->ID ] )
+		);
 	}
 
 	public function executeJob( string $username ): void {
