@@ -7,7 +7,7 @@ use MediaWiki\Message\Message;
 use MediaWiki\SpecialPage\SpecialPage;
 use Wikimedia\Message\ScalarParam;
 
-class ImportDumpLogFormatter extends LogFormatter {
+class RequestImportLogFormatter extends LogFormatter {
 
 	public const string TYPE_REQUEST_LINK = 'request-link';
 

@@ -635,7 +635,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 	 */
 	public function testGetLogType(): void {
 		$result = $this->specialRequestImport->getLogType( 'testwiki' );
-		$this->assertSame( 'importdump', $result );
+		$this->assertSame( 'requestimport', $result );
 	}
 
 	/**
