@@ -146,6 +146,7 @@
 	"importdump-section-handling": "'Handle Request' section label.",
 	"importdump-stage-afterimport": "Stage name for running the hooks that run after an import.",
 	"importdump-stage-counts": "Stage name for updating edit counts and the article count after an import.",
+	"importdump-stage-download": "Stage name for fetching the XML file before it is imported.",
 	"importdump-stage-import": "Stage name for importing the pages from the XML file.",
 	"importdump-stage-recentchanges": "Stage name for rebuilding recent changes after an import.",
 	"importdump-stage-refreshlinks": "Stage name for refreshing the links tables after an import.",

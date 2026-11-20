@@ -142,6 +142,7 @@
 	"importdump-section-handling": "Handle request",
 	"importdump-stage-afterimport": "Running post-import hooks",
 	"importdump-stage-counts": "Updating edit and article counts",
+	"importdump-stage-download": "Downloading the file",
 	"importdump-stage-import": "Importing pages",
 	"importdump-stage-recentchanges": "Rebuilding recent changes",
 	"importdump-stage-refreshlinks": "Refreshing links",

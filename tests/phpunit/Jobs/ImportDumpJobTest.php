@@ -220,12 +220,12 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
 	}
 
-	public function testRunFailureBeforeImportHasNoStage(): void {
+	public function testRunFailureBeforeImportLeavesDownloadStage(): void {
 		$id = $this->addRequest();
 
 		$this->assertTrue( $this->newJob( $id )->run() );
 		$this->assertSame( [ self::STATUS_FAILED ], $this->getStatuses( $this->popNotifications() ) );
-		$this->assertSame( '', $this->getRequestManager( $id )->getStage() );
+		$this->assertSame( self::STAGE_DOWNLOAD, $this->getRequestManager( $id )->getStage() );
 	}
 
 	public function testRunResumesAfterImportWithoutFetchingFile(): void {

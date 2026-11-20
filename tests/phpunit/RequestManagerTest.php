@@ -326,6 +326,9 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->assertSame( '', $manager->getStage() );
 		$this->assertFalse( $manager->hasImported() );
 
+		$manager->setStage( self::STAGE_DOWNLOAD );
+		$this->assertFalse( $manager->hasImported() );
+
 		$manager->setStage( self::STAGE_IMPORT );
 		$this->assertSame( self::STAGE_IMPORT, $manager->getStage() );
 		$this->assertFalse( $manager->hasImported() );

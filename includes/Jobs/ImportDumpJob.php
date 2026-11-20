@@ -52,7 +52,7 @@ class ImportDumpJob extends Job
 
 	private bool $running = false;
 	private int $lastBeat = 0;
-	private string $startStage = self::STAGE_IMPORT;
+	private string $startStage = self::STAGE_DOWNLOAD;
 	private int $refreshLinksChunkSize = 1000;
 
 	public function __construct(
@@ -82,7 +82,7 @@ class ImportDumpJob extends Job
 			return true;
 		}
 
-		$this->startStage = $this->requestManager->getStage() ?: self::STAGE_IMPORT;
+		$this->startStage = $this->requestManager->getStage() ?: self::STAGE_DOWNLOAD;
 		$filePath = wfTempDir() . '/' . $this->requestManager->getFileName();
 
 		$this->running = true;
@@ -91,7 +91,8 @@ class ImportDumpJob extends Job
 
 		try {
 			$importStreamSource = null;
-			if ( $this->startStage === self::STAGE_IMPORT ) {
+			if ( in_array( $this->startStage, [ self::STAGE_DOWNLOAD, self::STAGE_IMPORT ], true ) ) {
+				$this->enterStage( self::STAGE_DOWNLOAD );
 				$this->hookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
 
 				// @phan-suppress-next-line SecurityCheck-PathTraversal False positive

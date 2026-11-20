@@ -529,7 +529,7 @@ class RequestManager {
 
 	public function hasImported(): bool {
 		$stage = $this->getStage();
-		return $stage !== '' && $stage !== RequestStage::STAGE_IMPORT;
+		return !in_array( $stage, [ '', RequestStage::STAGE_DOWNLOAD, RequestStage::STAGE_IMPORT ], true );
 	}
 
 	/** @return string[] */
