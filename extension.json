@@ -90,26 +90,26 @@
 		"view-private-import-requests"
 	],
 	"LogActionsHandlers": {
-		"importdump/*": "Miraheze\\ImportDump\\Logging\\ImportDumpLogFormatter",
-		"importdumpprivate/*": "Miraheze\\ImportDump\\Logging\\ImportDumpLogFormatter"
+		"requestimport/*": "Miraheze\\ImportDump\\Logging\\RequestImportLogFormatter",
+		"requestimportprivate/*": "Miraheze\\ImportDump\\Logging\\RequestImportLogFormatter"
 	},
 	"LogHeaders": {
-		"importdump": "importdump-log-header",
-		"importdumpprivate": "importdumpprivate-log-header"
+		"requestimport": "requestimport-log-header",
+		"requestimportprivate": "requestimportprivate-log-header"
 	},
 	"LogNames": {
-		"importdump": "importdump-log-name",
-		"importdumpprivate": "importdumpprivate-log-name"
+		"requestimport": "requestimport-log-name",
+		"requestimportprivate": "requestimportprivate-log-name"
 	},
 	"LogTypes": [
-		"importdump",
-		"importdumpprivate"
+		"requestimport",
+		"requestimportprivate"
 	],
 	"LogRestrictions": {
-		"importdumpprivate": "view-private-import-requests"
+		"requestimportprivate": "view-private-import-requests"
 	},
 	"ActionFilteredLogs": {
-		"importdump": {
+		"requestimport": {
 			"interwiki": [
 				"interwiki"
 			],
@@ -123,7 +123,7 @@
 				"statusupdate"
 			]
 		},
-		"importdumpprivate": {
+		"requestimportprivate": {
 			"interwiki": [
 				"interwiki"
 			],

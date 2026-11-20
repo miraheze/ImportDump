@@ -7,15 +7,15 @@ use MediaWiki\Logging\ManualLogEntry;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Title\TitleValue;
 use MediaWikiIntegrationTestCase;
-use Miraheze\ImportDump\Logging\ImportDumpLogFormatter;
+use Miraheze\ImportDump\Logging\RequestImportLogFormatter;
 
 /**
  * @group ImportDump
  * @group Database
  * @group medium
- * @covers \Miraheze\ImportDump\Logging\ImportDumpLogFormatter
+ * @covers \Miraheze\ImportDump\Logging\RequestImportLogFormatter
  */
-class ImportDumpLogFormatterTest extends MediaWikiIntegrationTestCase {
+class RequestImportLogFormatterTest extends MediaWikiIntegrationTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -24,7 +24,7 @@ class ImportDumpLogFormatterTest extends MediaWikiIntegrationTestCase {
 		$this->overrideConfigValue( MainConfigNames::LanguageCode, 'en' );
 	}
 
-	private function newFormatter( string $type, string $action, array $params ): ImportDumpLogFormatter {
+	private function newFormatter( string $type, string $action, array $params ): RequestImportLogFormatter {
 		$entry = new ManualLogEntry( $type, $action );
 		$entry->setPerformer( $this->getTestUser()->getUser() );
 		$entry->setTarget( new TitleValue( NS_SPECIAL, 'RequestImportQueue/7' ) );
@@ -37,12 +37,12 @@ class ImportDumpLogFormatterTest extends MediaWikiIntegrationTestCase {
 		$formatter = $this->getServiceContainer()->getLogFormatterFactory()
 			->newFromEntry( $logEntry );
 
-		$this->assertInstanceOf( ImportDumpLogFormatter::class, $formatter );
+		$this->assertInstanceOf( RequestImportLogFormatter::class, $formatter );
 		return $formatter;
 	}
 
 	public function testStatusUpdateLinksRequestAndTranslatesStatus(): void {
-		$formatter = $this->newFormatter( 'importdump', 'statusupdate', [
+		$formatter = $this->newFormatter( 'requestimport', 'statusupdate', [
 			'4:request-link:requestID' => 7,
 			'5:request-status:requestStatus' => 'inprogress',
 		] );
@@ -57,7 +57,7 @@ class ImportDumpLogFormatterTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testPlainTextHasNoHtml(): void {
-		$formatter = $this->newFormatter( 'importdump', 'statusupdate', [
+		$formatter = $this->newFormatter( 'requestimport', 'statusupdate', [
 			'4:request-link:requestID' => 7,
 			'5:request-status:requestStatus' => 'complete',
 		] );
@@ -69,7 +69,7 @@ class ImportDumpLogFormatterTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testUnknownStatusIsShownAsStored(): void {
-		$formatter = $this->newFormatter( 'importdump', 'statusupdate', [
+		$formatter = $this->newFormatter( 'requestimport', 'statusupdate', [
 			'4:request-link:requestID' => 7,
 			'5:request-status:requestStatus' => 'something else',
 		] );
@@ -78,7 +78,7 @@ class ImportDumpLogFormatterTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testRequestEntryKeepsTarget(): void {
-		$formatter = $this->newFormatter( 'importdump', 'request', [
+		$formatter = $this->newFormatter( 'requestimport', 'request', [
 			'4::requestTarget' => 'testwiki',
 			'5:request-link:requestID' => 7,
 		] );
@@ -89,7 +89,7 @@ class ImportDumpLogFormatterTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testStoredHtmlIsNotRendered(): void {
-		$formatter = $this->newFormatter( 'importdump', 'request', [
+		$formatter = $this->newFormatter( 'requestimport', 'request', [
 			'4::requestTarget' => '<script>alert(1)</script>',
 			'5:request-link:requestID' => 7,
 		] );

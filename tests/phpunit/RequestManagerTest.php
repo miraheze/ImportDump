@@ -147,7 +147,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$rows = $this->getDb()->newSelectQueryBuilder()
 			->select( [ 'log_action', 'log_params' ] )
 			->from( 'logging' )
-			->where( [ 'log_type' => 'importdump' ] )
+			->where( [ 'log_type' => 'requestimport' ] )
 			->caller( __METHOD__ )
 			->fetchResultSet();
 

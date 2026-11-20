@@ -424,15 +424,15 @@ class SpecialRequestImport extends FormSpecialPage
 
 	public function getLogType( string $target ): string {
 		if ( !$this->moduleFactory?->isEnabled( 'core' ) ) {
-			return 'importdump';
+			return 'requestimport';
 		}
 
 		$mwCore = $this->moduleFactory->core( $target );
 		if ( !$mwCore->isEnabled( 'private-wikis' ) ) {
-			return 'importdump';
+			return 'requestimport';
 		}
 
-		return $mwCore->isPrivate() ? 'importdumpprivate' : 'importdump';
+		return $mwCore->isPrivate() ? 'requestimportprivate' : 'requestimport';
 	}
 
 	public function sendNotifications(
@@ -448,7 +448,7 @@ class SpecialRequestImport extends FormSpecialPage
 			)
 		);
 
-		$isPrivate = $this->getLogType( $target ) === 'importdumpprivate';
+		$isPrivate = $this->getLogType( $target ) === 'requestimportprivate';
 		$receivers = array_values( array_filter(
 			$notifiedUsers,
 			static fn ( User $receiver ): bool => $receiver->isAllowed( 'handle-import-requests' ) &&

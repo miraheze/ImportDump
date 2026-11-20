@@ -122,7 +122,7 @@ class RequestManager {
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
 
 		$logEntry = new ManualLogEntry(
-			$this->isPrivate( forced: false ) ? 'importdumpprivate' : 'importdump',
+			$this->isPrivate( forced: false ) ? 'requestimportprivate' : 'requestimport',
 			'statusupdate'
 		);
 
@@ -148,7 +148,7 @@ class RequestManager {
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
 
 		$logEntry = new ManualLogEntry(
-			$this->isPrivate( forced: false ) ? 'importdumpprivate' : 'importdump',
+			$this->isPrivate( forced: false ) ? 'requestimportprivate' : 'requestimport',
 			'started'
 		);
 
@@ -243,7 +243,7 @@ class RequestManager {
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
 
 		$logEntry = new ManualLogEntry(
-			$this->isPrivate( forced: false ) ? 'importdumpprivate' : 'importdump',
+			$this->isPrivate( forced: false ) ? 'requestimportprivate' : 'requestimport',
 			'interwiki'
 		);
 
