@@ -23,7 +23,9 @@ class MigrateEchoTypes extends LoggedUpdateMaintenance {
 	public function __construct() {
 		parent::__construct();
 
-		$this->addDescription( 'Moves the notification preferences and existing notifications to the new notification types.' );
+		$this->addDescription(
+			'Moves the notification preferences and existing notifications to the new notification types.'
+		);
 
 		$this->requireExtension( 'ImportDump' );
 	}
