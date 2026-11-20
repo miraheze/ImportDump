@@ -109,7 +109,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 		$this->runJob( $id, self::STATUS_FAILED, 'The import broke', $this->getTestUser()->getUser()->getName() );
 
 		$this->assertSame(
-			[ 'importdump-import-failed', 'importdump-request-status-update' ],
+			[ 'requestimport-import-failed', 'requestimport-request-status-update' ],
 			$this->getTypes()
 		);
 
@@ -135,7 +135,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 		$id = $this->addRequest();
 		$this->runJob( $id, self::STATUS_FAILED, 'The import broke', $this->getTestUser()->getUser()->getName() );
 
-		$this->assertNotContains( 'importdump-import-failed', $this->getTypes() );
+		$this->assertNotContains( 'requestimport-import-failed', $this->getTypes() );
 		$this->assertSame( self::STATUS_FAILED, $this->getRequestManager( $id )->getStatus() );
 	}
 
@@ -143,7 +143,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 		$id = $this->addRequest();
 		$this->runJob( $id, self::STATUS_COMPLETE, '', $this->getTestUser()->getUser()->getName() );
 
-		$this->assertSame( [ 'importdump-request-status-update' ], $this->getTypes() );
+		$this->assertSame( [ 'requestimport-request-status-update' ], $this->getTypes() );
 
 		[ $notification, $recipients ] = $this->captured[0];
 		$this->assertSame( [ $this->getTestUser()->getUser()->getName() ], array_map(
@@ -165,7 +165,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 		$this->assertSame( 'ImportDump Status Update', $comments[0]['user']->getName() );
 		$this->assertStringContainsString( $actor->getName(), $comments[0]['comment'] );
 
-		$this->assertSame( [ 'importdump-request-status-update' ], $this->getTypes() );
+		$this->assertSame( [ 'requestimport-request-status-update' ], $this->getTypes() );
 
 		[ $notification, $recipients ] = $this->captured[0];
 		$this->assertSame( $actor->getName(), $notification->getAgent()->getName() );

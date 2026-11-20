@@ -93,7 +93,7 @@ class VerifyDumpJob extends Job implements RequestStatus {
 			->escaped();
 
 		$this->requestManager->addComment( $comment, $user );
-		$this->requestManager->sendNotification( $comment, 'importdump-request-status-update', $user );
+		$this->requestManager->sendNotification( $comment, 'requestimport-request-status-update', $user );
 		$this->requestManager->setStatus( self::STATUS_DECLINED );
 		$this->requestManager->logStatusUpdate( $reason, self::STATUS_DECLINED, $user );
 	}

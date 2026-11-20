@@ -3,6 +3,7 @@
 namespace Miraheze\ImportDump\Hooks\Handlers;
 
 use MediaWiki\Installer\Hook\LoadExtensionSchemaUpdatesHook;
+use Miraheze\ImportDump\Maintenance\MigrateEchoTypes;
 use Miraheze\ImportDump\Maintenance\MigrateLogParams;
 use Miraheze\ImportDump\Maintenance\MigrateLogTypes;
 
@@ -23,5 +24,6 @@ class Installer implements LoadExtensionSchemaUpdatesHook {
 
 		$updater->addPostDatabaseUpdateMaintenance( MigrateLogParams::class );
 		$updater->addPostDatabaseUpdateMaintenance( MigrateLogTypes::class );
+		$updater->addPostDatabaseUpdateMaintenance( MigrateEchoTypes::class );
 	}
 }

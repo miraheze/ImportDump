@@ -461,7 +461,7 @@ class SpecialRequestImport extends FormSpecialPage
 
 		$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', $requestID )->getFullURL();
 		$this->notificationService->notify(
-			new RequestNotification( 'importdump-new-request', $requester, [
+			new RequestNotification( 'requestimport-new-request', $requester, [
 				'request-id' => $requestID,
 				'request-url' => $requestLink,
 				'reason' => $reason,

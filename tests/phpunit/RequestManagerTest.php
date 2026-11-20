@@ -194,7 +194,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		[ $notification, $recipients ] = $captured[0];
 
 		$this->assertInstanceOf( RequestNotification::class, $notification );
-		$this->assertSame( 'importdump-request-comment', $notification->getType() );
+		$this->assertSame( 'requestimport-request-comment', $notification->getType() );
 		$this->assertSame( $commenter->getName(), $notification->getAgent()->getName() );
 		$this->assertSame( [ $requester->getName() ], array_map(
 			static fn ( UserIdentity $user ): string => $user->getName(),

@@ -314,12 +314,12 @@
 		"ImportDump": "MediaWiki\\Config\\GlobalVarConfig::newInstance"
 	},
 	"DefaultUserOptions": {
-		"echo-subscriptions-email-importdump-import-failed": true,
-		"echo-subscriptions-email-importdump-new-request": true,
-		"echo-subscriptions-email-importdump-request-comment": true,
-		"echo-subscriptions-email-importdump-request-status-update": true,
-		"echo-subscriptions-web-importdump-request-comment": true,
-		"echo-subscriptions-web-importdump-request-status-update": true
+		"echo-subscriptions-email-requestimport-import-failed": true,
+		"echo-subscriptions-email-requestimport-new-request": true,
+		"echo-subscriptions-email-requestimport-request-comment": true,
+		"echo-subscriptions-email-requestimport-request-status-update": true,
+		"echo-subscriptions-web-requestimport-request-comment": true,
+		"echo-subscriptions-web-requestimport-request-status-update": true
 	},
 	"RateLimits": {
 		"request-import": {

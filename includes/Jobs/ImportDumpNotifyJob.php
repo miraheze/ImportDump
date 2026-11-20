@@ -79,7 +79,7 @@ class ImportDumpNotifyJob extends Job
 			->escaped();
 
 		$this->requestManager->addComment( $comment, $commentUser );
-		$this->requestManager->sendNotification( $comment, 'importdump-request-status-update', $commentUser );
+		$this->requestManager->sendNotification( $comment, 'requestimport-request-status-update', $commentUser );
 		$this->requestManager->setStatus( self::STATUS_COMPLETE );
 	}
 
@@ -102,7 +102,7 @@ class ImportDumpNotifyJob extends Job
 		if ( $receivers ) {
 			$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', (string)$this->requestID )->getFullURL();
 			$this->notificationService->notify(
-				new RequestNotification( 'importdump-import-failed', $commentUser, [
+				new RequestNotification( 'requestimport-import-failed', $commentUser, [
 					'request-id' => $this->requestID,
 					'request-url' => $requestLink,
 					'reason' => $this->jobError,
@@ -116,7 +116,7 @@ class ImportDumpNotifyJob extends Job
 			->escaped();
 
 		$this->requestManager->addComment( $comment, $commentUser );
-		$this->requestManager->sendNotification( $comment, 'importdump-request-status-update', $commentUser );
+		$this->requestManager->sendNotification( $comment, 'requestimport-request-status-update', $commentUser );
 		$this->requestManager->setStatus( $status );
 	}
 
@@ -139,7 +139,7 @@ class ImportDumpNotifyJob extends Job
 		)->inContentLanguage()->escaped();
 
 		$this->requestManager->addComment( $comment, User::newSystemUser( 'ImportDump Status Update' ) );
-		$this->requestManager->sendNotification( $comment, 'importdump-request-status-update', $user );
+		$this->requestManager->sendNotification( $comment, 'requestimport-request-status-update', $user );
 		$this->requestManager->setStatus( self::STATUS_INPROGRESS );
 	}
 }

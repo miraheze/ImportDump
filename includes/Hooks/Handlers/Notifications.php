@@ -28,54 +28,54 @@ class Notifications implements BeforeCreateEchoEventHook {
 			return;
 		}
 
-		$notificationCategories['importdump-import-failed'] = [
+		$notificationCategories['requestimport-import-failed'] = [
 			'priority' => 1,
 			'no-dismiss' => [ 'all' ],
 		];
 
-		$notificationCategories['importdump-new-request'] = [
+		$notificationCategories['requestimport-new-request'] = [
 			'priority' => 2,
 			'no-dismiss' => [ 'all' ],
 		];
 
-		$notificationCategories['importdump-request-comment'] = [
+		$notificationCategories['requestimport-request-comment'] = [
 			'priority' => 3,
 			'no-dismiss' => [ 'email' ],
-			'tooltip' => 'echo-pref-tooltip-importdump-request-comment',
+			'tooltip' => 'echo-pref-tooltip-requestimport-request-comment',
 		];
 
-		$notificationCategories['importdump-request-status-update'] = [
+		$notificationCategories['requestimport-request-status-update'] = [
 			'priority' => 3,
 			'no-dismiss' => [ 'email' ],
-			'tooltip' => 'echo-pref-tooltip-importdump-request-status-update',
+			'tooltip' => 'echo-pref-tooltip-requestimport-request-status-update',
 		];
 
-		$notifications['importdump-import-failed'] = [
-			'category' => 'importdump-import-failed',
+		$notifications['requestimport-import-failed'] = [
+			'category' => 'requestimport-import-failed',
 			'group' => 'positive',
 			'section' => 'alert',
 			'presentation-model' => EchoImportFailedPresentationModel::class,
 			'immediate' => true,
 		];
 
-		$notifications['importdump-new-request'] = [
-			'category' => 'importdump-new-request',
+		$notifications['requestimport-new-request'] = [
+			'category' => 'requestimport-new-request',
 			'group' => 'positive',
 			'section' => 'alert',
 			'presentation-model' => EchoNewRequestPresentationModel::class,
 			'immediate' => true,
 		];
 
-		$notifications['importdump-request-comment'] = [
-			'category' => 'importdump-request-comment',
+		$notifications['requestimport-request-comment'] = [
+			'category' => 'requestimport-request-comment',
 			'group' => 'positive',
 			'section' => 'alert',
 			'presentation-model' => EchoRequestCommentPresentationModel::class,
 			'immediate' => true,
 		];
 
-		$notifications['importdump-request-status-update'] = [
-			'category' => 'importdump-request-status-update',
+		$notifications['requestimport-request-status-update'] = [
+			'category' => 'requestimport-request-status-update',
 			'group' => 'positive',
 			'section' => 'alert',
 			'presentation-model' => EchoRequestStatusUpdatePresentationModel::class,
