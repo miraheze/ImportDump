@@ -84,7 +84,15 @@ class ApiRequestImportProgressTest extends ApiTestCase
 
 		[ $result ] = $this->doApiRequest( [ 'action' => 'requestimportprogress', 'requestid' => $id ] );
 		$this->assertSame(
-			[ 'status' => self::STATUS_STARTING, 'stage' => '', 'step' => 0, 'steps' => 8, 'percent' => null, 'done' => null, 'total' => null ],
+			[
+				'status' => self::STATUS_STARTING,
+				'stage' => '',
+				'step' => 0,
+				'steps' => 8,
+				'percent' => null,
+				'done' => null,
+				'total' => null,
+			],
 			$result['requestimportprogress']
 		);
 	}
