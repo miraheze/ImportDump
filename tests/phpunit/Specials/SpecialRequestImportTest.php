@@ -672,7 +672,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 		[ $notification, $recipients ] = $captured[0];
 
 		$this->assertInstanceOf( RequestNotification::class, $notification );
-		$this->assertSame( 'importdump-new-request', $notification->getType() );
+		$this->assertSame( 'requestimport-new-request', $notification->getType() );
 		$this->assertSame( $requester->getName(), $notification->getAgent()->getName() );
 		$this->assertSame( [ $this->getTestSysop()->getUser()->getName() ], array_map(
 			static fn ( UserIdentity $user ): string => $user->getName(),

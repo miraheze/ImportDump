@@ -750,7 +750,7 @@ class RequestViewer implements RequestStatus {
 				$this->requestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
 
 				$this->requestManager->sendNotification(
-					$comment, 'importdump-request-status-update', $user
+					$comment, 'requestimport-request-status-update', $user
 				);
 			} else {
 				$comment = $this->context->msg( 'importdump-request-edited', $user->getName() )->rawParams(
@@ -936,7 +936,7 @@ class RequestViewer implements RequestStatus {
 		);
 
 		$this->requestManager->sendNotification(
-			$comment, 'importdump-request-status-update', $user
+			$comment, 'requestimport-request-status-update', $user
 		);
 
 		$this->context->getOutput()->addHTML( Html::successBox(

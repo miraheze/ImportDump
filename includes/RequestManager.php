@@ -114,7 +114,7 @@ class RequestManager {
 			->execute();
 
 		if ( !in_array( $user->getName(), self::SYSTEM_USERS, true ) ) {
-			$this->sendNotification( $comment, 'importdump-request-comment', $user );
+			$this->sendNotification( $comment, 'requestimport-request-comment', $user );
 		}
 	}
 
