@@ -3,8 +3,6 @@
 namespace Miraheze\ImportDump\Maintenance;
 
 use MediaWiki\Maintenance\LoggedUpdateMaintenance;
-use MediaWiki\MediaWikiServices;
-use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\WikiMap\WikiMap;
 
 class MigrateEchoTypes extends LoggedUpdateMaintenance {
@@ -68,7 +66,7 @@ class MigrateEchoTypes extends LoggedUpdateMaintenance {
 	}
 
 	private function migrateGlobalPreferences(): int {
-		if ( !ExtensionRegistry::getInstance()->isLoaded( 'GlobalPreferences' ) ) {
+		if ( !$this->getServiceContainer()->getExtensionRegistry()->isLoaded( 'GlobalPreferences' ) ) {
 			return 0;
 		}
 
@@ -77,9 +75,10 @@ class MigrateEchoTypes extends LoggedUpdateMaintenance {
 			return 0;
 		}
 
-		$provider = MediaWikiServices::getInstance()->get(
+		$provider = $this->getServiceContainer()->getExtensionRegistry()->get(
 			'GlobalPreferences.GlobalPreferencesConnectionProvider'
 		);
+
 		$globalDbw = $provider->getPrimaryDatabase();
 
 		$migrated = 0;
@@ -101,7 +100,7 @@ class MigrateEchoTypes extends LoggedUpdateMaintenance {
 	}
 
 	private function migrateNotifications(): int {
-		if ( !ExtensionRegistry::getInstance()->isLoaded( 'Echo' ) ) {
+		if ( !$this->getServiceContainer()->getExtensionRegistry()->isLoaded( 'Echo' ) ) {
 			return 0;
 		}
 
