@@ -257,7 +257,12 @@ class ImportDumpJob extends Job
 			return false;
 		}
 
+		// Save the stage now. Otherwise this job keeps the request locked until it ends,
+		// and the notify jobs cannot update the request while the import runs.
+		$ticket = $this->connectionProvider->getEmptyTransactionTicket( __METHOD__ );
 		$this->requestManager->setStage( $stage );
+		$this->connectionProvider->commitAndWaitForReplication( __METHOD__, $ticket );
+
 		return true;
 	}
 
