@@ -803,7 +803,10 @@ class RequestViewer implements RequestStatus {
 
 		if ( isset( $formData['submit-verify'] ) ) {
 			if ( $this->requestManager->getStatus() !== self::STATUS_VERIFYING ) {
-				$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-verification-not-needed' )->escaped() ) );
+				$out->addHTML(
+					Html::errorBox( $this->context->msg( 'importdump-verification-not-needed' )->escaped() )
+				);
+
 				return;
 			}
 
