@@ -110,7 +110,7 @@ class MigrateEchoTypes extends LoggedUpdateMaintenance {
 			return 0;
 		}
 
-		$echoDbw = $this->getPrimaryDB( 'virtual-echo' );
+		$echoDbw = $this->getPrimaryDB();
 
 		$migrated = 0;
 		foreach ( self::TYPES as $oldType => $newType ) {
