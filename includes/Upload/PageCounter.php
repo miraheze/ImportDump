@@ -12,7 +12,11 @@ class PageCounter {
 
 	/** @return ?int The number of pages, or null if the file could not be read. */
 	public static function count( string $path ): ?int {
-		$handle = @fopen( $path, 'rb' );
+		if ( !is_file( $path ) || !is_readable( $path ) ) {
+			return null;
+		}
+
+		$handle = fopen( $path, 'rb' );
 		if ( $handle === false ) {
 			return null;
 		}
