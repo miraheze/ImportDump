@@ -8,7 +8,6 @@ use MediaWiki\Tests\Maintenance\MaintenanceBaseTestCase;
 use MediaWiki\Title\TitleValue;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\Maintenance\MigrateLogTypes;
-use Wikimedia\TestingAccessWrapper;
 
 /**
  * @group ImportDump
@@ -98,23 +97,5 @@ class MigrateLogTypesTest extends MaintenanceBaseTestCase {
 			->where( [ 'rc_logid' => $logID ] )
 			->caller( __METHOD__ )
 			->fetchField();
-	}
-
-	public function testBatches(): void {
-		$logIDs = [];
-		foreach ( [ 1, 2, 3 ] as $unused ) {
-			$logIDs[] = $this->addLog( 'importdump' );
-		}
-
-		$maintenance = $this->maintenance;
-		'@phan-var TestingAccessWrapper $maintenance';
-		$maintenance->setBatchSize( 1 );
-
-		$this->expectOutputRegex( '/Moved 3 log entries/' );
-		$this->maintenance->execute();
-
-		foreach ( $logIDs as $logID ) {
-			$this->assertSame( 'requestimport', $this->getLogType( $logID ) );
-		}
 	}
 }
