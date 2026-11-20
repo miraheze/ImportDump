@@ -105,6 +105,7 @@ class ImportDumpJob extends Job
 
 			if ( $importStreamSource ) {
 				$this->enterStage( self::STAGE_IMPORT );
+				// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
 				$this->importPages( $importStreamSource, $filePath );
 			}
 

@@ -569,7 +569,7 @@ class RequestViewer implements RequestStatus {
 
 		$stage = $this->requestManager->getStage();
 		$percent = $this->requestManager->getImportPercent();
-		$position = array_search( $stage, self::STAGES, true );
+		$position = array_search( $stage, RequestStage::STAGES, true );
 
 		if ( $position === false ) {
 			$label = $this->context->msg( 'importdump-import-waiting' )->text();
@@ -579,7 +579,7 @@ class RequestViewer implements RequestStatus {
 			// * importdump-import-step-percent
 			$message = $this->context->msg(
 				$percent === null ? 'importdump-import-step' : 'importdump-import-step-percent'
-			)->numParams( $position + 1, count( self::STAGES ) )
+			)->numParams( $position + 1, count( RequestStage::STAGES ) )
 				->params( $this->context->msg( 'importdump-stage-' . $stage )->text() );
 
 			if ( $percent !== null ) {
