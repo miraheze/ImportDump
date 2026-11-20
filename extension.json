@@ -212,6 +212,31 @@
 				"importdump-chunkedupload-progress"
 			]
 		},
+		"ext.importdump.importprogress": {
+			"scripts": "ext.importdump.importprogress.js",
+			"dependencies": [
+				"mediawiki.api",
+				"mediawiki.language",
+				"oojs-ui-core"
+			],
+			"messages": [
+				"importdump-import-finished",
+				"importdump-import-step",
+				"importdump-import-step-pages",
+				"importdump-import-step-percent",
+				"importdump-import-stopped",
+				"importdump-import-waiting",
+				"importdump-stage-afterimport",
+				"importdump-stage-counts",
+				"importdump-stage-download",
+				"importdump-stage-import",
+				"importdump-stage-recentchanges",
+				"importdump-stage-refreshlinks",
+				"importdump-stage-sitestats",
+				"importdump-stage-textindex",
+				"importdump-verification-reload"
+			]
+		},
 		"ext.importdump.oouiform": {
 			"scripts": "ext.importdump.oouiform.ooui.js",
 			"dependencies": [

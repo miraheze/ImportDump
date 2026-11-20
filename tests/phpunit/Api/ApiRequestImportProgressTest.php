@@ -79,6 +79,59 @@ class ApiRequestImportProgressTest extends ApiTestCase
 		);
 	}
 
+	public function testImportWaitingToStart(): void {
+		$id = $this->newRequest( self::STATUS_STARTING, 0 );
+
+		[ $result ] = $this->doApiRequest( [ 'action' => 'requestimportprogress', 'requestid' => $id ] );
+		$this->assertSame(
+			[
+				'status' => self::STATUS_STARTING,
+				'stage' => '',
+				'step' => 0,
+				'steps' => 8,
+				'percent' => null,
+				'done' => null,
+				'total' => null,
+			],
+			$result['requestimportprogress']
+		);
+	}
+
+	public function testImportProgress(): void {
+		$id = $this->newRequest( self::STATUS_INPROGRESS, 0 );
+
+		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		'@phan-var \Miraheze\ImportDump\RequestManager $manager';
+		$manager->loadFromID( $id );
+		$manager->setStage( 'textindex' );
+
+		[ $result ] = $this->doApiRequest( [ 'action' => 'requestimportprogress', 'requestid' => $id ] );
+		$this->assertSame(
+			[
+				'status' => self::STATUS_INPROGRESS,
+				'stage' => 'textindex',
+				'step' => 4,
+				'steps' => 8,
+				'percent' => null,
+				'done' => null,
+				'total' => null,
+			],
+			$result['requestimportprogress']
+		);
+
+		$manager->setImportPercent( 55, done: null, total: null );
+
+		[ $result ] = $this->doApiRequest( [ 'action' => 'requestimportprogress', 'requestid' => $id ] );
+		$this->assertSame( 55, $result['requestimportprogress']['percent'] );
+		$this->assertNull( $result['requestimportprogress']['done'] );
+
+		$manager->setImportPercent( 42, 1200, 2850 );
+
+		[ $result ] = $this->doApiRequest( [ 'action' => 'requestimportprogress', 'requestid' => $id ] );
+		$this->assertSame( 1200, $result['requestimportprogress']['done'] );
+		$this->assertSame( 2850, $result['requestimportprogress']['total'] );
+	}
+
 	public function testFinished(): void {
 		$id = $this->newRequest( self::STATUS_PENDING, 0 );
 

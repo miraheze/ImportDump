@@ -4,6 +4,8 @@ namespace Miraheze\ImportDump;
 
 interface RequestStage {
 
+	public const string STAGE_DOWNLOAD = 'download';
+
 	public const string STAGE_IMPORT = 'import';
 
 	public const string STAGE_SITESTATS = 'sitestats';
@@ -20,6 +22,7 @@ interface RequestStage {
 
 	/** In the order that the job runs them. */
 	public const array STAGES = [
+		self::STAGE_DOWNLOAD,
 		self::STAGE_IMPORT,
 		self::STAGE_SITESTATS,
 		self::STAGE_TEXTINDEX,

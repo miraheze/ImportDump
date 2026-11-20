@@ -24,6 +24,7 @@ use Miraheze\ImportDump\ImportHeartbeat;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStage;
 use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Upload\PageCounter;
 use RebuildRecentchanges;
 use RebuildTextIndex;
 use RefreshLinks;
@@ -50,7 +51,7 @@ class ImportDumpJob extends Job
 
 	private bool $running = false;
 	private int $lastBeat = 0;
-	private string $startStage = self::STAGE_IMPORT;
+	private string $startStage = self::STAGE_DOWNLOAD;
 	private int $refreshLinksChunkSize = 1000;
 
 	public function __construct(
@@ -80,7 +81,7 @@ class ImportDumpJob extends Job
 			return true;
 		}
 
-		$this->startStage = $this->requestManager->getStage() ?: self::STAGE_IMPORT;
+		$this->startStage = $this->requestManager->getStage() ?: self::STAGE_DOWNLOAD;
 		$filePath = wfTempDir() . '/' . $this->requestManager->getFileName();
 
 		$this->running = true;
@@ -89,7 +90,8 @@ class ImportDumpJob extends Job
 
 		try {
 			$importStreamSource = null;
-			if ( $this->startStage === self::STAGE_IMPORT ) {
+			if ( in_array( $this->startStage, [ self::STAGE_DOWNLOAD, self::STAGE_IMPORT ], true ) ) {
+				$this->enterStage( self::STAGE_DOWNLOAD );
 				$this->hookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
 
 				// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
@@ -103,7 +105,8 @@ class ImportDumpJob extends Job
 
 			if ( $importStreamSource ) {
 				$this->enterStage( self::STAGE_IMPORT );
-				$this->importPages( $importStreamSource );
+				// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
+				$this->importPages( $importStreamSource, $filePath );
 			}
 
 			$this->updateSiteStats();
@@ -135,7 +138,7 @@ class ImportDumpJob extends Job
 		return $status->value;
 	}
 
-	private function importPages( ImportStreamSource $importStreamSource ): void {
+	private function importPages( ImportStreamSource $importStreamSource, string $filePath ): void {
 		$user = User::newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
 		$importer = $this->wikiImporterFactory->getWikiImporter(
 			$importStreamSource, new UltimateAuthority( $user )
@@ -148,9 +151,29 @@ class ImportDumpJob extends Job
 			true
 		);
 
-		$importer->setPageOutCallback( fn () => $this->beat( force: false ) );
+		$total = PageCounter::count( $filePath );
+		$done = 0;
+		$lastUpdate = 0;
+
+		$importer->setPageOutCallback( function () use ( $total, &$done, &$lastUpdate ): void {
+			$this->beat( force: false );
+			$done++;
+
+			$now = time();
+			if ( !$total || $now === $lastUpdate ) {
+				return;
+			}
+
+			$lastUpdate = $now;
+			$pages = min( $done, $total );
+			$this->requestManager->setImportPercent( intdiv( $pages * 100, $total ), $pages, $total );
+		} );
 
 		$importer->doImport();
+		if ( $total ) {
+			$this->requestManager->setImportPercent( 100, $total, $total );
+		}
+
 		$this->beat( force: true );
 	}
 
@@ -204,6 +227,15 @@ class ImportDumpJob extends Job
 
 		$dbr = $this->connectionProvider->getReplicaDatabase();
 
+		$total = $dbr->newSelectQueryBuilder()
+			->select( 'COUNT(*)' )
+			->from( 'page' )
+			->caller( __METHOD__ )
+			->fetchField();
+
+		$total = (int)$total;
+		$batches = 0;
+
 		// Run in page ID ranges so we can beat between them. RefreshLinks can
 		// take a long time to run so we need to check if its still running.
 		$start = null;
@@ -228,6 +260,16 @@ class ImportDumpJob extends Job
 
 			$refreshLinks->execute();
 			$this->beat( force: true );
+
+			$batches++;
+			if ( $total > 0 ) {
+				$done = $next === false ? $total : min( $total, $batches * $this->refreshLinksChunkSize );
+				$this->requestManager->setImportPercent(
+					$next === false ? 100 : min( 99, intdiv( $done * 100, $total ) ),
+					$done,
+					$total
+				);
+			}
 
 			$start = $next === false ? null : (int)$next;
 		} while ( $start !== null );

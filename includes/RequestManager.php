@@ -76,6 +76,7 @@ class RequestManager {
 		private readonly ServiceOptions $options,
 		private readonly UserFactory $userFactory,
 		private readonly UserGroupManagerFactory $userGroupManagerFactory,
+		private readonly ImportProgress $importProgress,
 		private readonly VerificationProgress $verificationProgress,
 		private readonly ?ModuleFactory $moduleFactory,
 	) {
@@ -528,7 +529,7 @@ class RequestManager {
 
 	public function hasImported(): bool {
 		$stage = $this->getStage();
-		return $stage !== '' && $stage !== RequestStage::STAGE_IMPORT;
+		return !in_array( $stage, [ '', RequestStage::STAGE_DOWNLOAD, RequestStage::STAGE_IMPORT ], true );
 	}
 
 	/** @return string[] */
@@ -642,6 +643,35 @@ class RequestManager {
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();
+	}
+
+	public function setImportPercent( int $percent, ?int $done, ?int $total ): void {
+		$this->importProgress->set( $this->ID, $this->getStage(), $percent, $done, $total );
+	}
+
+	/** The percentage of the current stage that is done, or null if it is not known. */
+	public function getImportPercent(): ?int {
+		return $this->getImportProgress()['percent'] ?? null;
+	}
+
+	/** @return ?array{done: int, total: int} The pages imported so far, or null if it is not known. */
+	public function getImportPages(): ?array {
+		$progress = $this->getImportProgress();
+		if ( $progress === null || $progress['done'] === null || $progress['total'] === null ) {
+			return null;
+		}
+
+		return [ 'done' => $progress['done'], 'total' => $progress['total'] ];
+	}
+
+	/** @return ?array{stage: string, percent: int, done: ?int, total: ?int} */
+	private function getImportProgress(): ?array {
+		$progress = $this->importProgress->get( $this->ID );
+		if ( $progress === null || $progress['stage'] !== $this->getStage() ) {
+			return null;
+		}
+
+		return $progress;
 	}
 
 	public function setStage( string $stage ): void {

@@ -220,12 +220,12 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
 	}
 
-	public function testRunFailureBeforeImportHasNoStage(): void {
+	public function testRunFailureBeforeImportLeavesDownloadStage(): void {
 		$id = $this->addRequest();
 
 		$this->assertTrue( $this->newJob( $id )->run() );
 		$this->assertSame( [ self::STATUS_FAILED ], $this->getStatuses( $this->popNotifications() ) );
-		$this->assertSame( '', $this->getRequestManager( $id )->getStage() );
+		$this->assertSame( self::STAGE_DOWNLOAD, $this->getRequestManager( $id )->getStage() );
 	}
 
 	public function testRunResumesAfterImportWithoutFetchingFile(): void {
@@ -334,6 +334,19 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 		$this->assertSame(
 			[ self::STATUS_INPROGRESS, self::STATUS_COMPLETE ],
 			$this->getStatuses( $this->popNotifications() )
+		);
+
+		$progress = $this->getServiceContainer()->getService( 'ImportDumpImportProgress' );
+		'@phan-var \Miraheze\ImportDump\ImportProgress $progress';
+		$total = (int)$dbw->newSelectQueryBuilder()
+			->select( 'COUNT(*)' )
+			->from( 'page' )
+			->caller( __METHOD__ )
+			->fetchField();
+
+		$this->assertSame(
+			[ 'stage' => self::STAGE_REFRESHLINKS, 'percent' => 100, 'done' => $total, 'total' => $total ],
+			$progress->get( $id )
 		);
 	}
 

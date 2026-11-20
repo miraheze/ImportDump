@@ -326,6 +326,9 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->assertSame( '', $manager->getStage() );
 		$this->assertFalse( $manager->hasImported() );
 
+		$manager->setStage( self::STAGE_DOWNLOAD );
+		$this->assertFalse( $manager->hasImported() );
+
 		$manager->setStage( self::STAGE_IMPORT );
 		$this->assertSame( self::STAGE_IMPORT, $manager->getStage() );
 		$this->assertFalse( $manager->hasImported() );
@@ -624,6 +627,33 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$progress->set( 1, 'checking', 40 );
 		$this->assertSame( [ 'stage' => 'checking', 'percent' => 40 ], $manager->getVerificationProgress() );
+	}
+
+	/**
+	 * @covers ::getImportPages
+	 * @covers ::getImportPercent
+	 * @covers ::setImportPercent
+	 */
+	public function testImportPercentBelongsToTheCurrentStage(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setStage( self::STAGE_IMPORT );
+		$this->assertNull( $manager->getImportPercent() );
+
+		$this->assertNull( $manager->getImportPages() );
+
+		$manager->setImportPercent( 40, done: null, total: null );
+		$this->assertSame( 40, $manager->getImportPercent() );
+		$this->assertNull( $manager->getImportPages() );
+
+		$manager->setImportPercent( 40, 400, 1000 );
+		$this->assertSame( [ 'done' => 400, 'total' => 1000 ], $manager->getImportPages() );
+
+		$manager->setStage( self::STAGE_SITESTATS );
+		$this->assertNull( $manager->getImportPercent() );
+		$this->assertNull( $manager->getImportPages() );
+
+		$manager->setImportPercent( 100, done: null, total: null );
+		$this->assertSame( 100, $manager->getImportPercent() );
 	}
 
 	/**

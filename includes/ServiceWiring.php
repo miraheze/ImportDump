@@ -64,10 +64,14 @@ return [
 			),
 			$services->getUserFactory(),
 			$services->getUserGroupManagerFactory(),
+			$services->get( 'ImportDumpImportProgress' ),
 			$services->get( 'ImportDumpVerificationProgress' ),
 			$services->has( 'ManageWikiModuleFactory' ) ?
 				$services->get( 'ManageWikiModuleFactory' ) : null
 		);
+	},
+	'ImportDumpImportProgress' => static function ( MediaWikiServices $services ): ImportProgress {
+		return new ImportProgress( $services->getMainObjectStash() );
 	},
 	'ImportDumpVerificationProgress' => static function ( MediaWikiServices $services ): VerificationProgress {
 		return new VerificationProgress( $services->getMainObjectStash() );
