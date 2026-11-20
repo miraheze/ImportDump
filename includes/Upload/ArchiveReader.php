@@ -56,6 +56,21 @@ final class ArchiveReader {
 	) {
 	}
 
+	/** @return list<string> The FORMAT_* constants of the archives that can be read on this wiki. */
+	public function getFormats(): array {
+		$formats = [ self::FORMAT_ZIP, self::FORMAT_TAR, self::FORMAT_GZIP, self::FORMAT_BZIP2 ];
+
+		if ( $this->externalBinaries->isEnabled( ExternalBinaries::XZ ) ) {
+			$formats[] = self::FORMAT_XZ;
+		}
+
+		if ( $this->externalBinaries->isEnabled( ExternalBinaries::SEVEN_ZIP ) ) {
+			$formats[] = self::FORMAT_SEVEN_ZIP;
+		}
+
+		return $formats;
+	}
+
 	/** @return list<string> The MIME types of the formats that need a program, if they can be read. */
 	public function getExternalMimeTypes(): array {
 		return $this->externalBinaries->getMimeTypes();

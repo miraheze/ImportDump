@@ -65,6 +65,11 @@ class DumpProcessor implements RequestHistory {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
 	}
 
+	/** @return list<string> The ArchiveReader::FORMAT_* constants of the archives that can be read here. */
+	public function getArchiveFormats(): array {
+		return $this->archiveReader->getFormats();
+	}
+
 	/** @return list<string> The MIME types of all the archives that can be read on this wiki. */
 	public function getArchiveMimeTypes(): array {
 		return [ ...self::ARCHIVE_MIME_TYPES, ...$this->archiveReader->getExternalMimeTypes() ];

@@ -33,6 +33,7 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
@@ -42,6 +43,23 @@ use Wikimedia\Rdbms\Platform\ISQLPlatform;
 
 class SpecialRequestImport extends FormSpecialPage
 	implements RequestStatus {
+
+	/** What the archive formats are called in the help text. */
+	private const array FORMAT_NAMES = [
+		ArchiveReader::FORMAT_ZIP => 'ZIP',
+		ArchiveReader::FORMAT_TAR => 'TAR',
+		ArchiveReader::FORMAT_GZIP => 'GZIP',
+		ArchiveReader::FORMAT_BZIP2 => 'BZIP2',
+		ArchiveReader::FORMAT_XZ => 'XZ',
+		ArchiveReader::FORMAT_SEVEN_ZIP => '7z',
+	];
+
+	/** The extensions that a TAR has when it is compressed with a format. */
+	private const array COMPRESSED_TAR_EXTENSIONS = [
+		ArchiveReader::FORMAT_GZIP => [ '.tar.gz', '.tgz' ],
+		ArchiveReader::FORMAT_BZIP2 => [ '.tar.bz2' ],
+		ArchiveReader::FORMAT_XZ => [ '.tar.xz', '.txz' ],
+	];
 
 	public function __construct(
 		private readonly IConnectionProvider $connectionProvider,
@@ -122,7 +140,7 @@ class SpecialRequestImport extends FormSpecialPage
 				'UploadFile' => [
 					'type' => 'file',
 					'label-message' => 'importdump-label-upload-file',
-					'help-message' => 'importdump-help-upload-file',
+					'help-messages' => $this->getUploadHelp(),
 					'hide-if' => [ '!==', 'wpUploadSourceType', 'File' ],
 					'accept' => $this->dumpProcessor->getAcceptedMimeTypes(),
 				],
@@ -139,7 +157,7 @@ class SpecialRequestImport extends FormSpecialPage
 				'UploadFile' => [
 					'type' => 'file',
 					'label-message' => 'importdump-label-upload-file',
-					'help-message' => 'importdump-help-upload-file',
+					'help-messages' => $this->getUploadHelp(),
 					'accept' => $this->dumpProcessor->getAcceptedMimeTypes(),
 				],
 			];
@@ -349,6 +367,33 @@ class SpecialRequestImport extends FormSpecialPage
 		}
 
 		return Status::newGood();
+	}
+
+	/** @return list<Message> */
+	private function getUploadHelp(): array {
+		$formats = $this->dumpProcessor->getArchiveFormats();
+
+		$names = [];
+		$tarExtensions = [];
+		foreach ( $formats as $format ) {
+			$names[] = self::FORMAT_NAMES[$format];
+			array_push( $tarExtensions, ...( self::COMPRESSED_TAR_EXTENSIONS[$format] ?? [] ) );
+		}
+
+		$language = $this->getLanguage();
+		$help = [
+			$this->msg( 'importdump-help-upload-file' ),
+			$this->msg( 'importdump-help-upload-file-types' )->params(
+				$language->listToText( $names ),
+				$language->listToText( $tarExtensions )
+			),
+		];
+
+		if ( $this->getConfig()->get( ConfigNames::EnableHistoryDetection ) ) {
+			$help[] = $this->msg( 'importdump-help-upload-file-history' );
+		}
+
+		return $help;
 	}
 
 	private function useChunkedUploads(): bool {
