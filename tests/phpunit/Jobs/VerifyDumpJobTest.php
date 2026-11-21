@@ -192,7 +192,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 
 		$comments = $manager->getComments();
 		$this->assertCount( 1, $comments );
-		$this->assertSame( 'ImportDump Status Update', $comments[0]['user']->getName() );
+		$this->assertSame( 'RequestImport Status Update', $comments[0]['user']->getName() );
 	}
 
 	public static function provideRejectedUploads(): Generator {
