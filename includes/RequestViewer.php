@@ -19,6 +19,7 @@ use Miraheze\ImportDump\Notices\ImportRightNotices;
 use Miraheze\ImportDump\Notices\LockedNotices;
 use Miraheze\ImportDump\Notices\NoticeCollector;
 use Miraheze\ImportDump\Notices\NoticeResult;
+use Miraheze\ImportDump\Notices\PartialHistoryNotices;
 use Miraheze\ImportDump\Notices\RequesterNotices;
 use Miraheze\ImportDump\Notices\RequestNotice;
 use Miraheze\ImportDump\Notices\RequirementNotices;
@@ -536,6 +537,7 @@ class RequestViewer implements RequestStatus {
 			new FileNotices( $this->config ),
 			new TargetNotices(),
 			new HistoryNotices(),
+			new PartialHistoryNotices(),
 			new ImportRightNotices(),
 			new LockedNotices(),
 			$this->outcomes,
