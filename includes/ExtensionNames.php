@@ -3,9 +3,9 @@
 namespace Miraheze\ImportDump;
 
 use MediaWiki\Config\ServiceOptions;
+use MediaWiki\Language\MessageLocalizer;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Registration\ExtensionProcessor;
-use MessageLocalizer;
 use Wikimedia\ObjectCache\BagOStuff;
 
 /**
