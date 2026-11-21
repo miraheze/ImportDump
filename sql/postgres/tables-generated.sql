@@ -40,3 +40,12 @@ CREATE TABLE import_request_comments (
 CREATE INDEX request_id ON import_request_comments (request_id);
 
 CREATE INDEX request_comment_timestamp ON import_request_comments (request_comment_timestamp);
+
+
+CREATE TABLE import_request_handlers (
+  request_id BIGINT NOT NULL,
+  request_handler_actor BIGINT NOT NULL,
+  PRIMARY KEY(
+    request_id, request_handler_actor
+  )
+);

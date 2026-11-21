@@ -156,5 +156,25 @@
 			}
 		],
 		"pk": [ "request_comment_id" ]
+	},
+	{
+		"name": "import_request_handlers",
+		"comment": "Everyone who has handled a request, such as by starting it or changing its status",
+		"columns": [
+			{
+				"name": "request_id",
+				"comment": "",
+				"type": "bigint",
+				"options": { "notnull": true, "unsigned": true }
+			},
+			{
+				"name": "request_handler_actor",
+				"comment": "",
+				"type": "bigint",
+				"options": { "notnull": true, "unsigned": true }
+			}
+		],
+		"indexes": [],
+		"pk": [ "request_id", "request_handler_actor" ]
 	}
 ]

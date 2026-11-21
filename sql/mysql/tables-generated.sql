@@ -38,3 +38,12 @@ CREATE TABLE /*_*/import_request_comments (
   INDEX request_comment_timestamp (request_comment_timestamp),
   PRIMARY KEY(request_comment_id)
 ) /*$wgDBTableOptions*/;
+
+
+CREATE TABLE /*_*/import_request_handlers (
+  request_id BIGINT UNSIGNED NOT NULL,
+  request_handler_actor BIGINT UNSIGNED NOT NULL,
+  PRIMARY KEY(
+    request_id, request_handler_actor
+  )
+) /*$wgDBTableOptions*/;

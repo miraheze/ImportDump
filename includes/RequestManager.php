@@ -217,8 +217,39 @@ class RequestManager {
 		return $comments;
 	}
 
+	public function addHandler( User $user ): void {
+		$this->dbw->newInsertQueryBuilder()
+			->insertInto( 'import_request_handlers' )
+			->ignore()
+			->row( [
+				'request_id' => $this->ID,
+				'request_handler_actor' => $user->getActorId(),
+			] )
+			->caller( __METHOD__ )
+			->execute();
+	}
+
+	/** @return User[] */
+	public function getHandlers(): array {
+		$actorIDs = $this->dbw->newSelectQueryBuilder()
+			->select( 'request_handler_actor' )
+			->from( 'import_request_handlers' )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->fetchFieldValues();
+
+		return array_map(
+			fn ( string $actorID ): User => $this->userFactory->newFromActorId( (int)$actorID ),
+			$actorIDs
+		);
+	}
+
 	public function getInvolvedUsers(): array {
-		return array_unique( array_merge( array_column( $this->getComments(), 'user' ), [ $this->getRequester() ] ) );
+		return array_unique( array_merge(
+			array_column( $this->getComments(), 'user' ),
+			$this->getHandlers(),
+			[ $this->getRequester() ]
+		) );
 	}
 
 	public function insertInterwikiPrefix( string $prefix, string $url, User $user ): bool {

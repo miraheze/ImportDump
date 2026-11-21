@@ -980,6 +980,7 @@ class RequestViewer implements RequestStatus {
 				return;
 			}
 
+			$this->requestManager->addHandler( $user );
 			$this->requestManager->setStatus( self::STATUS_STARTING );
 			$this->requestManager->executeJob( $user->getName() );
 			$out->addHTML( Html::successBox(
@@ -989,6 +990,7 @@ class RequestViewer implements RequestStatus {
 	}
 
 	private function handleStatusUpdate( array $formData, User $user ): void {
+		$this->requestManager->addHandler( $user );
 		$this->requestManager->setStatus( $formData['handle-status'] );
 		$statusMessage = $this->context->msg( 'importdump-label-' . $formData['handle-status'] )
 			->inContentLanguage()
