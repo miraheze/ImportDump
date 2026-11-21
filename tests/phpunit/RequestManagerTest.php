@@ -122,6 +122,35 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	}
 
 	/**
+	 * @covers ::addHandler
+	 * @covers ::getHandlers
+	 * @covers ::getInvolvedUsers
+	 */
+	public function testHandlersAreInvolved(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$this->assertSame( [], $manager->getHandlers() );
+
+		$first = $this->getMutableTestUser()->getUser();
+		$second = $this->getMutableTestUser()->getUser();
+
+		$manager->addHandler( $first );
+		$manager->addHandler( $first );
+		$manager->addHandler( $second );
+
+		$names = array_map( static fn ( User $user ): string => $user->getName(), $manager->getHandlers() );
+		$this->assertEqualsCanonicalizing( [ $first->getName(), $second->getName() ], $names );
+
+		$involved = array_map(
+			static fn ( User $user ): string => $user->getName(),
+			$manager->getInvolvedUsers()
+		);
+
+		$this->assertContains( $first->getName(), $involved );
+		$this->assertContains( $second->getName(), $involved );
+		$this->assertContains( $manager->getRequester()->getName(), $involved );
+	}
+
+	/**
 	 * @covers ::addComment
 	 * @covers ::getComments
 	 * @covers ::sendNotification
