@@ -804,7 +804,7 @@ class RequestManager {
 		$this->row->request_status = $status->value;
 
 		if ( $oldStatus !== $status ) {
-			$this->hookRunner->onImportDumpRequestStatusUpdate( $this, $status->value, $oldStatus->value );
+			$this->hookRunner->onImportDumpRequestStatusUpdate( $this, $status, $oldStatus );
 		}
 	}
 

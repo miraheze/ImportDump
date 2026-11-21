@@ -309,8 +309,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->setTemporaryHook( 'ImportDumpRequestStatusUpdate',
 			static function (
 				RequestManager $manager,
-				string $newStatus,
-				string $oldStatus
+				RequestStatus $newStatus,
+				RequestStatus $oldStatus
 			) use ( &$calls ): void {
 				$calls[] = [ $newStatus, $oldStatus ];
 			}
@@ -323,7 +323,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 		$manager->setStatus( $newStatus );
 
-		$this->assertSame( [ [ $newStatus->value, $oldStatus->value ] ], $calls );
+		$this->assertSame( [ [ $newStatus, $oldStatus ] ], $calls );
 	}
 
 	/**
