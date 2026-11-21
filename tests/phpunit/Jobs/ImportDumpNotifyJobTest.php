@@ -14,6 +14,7 @@ use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Tests\IsolatesManageWikiTrait;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
@@ -25,11 +26,14 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
 class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 	implements RequestStatus {
 
+	use IsolatesManageWikiTrait;
+
 	/** @var list<array{Notification, RecipientSet}> */
 	private array $captured = [];
 
 	protected function setUp(): void {
 		parent::setUp();
+		$this->isolateFromManageWiki();
 
 		$this->overrideConfigValues( [
 			MainConfigNames::LocalDatabases => [ WikiMap::getCurrentWikiId() ],

@@ -13,6 +13,7 @@ use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\RequestHistory;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Tests\IsolatesManageWikiTrait;
 use Miraheze\ImportDump\Tests\Upload\TarFixture;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
 use Wikimedia\FileBackend\FileBackend;
@@ -29,6 +30,8 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
 class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 	implements RequestHistory, RequestStatus {
 
+	use IsolatesManageWikiTrait;
+
 	private const string DUMP = '<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.11/" version="0.11">' .
 		'<page><title>A</title><ns>0</ns><id>1</id>' .
 		'<revision><id>10</id><text>a</text></revision>' .
@@ -37,6 +40,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 
 	protected function setUp(): void {
 		parent::setUp();
+		$this->isolateFromManageWiki();
 
 		$this->setService( 'RepoGroup', new RepoGroup(
 			[

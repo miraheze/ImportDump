@@ -42,6 +42,8 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
 class RequestManagerTest extends MediaWikiIntegrationTestCase
 	implements RequestStage, RequestStatus {
 
+	use IsolatesManageWikiTrait;
+
 	public function addDBDataOnce(): void {
 		$this->overrideConfigValue( MainConfigNames::VirtualDomainsMapping, [
 			'virtual-importdump' => [ 'db' => 'wikidb' ],
@@ -69,6 +71,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 	protected function setUp(): void {
 		parent::setUp();
+		$this->isolateFromManageWiki();
 
 		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [ 'requestimporttest' ] );
 

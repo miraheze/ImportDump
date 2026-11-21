@@ -8,6 +8,7 @@ use MediaWiki\Tests\Api\ApiTestCase;
 use MediaWiki\User\UserIdentityValue;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Tests\IsolatesManageWikiTrait;
 use Miraheze\ImportDump\VerificationProgress;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
@@ -21,8 +22,11 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
 class ApiRequestImportProgressTest extends ApiTestCase
 	implements RequestStatus {
 
+	use IsolatesManageWikiTrait;
+
 	protected function setUp(): void {
 		parent::setUp();
+		$this->isolateFromManageWiki();
 
 		$this->overrideConfigValues( [
 			MainConfigNames::VirtualDomainsMapping => [
