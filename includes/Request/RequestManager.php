@@ -285,13 +285,13 @@ class RequestManager {
 		);
 	}
 
-	/** @return array<int, User> */
+	/** @return list<User> */
 	public function getInvolvedUsers(): array {
-		return array_unique( array_merge(
+		return array_values( array_unique( array_merge(
 			array_column( $this->getComments(), 'user' ),
 			$this->getHandlers(),
 			[ $this->getRequester() ]
-		) );
+		) ) );
 	}
 
 	public function insertInterwikiPrefix( string $prefix, string $url, User $user ): bool {
