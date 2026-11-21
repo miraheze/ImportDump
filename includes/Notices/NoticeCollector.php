@@ -78,7 +78,7 @@ final class NoticeCollector {
 
 	/**
 	 * @param RequestNotice[] $notices
-	 * @return RequestNotice[]
+	 * @return list<RequestNotice>
 	 */
 	private function sort( array $notices ): array {
 		usort(

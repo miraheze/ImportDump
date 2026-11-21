@@ -195,8 +195,10 @@ class ApiRequestImportUpload extends ApiBase {
 			$this->dieWithError( 'apierror-upload-missingresult', 'missingresult' );
 		}
 
-		if ( !$progress['status']->isGood() ) {
-			$this->dieStatusWithError( $progress['status'], 'stashfailed' );
+		$status = $progress['status'];
+		'@phan-var StatusValue $status';
+		if ( !$status->isGood() ) {
+			$this->dieStatusWithError( $status, 'stashfailed' );
 		}
 
 		$result = [

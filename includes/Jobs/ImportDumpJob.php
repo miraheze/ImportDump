@@ -44,7 +44,12 @@ use function str_repeat;
 use function time;
 use function unlink;
 use function wfTempDir;
+use const E_COMPILE_ERROR;
+use const E_CORE_ERROR;
+use const E_ERROR;
+use const E_PARSE;
 use const E_RECOVERABLE_ERROR;
+use const E_USER_ERROR;
 
 class ImportDumpJob extends Job {
 
@@ -179,12 +184,12 @@ class ImportDumpJob extends Job {
 
 			$lastUpdate = $now;
 			$pages = min( $done, $total );
-			$this->requestManager->setImportPercent( intdiv( $pages * 100, $total ), $pages, $total );
+			$this->requestManager->setImportPercent( intdiv( $pages * 100, $total ), done: $pages, total: $total );
 		} );
 
 		$importer->doImport();
 		if ( $total ) {
-			$this->requestManager->setImportPercent( 100, $total, $total );
+			$this->requestManager->setImportPercent( 100, done: $total, total: $total );
 		}
 
 		$this->beat( force: true );

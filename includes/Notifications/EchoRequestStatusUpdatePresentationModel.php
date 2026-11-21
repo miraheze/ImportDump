@@ -8,6 +8,7 @@ use MediaWiki\Extension\Notifications\Formatters\EchoEventPresentationModel;
 use MediaWiki\Language\RawMessage;
 use MediaWiki\Message\Message;
 use function htmlspecialchars;
+use function nl2br;
 
 class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationModel {
 

@@ -17,6 +17,7 @@ use Wikimedia\TestingAccessWrapper;
 use function file_exists;
 use function file_put_contents;
 use function filesize;
+use function gzencode;
 use function unlink;
 use const PHP_INT_MAX;
 

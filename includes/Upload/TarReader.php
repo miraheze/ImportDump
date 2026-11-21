@@ -86,7 +86,6 @@ final class TarReader {
 	 *
 	 * @param mixed $stream A stream resource that can be read.
 	 * @param int $length
-	 * @return string
 	 */
 	public static function readUpTo( mixed $stream, int $length ): string {
 		$data = '';
@@ -217,7 +216,6 @@ final class TarReader {
 	 * @param TarEntry $entry
 	 * @param mixed $output A stream resource that can be written to.
 	 * @param ?Closure( ?int ): void $onProgress Called with the percentage that is done.
-	 * @return Status
 	 */
 	public function copyBody( TarEntry $entry, mixed $output, ?Closure $onProgress ): Status {
 		$remaining = $entry->size;
@@ -253,7 +251,7 @@ final class TarReader {
 		return Status::newGood();
 	}
 
-	/** @return string|false|null The block, null at a clean end of the stream, or false if it was cut off. */
+	/** @return non-empty-string|false|null The block, null at a clean end of the stream, or false if it was cut off. */
 	private function readBlock(): string|false|null {
 		$block = self::readUpTo( $this->stream, self::BLOCK_SIZE );
 		if ( $block === '' ) {
@@ -388,10 +386,7 @@ final class TarReader {
 		return preg_match( '/^[0-7]{1,12}$/', $digits ) ? (int)octdec( $digits ) : null;
 	}
 
-	/**
-	 * @param string $body
-	 * @return ?array<string, string> The records, or null if they are not well formed.
-	 */
+	/** @return ?array<string, string> The records, or null if they are not well formed. */
 	private function parsePax( string $body ): ?array {
 		$records = [];
 		$offset = 0;

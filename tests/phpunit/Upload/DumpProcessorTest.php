@@ -29,6 +29,7 @@ use function htmlspecialchars;
 use function implode;
 use function range;
 use function strlen;
+use function substr;
 
 /**
  * @group ImportDump

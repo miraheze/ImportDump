@@ -44,7 +44,7 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		return $limit === null ? PHP_INT_MAX : (int)$limit;
 	}
 
-	/** @return string[] */
+	/** @return list<string> */
 	public static function getTypeNames(): array {
 		return array_keys( self::TYPES );
 	}

@@ -231,6 +231,7 @@ class RequestManager {
 		);
 	}
 
+	/** @return list<array{comment: string, timestamp: string, user: User}> */
 	public function getComments(): array {
 		$res = $this->dbw->newSelectQueryBuilder()
 			->select( ISQLPlatform::ALL_ROWS )
@@ -284,6 +285,7 @@ class RequestManager {
 		);
 	}
 
+	/** @return User[] */
 	public function getInvolvedUsers(): array {
 		return array_unique( array_merge(
 			array_column( $this->getComments(), 'user' ),
@@ -453,6 +455,7 @@ class RequestManager {
 		return $this->targetStateProvider->getState( $this->getTarget(), $this->getRequester()->getName() );
 	}
 
+	/** @return string[] */
 	public function getUserGroupsFromTarget(): array {
 		if ( !$this->targetExists() ) {
 			return [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
@@ -626,7 +629,7 @@ class RequestManager {
 		return $this->getStage()?->hasImported() ?? false;
 	}
 
-	/** @return string[] */
+	/** @return list<string> */
 	public function getRemainingCommands(): array {
 		$scripts = [
 			RequestStage::SiteStats->value => [ 'initSiteStats.php' => '--update' ],

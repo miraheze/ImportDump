@@ -18,6 +18,7 @@ use function is_array;
 use function is_object;
 use function is_string;
 use function max;
+use function mb_strtolower;
 use function preg_match;
 use function str_ends_with;
 use function wfMessage;
@@ -169,11 +170,7 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 		);
 	}
 
-	/**
-	 * @param string $title
-	 * @param array<string|int, mixed> $params
-	 * @return int|null
-	 */
+	/** @param array<string|int, mixed> $params */
 	private function getRequestID( string $title, array $params ): ?int {
 		if ( preg_match( '!/(\d+)$!', $title, $matches ) ) {
 			return (int)$matches[1];
@@ -217,7 +214,7 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 	/**
 	 * Old entries stored the status as lowercased text in the content language.
 	 *
-	 * @return array<string, string>
+	 * @return non-empty-array<string, string>
 	 */
 	private function getStatusMap(): array {
 		$map = [];

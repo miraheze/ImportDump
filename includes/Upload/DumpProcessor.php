@@ -11,6 +11,7 @@ use MediaWiki\Upload\UploadVerification;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Request\RequestHistory;
 use Miraheze\ImportDump\Requirements\ExtensionRequirement;
+use Wikimedia\FileBackend\FSFile\TempFSFile;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use XMLReader;
 use function array_any;
@@ -25,6 +26,7 @@ use function str_starts_with;
 use function version_compare;
 use const LIBXML_COMPACT;
 use const LIBXML_ERR_ERROR;
+use const LIBXML_NONET;
 
 /**
  * Unpacks and checks an uploaded dump. The upload may be a MediaWiki XML export,
@@ -117,6 +119,7 @@ class DumpProcessor {
 			}
 
 			$tempFile = $extracted->getValue();
+			'@phan-var TempFSFile $tempFile';
 			$xmlPath = $tempFile->getPath();
 
 			$virus = $this->uploadVerification->detectVirus( $xmlPath );

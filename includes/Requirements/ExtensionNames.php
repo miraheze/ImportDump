@@ -50,6 +50,7 @@ class ExtensionNames {
 		$this->messageKeys ??= $this->cache->getWithSetCallback(
 			$this->cache->makeGlobalKey( 'ImportDump', 'extension-names', MW_VERSION ),
 			BagOStuff::TTL_DAY,
+			/** @return array<string, string> */
 			function (): array {
 				$paths = array_merge(
 					glob( $this->options->get( MainConfigNames::ExtensionDirectory ) . '/*/extension*.json' ) ?: [],

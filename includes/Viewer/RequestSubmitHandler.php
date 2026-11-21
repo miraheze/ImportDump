@@ -202,19 +202,19 @@ class RequestSubmitHandler {
 					return;
 				}
 
-				if ( in_array( 'private', $changes ) ) {
+				if ( in_array( 'private', $changes, true ) ) {
 					$this->addSuccess( $this->context->msg( 'importdump-success-private' ) );
 				}
 
-				if ( in_array( 'public', $changes ) ) {
+				if ( in_array( 'public', $changes, true ) ) {
 					$this->addSuccess( $this->context->msg( 'importdump-success-public' ) );
 				}
 
-				if ( in_array( 'locked', $changes ) ) {
+				if ( in_array( 'locked', $changes, true ) ) {
 					$this->addSuccess( $this->context->msg( 'importdump-success-locked' ) );
 				}
 
-				if ( in_array( 'unlocked', $changes ) ) {
+				if ( in_array( 'unlocked', $changes, true ) ) {
 					$this->addSuccess( $this->context->msg( 'importdump-success-unlocked' ) );
 				}
 

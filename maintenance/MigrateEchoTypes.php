@@ -7,6 +7,7 @@ namespace Miraheze\ImportDump\Maintenance;
 use MediaWiki\Maintenance\LoggedUpdateMaintenance;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\Request\RequestManager;
+use Wikimedia\Rdbms\IConnectionProvider;
 
 class MigrateEchoTypes extends LoggedUpdateMaintenance {
 
@@ -81,6 +82,7 @@ class MigrateEchoTypes extends LoggedUpdateMaintenance {
 		$provider = $this->getServiceContainer()->get(
 			'GlobalPreferences.GlobalPreferencesConnectionProvider'
 		);
+		'@phan-var IConnectionProvider $provider';
 
 		$globalDbw = $provider->getPrimaryDatabase();
 

@@ -16,7 +16,7 @@ interface ImportDumpRequestStatusUpdateHook {
 	 * @param RequestManager $requestManager
 	 * @param RequestStatus $newStatus The new status.
 	 * @param RequestStatus $oldStatus The previous status.
-	 * @return void
+	 * @return void This hook must not abort, it must return no value.
 	 */
 	public function onImportDumpRequestStatusUpdate(
 		RequestManager $requestManager,
