@@ -23,6 +23,39 @@ $cfg['suppress_issue_types'] = [
 	'SecurityCheck-LikelyFalsePositive',
 ];
 
+$cfg['plugins'] = array_merge( $cfg['plugins'], [
+	'AddNeverReturnTypePlugin',
+	'AlwaysReturnPlugin',
+	'DeprecateAliasPlugin',
+	'DollarDollarPlugin',
+	'DuplicateConstantPlugin',
+	'EmptyMethodAndFunctionPlugin',
+	'EmptyStatementListPlugin',
+	'FFIAnalysisPlugin',
+	'InlineHTMLPlugin',
+	'InvalidVariableIssetPlugin',
+	'InvokePHPNativeSyntaxCheckPlugin',
+	'LoopVariableReusePlugin',
+	'MoreSpecificElementTypePlugin',
+	'NotFullyQualifiedUsagePlugin',
+	'PHPDocRedundantPlugin',
+	'PHPUnitAssertionPlugin',
+	'PHPUnitNotDeadCodePlugin',
+	'PreferNamespaceUsePlugin',
+	'PrintfCheckerPlugin',
+	'RedundantAssignmentPlugin',
+	'SimplifyExpressionPlugin',
+	'SleepCheckerPlugin',
+	'StrictComparisonPlugin',
+	'StrictLiteralComparisonPlugin',
+	'SuspiciousParamOrderPlugin',
+	'UnknownClassElementAccessPlugin',
+	// 'UnknownElementTypePlugin',
+	'UnreachableCodePlugin',
+	'UnsafeCodePlugin',
+	'UseReturnValuePlugin',
+] );
+
 $cfg['plugins'][] = __DIR__ . '/../vendor/miraheze/phan-plugins/NoOptionalParamPlugin.php';
 
 $cfg['enable_class_alias_support'] = false;
