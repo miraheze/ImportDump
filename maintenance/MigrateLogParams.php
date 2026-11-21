@@ -170,7 +170,10 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 		);
 	}
 
-	/** @param array<string|int, mixed> $params */
+	/**
+	 * @param string $title
+	 * @param array<string|int, mixed> $params
+	 */
 	private function getRequestID( string $title, array $params ): ?int {
 		if ( preg_match( '!/(\d+)$!', $title, $matches ) ) {
 			return (int)$matches[1];

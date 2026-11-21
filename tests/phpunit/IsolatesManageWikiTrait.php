@@ -2,6 +2,8 @@
 
 declare( strict_types = 1 );
 
+// @phan-file-suppress PhanUndeclaredMethod, PhanPluginUnknownObjectMethodCall
+
 namespace Miraheze\ImportDump\Tests;
 
 use MediaWikiIntegrationTestCase;
@@ -12,7 +14,6 @@ use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
  * so that the tests give the same results whether or not it is installed.
  *
  * @require-extends MediaWikiIntegrationTestCase
- * @phan-file-suppress PhanUndeclaredMethod, PhanPluginUnknownObjectMethodCall
  */
 trait IsolatesManageWikiTrait {
 

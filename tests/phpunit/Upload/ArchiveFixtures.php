@@ -2,6 +2,8 @@
 
 declare( strict_types = 1 );
 
+// @phan-file-suppress PhanUndeclaredMethod, PhanPluginUnknownObjectMethodCall
+
 namespace Miraheze\ImportDump\Tests\Upload;
 
 use MediaWiki\Config\ServiceOptions;
@@ -18,7 +20,6 @@ use function is_string;
  * Builds the files that the archive tests read.
  *
  * @require-extends MediaWikiIntegrationTestCase
- * @phan-file-suppress PhanUndeclaredMethod, PhanPluginUnknownObjectMethodCall
  */
 trait ArchiveFixtures {
 
