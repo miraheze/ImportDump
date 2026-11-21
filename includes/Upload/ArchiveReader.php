@@ -521,10 +521,9 @@ final class ArchiveReader {
 	/**
 	 * Opens a file for reading its contents, decompressed if it is compressed.
 	 *
-	 * @return mixed A stream resource, or false if the file could not be opened.
+	 * @return resource|false A stream resource, or false if the file could not be opened.
 	 */
-	private function openStream( string $path, string $format ): mixed {
-		// @phan-suppress-next-line PhanPluginMoreSpecificActualReturnType Resources cannot be declared
+	private function openStream( string $path, string $format ) {
 		return match ( $format ) {
 			self::FORMAT_GZIP => gzopen( $path, 'rb' ),
 			self::FORMAT_BZIP2 => function_exists( 'bzopen' ) ? bzopen( $path, 'r' ) : false,

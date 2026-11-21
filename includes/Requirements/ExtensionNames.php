@@ -50,7 +50,7 @@ class ExtensionNames {
 		$this->messageKeys ??= $this->cache->getWithSetCallback(
 			$this->cache->makeGlobalKey( 'ImportDump', 'extension-names', MW_VERSION ),
 			BagOStuff::TTL_DAY,
-			// @phan-suppress-next-line PhanPluginMoreSpecificActualReturnType Only strings are returned
+			/** @return array<string, string> */
 			function (): array {
 				$paths = array_merge(
 					glob( $this->options->get( MainConfigNames::ExtensionDirectory ) . '/*/extension*.json' ) ?: [],
