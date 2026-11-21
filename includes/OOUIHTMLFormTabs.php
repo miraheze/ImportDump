@@ -2,6 +2,7 @@
 
 namespace Miraheze\ImportDump;
 
+use Closure;
 use MediaWiki\HTMLForm\OOUIHTMLForm;
 use MediaWiki\Logger\LoggerFactory;
 use OOUI\FieldsetLayout;
@@ -15,6 +16,17 @@ class OOUIHTMLFormTabs extends OOUIHTMLForm {
 
 	/** @var bool Override default value from HTMLForm */
 	protected $mSubSectionBeforeFields = false;
+
+	private ?Closure $noticesRenderer = null;
+
+	/**
+	 * The notices are rendered when the body is, which is after the form is submitted.
+	 *
+	 * @param Closure(): string $renderer
+	 */
+	public function setNoticesRenderer( Closure $renderer ): void {
+		$this->noticesRenderer = $renderer;
+	}
 
 	/**
 	 * @param string $legend
@@ -93,6 +105,7 @@ class OOUIHTMLFormTabs extends OOUIHTMLForm {
 			'content' => $indexLayout,
 		] );
 
-		return $header . $form;
+		$notices = $this->noticesRenderer ? ( $this->noticesRenderer )() : '';
+		return $notices . $header . $form;
 	}
 }
