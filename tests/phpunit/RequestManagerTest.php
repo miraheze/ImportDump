@@ -676,6 +676,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	 * @covers ::getRequirementProblems
 	 */
 	public function testRequirementProblemsAreUnknownWithoutHook(): void {
+		$this->setRemoteGroups( null );
+
 		$manager = $this->getRequestManager( id: 1 );
 		$manager->setRequirements( [ 'WikibaseRepository' => true ] );
 
@@ -687,7 +689,81 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->assertSame( [], $manager->getBlockingRequirementProblems() );
 	}
 
-	private function setTargetState( ?array $extensions, array $settings ): void {
+	/*
+	 * @covers ::requesterHasTargetAccess
+	 * @dataProvider provideTargetAccess
+	 */
+	public function testRequesterHasTargetAccess( array $rights, ?array $groups, bool $expected ): void {
+		$this->setTargetState( [], [], $rights, $groups );
+
+		$this->assertSame( $expected, $this->getRequestManager( id: 1 )->requesterHasTargetAccess() );
+	}
+
+	public static function provideTargetAccess(): array {
+		return [
+			'can read' => [ [ 'read', 'edit' ], [ 'sysop' ], true ],
+			'cannot read' => [ [ 'edit' ], [ 'sysop' ], false ],
+			'no rights known' => [ [], [ 'sysop' ], false ],
+			'no account on the target' => [ [ 'read' ], null, false ],
+		];
+	}
+
+	/**
+	 * @covers ::getRequirementProblems
+	 */
+	public function testHookGetsTheGroupsOfTheRequester(): void {
+		$this->setRemoteGroups( [ 'sysop', 'bureaucrat' ] );
+		$this->overrideConfigValue( ConfigNames::ExtensionRequirements, [
+			'PortableInfobox' => [ 'models' => [], 'patterns' => [], 'settings' => [] ],
+		] );
+
+		$received = null;
+		$this->setTemporaryHook( 'ImportDumpGetTargetState',
+			static function (
+				string $target,
+				array $requesterGroups,
+				?array &$extensions,
+				array &$settings,
+				array &$rights
+			) use ( &$received ): void {
+				$received = $requesterGroups;
+			}
+		);
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setRequirements( [ 'PortableInfobox' => true ] );
+		$manager->getRequirementProblems();
+
+		$this->assertSame( [ 'sysop', 'bureaucrat' ], $received );
+	}
+
+	private function setRemoteGroups( ?array $groups ): void {
+		$lookup = $this->createMock( UserIdentityLookup::class );
+		$lookup->method( 'getUserIdentityByName' )->willReturn(
+			$groups === null ? null : new UserIdentityValue( 1, 'Test user' )
+		);
+
+		$actorStoreFactory = $this->createMock( ActorStoreFactory::class );
+		$actorStoreFactory->method( 'getUserIdentityLookup' )->willReturn( $lookup );
+
+		$groupManager = $this->createMock( UserGroupManager::class );
+		$groupManager->method( 'getUserGroups' )->willReturn( $groups ?? [] );
+
+		$groupManagerFactory = $this->createMock( UserGroupManagerFactory::class );
+		$groupManagerFactory->method( 'getUserGroupManager' )->willReturn( $groupManager );
+
+		$this->setService( 'ActorStoreFactory', $actorStoreFactory );
+		$this->setService( 'UserGroupManagerFactory', $groupManagerFactory );
+	}
+
+	private function setTargetState(
+		?array $extensions,
+		array $settings,
+		array $rights,
+		?array $groups
+	): void {
+		$this->setRemoteGroups( $groups );
+
 		$this->overrideConfigValue( ConfigNames::ExtensionRequirements, [
 			'PortableInfobox' => [ 'models' => [], 'patterns' => [], 'settings' => [] ],
 			'WikibaseRepository' => [ 'models' => [], 'patterns' => [], 'settings' => [ 'allowEntityImport' ] ],
@@ -699,10 +775,11 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 				array $requesterGroups,
 				?array &$enabled,
 				array &$enabledSettings,
-				array &$rights
-			) use ( $extensions, $settings ): void {
+				array &$grantedRights
+			) use ( $extensions, $settings, $rights ): void {
 				$enabled = $extensions;
 				$enabledSettings = $settings;
+				$grantedRights = $rights;
 			}
 		);
 	}
@@ -717,7 +794,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	 * @dataProvider provideRequirementProblems
 	 */
 	public function testRequirementProblems( ?array $extensions, array $settings, array $expected ): void {
-		$this->setTargetState( $extensions, $settings );
+		$this->setTargetState( $extensions, $settings, rights: [], groups: null );
 
 		$manager = $this->getRequestManager( id: 1 );
 		$manager->setRequirements( [ 'PortableInfobox' => false, 'WikibaseRepository' => true ] );
@@ -789,7 +866,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	 * @covers ::getBlockingRequirementProblems
 	 */
 	public function testOnlyCertainProblemsBlock(): void {
-		$this->setTargetState( [], [] );
+		$this->setTargetState( [], [], rights: [], groups: null );
 
 		$manager = $this->getRequestManager( id: 1 );
 		$manager->setRequirements( [ 'PortableInfobox' => false, 'WikibaseRepository' => true ] );
