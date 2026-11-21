@@ -246,7 +246,7 @@ class RequestManager {
 
 		$comments = [];
 		foreach ( $res as $row ) {
-			$user = $this->userFactory->newFromActorId( $row->request_comment_actor );
+			$user = $this->userFactory->newFromActorId( (int)$row->request_comment_actor );
 			$comments[] = [
 				'comment' => $row->request_comment_text,
 				'timestamp' => $row->request_comment_timestamp,
@@ -598,7 +598,7 @@ class RequestManager {
 	}
 
 	public function getRequester(): User {
-		return $this->userFactory->newFromActorId( $this->row->request_actor );
+		return $this->userFactory->newFromActorId( (int)$this->row->request_actor );
 	}
 
 	public function getSource(): string {
