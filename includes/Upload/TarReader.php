@@ -7,7 +7,6 @@ namespace Miraheze\ImportDump\Upload;
 use Closure;
 use MediaWiki\Message\Message;
 use MediaWiki\Status\Status;
-
 use function array_any;
 use function array_keys;
 use function count_chars;

@@ -33,7 +33,6 @@ use RefreshLinks;
 use Throwable;
 use UpdateArticleCount;
 use Wikimedia\Rdbms\IConnectionProvider;
-
 use function error_get_last;
 use function file_exists;
 use function get_class;

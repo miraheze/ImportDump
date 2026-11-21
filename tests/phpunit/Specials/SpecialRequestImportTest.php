@@ -30,7 +30,6 @@ use SpecialPageTestBase;
 use Wikimedia\Rdbms\SelectQueryBuilder;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
-
 use function array_map;
 use function basename;
 use function crc32;

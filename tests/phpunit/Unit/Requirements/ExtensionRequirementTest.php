@@ -6,7 +6,6 @@ namespace Miraheze\ImportDump\Tests\Unit\Requirements;
 
 use MediaWikiUnitTestCase;
 use Miraheze\ImportDump\Requirements\ExtensionRequirement;
-
 use function array_keys;
 
 /**

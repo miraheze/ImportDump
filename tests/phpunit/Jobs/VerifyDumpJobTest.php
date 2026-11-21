@@ -22,7 +22,6 @@ use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
-
 use function gzencode;
 use function str_replace;
 

@@ -15,7 +15,6 @@ use Miraheze\ImportDump\Notices\ActionOutcomeNotices;
 use Miraheze\ImportDump\Notices\NoticeSeverity;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
-
 use function array_column;
 use function array_unique;
 use function implode;

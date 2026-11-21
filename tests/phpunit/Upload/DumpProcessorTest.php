@@ -15,7 +15,6 @@ use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\DumpResult;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
-
 use function array_column;
 use function array_map;
 use function array_slice;

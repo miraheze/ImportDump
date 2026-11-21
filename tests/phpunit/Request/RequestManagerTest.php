@@ -37,7 +37,6 @@ use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
-
 use function array_keys;
 use function array_map;
 use function file_get_contents;

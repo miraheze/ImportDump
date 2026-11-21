@@ -45,7 +45,6 @@ use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\Platform\ISQLPlatform;
-
 use function array_filter;
 use function array_map;
 use function array_push;

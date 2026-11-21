@@ -13,7 +13,6 @@ use OOUI\IndexLayout;
 use OOUI\PanelLayout;
 use OOUI\TabPanelLayout;
 use OOUI\Widget;
-
 use function is_array;
 
 class OOUIHTMLFormTabs extends OOUIHTMLForm {

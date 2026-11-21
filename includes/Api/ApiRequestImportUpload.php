@@ -24,7 +24,6 @@ use StatusValue;
 use Wikimedia\ParamValidator\ParamValidator;
 use Wikimedia\ParamValidator\TypeDef\IntegerDef;
 use Wikimedia\Rdbms\IConnectionProvider;
-
 use const PHP_INT_MAX;
 
 class ApiRequestImportUpload extends ApiBase {

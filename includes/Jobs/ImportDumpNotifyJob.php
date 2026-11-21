@@ -17,7 +17,6 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
-
 use function array_filter;
 use function array_map;
 use function array_values;

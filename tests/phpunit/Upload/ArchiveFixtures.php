@@ -10,7 +10,6 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
-
 use function file_put_contents;
 use function is_string;
 

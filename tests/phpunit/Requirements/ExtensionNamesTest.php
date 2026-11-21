@@ -10,7 +10,6 @@ use MediaWiki\MainConfigNames;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\Requirements\ExtensionNames;
 use Wikimedia\ObjectCache\HashBagOStuff;
-
 use function file_put_contents;
 use function json_encode;
 use function mkdir;

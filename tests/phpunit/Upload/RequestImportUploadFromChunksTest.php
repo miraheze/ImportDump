@@ -14,7 +14,6 @@ use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use Wikimedia\TestingAccessWrapper;
-
 use function file_exists;
 use function file_put_contents;
 use function filesize;

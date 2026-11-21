@@ -13,7 +13,6 @@ use MediaWiki\Shell\Shell;
 use MediaWiki\Status\Status;
 use Miraheze\ImportDump\ConfigNames;
 use Shellbox\Command\BoxedResult;
-
 use function count;
 use function ctype_digit;
 use function defined;

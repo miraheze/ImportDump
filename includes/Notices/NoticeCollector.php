@@ -7,7 +7,6 @@ namespace Miraheze\ImportDump\Notices;
 use MediaWiki\Context\IContextSource;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
-
 use function usort;
 
 /**

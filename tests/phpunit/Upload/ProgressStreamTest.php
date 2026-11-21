@@ -8,7 +8,6 @@ use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\Upload\ProgressStream;
 use Wikimedia\AtEase\AtEase;
 use XMLReader;
-
 use function end;
 use function file_get_contents;
 use function file_put_contents;

@@ -9,7 +9,6 @@ use MediaWiki\Language\MessageLocalizer;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Registration\ExtensionProcessor;
 use Wikimedia\ObjectCache\BagOStuff;
-
 use function array_merge;
 use function glob;
 use const MW_VERSION;

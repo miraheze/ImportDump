@@ -13,7 +13,6 @@ use MediaWiki\Title\TitleValue;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\Maintenance\MigrateLogParams;
 use Wikimedia\TestingAccessWrapper;
-
 use const NS_SPECIAL;
 
 /**

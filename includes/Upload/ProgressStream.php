@@ -6,7 +6,6 @@ declare( strict_types = 1 );
 namespace Miraheze\ImportDump\Upload;
 
 use Closure;
-
 use function bin2hex;
 use function fclose;
 use function feof;

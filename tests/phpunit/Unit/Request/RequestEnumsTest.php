@@ -9,7 +9,6 @@ use MediaWikiUnitTestCase;
 use Miraheze\ImportDump\Request\RequestHistory;
 use Miraheze\ImportDump\Request\RequestStage;
 use Miraheze\ImportDump\Request\RequestStatus;
-
 use function array_column;
 
 /**

@@ -10,7 +10,6 @@ use MediaWiki\Message\Message;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Requirements\ExtensionNames;
-
 use function count;
 use function in_array;
 

@@ -9,7 +9,6 @@ use MediaWiki\Message\Message;
 use MediaWiki\Status\Status;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use ZipArchive;
-
 use function basename;
 use function bzopen;
 use function count;

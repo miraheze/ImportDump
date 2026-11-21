@@ -10,7 +10,6 @@ use MediaWiki\Tests\Maintenance\MaintenanceBaseTestCase;
 use MediaWiki\Title\TitleValue;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\Maintenance\MigrateLogTypes;
-
 use const NS_SPECIAL;
 
 /**

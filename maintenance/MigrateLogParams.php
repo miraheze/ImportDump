@@ -12,7 +12,6 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
 use stdClass;
 use Wikimedia\Rdbms\IDatabase;
-
 use function array_any;
 use function array_keys;
 use function is_array;

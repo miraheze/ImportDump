@@ -10,7 +10,6 @@ use Miraheze\ImportDump\Upload\ArchiveEntry;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
 use ZipArchive;
-
 use function bzcompress;
 use function end;
 use function file_get_contents;

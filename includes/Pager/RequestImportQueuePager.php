@@ -12,7 +12,6 @@ use MediaWiki\User\UserFactory;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
 use Wikimedia\Rdbms\IConnectionProvider;
-
 use function htmlspecialchars;
 
 class RequestImportQueuePager extends TablePager {

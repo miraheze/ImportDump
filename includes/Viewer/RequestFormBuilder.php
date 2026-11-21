@@ -13,7 +13,6 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Notices\NoticeResult;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
-
 use function array_unique;
 use function ctype_space;
 use function htmlspecialchars;

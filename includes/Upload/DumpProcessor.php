@@ -13,7 +13,6 @@ use Miraheze\ImportDump\Request\RequestHistory;
 use Miraheze\ImportDump\Requirements\ExtensionRequirement;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use XMLReader;
-
 use function array_any;
 use function array_filter;
 use function count;

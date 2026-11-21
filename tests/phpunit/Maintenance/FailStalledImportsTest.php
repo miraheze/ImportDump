@@ -15,7 +15,6 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStage;
 use Miraheze\ImportDump\Request\RequestStatus;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
-
 use const TS_UNIX;
 
 /**

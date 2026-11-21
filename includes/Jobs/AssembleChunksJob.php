@@ -16,7 +16,6 @@ use MediaWiki\Upload\UploadBase;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use UnexpectedValueException;
 use Wikimedia\ScopedCallback;
-
 use function get_class;
 use function is_array;
 
