@@ -15,6 +15,7 @@ use MediaWiki\Status\Status;
 use MediaWiki\Upload\Exception\UploadStashException;
 use MediaWiki\Upload\UploadBase;
 use MediaWiki\Upload\UploadFromStash;
+use MediaWiki\Upload\UploadStashFile;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\AssembleChunksJob;
@@ -92,7 +93,9 @@ class ApiRequestImportUpload extends ApiBase {
 					$this->dieStatus( $status );
 				}
 
-				$fileKey = $status->getValue()->getFileKey();
+				$stashFile = $status->getValue();
+				'@phan-var UploadStashFile $stashFile';
+				$fileKey = $stashFile->getFileKey();
 			} else {
 				if ( $fileKey === null ) {
 					$this->dieWithError( 'apierror-upload-filekeyneeded', 'filekeyneeded' );

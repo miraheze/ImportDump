@@ -285,7 +285,7 @@ class RequestManager {
 		);
 	}
 
-	/** @return User[] */
+	/** @return array<int, User> */
 	public function getInvolvedUsers(): array {
 		return array_unique( array_merge(
 			array_column( $this->getComments(), 'user' ),

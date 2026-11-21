@@ -26,6 +26,7 @@ use MediaWiki\Upload\UploadBase;
 use MediaWiki\Upload\UploadFromStash;
 use MediaWiki\Upload\UploadFromUrl;
 use MediaWiki\Upload\UploadStash;
+use MediaWiki\Upload\UploadStashFile;
 use MediaWiki\Upload\UploadVerification;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
@@ -308,7 +309,9 @@ class SpecialRequestImport extends FormSpecialPage {
 				return $status;
 			}
 
-			$fileKey = $status->getStatusValue()->getValue()->getFileKey();
+			$stashFile = $status->getStatusValue()->getValue();
+			'@phan-var UploadStashFile $stashFile';
+			$fileKey = $stashFile->getFileKey();
 		}
 
 		try {

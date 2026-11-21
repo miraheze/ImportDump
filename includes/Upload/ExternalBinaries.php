@@ -34,6 +34,7 @@ use function str_starts_with;
 use function strtolower;
 use function trim;
 use const MW_CONFIG_FILE;
+use const PHP_INT_MAX;
 
 /**
  * Runs the programs that unpack the formats PHP cannot read itself. A format only works when
