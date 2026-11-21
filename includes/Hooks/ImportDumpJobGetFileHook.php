@@ -2,7 +2,7 @@
 
 namespace Miraheze\ImportDump\Hooks;
 
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestManager;
 
 interface ImportDumpJobGetFileHook {
 

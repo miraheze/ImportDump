@@ -4,7 +4,7 @@ namespace Miraheze\ImportDump\Maintenance;
 
 use MediaWiki\Maintenance\LoggedUpdateMaintenance;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestManager;
 
 class MigrateEchoTypes extends LoggedUpdateMaintenance {
 

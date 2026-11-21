@@ -16,7 +16,7 @@ use MediaWiki\Upload\UploadFromStash;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\AssembleChunksJob;
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use StatusValue;
 use Wikimedia\ParamValidator\ParamValidator;

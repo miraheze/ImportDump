@@ -7,8 +7,8 @@ use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Status\Status;
 use MediaWiki\Upload\UploadVerification;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\ExtensionRequirement;
-use Miraheze\ImportDump\RequestHistory;
+use Miraheze\ImportDump\Request\RequestHistory;
+use Miraheze\ImportDump\Requirements\ExtensionRequirement;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use XMLReader;
 

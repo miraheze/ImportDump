@@ -7,10 +7,10 @@ use MediaWiki\Permissions\SimpleAuthority;
 use MediaWiki\Tests\Api\ApiTestCase;
 use MediaWiki\User\UserIdentityValue;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\ImportDump\RequestStage;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Progress\VerificationProgress;
+use Miraheze\ImportDump\Request\RequestStage;
+use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Tests\IsolatesManageWikiTrait;
-use Miraheze\ImportDump\VerificationProgress;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
@@ -105,7 +105,7 @@ class ApiRequestImportProgressTest extends ApiTestCase {
 		$id = $this->newRequest( RequestStatus::InProgress, 0 );
 
 		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
-		'@phan-var \Miraheze\ImportDump\RequestManager $manager';
+		'@phan-var \Miraheze\ImportDump\Request\RequestManager $manager';
 		$manager->loadFromID( $id );
 		$manager->setStage( RequestStage::TextIndex );
 

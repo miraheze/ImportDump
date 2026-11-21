@@ -4,8 +4,8 @@ namespace Miraheze\ImportDump\Api;
 
 use MediaWiki\Api\ApiBase;
 use MediaWiki\Api\ApiMain;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStage;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStage;
 use Wikimedia\ParamValidator\ParamValidator;
 use Wikimedia\ParamValidator\TypeDef\IntegerDef;
 

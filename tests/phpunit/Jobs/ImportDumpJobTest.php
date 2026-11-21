@@ -6,12 +6,12 @@ use MediaWiki\MainConfigNames;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\ImportHeartbeat;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStage;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Progress\ImportHeartbeat;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStage;
+use Miraheze\ImportDump\Request\RequestStatus;
 use RuntimeException;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
@@ -336,7 +336,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 		);
 
 		$progress = $this->getServiceContainer()->getService( 'ImportDumpImportProgress' );
-		'@phan-var \Miraheze\ImportDump\ImportProgress $progress';
+		'@phan-var \Miraheze\ImportDump\Progress\ImportProgress $progress';
 		$total = (int)$dbw->newSelectQueryBuilder()
 			->select( 'COUNT(*)' )
 			->from( 'page' )

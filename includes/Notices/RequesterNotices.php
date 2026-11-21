@@ -4,8 +4,8 @@ namespace Miraheze\ImportDump\Notices;
 
 use MediaWiki\Context\IContextSource;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 
 final class RequesterNotices implements NoticeProvider {
 

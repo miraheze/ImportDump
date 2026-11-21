@@ -8,12 +8,12 @@ use MediaWiki\Language\FormatterFactory;
 use MediaWiki\Language\MessageLocalizer;
 use MediaWiki\Status\Status;
 use MediaWiki\User\User;
-use Miraheze\ImportDump\AttentionNotifier;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Notifications\AttentionNotifier;
+use Miraheze\ImportDump\Progress\VerificationProgress;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\DumpResult;
-use Miraheze\ImportDump\VerificationProgress;
 
 /**
  * Checks an upload that was too big, or too risky, to check while the request was submitted.

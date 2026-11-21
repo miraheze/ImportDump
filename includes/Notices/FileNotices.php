@@ -6,9 +6,9 @@ use MediaWiki\Config\Config;
 use MediaWiki\Context\IContextSource;
 use MediaWiki\Html\Html;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStage;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStage;
+use Miraheze\ImportDump\Request\RequestStatus;
 
 final class FileNotices implements NoticeProvider {
 

@@ -6,12 +6,12 @@ use MediaWiki\MainConfigNames;
 use MediaWiki\Tests\Maintenance\MaintenanceBaseTestCase;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\ImportHeartbeat;
 use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
 use Miraheze\ImportDump\Maintenance\FailStalledImports;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStage;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Progress\ImportHeartbeat;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStage;
+use Miraheze\ImportDump\Request\RequestStatus;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**

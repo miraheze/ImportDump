@@ -6,7 +6,7 @@ use MediaWiki\Block\Hook\GetAllBlockActionsHook;
 use MediaWiki\Specials\Hook\LoginFormValidErrorMessagesHook;
 use MediaWiki\User\Hook\UserGetReservedNamesHook;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestManager;
 use Wikimedia\Rdbms\IConnectionProvider;
 
 class Main implements

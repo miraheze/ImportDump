@@ -2,7 +2,7 @@
 
 namespace Miraheze\ImportDump\Upload;
 
-use Miraheze\ImportDump\RequestHistory;
+use Miraheze\ImportDump\Request\RequestHistory;
 use Wikimedia\FileBackend\FSFile\TempFSFile;
 
 final readonly class DumpResult {

@@ -5,7 +5,7 @@ namespace Miraheze\ImportDump\Maintenance;
 use MediaWiki\Maintenance\LoggedUpdateMaintenance;
 use MediaWiki\RecentChanges\RecentChange;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestManager;
 
 class MigrateLogTypes extends LoggedUpdateMaintenance {
 

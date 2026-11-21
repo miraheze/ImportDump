@@ -6,7 +6,7 @@ use MediaWiki\Installer\Hook\LoadExtensionSchemaUpdatesHook;
 use Miraheze\ImportDump\Maintenance\MigrateEchoTypes;
 use Miraheze\ImportDump\Maintenance\MigrateLogParams;
 use Miraheze\ImportDump\Maintenance\MigrateLogTypes;
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestManager;
 
 class Installer implements LoadExtensionSchemaUpdatesHook {
 

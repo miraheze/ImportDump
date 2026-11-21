@@ -8,11 +8,11 @@ use MediaWiki\Parser\ParserOptions;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\ImportDump\ExtensionNames;
-use Miraheze\ImportDump\RequestImportQueuePager;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStatus;
-use Miraheze\ImportDump\RequestViewer;
+use Miraheze\ImportDump\Pager\RequestImportQueuePager;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Requirements\ExtensionNames;
+use Miraheze\ImportDump\Viewer\RequestViewer;
 use Wikimedia\Rdbms\IConnectionProvider;
 
 class SpecialRequestImportQueue extends SpecialPage {

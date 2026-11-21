@@ -2,8 +2,8 @@
 
 namespace Miraheze\ImportDump\Hooks;
 
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 
 interface ImportDumpRequestStatusUpdateHook {
 
@@ -12,13 +12,13 @@ interface ImportDumpRequestStatusUpdateHook {
 	 * This may run inside a database transaction. Defer any external work.
 	 *
 	 * @param RequestManager $requestManager
-	 * @param RequestStatus $newStatus
-	 * @param RequestStatus $oldStatus
+	 * @param string $newStatus The value of the new RequestStatus.
+	 * @param string $oldStatus The value of the old RequestStatus.
 	 * @return void
 	 */
 	public function onImportDumpRequestStatusUpdate(
 		RequestManager $requestManager,
-		RequestStatus $newStatus,
-		RequestStatus $oldStatus
+		string $newStatus,
+		string $oldStatus
 	): void;
 }

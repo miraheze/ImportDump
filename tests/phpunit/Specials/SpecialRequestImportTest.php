@@ -20,7 +20,7 @@ use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;

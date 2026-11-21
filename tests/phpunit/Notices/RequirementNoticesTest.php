@@ -7,10 +7,10 @@ use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\Notices\NoticeSeverity;
 use Miraheze\ImportDump\Notices\RequestNotice;
 use Miraheze\ImportDump\Notices\RequirementNotices;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStatus;
-use Miraheze\ImportDump\RequirementProblem;
-use Miraheze\ImportDump\RequirementProblemKind;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Requirements\RequirementProblem;
+use Miraheze\ImportDump\Requirements\RequirementProblemKind;
 
 /**
  * @covers \Miraheze\ImportDump\Notices\RequirementNotices

@@ -7,7 +7,7 @@ use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Status\Status;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\RequestHistory;
+use Miraheze\ImportDump\Request\RequestHistory;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\DumpResult;

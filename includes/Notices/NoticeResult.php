@@ -2,7 +2,7 @@
 
 namespace Miraheze\ImportDump\Notices;
 
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Request\RequestStatus;
 
 final readonly class NoticeResult {
 

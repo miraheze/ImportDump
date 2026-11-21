@@ -13,8 +13,8 @@ use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Notifications\RequestNotification;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 
 class ImportDumpNotifyJob extends Job {
 
