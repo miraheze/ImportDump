@@ -680,6 +680,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	 */
 	public function testRequirementProblemsAreUnknownWithoutHook(): void {
 		$this->setRemoteGroups( null );
+		// Other extensions can handle this hook.
+		$this->clearHook( 'ImportDumpGetTargetState' );
 
 		$manager = $this->getRequestManager( id: 1 );
 		$manager->setRequirements( [ 'WikibaseRepository' => true ] );
