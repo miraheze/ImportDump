@@ -23,7 +23,7 @@ class RequirementNoticesTest extends MediaWikiIntegrationTestCase {
 
 		$extensionNames = $this->getServiceContainer()->get( 'ImportDumpExtensionNames' );
 
-		return ( new RequirementNotices( $extensionNames ) )->getNotices(
+		return new RequirementNotices( $extensionNames )->getNotices(
 			$requestManager,
 			RequestContext::getMain(),
 			$status
