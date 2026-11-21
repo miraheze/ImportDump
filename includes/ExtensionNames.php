@@ -9,8 +9,8 @@ use MessageLocalizer;
 use Wikimedia\ObjectCache\BagOStuff;
 
 /**
- * Finds the name that an extension gives itself. It reads the extension files like ManageWiki
- * does, so that extensions that are not loaded on this wiki have their names too.
+ * Finds the name that an extension gives itself. It reads the extension files, so that
+ * extensions that are not loaded on this wiki have their names too.
  */
 class ExtensionNames {
 
