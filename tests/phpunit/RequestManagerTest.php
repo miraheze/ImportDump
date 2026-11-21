@@ -2,6 +2,7 @@
 
 namespace Miraheze\ImportDump\Tests;
 
+use Generator;
 use MediaWiki\FileRepo\LocalRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\Logging\LogEntryBase;
@@ -642,6 +643,159 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$manager->setHistory( null );
 		$this->assertNull( $this->getRequestManager( id: 1 )->getHistory() );
+	}
+
+	/**
+	 * @covers ::getRequirements
+	 * @covers ::setRequirements
+	 */
+	public function testRequirements(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$this->assertSame( [], $manager->getRequirements() );
+
+		$requirements = [ 'PortableInfobox' => false, 'WikibaseRepository' => true ];
+		$manager->setRequirements( $requirements );
+		$this->assertSame( $requirements, $manager->getRequirements() );
+		$this->assertSame( $requirements, $this->getRequestManager( id: 1 )->getRequirements() );
+
+		$manager->setRequirements( [] );
+		$this->assertSame( [], $this->getRequestManager( id: 1 )->getRequirements() );
+	}
+
+	/**
+	 * @covers ::getRequirementProblems
+	 * @covers ::getBlockingRequirementProblems
+	 */
+	public function testNoRequirementProblemsWithoutRequirements(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$this->assertSame( [], $manager->getRequirementProblems() );
+		$this->assertSame( [], $manager->getBlockingRequirementProblems() );
+	}
+
+	/**
+	 * @covers ::getRequirementProblems
+	 */
+	public function testRequirementProblemsAreUnknownWithoutHook(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setRequirements( [ 'WikibaseRepository' => true ] );
+
+		$this->assertSame(
+			[ [ 'name' => 'WikibaseRepository', 'problem' => 'unknown', 'setting' => '', 'blocking' => false ] ],
+			$manager->getRequirementProblems()
+		);
+
+		$this->assertSame( [], $manager->getBlockingRequirementProblems() );
+	}
+
+	private function setTargetState( ?array $extensions, array $settings ): void {
+		$this->overrideConfigValue( ConfigNames::ExtensionRequirements, [
+			'PortableInfobox' => [ 'models' => [], 'patterns' => [], 'settings' => [] ],
+			'WikibaseRepository' => [ 'models' => [], 'patterns' => [], 'settings' => [ 'allowEntityImport' ] ],
+		] );
+
+		$this->setTemporaryHook( 'ImportDumpGetTargetState',
+			static function (
+				string $target,
+				?array &$enabled,
+				array &$enabledSettings
+			) use ( $extensions, $settings ): void {
+				$enabled = $extensions;
+				$enabledSettings = $settings;
+			}
+		);
+	}
+
+	/**
+	 * PortableInfobox is only found by its text here, and WikibaseRepository by a content model.
+	 *
+	 * @param ?string[] $extensions
+	 * @param array<string, bool> $settings
+	 * @param list<array{name: string, problem: string, setting: string, blocking: bool}> $expected
+	 * @covers ::getRequirementProblems
+	 * @dataProvider provideRequirementProblems
+	 */
+	public function testRequirementProblems( ?array $extensions, array $settings, array $expected ): void {
+		$this->setTargetState( $extensions, $settings );
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setRequirements( [ 'PortableInfobox' => false, 'WikibaseRepository' => true ] );
+
+		$this->assertSame( $expected, $manager->getRequirementProblems() );
+	}
+
+	public static function provideRequirementProblems(): Generator {
+		yield 'everything is enabled' => [
+			[ 'PortableInfobox', 'WikibaseRepository' ],
+			[ 'allowEntityImport' => true ],
+			[],
+		];
+
+		yield 'certain extension is missing' => [
+			[ 'PortableInfobox' ],
+			[],
+			[ [ 'name' => 'WikibaseRepository', 'problem' => 'missing', 'setting' => '', 'blocking' => true ] ],
+		];
+
+		yield 'uncertain extension is missing' => [
+			[ 'WikibaseRepository' ],
+			[ 'allowEntityImport' => true ],
+			[ [ 'name' => 'PortableInfobox', 'problem' => 'missing', 'setting' => '', 'blocking' => false ] ],
+		];
+
+		yield 'certain setting is off' => [
+			[ 'PortableInfobox', 'WikibaseRepository' ],
+			[ 'allowEntityImport' => false ],
+			[ [
+				'name' => 'WikibaseRepository',
+				'problem' => 'setting',
+				'setting' => 'allowEntityImport',
+				'blocking' => true,
+			] ],
+		];
+
+		yield 'setting is not known' => [
+			[ 'PortableInfobox', 'WikibaseRepository' ],
+			[],
+			[ [
+				'name' => 'WikibaseRepository',
+				'problem' => 'setting-unknown',
+				'setting' => 'allowEntityImport',
+				'blocking' => false,
+			] ],
+		];
+
+		yield 'nothing is enabled' => [
+			[],
+			[],
+			[
+				[ 'name' => 'PortableInfobox', 'problem' => 'missing', 'setting' => '', 'blocking' => false ],
+				[ 'name' => 'WikibaseRepository', 'problem' => 'missing', 'setting' => '', 'blocking' => true ],
+			],
+		];
+
+		yield 'hook does not know' => [
+			null,
+			[],
+			[
+				[ 'name' => 'PortableInfobox', 'problem' => 'unknown', 'setting' => '', 'blocking' => false ],
+				[ 'name' => 'WikibaseRepository', 'problem' => 'unknown', 'setting' => '', 'blocking' => false ],
+			],
+		];
+	}
+
+	/**
+	 * @covers ::getBlockingRequirementProblems
+	 */
+	public function testOnlyCertainProblemsBlock(): void {
+		$this->setTargetState( [], [] );
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setRequirements( [ 'PortableInfobox' => false, 'WikibaseRepository' => true ] );
+
+		$this->assertSame(
+			[ [ 'name' => 'WikibaseRepository', 'problem' => 'missing', 'setting' => '', 'blocking' => true ] ],
+			$manager->getBlockingRequirementProblems()
+		);
 	}
 
 	/**

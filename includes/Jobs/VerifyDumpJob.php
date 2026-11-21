@@ -73,6 +73,7 @@ class VerifyDumpJob extends Job implements RequestStatus {
 		}
 
 		$this->requestManager->setHistory( $result->history );
+		$this->requestManager->setRequirements( $result->requirements );
 		$this->requestManager->setStatus( self::STATUS_PENDING );
 		$this->progress->clear( $requestID );
 

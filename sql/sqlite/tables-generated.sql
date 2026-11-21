@@ -12,6 +12,7 @@ CREATE TABLE /*_*/import_requests (
   request_status TEXT NOT NULL,
   request_stage VARCHAR(32) DEFAULT NULL,
   request_history TEXT DEFAULT NULL,
+  request_requirements BLOB DEFAULT NULL,
   request_locked SMALLINT UNSIGNED DEFAULT 0 NOT NULL,
   request_private SMALLINT UNSIGNED DEFAULT 0 NOT NULL
 );

@@ -7,6 +7,7 @@ use Miraheze\ImportDump\RequestManager;
 
 class HookRunner implements
 	ImportDumpJobAfterImportHook,
+	ImportDumpGetTargetStateHook,
 	ImportDumpJobGetFileHook,
 	ImportDumpRequestStatusUpdateHook
 {
@@ -14,6 +15,19 @@ class HookRunner implements
 	public function __construct(
 		private readonly HookContainer $container,
 	) {
+	}
+
+	/** @inheritDoc */
+	public function onImportDumpGetTargetState(
+		string $target,
+		?array &$extensions,
+		array &$settings
+	): void {
+		$this->container->run(
+			'ImportDumpGetTargetState',
+			[ $target, &$extensions, &$settings ],
+			[ 'abortable' => false ]
+		);
 	}
 
 	/** @inheritDoc */

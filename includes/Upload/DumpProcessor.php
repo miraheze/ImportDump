@@ -7,6 +7,7 @@ use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Status\Status;
 use MediaWiki\Upload\UploadVerification;
 use Miraheze\ImportDump\ConfigNames;
+use Miraheze\ImportDump\ExtensionRequirement;
 use Miraheze\ImportDump\RequestHistory;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use XMLReader;
@@ -20,6 +21,7 @@ class DumpProcessor implements RequestHistory {
 
 	public const array CONSTRUCTOR_OPTIONS = [
 		ConfigNames::EnableHistoryDetection,
+		ConfigNames::ExtensionRequirements,
 		ConfigNames::MaxArchiveEntries,
 		ConfigNames::MaxExtractedSize,
 	];
@@ -109,12 +111,13 @@ class DumpProcessor implements RequestHistory {
 			}
 		}
 
-		$history = $this->inspect( $xmlPath, $onProgress );
-		if ( !$history->isOK() ) {
-			return $history;
+		$inspected = $this->inspect( $xmlPath, $onProgress );
+		if ( !$inspected->isOK() ) {
+			return $inspected;
 		}
 
-		return Status::newGood( new DumpResult( $xmlPath, $history->getValue(), $tempFile ) );
+		[ 'history' => $history, 'requirements' => $requirements ] = $inspected->getValue();
+		return Status::newGood( new DumpResult( $xmlPath, $history, $requirements, $tempFile ) );
 	}
 
 	/**
@@ -165,8 +168,7 @@ class DumpProcessor implements RequestHistory {
 	/**
 	 * @param string $path
 	 * @param ?Closure( string, ?int ): void $onProgress
-	 * @return Status A good status with one of the HISTORY_* constants as its value,
-	 *  or null if history detection is off.
+	 * @return Status A good status with an array as its value. See readDump().
 	 */
 	private function inspect( string $path, ?Closure $onProgress ): Status {
 		$source = $onProgress ?
@@ -198,8 +200,10 @@ class DumpProcessor implements RequestHistory {
 	 * Every revision in an export names its parent. If the parent is missing from the file,
 	 * the export was cut down, for example to only the current revisions.
 	 *
-	 * @return Status A good status with one of the HISTORY_* constants as its value,
-	 *  or null if history detection is off.
+	 * @return Status A good status with an array as its value. Its history is one of the
+	 *  HISTORY_* constants, or null if history detection is off. Its requirements are the names
+	 *  of the extensions that the latest revision of any page needs, each with whether it is
+	 *  certain. It is for a content model, but not for text that only looks like a use.
 	 */
 	private function readDump( XMLReader $reader ): Status {
 		$detectHistory = (bool)$this->options->get( ConfigNames::EnableHistoryDetection );
@@ -208,6 +212,14 @@ class DumpProcessor implements RequestHistory {
 		$schemaNamesParents = false;
 		$pages = 0;
 		$pagesWithGaps = 0;
+
+		$requirements = ExtensionRequirement::fromConfig(
+			(array)$this->options->get( ConfigNames::ExtensionRequirements )
+		);
+		$scanText = array_filter( $requirements, static fn ( ExtensionRequirement $requirement ): bool =>
+			$requirement->patterns !== [] );
+		$needed = [];
+		$neededByRevision = [];
 
 		$revisionIds = [];
 		$parentIds = [];
@@ -221,8 +233,17 @@ class DumpProcessor implements RequestHistory {
 
 			$skipChildren = false;
 			if ( $reader->nodeType === XMLReader::END_ELEMENT ) {
-				if ( $reader->depth === 1 && $reader->localName === 'page' && $tracked ) {
-					$pagesWithGaps += $this->hasMissingParent( $revisionIds, $parentIds ) ? 1 : 0;
+				if ( $reader->depth === 1 && $reader->localName === 'page' ) {
+					// Only the last revision counts, because it is the one that is current.
+					foreach ( $neededByRevision as $name => $certain ) {
+						$needed[$name] = ( $needed[$name] ?? false ) || $certain;
+					}
+
+					$neededByRevision = [];
+
+					if ( $tracked ) {
+						$pagesWithGaps += $this->hasMissingParent( $revisionIds, $parentIds ) ? 1 : 0;
+					}
 				}
 			} elseif ( $reader->nodeType === XMLReader::ELEMENT ) {
 				$depth = $reader->depth;
@@ -241,10 +262,36 @@ class DumpProcessor implements RequestHistory {
 					);
 				} elseif ( $depth === 1 && $name === 'page' ) {
 					$pages++;
+					$neededByRevision = [];
 					$revisionIds = [];
 					$parentIds = [];
 					$tracked = $detectHistory;
-				} elseif ( $depth !== 2 || $name !== 'revision' ) {
+				} elseif ( $depth === 2 && $name === 'revision' ) {
+					$neededByRevision = [];
+				} else {
+					if ( $depth === 3 && $name === 'model' ) {
+						$model = $reader->readString();
+						foreach ( $requirements as $requirement ) {
+							foreach ( $requirement->models as $prefix ) {
+								if ( $prefix !== '' && str_starts_with( $model, $prefix ) ) {
+									// A content model is certain, unlike text that only looks like a use.
+									$neededByRevision[$requirement->name] = true;
+								}
+							}
+						}
+					}
+
+					if ( $depth === 3 && $name === 'text' && $scanText ) {
+						$text = $reader->readString();
+						foreach ( $scanText as $requirement ) {
+							foreach ( $requirement->patterns as $pattern ) {
+								if ( preg_match( $pattern, $text ) === 1 ) {
+									$neededByRevision[$requirement->name] ??= false;
+								}
+							}
+						}
+					}
+
 					if ( $detectHistory && $depth === 3 && ( $name === 'id' || $name === 'parentid' ) ) {
 						$id = (int)$reader->readString();
 						if ( $name === 'parentid' ) {
@@ -282,11 +329,18 @@ class DumpProcessor implements RequestHistory {
 			return Status::newFatal( 'importdump-xml-no-pages' );
 		}
 
-		return Status::newGood(
-			$detectHistory ?
+		ksort( $needed );
+		$names = [];
+		foreach ( $needed as $name => $certain ) {
+			$names[(string)$name] = $certain;
+		}
+
+		return Status::newGood( [
+			'history' => $detectHistory ?
 				$this->classifyHistory( $sawParent, $schemaNamesParents, $pages, $pagesWithGaps ) :
-				null
-		);
+				null,
+			'requirements' => $names,
+		] );
 	}
 
 	/**

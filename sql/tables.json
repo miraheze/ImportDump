@@ -66,6 +66,12 @@
 				}
 			},
 			{
+				"name": "request_requirements",
+				"comment": "JSON list of the extensions that the dump needs, or NULL if it was not checked",
+				"type": "blob",
+				"options": { "notnull": false, "length": 65530 }
+			},
+			{
 				"name": "request_locked",
 				"comment": "",
 				"type": "mwtinyint",
