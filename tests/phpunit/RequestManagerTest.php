@@ -696,8 +696,10 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->setTemporaryHook( 'ImportDumpGetTargetState',
 			static function (
 				string $target,
+				UserIdentity $requester,
 				?array &$enabled,
-				array &$enabledSettings
+				array &$enabledSettings,
+				array &$rights
 			) use ( $extensions, $settings ): void {
 				$enabled = $extensions;
 				$enabledSettings = $settings;

@@ -13,6 +13,11 @@ final class TargetNotices implements NoticeProvider {
 	}
 
 	/** @inheritDoc */
+	public function requiresTargetAccess(): bool {
+		return false;
+	}
+
+	/** @inheritDoc */
 	public function getNotices(
 		RequestManager $requestManager,
 		IContextSource $context,

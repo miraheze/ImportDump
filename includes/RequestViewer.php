@@ -109,12 +109,16 @@ class RequestViewer implements RequestStatus {
 
 		$formDescriptor += $this->getStageDescriptor();
 
-		if ( !$authority->isAllowed( 'handle-import-requests' ) ) {
+		if (
+			!$authority->isAllowed( 'handle-import-requests' ) &&
+			$user->getActorId() === $this->requestManager->getRequester()->getActorId()
+		) {
 			$result = $this->getNoticeCollector()->collect(
 				$this->requestManager,
 				$this->context,
 				$requestStatus,
-				forHandler: false
+				forHandler: false,
+				hasTargetAccess: $this->requestManager->requesterHasTargetAccess()
 			);
 
 			if ( $result->notices ) {
@@ -216,7 +220,8 @@ class RequestViewer implements RequestStatus {
 				$this->requestManager,
 				$this->context,
 				$this->requestManager->getStatus(),
-				forHandler: true
+				forHandler: true,
+				hasTargetAccess: true
 			);
 
 			$validRequest = $result->valid;

@@ -9,10 +9,14 @@ interface NoticeProvider {
 
 	public const string AUDIENCE_HANDLERS = 'handlers';
 
-	public const string AUDIENCE_EVERYONE = 'everyone';
+	/** The handlers and the requester of the request. */
+	public const string AUDIENCE_PARTIES = 'parties';
 
 	/** @return string One of the AUDIENCE_* constants. */
 	public function getAudience(): string;
+
+	/** Whether the notices come from the target wiki, so the requester needs access to it. */
+	public function requiresTargetAccess(): bool;
 
 	/**
 	 * @param RequestManager $requestManager

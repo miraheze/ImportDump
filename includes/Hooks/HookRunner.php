@@ -3,6 +3,7 @@
 namespace Miraheze\ImportDump\Hooks;
 
 use MediaWiki\HookContainer\HookContainer;
+use MediaWiki\User\UserIdentity;
 use Miraheze\ImportDump\RequestManager;
 
 class HookRunner implements
@@ -20,12 +21,14 @@ class HookRunner implements
 	/** @inheritDoc */
 	public function onImportDumpGetTargetState(
 		string $target,
+		UserIdentity $requester,
 		?array &$extensions,
-		array &$settings
+		array &$settings,
+		array &$rights
 	): void {
 		$this->container->run(
 			'ImportDumpGetTargetState',
-			[ $target, &$extensions, &$settings ],
+			[ $target, $requester, &$extensions, &$settings, &$rights ],
 			[ 'abortable' => false ]
 		);
 	}

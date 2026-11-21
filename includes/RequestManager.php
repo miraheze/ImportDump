@@ -61,9 +61,15 @@ class RequestManager {
 		MainConfigNames::LocalDatabases,
 	];
 
+	/** The rights that the requester needs on the target wiki to be shown what it is missing. */
+	public const array REQUIRED_TARGET_RIGHTS = [ 'read' ];
+
 	private IDatabase $dbw;
 	private stdClass|false $row;
 	private int $ID;
+
+	/** @var ?array{extensions: ?string[], settings: array<string, bool>, rights: string[]} */
+	private ?array $targetState = null;
 
 	public function __construct(
 		private readonly ActorStoreFactory $actorStoreFactory,
@@ -87,6 +93,7 @@ class RequestManager {
 	public function loadFromID( int $requestID ): void {
 		$this->dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-importdump' );
 		$this->ID = $requestID;
+		$this->targetState = null;
 
 		$this->row = $this->dbw->newSelectQueryBuilder()
 			->select( ISQLPlatform::ALL_ROWS )
@@ -379,25 +386,63 @@ class RequestManager {
 	}
 
 	/** @return string[] */
+	/** Whether the requester has all of the rights that are needed to see the state of the target wiki. */
+	public function requesterHasTargetAccess(): bool {
+		if ( !$this->targetExists() ) {
+			return false;
+		}
+
+		return array_diff( self::REQUIRED_TARGET_RIGHTS, $this->getTargetState()['rights'] ) === [];
+	}
+
+	/** @return ?string[] The groups of the requester on the target wiki, or null without an account there. */
+	private function getRequesterGroupsOnTarget(): ?array {
+		$remoteUser = $this->actorStoreFactory
+			->getUserIdentityLookup( $this->getTarget() )
+			->getUserIdentityByName( $this->getRequester()->getName() );
+
+		if ( !$remoteUser ) {
+			return null;
+		}
+
+		return $this->userGroupManagerFactory
+			->getUserGroupManager( $this->getTarget() )
+			->getUserGroups( $remoteUser );
+	}
+
+	/** @return array{extensions: ?string[], settings: array<string, bool>, rights: string[]} */
+	private function getTargetState(): array {
+		if ( $this->targetState !== null ) {
+			return $this->targetState;
+		}
+
+		$extensions = null;
+		$settings = [];
+		$rights = [];
+
+		if ( $this->targetExists() ) {
+			$this->hookRunner->onImportDumpGetTargetState(
+				$this->getTarget(),
+				$this->getRequester(),
+				$extensions,
+				$settings,
+				$rights
+			);
+		}
+
+		return $this->targetState = [
+			'extensions' => $extensions,
+			'settings' => $settings,
+			'rights' => $rights,
+		];
+	}
+
 	public function getUserGroupsFromTarget(): array {
 		if ( !$this->targetExists() ) {
 			return [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
 		}
 
-		$userName = $this->getRequester()->getName();
-		$remoteUser = $this->actorStoreFactory
-			->getUserIdentityLookup( $this->getTarget() )
-			->getUserIdentityByName( $userName );
-
-		if ( !$remoteUser ) {
-			return [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
-		}
-
-		$groups = $this->userGroupManagerFactory
-			->getUserGroupManager( $this->getTarget() )
-			->getUserGroups( $remoteUser );
-
-		return $groups ?: [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
+		return $this->getRequesterGroupsOnTarget() ?: [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
 	}
 
 	public function getFilePath(): string {
@@ -775,9 +820,9 @@ class RequestManager {
 			return [];
 		}
 
-		$extensions = null;
-		$settings = [];
-		$this->hookRunner->onImportDumpGetTargetState( $this->getTarget(), $extensions, $settings );
+		$state = $this->getTargetState();
+		$extensions = $state['extensions'];
+		$settings = $state['settings'];
 
 		$definitions = ExtensionRequirement::fromConfig(
 			(array)$this->options->get( ConfigNames::ExtensionRequirements )

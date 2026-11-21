@@ -16,7 +16,12 @@ final class RequirementNotices implements NoticeProvider {
 
 	/** @inheritDoc */
 	public function getAudience(): string {
-		return self::AUDIENCE_EVERYONE;
+		return self::AUDIENCE_PARTIES;
+	}
+
+	/** @inheritDoc */
+	public function requiresTargetAccess(): bool {
+		return true;
 	}
 
 	/** @inheritDoc */
