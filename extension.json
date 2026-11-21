@@ -275,6 +275,10 @@
 		"remoteExtPath": "ImportDump/modules"
 	},
 	"config": {
+		"RequestImportChunkedUploadThreshold": {
+			"value": null,
+			"description": "Size in bytes from which files are uploaded in chunks. It can only lower the point that PHP's upload limit and $wgMaxUploadSize already set. Leave as null to chunk only the files that are too big to be uploaded at once."
+		},
 		"RequestImportDumpCommand": {
 			"value": "php {IP}/maintenance/importDump.php --wiki={wiki} --username-prefix=\"{username-prefix}\" {file-path}",
 			"description": "Generated maintenance script command to use. If $wgRequestImportEnableAutomatedJob is enabled, this is not displayed unless the status is 'failed'."
@@ -303,22 +307,6 @@
 			"value": [],
 			"description": "A mapping of 'status => days' for deleting the stored XML file of an import request once it is older than that many days, by running the ExpireFiles maintenance script. Only 'complete', 'declined' and 'failed' can be used. Statuses that are not listed are never expired. Leave empty to disable. Age is counted from when the request was made."
 		},
-		"RequestImportMaxArchiveEntries": {
-			"value": 1000,
-			"description": "Most entries, including directories, that an uploaded archive may have."
-		},
-		"RequestImportMaxExtractedSize": {
-			"value": 53687091200,
-			"description": "Most bytes that an uploaded archive may expand to. Archives that expand to more, or that are compressed more than 200 times, are rejected while being extracted."
-		},
-		"RequestImportMaxUploadSize": {
-			"value": null,
-			"description": "Maximum total size in bytes of a file uploaded in chunks. Chunked uploads ignore $wgMaxUploadSize. Leave as null for no limit."
-		},
-		"RequestImportChunkedUploadThreshold": {
-			"value": null,
-			"description": "Size in bytes from which files are uploaded in chunks. It can only lower the point that PHP's upload limit and $wgMaxUploadSize already set. Leave as null to chunk only the files that are too big to be uploaded at once."
-		},
 		"RequestImportHelpUrl": {
 			"value": "",
 			"description": "Full URL. If set, adds a help URL to Special:RequestImport."
@@ -330,6 +318,18 @@
 		"RequestImportMaintenanceCommand": {
 			"value": "php {IP}/maintenance/{script} --wiki={wiki} {arguments}",
 			"description": "Generated command to use for each of the maintenance scripts that still need to be run when an import stopped after its pages were already imported. {script} is the script file name, such as refreshLinks.php, {script-name} is the same without .php, and {arguments} is any arguments the script needs."
+		},
+		"RequestImportMaxArchiveEntries": {
+			"value": 1000,
+			"description": "Most entries, including directories, that an uploaded archive may have."
+		},
+		"RequestImportMaxExtractedSize": {
+			"value": 53687091200,
+			"description": "Most bytes that an uploaded archive may expand to. Archives that expand to more, or that are compressed more than 200 times, are rejected while being extracted."
+		},
+		"RequestImportMaxUploadSize": {
+			"value": null,
+			"description": "Maximum total size in bytes of a file uploaded in chunks. Chunked uploads ignore $wgMaxUploadSize. Leave as null for no limit."
 		},
 		"RequestImportStalledImportHours": {
 			"value": null,

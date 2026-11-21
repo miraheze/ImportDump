@@ -9,6 +9,8 @@ namespace Miraheze\ImportDump;
  */
 class ConfigNames {
 
+	public const string ChunkedUploadThreshold = 'RequestImportChunkedUploadThreshold';
+
 	public const string DumpCommand = 'RequestImportDumpCommand';
 
 	public const string EnableAutomatedJob = 'RequestImportEnableAutomatedJob';
@@ -34,8 +36,6 @@ class ConfigNames {
 	public const string MaxExtractedSize = 'RequestImportMaxExtractedSize';
 
 	public const string MaxUploadSize = 'RequestImportMaxUploadSize';
-
-	public const string ChunkedUploadThreshold = 'RequestImportChunkedUploadThreshold';
 
 	public const string StalledImportHours = 'RequestImportStalledImportHours';
 
