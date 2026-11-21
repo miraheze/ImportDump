@@ -36,8 +36,6 @@ class Main implements
 
 	/** @inheritDoc */
 	public function onUserGetReservedNames( &$reservedUsernames ) {
-		$reservedUsernames[] = 'ImportDump Extension';
-		$reservedUsernames[] = 'ImportDump Status Update';
 		$reservedUsernames[] = 'RequestImport Extension';
 		$reservedUsernames[] = 'RequestImport Status Update';
 	}
