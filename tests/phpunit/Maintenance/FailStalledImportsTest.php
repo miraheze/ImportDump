@@ -33,7 +33,7 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase
 
 		$this->overrideConfigValues( [
 			MainConfigNames::VirtualDomainsMapping => [
-				'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
+				'virtual-requestimport' => [ 'db' => WikiMap::getCurrentWikiId() ],
 			],
 			ConfigNames::StalledImportHours => 6,
 		] );
@@ -54,7 +54,7 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase
 
 	private function addRequest( string $status, int $ageInHours ): int {
 		$dbw = $this->getServiceContainer()->getConnectionProvider()
-			->getPrimaryDatabase( 'virtual-importdump' );
+			->getPrimaryDatabase( 'virtual-requestimport' );
 
 		$dbw->newInsertQueryBuilder()
 			->insertInto( 'import_requests' )

@@ -14,7 +14,7 @@ use Shellbox\Command\BoxedResult;
 
 /**
  * Runs the programs that unpack the formats PHP cannot read itself. A format only works when
- * the wiki names a program for it in ImportDumpExternalBinaries, either as the path alone or as
+ * the wiki names a program for it in RequestImportExternalBinaries, either as the path alone or as
  * an array with the keys binary and limits. The program runs in a sandbox with limits on memory,
  * time and the size of what it writes, and never sees a path or a name that came from the upload.
  */

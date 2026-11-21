@@ -46,7 +46,7 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 
 		$this->overrideConfigValues( [
 			MainConfigNames::VirtualDomainsMapping => [
-				'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
+				'virtual-requestimport' => [ 'db' => WikiMap::getCurrentWikiId() ],
 			],
 			MainConfigNames::MinUploadChunkSize => self::CHUNK_SIZE,
 			ConfigNames::EnableChunkedUploads => true,

@@ -26,7 +26,7 @@ class MigrateLogTypesTest extends MaintenanceBaseTestCase {
 		parent::setUp();
 
 		$this->overrideConfigValue( MainConfigNames::VirtualDomainsMapping, [
-			'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
+			'virtual-requestimport' => [ 'db' => WikiMap::getCurrentWikiId() ],
 		] );
 	}
 

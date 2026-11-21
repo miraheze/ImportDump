@@ -28,7 +28,7 @@ class MigrateLogTypes extends LoggedUpdateMaintenance {
 
 	/** @inheritDoc */
 	protected function doDBUpdates(): true {
-		$dbw = $this->getPrimaryDB( 'virtual-importdump' );
+		$dbw = $this->getPrimaryDB( 'virtual-requestimport' );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbw->getDomainID() ) ) {
 			$this->output( "Import request logs are not stored on this wiki. Skipping.\n" );
 			return true;

@@ -30,8 +30,8 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 
 		$this->overrideConfigValues( [
 			MainConfigNames::VirtualDomainsMapping => [
-				'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
 				'virtual-interwiki' => [ 'db' => WikiMap::getCurrentWikiId() ],
+				'virtual-requestimport' => [ 'db' => WikiMap::getCurrentWikiId() ],
 			],
 			ConfigNames::StalledImportHours => 6,
 		] );
@@ -39,7 +39,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 
 	private function addRequest(): int {
 		$dbw = $this->getServiceContainer()->getConnectionProvider()
-			->getPrimaryDatabase( 'virtual-importdump' );
+			->getPrimaryDatabase( 'virtual-requestimport' );
 
 		$dbw->newInsertQueryBuilder()
 			->insertInto( 'import_requests' )

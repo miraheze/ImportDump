@@ -275,77 +275,77 @@
 		"remoteExtPath": "ImportDump/modules"
 	},
 	"config": {
-		"ImportDumpEnableAutomatedJob": {
-			"value": false,
-			"description": "Whether to enable a job where a reviewer just has to 'approve' an import and job handles everything else. You can use the ImportDumpJobGetFile hook to manipulate how the job gets the XML file."
-		},
-		"ImportDumpEnableChunkedUploads": {
-			"value": false,
-			"description": "Whether to upload XML files in chunks from Special:RequestImport using JavaScript. Chunks are sent to the requestimportupload API module."
-		},
-		"ImportDumpEnableHistoryDetection": {
-			"value": false,
-			"description": "Whether to check if an uploaded dump has the full revision history of its pages, and tell handlers what was found. The result is a guess, see the message that is shown on the request."
-		},
-		"ImportDumpExtensionRequirements": {
-			"value": [],
-			"description": "Extensions that a dump can need, by the name that the extension has in its extension.json, such as WikibaseRepository. Each one has models, content models or the start of one that need the extension, patterns, regular expressions that match the text of a page that needs it, and settings, names of settings that must be enabled on the target wiki. Only the latest revision of each page is checked. Verification records which extensions a dump needs, and handlers are warned when the ImportDumpGetTargetState hook says that the target wiki does not have them. Nothing is checked if this is empty."
-		},
-		"ImportDumpExternalBinaries": {
-			"value": [],
-			"description": "A mapping of 'format => settings' that turns on the archive formats that PHP cannot read itself. The formats are 'xz', for XZ files and TAR files compressed with XZ, and '7z', for 7z archives. The settings are an array with 'binary', the path to the program that unpacks the format, and optionally 'limits', for example [ '7z' => [ 'binary' => '/usr/bin/7z', 'limits' => [ 'memory' => 4294967296, 'time' => 3600, 'dictionary' => 1073741824 ] ] ]. Limits that are not set keep these values. 'memory' is the most memory in bytes that the program may use in the sandbox, 'time' is the most seconds it may run, and 'dictionary' is the most memory in bytes that unpacking an archive may need, which is read from how the archive was made. Just the path can be given instead of the array, as in [ 'xz' => '/usr/bin/xz' ]. The programs run through the shell command settings of MediaWiki, so they are sandboxed if $wgShellRestrictionMethod is set up, and they only ever get a copy of the uploaded file. Formats that are not listed are not accepted. Leave empty to turn all of them off."
-		},
-		"ImportDumpFileExpiryDays": {
-			"value": [],
-			"description": "A mapping of 'status => days' for deleting the stored XML file of an import request once it is older than that many days, by running the ExpireFiles maintenance script. Only 'complete', 'declined' and 'failed' can be used. Statuses that are not listed are never expired. Leave empty to disable. Age is counted from when the request was made."
-		},
-		"ImportDumpMaxArchiveEntries": {
-			"value": 1000,
-			"description": "Most entries, including directories, that an uploaded archive may have."
-		},
-		"ImportDumpMaxExtractedSize": {
-			"value": 53687091200,
-			"description": "Most bytes that an uploaded archive may expand to. Archives that expand to more, or that are compressed more than 200 times, are rejected while being extracted."
-		},
-		"ImportDumpMaxUploadSize": {
-			"value": null,
-			"description": "Maximum total size in bytes of a file uploaded in chunks. Chunked uploads ignore $wgMaxUploadSize. Leave as null for no limit."
-		},
-		"ImportDumpChunkedUploadThreshold": {
+		"RequestImportChunkedUploadThreshold": {
 			"value": null,
 			"description": "Size in bytes from which files are uploaded in chunks. It can only lower the point that PHP's upload limit and $wgMaxUploadSize already set. Leave as null to chunk only the files that are too big to be uploaded at once."
 		},
-		"ImportDumpHelpUrl": {
+		"RequestImportDumpCommand": {
+			"value": "php {IP}/maintenance/importDump.php --wiki={wiki} --username-prefix=\"{username-prefix}\" {file-path}",
+			"description": "Generated maintenance script command to use. If $wgRequestImportEnableAutomatedJob is enabled, this is not displayed unless the status is 'failed'."
+		},
+		"RequestImportEnableAutomatedJob": {
+			"value": false,
+			"description": "Whether to enable a job where a reviewer just has to 'approve' an import and job handles everything else. You can use the ImportDumpJobGetFile hook to manipulate how the job gets the XML file."
+		},
+		"RequestImportEnableChunkedUploads": {
+			"value": false,
+			"description": "Whether to upload XML files in chunks from Special:RequestImport using JavaScript. Chunks are sent to the requestimportupload API module."
+		},
+		"RequestImportEnableHistoryDetection": {
+			"value": false,
+			"description": "Whether to check if an uploaded dump has the full revision history of its pages, and tell handlers what was found. The result is a guess, see the message that is shown on the request."
+		},
+		"RequestImportExtensionRequirements": {
+			"value": [],
+			"description": "Extensions that a dump can need, by the name that the extension has in its extension.json, such as WikibaseRepository. Each one has models, content models or the start of one that need the extension, patterns, regular expressions that match the text of a page that needs it, and settings, names of settings that must be enabled on the target wiki. Only the latest revision of each page is checked. Verification records which extensions a dump needs, and handlers are warned when the ImportDumpGetTargetState hook says that the target wiki does not have them. Nothing is checked if this is empty."
+		},
+		"RequestImportExternalBinaries": {
+			"value": [],
+			"description": "A mapping of 'format => settings' that turns on the archive formats that PHP cannot read itself. The formats are 'xz', for XZ files and TAR files compressed with XZ, and '7z', for 7z archives. The settings are an array with 'binary', the path to the program that unpacks the format, and optionally 'limits', for example [ '7z' => [ 'binary' => '/usr/bin/7z', 'limits' => [ 'memory' => 4294967296, 'time' => 3600, 'dictionary' => 1073741824 ] ] ]. Limits that are not set keep these values. 'memory' is the most memory in bytes that the program may use in the sandbox, 'time' is the most seconds it may run, and 'dictionary' is the most memory in bytes that unpacking an archive may need, which is read from how the archive was made. Just the path can be given instead of the array, as in [ 'xz' => '/usr/bin/xz' ]. The programs run through the shell command settings of MediaWiki, so they are sandboxed if $wgShellRestrictionMethod is set up, and they only ever get a copy of the uploaded file. Formats that are not listed are not accepted. Leave empty to turn all of them off."
+		},
+		"RequestImportFileExpiryDays": {
+			"value": [],
+			"description": "A mapping of 'status => days' for deleting the stored XML file of an import request once it is older than that many days, by running the ExpireFiles maintenance script. Only 'complete', 'declined' and 'failed' can be used. Statuses that are not listed are never expired. Leave empty to disable. Age is counted from when the request was made."
+		},
+		"RequestImportHelpUrl": {
 			"value": "",
 			"description": "Full URL. If set, adds a help URL to Special:RequestImport."
 		},
-		"ImportDumpInterwikiMap": {
+		"RequestImportInterwikiMap": {
 			"value": [],
 			"description": "A mapping of 'domain => interwiki prefix' for multi-level interwiki prefix generation for --username-prefix."
 		},
-		"ImportDumpMaintenanceCommand": {
+		"RequestImportMaintenanceCommand": {
 			"value": "php {IP}/maintenance/{script} --wiki={wiki} {arguments}",
 			"description": "Generated command to use for each of the maintenance scripts that still need to be run when an import stopped after its pages were already imported. {script} is the script file name, such as refreshLinks.php, {script-name} is the same without .php, and {arguments} is any arguments the script needs."
 		},
-		"ImportDumpScriptCommand": {
-			"value": "php {IP}/maintenance/importDump.php --wiki={wiki} --username-prefix=\"{username-prefix}\" {file-path}",
-			"description": "Generated maintenance script command to use. If $wgImportDumpEnableAutomatedJob is enabled, this is not displayed unless the status is 'failed'."
+		"RequestImportMaxArchiveEntries": {
+			"value": 1000,
+			"description": "Most entries, including directories, that an uploaded archive may have."
 		},
-		"ImportDumpStalledImportHours": {
+		"RequestImportMaxExtractedSize": {
+			"value": 53687091200,
+			"description": "Most bytes that an uploaded archive may expand to. Archives that expand to more, or that are compressed more than 200 times, are rejected while being extracted."
+		},
+		"RequestImportMaxUploadSize": {
+			"value": null,
+			"description": "Maximum total size in bytes of a file uploaded in chunks. Chunked uploads ignore $wgMaxUploadSize. Leave as null for no limit."
+		},
+		"RequestImportStalledImportHours": {
 			"value": null,
 			"description": "Number of hours without any sign of progress after which an import that is 'in progress' is treated as stalled by the FailStalledImports maintenance script, which marks it as failed. The import job reports progress about once a minute while pages are imported. Leave as null to disable."
 		},
-		"ImportDumpUsersNotifiedOnAllRequests": {
+		"RequestImportUsersNotifiedOnAllRequests": {
 			"value": [],
 			"description": "Array of usernames to send email notifications to for all requests. Users listed here must have a verified email address on their account. Notifications are sent through the notification system of MediaWiki, so they are only delivered if an extension that handles notifications, such as Echo, is installed."
 		},
-		"ImportDumpUsersNotifiedOnFailedImports": {
+		"RequestImportUsersNotifiedOnFailedImports": {
 			"value": [],
-			"description": "Array of usernames to send email notifications to for failed imports. Users listed here must have a verified email address on their account. Notifications are sent through the notification system of MediaWiki, so they are only delivered if an extension that handles notifications, such as Echo, is installed. This doesn't do anything if $wgImportDumpEnableAutomatedJob is not enabled."
+			"description": "Array of usernames to send email notifications to for failed imports. Users listed here must have a verified email address on their account. Notifications are sent through the notification system of MediaWiki, so they are only delivered if an extension that handles notifications, such as Echo, is installed. This doesn't do anything if $wgRequestImportEnableAutomatedJob is not enabled."
 		}
 	},
 	"ConfigRegistry": {
-		"ImportDump": "MediaWiki\\Config\\GlobalVarConfig::newInstance"
+		"RequestImport": "MediaWiki\\Config\\GlobalVarConfig::newInstance"
 	},
 	"DefaultUserOptions": {
 		"echo-subscriptions-email-requestimport-attention": true,
@@ -369,7 +369,7 @@
 		"includes/ServiceWiring.php"
 	],
 	"DatabaseVirtualDomains": [
-		"virtual-importdump"
+		"virtual-requestimport"
 	],
 	"manifest_version": 2
 }

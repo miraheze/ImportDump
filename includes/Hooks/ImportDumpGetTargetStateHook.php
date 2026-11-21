@@ -17,7 +17,7 @@ interface ImportDumpGetTargetStateHook {
 	 * @param string[] $requesterGroups The groups that the requester has on the target wiki,
 	 *  without implicit ones such as '*' and 'user'. Empty if they have no account there.
 	 * @param ?string[] &$extensions The names of the enabled extensions, as ExtensionRegistry knows
-	 *  them, matching the names in $wgImportDumpExtensionRequirements.
+	 *  them, matching the names in $wgRequestImportExtensionRequirements.
 	 * @param array<string, bool> &$settings Whether each setting that a requirement names is
 	 *  enabled, by the name of the setting. Settings that are left out are treated as unknown.
 	 * @param string[] &$rights The rights that the requester has on the target wiki, including

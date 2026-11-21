@@ -25,7 +25,7 @@ class FailStalledImports extends Maintenance {
 		parent::__construct();
 
 		$this->addDescription(
-			'Marks imports that stopped reporting progress as failed using $wgImportDumpStalledImportHours.'
+			'Marks imports that stopped reporting progress as failed using $wgRequestImportStalledImportHours.'
 		);
 
 		$this->addOption( 'dry-run', 'List the imports that would be marked as failed without changing them.' );
@@ -45,14 +45,14 @@ class FailStalledImports extends Maintenance {
 	public function execute(): void {
 		$this->initServices();
 
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			$this->fatalError( 'This script must be run on the wiki that stores import requests.' );
 		}
 
 		$hours = (int)$this->getConfig()->get( ConfigNames::StalledImportHours );
 		if ( $hours <= 0 ) {
-			$this->output( "\$wgImportDumpStalledImportHours is not set. Nothing to do.\n" );
+			$this->output( "\$wgRequestImportStalledImportHours is not set. Nothing to do.\n" );
 			return;
 		}
 
