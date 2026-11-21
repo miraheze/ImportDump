@@ -193,8 +193,8 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		];
 		yield 'tag in other case' => [ [ [ 'wikitext', '<INFOBOX></INFOBOX>' ] ], [ 'PortableInfobox' => false ] ];
 		yield 'similar tag' => [ [ [ 'wikitext', '<infoboxes></infoboxes>' ] ], [] ];
-		yield 'both' => [
-			[ [ 'wikibase-property', '{}' ], [ 'wikitext', '<infobox/>' ] ],
+		yield 'both in the latest revision' => [
+			[ [ 'wikibase-property', '<infobox/>' ] ],
 			[ 'PortableInfobox' => false, 'Wikibase' => true ],
 		];
 		yield 'only the latest revision counts' => [
