@@ -169,6 +169,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 	}
 
 	/**
+	 * @param list<array{string, string}> $revisions The model and the text of each revision.
 	 * @param array<string, bool> $expected
 	 * @dataProvider provideRequirements
 	 */
