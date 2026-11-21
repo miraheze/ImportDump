@@ -147,6 +147,7 @@
 			"services": [
 				"ConnectionProvider",
 				"ImportDumpDumpProcessor",
+				"ImportDumpRequestManager",
 				"JobQueueGroup",
 				"MimeAnalyzer",
 				"NotificationService",
