@@ -10,11 +10,14 @@ final readonly class RequestNotice {
 
 	public const string SEVERITY_NOTICE = 'notice';
 
+	public const string SEVERITY_SUCCESS = 'success';
+
 	/** From the most to the least important. */
 	public const array SEVERITIES = [
 		self::SEVERITY_ERROR,
 		self::SEVERITY_WARNING,
 		self::SEVERITY_NOTICE,
+		self::SEVERITY_SUCCESS,
 	];
 
 	/**
