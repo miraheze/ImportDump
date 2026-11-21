@@ -29,6 +29,12 @@ class Notifications implements BeforeCreateEchoEventHook {
 			return;
 		}
 
+		$notificationCategories['requestimport-attention'] = [
+			'priority' => 3,
+			'no-dismiss' => [ 'email' ],
+			'tooltip' => 'echo-pref-tooltip-requestimport-attention',
+		];
+
 		$notificationCategories['requestimport-import-failed'] = [
 			'priority' => 1,
 			'no-dismiss' => [ 'all' ],
@@ -51,10 +57,12 @@ class Notifications implements BeforeCreateEchoEventHook {
 			'tooltip' => 'echo-pref-tooltip-requestimport-request-status-update',
 		];
 
-		$notificationCategories['requestimport-attention'] = [
-			'priority' => 3,
-			'no-dismiss' => [ 'email' ],
-			'tooltip' => 'echo-pref-tooltip-requestimport-attention',
+		$notifications['requestimport-attention'] = [
+			'category' => 'requestimport-attention',
+			'group' => 'neutral',
+			'section' => 'alert',
+			'presentation-model' => EchoRequestAttentionPresentationModel::class,
+			'immediate' => true,
 		];
 
 		$notifications['requestimport-import-failed'] = [
@@ -78,14 +86,6 @@ class Notifications implements BeforeCreateEchoEventHook {
 			'group' => 'positive',
 			'section' => 'alert',
 			'presentation-model' => EchoRequestCommentPresentationModel::class,
-			'immediate' => true,
-		];
-
-		$notifications['requestimport-attention'] = [
-			'category' => 'requestimport-attention',
-			'group' => 'neutral',
-			'section' => 'alert',
-			'presentation-model' => EchoRequestAttentionPresentationModel::class,
 			'immediate' => true,
 		];
 
