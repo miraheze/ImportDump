@@ -119,7 +119,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 
 		[ $notification, $recipients ] = $this->captured[0];
 		$this->assertInstanceOf( RequestNotification::class, $notification );
-		$this->assertSame( 'ImportDump Status Update', $notification->getAgent()->getName() );
+		$this->assertSame( 'RequestImport Status Update', $notification->getAgent()->getName() );
 		$this->assertSame( [ $sysop->getName() ], array_map(
 			static fn ( UserIdentity $user ): string => $user->getName(),
 			$recipients->getRecipients()
@@ -166,7 +166,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 
 		$comments = $this->getRequestManager( $id )->getComments();
 		$this->assertCount( 1, $comments );
-		$this->assertSame( 'ImportDump Status Update', $comments[0]['user']->getName() );
+		$this->assertSame( 'RequestImport Status Update', $comments[0]['user']->getName() );
 		$this->assertStringContainsString( $actor->getName(), $comments[0]['comment'] );
 
 		$this->assertSame( [ 'requestimport-request-status-update' ], $this->getTypes() );
