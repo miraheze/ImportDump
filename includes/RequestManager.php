@@ -429,11 +429,13 @@ class RequestManager {
 			);
 		}
 
-		return $this->targetState = [
+		$this->targetState = [
 			'extensions' => $extensions,
 			'settings' => $settings,
 			'rights' => $rights,
 		];
+
+		return $this->targetState;
 	}
 
 	public function getUserGroupsFromTarget(): array {
@@ -441,7 +443,9 @@ class RequestManager {
 			return [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
 		}
 
-		return $this->getRequesterGroupsOnTarget() ?: [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
+		return $this->getRequesterGroupsOnTarget() ?: [
+			$this->messageLocalizer->msg( 'importdump-usergroups-none' )->text(),
+		];
 	}
 
 	public function getFilePath(): string {

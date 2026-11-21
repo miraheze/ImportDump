@@ -50,7 +50,10 @@ class RequestViewer implements RequestStatus {
 		}
 
 		if ( !$authority->isAllowed( 'handle-import-requests' ) && $this->requestManager->hasFileExpired() ) {
-			$this->context->getOutput()->addHTML( Html::noticeBox( FileNotices::getExpiredInfo( $this->requestManager, $this->context ), '' ) );
+			$this->context->getOutput()->addHTML( Html::noticeBox(
+				FileNotices::getExpiredInfo( $this->requestManager, $this->context ),
+				''
+			) );
 		}
 
 		$this->context->getOutput()->enableOOUI();
