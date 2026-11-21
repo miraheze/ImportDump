@@ -744,6 +744,75 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->assertSame( [ 'sysop', 'bureaucrat' ], $received );
 	}
 
+	/** @covers ::notifyBlockingRequirements */
+	public function testRequesterIsToldWhenTheImportCannotStart(): void {
+		$captured = [];
+		$service = $this->createMock( NotificationService::class );
+		$service->method( 'notify' )->willReturnCallback(
+			static function ( Notification $notification, RecipientSet $recipients ) use ( &$captured ): void {
+				$captured[] = [ $notification, $recipients ];
+			}
+		);
+
+		$this->setService( 'NotificationService', $service );
+		$this->setTargetState( [], [], [ 'read' ], [ 'user' ] );
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setRequirements( [ 'PortableInfobox' => true ] );
+		$manager->notifyBlockingRequirements();
+
+		$this->assertCount( 1, $captured );
+		[ $notification, $recipients ] = $captured[0];
+
+		$this->assertInstanceOf( RequestNotification::class, $notification );
+		$this->assertSame( 'requestimport-requirements', $notification->getType() );
+		$this->assertSame( 'ImportDump Status Update', $notification->getAgent()->getName() );
+		$this->assertSame( [ $manager->getRequester()->getName() ], array_map(
+			static fn ( UserIdentity $user ): string => $user->getName(),
+			$recipients->getRecipients()
+		) );
+
+		$properties = $notification->getProperties();
+		$this->assertSame( 1, $properties['request-id'] );
+		$this->assertStringContainsString( 'RequestImportQueue/1', $properties['request-url'] );
+		$this->assertSame( [ 'request-id', 'request-url' ], array_keys( $properties ) );
+	}
+
+	/**
+	 * @param ?string[] $extensions
+	 * @param string[] $rights
+	 * @param ?string[] $groups
+	 * @param array<string, bool> $requirements
+	 * @covers ::notifyBlockingRequirements
+	 * @dataProvider provideNoRequirementNotification
+	 */
+	public function testRequesterIsNotToldOtherwise(
+		?array $extensions,
+		array $rights,
+		?array $groups,
+		array $requirements
+	): void {
+		$service = $this->createMock( NotificationService::class );
+		$service->expects( $this->never() )->method( 'notify' );
+		$this->setService( 'NotificationService', $service );
+		$this->setTargetState( $extensions, [], $rights, $groups );
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setRequirements( $requirements );
+		$manager->notifyBlockingRequirements();
+	}
+
+	public static function provideNoRequirementNotification(): array {
+		return [
+			'requester cannot read the target' => [ [], [ 'edit' ], [ 'user' ], [ 'PortableInfobox' => true ] ],
+			'requester has no account on the target' => [ [], [ 'read' ], null, [ 'PortableInfobox' => true ] ],
+			'nothing is known about the target' => [ null, [ 'read' ], [ 'user' ], [ 'PortableInfobox' => true ] ],
+			'the dump may need it' => [ [], [ 'read' ], [ 'user' ], [ 'PortableInfobox' => false ] ],
+			'it is enabled' => [ [ 'PortableInfobox' ], [ 'read' ], [ 'user' ], [ 'PortableInfobox' => true ] ],
+			'the dump needs nothing' => [ [], [ 'read' ], [ 'user' ], [] ],
+		];
+	}
+
 	/** @param ?string[] $groups The groups of the requester on the target, or null for no account there. */
 	private function setRemoteGroups( ?array $groups ): void {
 		$lookup = $this->createMock( UserIdentityLookup::class );

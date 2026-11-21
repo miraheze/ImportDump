@@ -61,7 +61,6 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 			MainConfigNames::VirtualDomainsMapping => [
 				'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
 			],
-			MainConfigNames::LocalDatabases => [ 'requestimporttest' ],
 			ConfigNames::EnableHistoryDetection => true,
 			ConfigNames::ExtensionRequirements => [
 				'WikibaseRepository' => [

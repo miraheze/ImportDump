@@ -874,6 +874,33 @@ class RequestManager {
 		) );
 	}
 
+	/**
+	 * Tells the requester that the import cannot start until something is enabled on the target
+	 * wiki. That the target lacks something is a fact about the target, so it is only told to a
+	 * requester who can read it, like the notices on the request. The notification itself does not
+	 * say what is missing. That is left to the notices, which are up to date when the request is
+	 * opened.
+	 */
+	public function notifyBlockingRequirements(): void {
+		if ( !$this->requesterHasTargetAccess() || !$this->getBlockingRequirementProblems() ) {
+			return;
+		}
+
+		$this->notificationService->notify(
+			new RequestNotification(
+				'requestimport-requirements',
+				User::newSystemUser( 'ImportDump Status Update' ),
+				[
+					'request-id' => $this->ID,
+					'request-url' => SpecialPage::getTitleFor(
+						'RequestImportQueue', (string)$this->ID
+					)->getFullURL(),
+				]
+			),
+			new RecipientSet( [ $this->getRequester() ] )
+		);
+	}
+
 	public function setHistory( ?string $history ): void {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )

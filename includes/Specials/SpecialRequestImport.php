@@ -32,6 +32,7 @@ use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
+use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
@@ -64,6 +65,7 @@ class SpecialRequestImport extends FormSpecialPage
 	public function __construct(
 		private readonly IConnectionProvider $connectionProvider,
 		private readonly DumpProcessor $dumpProcessor,
+		private readonly RequestManager $requestManager,
 		private readonly JobQueueGroup $jobQueueGroup,
 		private readonly MimeAnalyzer $mimeAnalyzer,
 		private readonly NotificationService $notificationService,
@@ -268,6 +270,7 @@ class SpecialRequestImport extends FormSpecialPage
 			$uploadBase->getFileSize() > DumpProcessor::INLINE_SIZE_LIMIT;
 
 		$history = null;
+		$requirements = [];
 		if ( !$verifyLater ) {
 			$processed = $this->dumpProcessor->process( $uploadBase->getTempPath(), null );
 			if ( !$processed->isOK() ) {
@@ -275,6 +278,7 @@ class SpecialRequestImport extends FormSpecialPage
 			}
 
 			$history = $processed->getValue()->history;
+			$requirements = $processed->getValue()->requirements;
 		}
 
 		$repo = $this->repoGroup->getLocalRepo();
@@ -328,6 +332,10 @@ class SpecialRequestImport extends FormSpecialPage
 			$this->jobQueueGroup->push(
 				new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => (int)$requestID ] )
 			);
+		} else {
+			$this->requestManager->loadFromID( (int)$requestID );
+			$this->requestManager->setRequirements( $requirements );
+			$this->requestManager->notifyBlockingRequirements();
 		}
 
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', $requestID );

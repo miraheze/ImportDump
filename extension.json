@@ -147,6 +147,7 @@
 			"services": [
 				"ConnectionProvider",
 				"ImportDumpDumpProcessor",
+				"ImportDumpRequestManager",
 				"JobQueueGroup",
 				"MimeAnalyzer",
 				"NotificationService",
@@ -351,8 +352,10 @@
 		"echo-subscriptions-email-requestimport-new-request": true,
 		"echo-subscriptions-email-requestimport-request-comment": true,
 		"echo-subscriptions-email-requestimport-request-status-update": true,
+		"echo-subscriptions-email-requestimport-requirements": true,
 		"echo-subscriptions-web-requestimport-request-comment": true,
-		"echo-subscriptions-web-requestimport-request-status-update": true
+		"echo-subscriptions-web-requestimport-request-status-update": true,
+		"echo-subscriptions-web-requestimport-requirements": true
 	},
 	"RateLimits": {
 		"request-import": {
