@@ -28,6 +28,11 @@ final class RequirementNotices implements NoticeProvider {
 	}
 
 	/** @inheritDoc */
+	public function isAlwaysAtTop(): false {
+		return false;
+	}
+
+	/** @inheritDoc */
 	public function requiresTargetAccess(): true {
 		return true;
 	}

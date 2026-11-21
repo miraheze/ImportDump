@@ -5,12 +5,14 @@ namespace Miraheze\ImportDump\Notices;
 final readonly class NoticeResult {
 
 	/**
-	 * @param RequestNotice[] $notices Sorted with the most important first.
+	 * @param RequestNotice[] $notices For the handling tab, with the most important first.
+	 * @param RequestNotice[] $topNotices For above the form, with the most important first.
 	 * @param bool $valid Whether the request can be started and have its status changed.
 	 * @param string $status The status to show, which a notice can change to declined.
 	 */
 	public function __construct(
 		public array $notices,
+		public array $topNotices,
 		public bool $valid,
 		public string $status,
 	) {

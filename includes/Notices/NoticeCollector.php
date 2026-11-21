@@ -7,10 +7,17 @@ use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 
 /**
- * Handlers see every notice. Anyone else is the requester, and sees only the notices meant for
- * them, and the ones from the target wiki only if they have access to it.
+ * Handlers see every notice, and the ones that are not always at the top go in the handling tab.
+ * Everyone else sees only the notices meant for them, all above the form, and the ones from the
+ * target wiki only if they have access to it.
  */
 final class NoticeCollector {
+
+	public const string ROLE_HANDLER = 'handler';
+
+	public const string ROLE_REQUESTER = 'requester';
+
+	public const string ROLE_VIEWER = 'viewer';
 
 	/** @param NoticeProvider[] $providers In the order that they are asked. */
 	public function __construct(
@@ -18,28 +25,31 @@ final class NoticeCollector {
 	) {
 	}
 
+	/** @param string $role One of the ROLE_* constants. */
 	public function collect(
 		RequestManager $requestManager,
 		IContextSource $context,
 		string $status,
-		bool $forHandler,
+		string $role,
 		bool $hasTargetAccess
 	): NoticeResult {
 		$notices = [];
+		$topNotices = [];
 		$valid = true;
 
 		foreach ( $this->providers as $provider ) {
-			if ( !$forHandler && $provider->getAudience() !== NoticeProvider::AUDIENCE_PARTIES ) {
+			if ( !$this->isShownTo( $provider, $role, $hasTargetAccess ) ) {
 				continue;
 			}
 
-			if ( !$forHandler && $provider->requiresTargetAccess() && !$hasTargetAccess ) {
-				continue;
-			}
+			$atTop = $role !== self::ROLE_HANDLER || $provider->isAlwaysAtTop();
+			foreach ( $provider->getNotices( $requestManager, $context, $status ) as $notice ) {
+				if ( $atTop ) {
+					$topNotices[] = $notice;
+				} else {
+					$notices[] = $notice;
+				}
 
-			$pending = $status;
-			foreach ( $provider->getNotices( $requestManager, $context, $pending ) as $notice ) {
-				$notices[] = $notice;
 				$valid = $valid && !$notice->invalidates;
 
 				if (
@@ -51,6 +61,30 @@ final class NoticeCollector {
 			}
 		}
 
+		return new NoticeResult( $this->sort( $notices ), $this->sort( $topNotices ), $valid, $status );
+	}
+
+	private function isShownTo( NoticeProvider $provider, string $role, bool $hasTargetAccess ): bool {
+		if ( $role === self::ROLE_HANDLER ) {
+			return true;
+		}
+
+		if ( $provider->requiresTargetAccess() && !$hasTargetAccess ) {
+			return false;
+		}
+
+		return match ( $provider->getAudience() ) {
+			NoticeProvider::AUDIENCE_EVERYONE => true,
+			NoticeProvider::AUDIENCE_PARTIES => $role === self::ROLE_REQUESTER,
+			default => false,
+		};
+	}
+
+	/**
+	 * @param RequestNotice[] $notices
+	 * @return RequestNotice[]
+	 */
+	private function sort( array $notices ): array {
 		usort(
 			$notices,
 			static fn ( RequestNotice $a, RequestNotice $b ): int =>
@@ -58,6 +92,6 @@ final class NoticeCollector {
 				[ !$b->pinned, array_search( $b->severity, RequestNotice::SEVERITIES, true ) ]
 		);
 
-		return new NoticeResult( $notices, $valid, $status );
+		return $notices;
 	}
 }
