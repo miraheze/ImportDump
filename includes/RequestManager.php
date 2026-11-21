@@ -385,7 +385,6 @@ class RequestManager {
 		], $command );
 	}
 
-	/** @return string[] */
 	/** Whether the requester has all of the rights that are needed to see the state of the target wiki. */
 	public function requesterHasTargetAccess(): bool {
 		if ( !$this->targetExists() || $this->getRequesterGroupsOnTarget() === null ) {
