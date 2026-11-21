@@ -689,7 +689,9 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->assertSame( [], $manager->getBlockingRequirementProblems() );
 	}
 
-	/*
+	/**
+	 * @param string[] $rights
+	 * @param ?string[] $groups
 	 * @covers ::requesterHasTargetAccess
 	 * @dataProvider provideTargetAccess
 	 */
@@ -737,6 +739,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->assertSame( [ 'sysop', 'bureaucrat' ], $received );
 	}
 
+	/** @param ?string[] $groups The groups of the requester on the target, or null for no account there. */
 	private function setRemoteGroups( ?array $groups ): void {
 		$lookup = $this->createMock( UserIdentityLookup::class );
 		$lookup->method( 'getUserIdentityByName' )->willReturn(
@@ -756,6 +759,12 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->setService( 'UserGroupManagerFactory', $groupManagerFactory );
 	}
 
+	/**
+	 * @param ?string[] $extensions
+	 * @param array<string, bool> $settings
+	 * @param string[] $rights
+	 * @param ?string[] $groups
+	 */
 	private function setTargetState(
 		?array $extensions,
 		array $settings,
