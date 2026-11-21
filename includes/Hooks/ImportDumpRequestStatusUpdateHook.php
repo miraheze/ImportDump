@@ -3,7 +3,6 @@
 namespace Miraheze\ImportDump\Hooks;
 
 use Miraheze\ImportDump\Request\RequestManager;
-use Miraheze\ImportDump\Request\RequestStatus;
 
 interface ImportDumpRequestStatusUpdateHook {
 
