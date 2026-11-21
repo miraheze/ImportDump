@@ -10,6 +10,7 @@ use MediaWiki\HTMLForm\HTMLForm;
 use MediaWiki\Linker\Linker;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
+use MediaWiki\Permissions\Authority;
 use MediaWiki\User\User;
 use Miraheze\ImportDump\Notices\FileNotices;
 use Miraheze\ImportDump\Notices\HistoryNotices;
@@ -58,6 +59,8 @@ class RequestViewer implements RequestStatus {
 		}
 
 		$this->context->getOutput()->enableOOUI();
+
+		$this->addRequesterNotices( $authority, $user );
 
 		$requestStatus = $this->requestManager->getStatus();
 		if ( $requestStatus === self::STATUS_VERIFYING ) {
@@ -112,28 +115,6 @@ class RequestViewer implements RequestStatus {
 		];
 
 		$formDescriptor += $this->getStageDescriptor();
-
-		if (
-			!$authority->isAllowed( 'handle-import-requests' ) &&
-			$user->getActorId() === $this->requestManager->getRequester()->getActorId()
-		) {
-			$result = $this->getNoticeCollector()->collect(
-				$this->requestManager,
-				$this->context,
-				$requestStatus,
-				forHandler: false,
-				hasTargetAccess: $this->requestManager->requesterHasTargetAccess()
-			);
-
-			if ( $result->notices ) {
-				$formDescriptor['request-notices'] = [
-					'type' => 'info',
-					'default' => $this->renderNotices( $result->notices ),
-					'raw' => true,
-					'section' => 'details',
-				];
-			}
-		}
 
 		$formDescriptor += [
 			'reason' => [
@@ -510,6 +491,31 @@ class RequestViewer implements RequestStatus {
 				'default' => $this->context->msg( "importdump-stage-$stage" )->text(),
 			],
 		];
+	}
+
+	private function addRequesterNotices( Authority $authority, User $user ): void {
+		if (
+			$authority->isAllowed( 'handle-import-requests' ) ||
+			$user->getActorId() !== $this->requestManager->getRequester()->getActorId()
+		) {
+			return;
+		}
+
+		$result = $this->getNoticeCollector()->collect(
+			$this->requestManager,
+			$this->context,
+			$this->requestManager->getStatus(),
+			forHandler: false,
+			hasTargetAccess: $this->requestManager->requesterHasTargetAccess()
+		);
+
+		if ( $result->notices ) {
+			$this->context->getOutput()->addHTML( Html::rawElement(
+				'div',
+				[ 'class' => 'ext-importdump-notices' ],
+				$this->renderNotices( $result->notices )
+			) );
+		}
 	}
 
 	private function getNoticeCollector(): NoticeCollector {
