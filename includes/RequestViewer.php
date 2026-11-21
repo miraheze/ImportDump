@@ -10,9 +10,11 @@ use MediaWiki\HTMLForm\HTMLForm;
 use MediaWiki\Linker\Linker;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
+use MediaWiki\Permissions\Authority;
 use MediaWiki\User\User;
 use Miraheze\ImportDump\Notices\FileNotices;
 use Miraheze\ImportDump\Notices\HistoryNotices;
+use Miraheze\ImportDump\Notices\LockedNotices;
 use Miraheze\ImportDump\Notices\NoticeCollector;
 use Miraheze\ImportDump\Notices\RequesterNotices;
 use Miraheze\ImportDump\Notices\RequestNotice;
@@ -27,6 +29,7 @@ class RequestViewer implements RequestStatus {
 	public function __construct(
 		private readonly Config $config,
 		private readonly IContextSource $context,
+		private readonly ExtensionNames $extensionNames,
 		private readonly RequestManager $requestManager,
 	) {
 	}
@@ -43,12 +46,6 @@ class RequestViewer implements RequestStatus {
 			return [];
 		}
 
-		if ( $this->requestManager->isLocked() ) {
-			$this->context->getOutput()->addHTML(
-				Html::errorBox( $this->context->msg( 'importdump-request-locked' )->escaped() )
-			);
-		}
-
 		if ( !$authority->isAllowed( 'handle-import-requests' ) && $this->requestManager->hasFileExpired() ) {
 			$this->context->getOutput()->addHTML( Html::noticeBox(
 				FileNotices::getExpiredInfo( $this->requestManager, $this->context ),
@@ -57,6 +54,24 @@ class RequestViewer implements RequestStatus {
 		}
 
 		$this->context->getOutput()->enableOOUI();
+
+		$role = $this->getNoticeRole( $authority, $user );
+		$noticeResult = $this->getNoticeCollector()->collect(
+			$this->requestManager,
+			$this->context,
+			$this->requestManager->getStatus(),
+			role: $role,
+			hasTargetAccess: $role === NoticeCollector::ROLE_REQUESTER &&
+				$this->requestManager->requesterHasTargetAccess()
+		);
+
+		if ( $noticeResult->topNotices ) {
+			$this->context->getOutput()->addHTML( Html::rawElement(
+				'div',
+				[ 'class' => 'ext-importdump-notices' ],
+				$this->renderNotices( $noticeResult->topNotices )
+			) );
+		}
 
 		$requestStatus = $this->requestManager->getStatus();
 		if ( $requestStatus === self::STATUS_VERIFYING ) {
@@ -111,28 +126,6 @@ class RequestViewer implements RequestStatus {
 		];
 
 		$formDescriptor += $this->getStageDescriptor();
-
-		if (
-			!$authority->isAllowed( 'handle-import-requests' ) &&
-			$user->getActorId() === $this->requestManager->getRequester()->getActorId()
-		) {
-			$result = $this->getNoticeCollector()->collect(
-				$this->requestManager,
-				$this->context,
-				$requestStatus,
-				forHandler: false,
-				hasTargetAccess: $this->requestManager->requesterHasTargetAccess()
-			);
-
-			if ( $result->notices ) {
-				$formDescriptor['request-notices'] = [
-					'type' => 'info',
-					'default' => $this->renderNotices( $result->notices ),
-					'raw' => true,
-					'section' => 'details',
-				];
-			}
-		}
 
 		$formDescriptor += [
 			'reason' => [
@@ -219,18 +212,10 @@ class RequestViewer implements RequestStatus {
 		}
 
 		if ( $authority->isAllowed( 'handle-import-requests' ) ) {
-			$result = $this->getNoticeCollector()->collect(
-				$this->requestManager,
-				$this->context,
-				$this->requestManager->getStatus(),
-				forHandler: true,
-				hasTargetAccess: true
-			);
-
-			$validRequest = $result->valid;
-			$status = $result->status;
+			$validRequest = $noticeResult->valid;
+			$status = $noticeResult->status;
 			$targetExists = $this->requestManager->targetExists();
-			$info = $this->renderNotices( $result->notices );
+			$info = $this->renderNotices( $noticeResult->notices );
 
 			$formDescriptor += [
 				'handle-info' => [
@@ -511,12 +496,24 @@ class RequestViewer implements RequestStatus {
 		];
 	}
 
+	/** @return string One of the NoticeCollector::ROLE_* constants. */
+	private function getNoticeRole( Authority $authority, User $user ): string {
+		if ( $authority->isAllowed( 'handle-import-requests' ) ) {
+			return NoticeCollector::ROLE_HANDLER;
+		}
+
+		return $user->getActorId() === $this->requestManager->getRequester()->getActorId() ?
+			NoticeCollector::ROLE_REQUESTER :
+			NoticeCollector::ROLE_VIEWER;
+	}
+
 	private function getNoticeCollector(): NoticeCollector {
 		return new NoticeCollector( [
 			new FileNotices( $this->config ),
 			new TargetNotices(),
 			new HistoryNotices(),
-			new RequirementNotices(),
+			new LockedNotices(),
+			new RequirementNotices( $this->extensionNames ),
 			new RequesterNotices(),
 		] );
 	}

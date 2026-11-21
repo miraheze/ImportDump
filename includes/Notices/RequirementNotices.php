@@ -3,6 +3,9 @@
 namespace Miraheze\ImportDump\Notices;
 
 use MediaWiki\Context\IContextSource;
+use MediaWiki\Html\Html;
+use MediaWiki\Message\Message;
+use Miraheze\ImportDump\ExtensionNames;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 
@@ -14,9 +17,19 @@ final class RequirementNotices implements NoticeProvider {
 		RequestStatus::STATUS_PARTIAL,
 	];
 
+	public function __construct(
+		private readonly ExtensionNames $extensionNames,
+	) {
+	}
+
 	/** @inheritDoc */
 	public function getAudience(): string {
 		return self::AUDIENCE_PARTIES;
+	}
+
+	/** @inheritDoc */
+	public function isAlwaysAtTop(): false {
+		return false;
 	}
 
 	/** @inheritDoc */
@@ -37,11 +50,16 @@ final class RequirementNotices implements NoticeProvider {
 		$groups = [];
 		foreach ( $requestManager->getRequirementProblems() as $problem ) {
 			$type = $problem['problem'];
-			$groups[$type] ??= [ 'items' => [], 'blocking' => false ];
-			$groups[$type]['items'][] = $problem['setting'] !== '' ?
-				$problem['setting'] . ' (' . $problem['name'] . ')' :
-				$problem['name'];
+			$extension = $this->extensionNames->getName( $context, $problem['name'] );
 
+			$item = $problem['setting'] !== '' ?
+				$problem['setting'] . $context->msg( 'word-separator' )->text() .
+				$context->msg( 'parentheses', $extension )->text() :
+				$extension;
+
+			// Items can run in another direction than the interface, such as setting names, so isolate each one.
+			$groups[$type] ??= [ 'items' => [], 'blocking' => false ];
+			$groups[$type]['items'][] = Html::element( 'bdi', [], $item );
 			$groups[$type]['blocking'] = $groups[$type]['blocking'] || $problem['blocking'];
 		}
 
@@ -56,9 +74,10 @@ final class RequirementNotices implements NoticeProvider {
 				severity: in_array( $type, [ 'missing', 'setting' ], true ) ?
 					RequestNotice::SEVERITY_ERROR :
 					RequestNotice::SEVERITY_WARNING,
-				html: $context->msg( 'importdump-requirement-' . $type )
-					->params( $context->getLanguage()->listToText( $group['items'] ) )
-					->numParams( count( $group['items'] ) )
+				html: $context->msg(
+					'importdump-requirement-' . $type,
+					Message::rawParam( $context->getLanguage()->listToText( $group['items'] ) )
+				)->numParams( count( $group['items'] ) )
 					->escaped(),
 				invalidates: $group['blocking'],
 				declines: false,

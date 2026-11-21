@@ -7,7 +7,10 @@
 	"license-name": "GPL-3.0-or-later",
 	"type": "specialpage",
 	"requires": {
-		"MediaWiki": ">= 1.46.0"
+		"MediaWiki": ">= 1.46.0",
+		"platform": {
+			"php": ">= 8.4"
+		}
 	},
 	"MessagesDirs": {
 		"ImportDump": [
@@ -159,6 +162,7 @@
 			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportQueue",
 			"services": [
 				"ConnectionProvider",
+				"ImportDumpExtensionNames",
 				"ImportDumpRequestManager",
 				"UserFactory"
 			]

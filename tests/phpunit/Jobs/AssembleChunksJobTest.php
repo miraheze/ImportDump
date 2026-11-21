@@ -143,7 +143,7 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 		$this->assertTrue( $status['status']->isGood() );
 
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
-		$file = ( new UploadStash( $repo, $this->uploader ) )->getFile( $status['filekey'] );
+		$file = new UploadStash( $repo, $this->uploader )->getFile( $status['filekey'] );
 		$this->assertSame( strlen( $xml ), $file->getSize() );
 	}
 

@@ -33,6 +33,15 @@ return [
 			$services->getUploadVerification()
 		);
 	},
+	'ImportDumpExtensionNames' => static function ( MediaWikiServices $services ): ExtensionNames {
+		return new ExtensionNames(
+			$services->getObjectCacheFactory()->getLocalClusterInstance(),
+			new ServiceOptions(
+				ExtensionNames::CONSTRUCTOR_OPTIONS,
+				$services->getMainConfig()
+			)
+		);
+	},
 	'ImportDumpExternalBinaries' => static function ( MediaWikiServices $services ): ExternalBinaries {
 		return new ExternalBinaries(
 			$services->getShellCommandFactory(),

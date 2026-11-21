@@ -421,7 +421,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 		file_put_contents( $path, self::DUMP );
 
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
-		return ( new UploadStash( $repo, $user ) )->stashFile( $path, 'file' )->getFileKey();
+		return new UploadStash( $repo, $user )->stashFile( $path, 'file' )->getFileKey();
 	}
 
 	private function submitStashKey( User $user, string $fileKey ): Status {

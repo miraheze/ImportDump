@@ -8,6 +8,7 @@ use MediaWiki\Parser\ParserOptions;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\ExtensionNames;
 use Miraheze\ImportDump\RequestImportQueuePager;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
@@ -19,6 +20,7 @@ class SpecialRequestImportQueue extends SpecialPage
 
 	public function __construct(
 		private readonly IConnectionProvider $connectionProvider,
+		private readonly ExtensionNames $extensionNames,
 		private readonly RequestManager $requestManager,
 		private readonly UserFactory $userFactory,
 	) {
@@ -119,6 +121,7 @@ class SpecialRequestImportQueue extends SpecialPage
 		$requestViewer = new RequestViewer(
 			$this->getConfig(),
 			$this->getContext(),
+			$this->extensionNames,
 			$this->requestManager
 		);
 

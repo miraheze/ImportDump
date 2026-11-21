@@ -21,7 +21,9 @@ class RequirementNoticesTest extends MediaWikiIntegrationTestCase {
 		$requestManager = $this->createMock( RequestManager::class );
 		$requestManager->method( 'getRequirementProblems' )->willReturn( $problems );
 
-		return ( new RequirementNotices() )->getNotices(
+		$extensionNames = $this->getServiceContainer()->get( 'ImportDumpExtensionNames' );
+
+		return new RequirementNotices( $extensionNames )->getNotices(
 			$requestManager,
 			RequestContext::getMain(),
 			$status
@@ -44,11 +46,12 @@ class RequirementNoticesTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertSame( RequestNotice::SEVERITY_ERROR, $notices[0]->severity );
 		$this->assertTrue( $notices[0]->invalidates );
-		$this->assertStringContainsString( 'PortableInfobox', $notices[0]->html );
+		$this->assertStringContainsString( '<bdi>PortableInfobox</bdi>', $notices[0]->html );
 		$this->assertStringContainsString( 'TemplateStyles', $notices[0]->html );
 
 		$this->assertTrue( $notices[1]->invalidates );
 		$this->assertStringContainsString( 'allowEntityImport', $notices[1]->html );
+		$this->assertStringContainsString( 'WikibaseRepository', $notices[1]->html );
 
 		$this->assertSame( RequestNotice::SEVERITY_WARNING, $notices[2]->severity );
 		$this->assertFalse( $notices[2]->invalidates );

@@ -14,6 +14,11 @@ final class HistoryNotices implements NoticeProvider {
 	}
 
 	/** @inheritDoc */
+	public function isAlwaysAtTop(): false {
+		return false;
+	}
+
+	/** @inheritDoc */
 	public function requiresTargetAccess(): false {
 		return false;
 	}

@@ -217,7 +217,7 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 
 		$user = $this->getTestUser()->getUser();
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
-		$file = ( new UploadStash( $repo, $user ) )->getFile( $filekey );
+		$file = new UploadStash( $repo, $user )->getFile( $filekey );
 		$this->assertSame( strlen( $xml ), $file->getSize() );
 	}
 
@@ -242,7 +242,7 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 
 		$user = $this->getTestUser()->getUser();
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
-		$file = ( new UploadStash( $repo, $user ) )->getFile( $filekey );
+		$file = new UploadStash( $repo, $user )->getFile( $filekey );
 		$this->assertSame( $size, $file->getSize() );
 	}
 
@@ -287,7 +287,7 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 
 		$user = $this->getTestUser()->getUser();
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
-		$file = ( new UploadStash( $repo, $user ) )->getFile( $progress['filekey'] );
+		$file = new UploadStash( $repo, $user )->getFile( $progress['filekey'] );
 		$this->assertSame( $size, $file->getSize() );
 	}
 
