@@ -523,7 +523,7 @@ final class ArchiveReader {
 	 *
 	 * @return resource|false A stream resource, or false if the file could not be opened.
 	 */
-	private function openStream( string $path, string $format ) {
+	private function openStream( string $path, string $format ): mixed {
 		return match ( $format ) {
 			self::FORMAT_GZIP => gzopen( $path, 'rb' ),
 			self::FORMAT_BZIP2 => function_exists( 'bzopen' ) ? bzopen( $path, 'r' ) : false,
