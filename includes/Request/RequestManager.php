@@ -831,7 +831,12 @@ class RequestManager {
 
 	/** @return list<RequirementProblem> */
 	public function getRequirementProblems(): array {
-		return $this->requirementChecker->getProblems( $this->getRequirements(), $this->getTargetState() );
+		$requirements = $this->getRequirements();
+		if ( $requirements === [] ) {
+			return [];
+		}
+
+		return $this->requirementChecker->getProblems( $requirements, $this->getTargetState() );
 	}
 
 	/** @return list<RequirementProblem> */

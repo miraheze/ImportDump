@@ -83,6 +83,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		$this->isolateFromManageWiki();
+		$this->resetRequest();
 
 		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [ 'requestimporttest' ] );
 
@@ -100,6 +101,36 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 			$this->getServiceContainer()->getMainWANObjectCache(),
 			$this->createMock( MimeAnalyzer::class )
 		) );
+	}
+
+	/** The fixture is only added once, so undo what earlier tests did to it. */
+	private function resetRequest(): void {
+		$dbw = $this->getServiceContainer()
+			->getConnectionProvider()
+			->getPrimaryDatabase( RequestManager::VIRTUAL_DOMAIN );
+
+		$dbw->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [
+				'request_source' => 'https://requestimporttest.com',
+				'request_target' => 'requestimporttest',
+				'request_reason' => 'test',
+				'request_status' => RequestStatus::Pending->value,
+				'request_stage' => null,
+				'request_history' => null,
+				'request_requirements' => null,
+				'request_locked' => 0,
+				'request_private' => 0,
+			] )
+			->where( [ 'request_id' => 1 ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$dbw->newDeleteQueryBuilder()
+			->deleteFrom( 'import_request_comments' )
+			->where( [ 'request_id' => 1 ] )
+			->caller( __METHOD__ )
+			->execute();
 	}
 
 	private function getRequestManager( int $id ): RequestManager {
