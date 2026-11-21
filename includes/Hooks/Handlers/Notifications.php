@@ -6,8 +6,8 @@ use MediaWiki\Extension\Notifications\Hooks\BeforeCreateEchoEventHook;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\Notifications\EchoImportFailedPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoNewRequestPresentationModel;
+use Miraheze\ImportDump\Notifications\EchoRequestAttentionPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestCommentPresentationModel;
-use Miraheze\ImportDump\Notifications\EchoRequestRequirementsPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestStatusUpdatePresentationModel;
 use Wikimedia\Rdbms\IConnectionProvider;
 
@@ -28,6 +28,12 @@ class Notifications implements BeforeCreateEchoEventHook {
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			return;
 		}
+
+		$notificationCategories['requestimport-attention'] = [
+			'priority' => 3,
+			'no-dismiss' => [ 'email' ],
+			'tooltip' => 'echo-pref-tooltip-requestimport-attention',
+		];
 
 		$notificationCategories['requestimport-import-failed'] = [
 			'priority' => 1,
@@ -51,10 +57,12 @@ class Notifications implements BeforeCreateEchoEventHook {
 			'tooltip' => 'echo-pref-tooltip-requestimport-request-status-update',
 		];
 
-		$notificationCategories['requestimport-requirements'] = [
-			'priority' => 3,
-			'no-dismiss' => [ 'email' ],
-			'tooltip' => 'echo-pref-tooltip-requestimport-requirements',
+		$notifications['requestimport-attention'] = [
+			'category' => 'requestimport-attention',
+			'group' => 'neutral',
+			'section' => 'alert',
+			'presentation-model' => EchoRequestAttentionPresentationModel::class,
+			'immediate' => true,
 		];
 
 		$notifications['requestimport-import-failed'] = [
@@ -78,14 +86,6 @@ class Notifications implements BeforeCreateEchoEventHook {
 			'group' => 'positive',
 			'section' => 'alert',
 			'presentation-model' => EchoRequestCommentPresentationModel::class,
-			'immediate' => true,
-		];
-
-		$notifications['requestimport-requirements'] = [
-			'category' => 'requestimport-requirements',
-			'group' => 'neutral',
-			'section' => 'alert',
-			'presentation-model' => EchoRequestRequirementsPresentationModel::class,
 			'immediate' => true,
 		];
 

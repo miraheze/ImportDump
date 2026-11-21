@@ -744,7 +744,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->assertSame( [ 'sysop', 'bureaucrat' ], $received );
 	}
 
-	/** @covers ::notifyBlockingRequirements */
+	/** @covers ::notifyRequester */
 	public function testRequesterIsToldWhenTheImportCannotStart(): void {
 		$captured = [];
 		$service = $this->createMock( NotificationService::class );
@@ -759,13 +759,13 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$manager = $this->getRequestManager( id: 1 );
 		$manager->setRequirements( [ 'PortableInfobox' => true ] );
-		$manager->notifyBlockingRequirements();
+		$manager->notifyRequester();
 
 		$this->assertCount( 1, $captured );
 		[ $notification, $recipients ] = $captured[0];
 
 		$this->assertInstanceOf( RequestNotification::class, $notification );
-		$this->assertSame( 'requestimport-requirements', $notification->getType() );
+		$this->assertSame( 'requestimport-attention', $notification->getType() );
 		$this->assertSame( 'RequestImport Status Update', $notification->getAgent()->getName() );
 		$this->assertSame( [ $manager->getRequester()->getName() ], array_map(
 			static fn ( UserIdentity $user ): string => $user->getName(),
@@ -783,7 +783,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	 * @param string[] $rights
 	 * @param ?string[] $groups
 	 * @param array<string, bool> $requirements
-	 * @covers ::notifyBlockingRequirements
+	 * @covers ::notifyRequester
 	 * @dataProvider provideNoRequirementNotification
 	 */
 	public function testRequesterIsNotToldOtherwise(
@@ -799,7 +799,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$manager = $this->getRequestManager( id: 1 );
 		$manager->setRequirements( $requirements );
-		$manager->notifyBlockingRequirements();
+		$manager->notifyRequester();
 	}
 
 	public static function provideNoRequirementNotification(): array {
@@ -810,6 +810,79 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 			'the dump may need it' => [ [], [ 'read' ], [ 'user' ], [ 'PortableInfobox' => false ] ],
 			'it is enabled' => [ [ 'PortableInfobox' ], [ 'read' ], [ 'user' ], [ 'PortableInfobox' => true ] ],
 			'the dump needs nothing' => [ [], [ 'read' ], [ 'user' ], [] ],
+		];
+	}
+
+	/** @covers ::notifyRequester */
+	public function testRequesterIsToldAboutPartialHistory(): void {
+		$captured = [];
+		$service = $this->createMock( NotificationService::class );
+		$service->method( 'notify' )->willReturnCallback(
+			static function ( Notification $notification, RecipientSet $recipients ) use ( &$captured ): void {
+				$captured[] = [ $notification, $recipients ];
+			}
+		);
+
+		$this->setService( 'NotificationService', $service );
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setHistory( RequestHistory::HISTORY_PARTIAL );
+		$manager->notifyRequester();
+
+		$this->assertCount( 1, $captured );
+		[ $notification, $recipients ] = $captured[0];
+
+		$this->assertSame( 'requestimport-attention', $notification->getType() );
+		$this->assertSame( [ $manager->getRequester()->getName() ], array_map(
+			static fn ( UserIdentity $user ): string => $user->getName(),
+			$recipients->getRecipients()
+		) );
+	}
+
+	/**
+	 * @covers ::notifyRequester
+	 * @dataProvider provideHistoryWithoutProblem
+	 */
+	public function testRequesterIsNotToldAboutOtherHistory( ?string $history ): void {
+		$service = $this->createMock( NotificationService::class );
+		$service->expects( $this->never() )->method( 'notify' );
+		$this->setService( 'NotificationService', $service );
+		$this->setTargetState( [], [], [ 'edit' ], [ 'user' ] );
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setHistory( $history );
+		$manager->notifyRequester();
+	}
+
+	public static function provideHistoryWithoutProblem(): array {
+		return [
+			'full' => [ RequestHistory::HISTORY_FULL ],
+			'unknown' => [ RequestHistory::HISTORY_UNKNOWN ],
+			'not checked' => [ null ],
+		];
+	}
+
+	/**
+	 * @param string[] $rights
+	 * @param ?string[] $groups
+	 * @covers ::requesterHasTargetRight
+	 * @dataProvider provideTargetRight
+	 */
+	public function testRequesterHasTargetRight( array $rights, ?array $groups, ?bool $expected ): void {
+		$this->setTargetState( [], [], $rights, $groups );
+
+		$this->assertSame(
+			$expected,
+			$this->getRequestManager( id: 1 )->requesterHasTargetRight( RequestManager::IMPORT_RIGHT )
+		);
+	}
+
+	public static function provideTargetRight(): array {
+		return [
+			'has it' => [ [ 'read', 'import' ], [ 'sysop' ], true ],
+			'does not have it' => [ [ 'read', 'edit' ], [ 'sysop' ], false ],
+			'no rights given' => [ [], [ 'sysop' ], null ],
+			'no account on the target' => [ [ 'read', 'import' ], null, null ],
 		];
 	}
 

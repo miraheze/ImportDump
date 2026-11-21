@@ -62,6 +62,8 @@ class RequestManager {
 	/** The rights that the requester needs on the target wiki to be shown what it is missing. */
 	public const array REQUIRED_TARGET_RIGHTS = [ 'read' ];
 
+	public const string IMPORT_RIGHT = 'import';
+
 	private IDatabase $dbw;
 	private stdClass|false $row;
 	private int $ID;
@@ -390,6 +392,20 @@ class RequestManager {
 		}
 
 		return array_diff( self::REQUIRED_TARGET_RIGHTS, $this->getTargetState()['rights'] ) === [];
+	}
+
+	/**
+	 * Whether the requester has a right on the target wiki, as the ImportDumpGetTargetState hook
+	 * reports it. This is null when that is not known, which is without an account on the target
+	 * wiki or when the hook gives no rights.
+	 */
+	public function requesterHasTargetRight( string $right ): ?bool {
+		if ( !$this->targetExists() || $this->getRequesterGroupsOnTarget() === null ) {
+			return null;
+		}
+
+		$rights = $this->getTargetState()['rights'];
+		return $rights === [] ? null : in_array( $right, $rights, true );
 	}
 
 	/** @return ?string[] The groups of the requester on the target wiki, or null without an account there. */
@@ -873,20 +889,25 @@ class RequestManager {
 	}
 
 	/**
-	 * Tells the requester that the import cannot start until something is enabled on the target
-	 * wiki. That the target lacks something is a fact about the target, so it is only told to a
-	 * requester who can read it, like the notices on the request. The notification itself does not
-	 * say what is missing. That is left to the notices, which are up to date when the request is
+	 * Tells the requester that the request needs attention, which is when the dump seems to be
+	 * missing revisions, or when the import cannot start until something is enabled on the target
+	 * wiki. That the target lacks something is a fact about the target, so it only counts for a
+	 * requester who can read it, like the notices on the request. The notification does not say
+	 * what the matter is. That is left to the notices, which are up to date when the request is
 	 * opened.
 	 */
-	public function notifyBlockingRequirements(): void {
-		if ( !$this->requesterHasTargetAccess() || !$this->getBlockingRequirementProblems() ) {
+	public function notifyRequester(): void {
+		$needsAttention = $this->getHistory() === RequestHistory::HISTORY_PARTIAL || (
+			$this->requesterHasTargetAccess() && $this->getBlockingRequirementProblems()
+		);
+
+		if ( !$needsAttention ) {
 			return;
 		}
 
 		$this->notificationService->notify(
 			new RequestNotification(
-				'requestimport-requirements',
+				'requestimport-attention',
 				User::newSystemUser( 'RequestImport Status Update' ),
 				[
 					'request-id' => $this->ID,

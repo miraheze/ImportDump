@@ -15,6 +15,7 @@ use MediaWiki\User\User;
 use Miraheze\ImportDump\Notices\ActionOutcomeNotices;
 use Miraheze\ImportDump\Notices\FileNotices;
 use Miraheze\ImportDump\Notices\HistoryNotices;
+use Miraheze\ImportDump\Notices\ImportRightNotices;
 use Miraheze\ImportDump\Notices\LockedNotices;
 use Miraheze\ImportDump\Notices\NoticeCollector;
 use Miraheze\ImportDump\Notices\NoticeResult;
@@ -535,6 +536,7 @@ class RequestViewer implements RequestStatus {
 			new FileNotices( $this->config ),
 			new TargetNotices(),
 			new HistoryNotices(),
+			new ImportRightNotices(),
 			new LockedNotices(),
 			$this->outcomes,
 			new RequirementNotices( $this->extensionNames ),

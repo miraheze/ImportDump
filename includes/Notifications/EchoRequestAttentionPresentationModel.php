@@ -5,7 +5,7 @@ namespace Miraheze\ImportDump\Notifications;
 use MediaWiki\Extension\Notifications\Formatters\EchoEventPresentationModel;
 use MediaWiki\Message\Message;
 
-class EchoRequestRequirementsPresentationModel extends EchoEventPresentationModel {
+class EchoRequestAttentionPresentationModel extends EchoEventPresentationModel {
 
 	/** @inheritDoc */
 	public function getIconType(): string {
@@ -15,14 +15,14 @@ class EchoRequestRequirementsPresentationModel extends EchoEventPresentationMode
 	/** @inheritDoc */
 	public function getHeaderMessage(): Message {
 		return $this->msg(
-			'importdump-notification-header-requirements',
+			'importdump-notification-header-attention',
 			$this->event->getExtraParam( 'request-id' )
 		);
 	}
 
 	/** @inheritDoc */
 	public function getBodyMessage(): Message {
-		return $this->msg( 'importdump-notification-body-requirements' );
+		return $this->msg( 'importdump-notification-body-attention' );
 	}
 
 	/** @inheritDoc */
