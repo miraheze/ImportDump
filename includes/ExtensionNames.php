@@ -58,7 +58,7 @@ class ExtensionNames {
 
 				$keys = [];
 				foreach ( $processor->getExtractedInfo()['credits'] as $credit ) {
-					if ( isset( $credit['name'], $credit['namemsg'] ) ) {
+					if ( isset( $credit['name'] ) && isset( $credit['namemsg'] ) ) {
 						$keys[$credit['name']] = $credit['namemsg'];
 					}
 				}
