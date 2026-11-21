@@ -29,6 +29,7 @@ use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\Progress\ImportProgress;
 use Miraheze\ImportDump\Progress\VerificationProgress;
 use Miraheze\ImportDump\Requirements\RequirementChecker;
+use Miraheze\ImportDump\Requirements\RequirementProblem;
 use Miraheze\ImportDump\Requirements\TargetState;
 use Miraheze\ImportDump\Requirements\TargetStateProvider;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
