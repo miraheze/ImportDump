@@ -43,6 +43,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	implements RequestStage, RequestStatus {
 
 	use IsolatesManageWikiTrait;
+	use MocksRemoteGroupsTrait;
 
 	public function addDBDataOnce(): void {
 		$this->overrideConfigValue( MainConfigNames::VirtualDomainsMapping, [
@@ -811,26 +812,6 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 			'it is enabled' => [ [ 'PortableInfobox' ], [ 'read' ], [ 'user' ], [ 'PortableInfobox' => true ] ],
 			'the dump needs nothing' => [ [], [ 'read' ], [ 'user' ], [] ],
 		];
-	}
-
-	/** @param ?string[] $groups The groups of the requester on the target, or null for no account there. */
-	private function setRemoteGroups( ?array $groups ): void {
-		$lookup = $this->createMock( UserIdentityLookup::class );
-		$lookup->method( 'getUserIdentityByName' )->willReturn(
-			$groups === null ? null : new UserIdentityValue( 1, 'Test user' )
-		);
-
-		$actorStoreFactory = $this->createMock( ActorStoreFactory::class );
-		$actorStoreFactory->method( 'getUserIdentityLookup' )->willReturn( $lookup );
-
-		$groupManager = $this->createMock( UserGroupManager::class );
-		$groupManager->method( 'getUserGroups' )->willReturn( $groups ?? [] );
-
-		$groupManagerFactory = $this->createMock( UserGroupManagerFactory::class );
-		$groupManagerFactory->method( 'getUserGroupManager' )->willReturn( $groupManager );
-
-		$this->setService( 'ActorStoreFactory', $actorStoreFactory );
-		$this->setService( 'UserGroupManagerFactory', $groupManagerFactory );
 	}
 
 	/**
