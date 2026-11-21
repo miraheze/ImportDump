@@ -44,7 +44,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( ArchiveReader::FORMAT_ZIP, $this->reader->detectFormat( $this->newZip( [ 'a' => 'b' ] ) ) );
 		$this->assertSame(
 			ArchiveReader::FORMAT_GZIP,
-			$this->reader->detectFormat( $this->newFile( (string)gzencode( 'content' ) ) )
+			$this->reader->detectFormat( $this->newFile( gzencode( 'content' ) ) )
 		);
 
 		$this->assertSame(
@@ -110,7 +110,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testListFilesGzip(): void {
-		$path = $this->newFile( (string)gzencode( 'content' ) );
+		$path = $this->newFile( gzencode( 'content' ) );
 
 		$status = $this->reader->listFiles( $path, ArchiveReader::FORMAT_GZIP, 100, self::MAX_SIZE );
 		$this->assertStatusGood( $status );
@@ -250,7 +250,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testExtractGzip(): void {
-		$path = $this->newFile( (string)gzencode( str_repeat( 'content ', 1000 ) ) );
+		$path = $this->newFile( gzencode( str_repeat( 'content ', 1000 ) ) );
 		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_GZIP, 100, self::MAX_SIZE )->getValue()[0];
 		$destination = $this->getNewTempFile();
 
@@ -281,7 +281,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 			$this->reader->extractTo( $zip, ArchiveReader::FORMAT_ZIP, $entry, $this->getNewTempFile(), 100, null )
 		);
 
-		$gzip = $this->newFile( (string)gzencode( str_repeat( 'content ', 1000 ) ) );
+		$gzip = $this->newFile( gzencode( str_repeat( 'content ', 1000 ) ) );
 		$entry = $this->reader->listFiles( $gzip, ArchiveReader::FORMAT_GZIP, 100, self::MAX_SIZE )->getValue()[0];
 		$destination = $this->getNewTempFile();
 		$this->assertStatusError(
@@ -293,7 +293,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testExtractExtremeCompressionRatio(): void {
-		$path = $this->newFile( (string)gzencode( str_repeat( 'a', 4 * 1048576 ) ) );
+		$path = $this->newFile( gzencode( str_repeat( 'a', 4 * 1048576 ) ) );
 		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_GZIP, 100, self::MAX_SIZE )->getValue()[0];
 
 		$destination = $this->getNewTempFile();
@@ -363,7 +363,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$tar = TarFixture::build( [ 'dump.xml' => 'one' ] );
 
 		$status = $this->reader->listFiles(
-			$this->newFile( (string)gzencode( $tar ) ),
+			$this->newFile( gzencode( $tar ) ),
 			ArchiveReader::FORMAT_GZIP,
 			100,
 			self::MAX_SIZE
@@ -498,7 +498,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 	public function testListFilesTarExtremeCompressionRatio(): void {
 		$tar = TarFixture::build( [ 'dump.xml' => str_repeat( 'a', 4 * 1048576 ) ] );
-		$path = $this->newFile( (string)gzencode( $tar ) );
+		$path = $this->newFile( gzencode( $tar ) );
 
 		$this->assertStatusError(
 			'importdump-archive-ratio',
@@ -570,7 +570,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 	public function testExtractCompressedTar(): void {
 		$tar = TarFixture::build( [ 'dump.xml' => str_repeat( 'content ', 1000 ) ] );
-		$path = $this->newFile( (string)gzencode( $tar ) );
+		$path = $this->newFile( gzencode( $tar ) );
 		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_GZIP, 100, self::MAX_SIZE )->getValue()[0];
 		$destination = $this->getNewTempFile();
 
@@ -633,7 +633,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 			$this->reader->extractTo(
 				$path,
 				ArchiveReader::FORMAT_TAR,
-				new ArchiveEntry( 0, 'dump.xml', 2000, (int)filesize( $path ) ),
+				new ArchiveEntry( 0, 'dump.xml', 2000, filesize( $path ) ),
 				$this->getNewTempFile(),
 				self::MAX_SIZE,
 				null
@@ -658,7 +658,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 			$this->markTestSkipped( 'The bz2 extension is not installed.' );
 		}
 
-		$path = $this->newFile( (string)bzcompress( str_repeat( 'content ', 1000 ) ) );
+		$path = $this->newFile( bzcompress( str_repeat( 'content ', 1000 ) ) );
 		$this->assertSame( ArchiveReader::FORMAT_BZIP2, $this->reader->detectFormat( $path ) );
 
 		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_BZIP2, 100, self::MAX_SIZE )->getValue()[0];
@@ -684,7 +684,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 			$this->markTestSkipped( 'The bz2 extension is not installed.' );
 		}
 
-		$path = $this->newFile( (string)bzcompress( TarFixture::build( [ 'dump.xml' => 'content' ] ) ) );
+		$path = $this->newFile( bzcompress( TarFixture::build( [ 'dump.xml' => 'content' ] ) ) );
 		$status = $this->reader->listFiles( $path, ArchiveReader::FORMAT_BZIP2, 100, self::MAX_SIZE );
 		$this->assertStatusGood( $status );
 		$this->assertSame( 'dump.xml', $status->getValue()[0]->name );
@@ -707,7 +707,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 			$this->markTestSkipped( 'The bz2 extension is not installed.' );
 		}
 
-		$path = $this->newFile( (string)bzcompress( str_repeat( 'a', 8 * 1048576 ) ) );
+		$path = $this->newFile( bzcompress( str_repeat( 'a', 8 * 1048576 ) ) );
 		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_BZIP2, 100, self::MAX_SIZE )->getValue()[0];
 
 		$this->assertStatusError(

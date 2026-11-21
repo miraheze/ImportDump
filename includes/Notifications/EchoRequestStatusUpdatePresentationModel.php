@@ -27,7 +27,7 @@ class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationMode
 
 	/** @inheritDoc */
 	public function getBodyMessage(): Message {
-		$comment = (string)$this->event->getExtraParam( 'comment' );
+		$comment = $this->event->getExtraParam( 'comment' );
 
 		return new RawMessage( '$1', [ nl2br( htmlspecialchars( $comment ) ) ] );
 	}

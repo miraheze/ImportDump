@@ -9,6 +9,7 @@ use MediaWiki\JobQueue\Job;
 use MediaWiki\Language\FormatterFactory;
 use MediaWiki\Language\MessageLocalizer;
 use MediaWiki\Status\Status;
+use MediaWiki\User\User;
 use Miraheze\ImportDump\Notifications\AttentionNotifier;
 use Miraheze\ImportDump\Progress\VerificationProgress;
 use Miraheze\ImportDump\Request\RequestManager;
@@ -88,7 +89,7 @@ class VerifyDumpJob extends Job {
 		$this->requestManager->deleteUnverifiedFile();
 		$this->progress->clear( $this->requestManager->getID() );
 
-		$user = RequestManager::getSystemUser( RequestManager::STATUS_UPDATE_USER );
+		$user = User::newSystemUser( RequestManager::STATUS_UPDATE_USER );
 		$reason = $this->formatterFactory->getStatusFormatter( $this->messageLocalizer )
 			->getMessage( $status, [] )
 			->inContentLanguage()

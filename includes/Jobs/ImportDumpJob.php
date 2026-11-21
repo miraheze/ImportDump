@@ -30,13 +30,13 @@ use Miraheze\ImportDump\Upload\PageCounter;
 use RebuildRecentchanges;
 use RebuildTextIndex;
 use RefreshLinks;
-use RuntimeException;
 use Throwable;
 use UpdateArticleCount;
 use Wikimedia\Rdbms\IConnectionProvider;
 use function error_get_last;
 use function file_exists;
 use function get_class;
+use function intdiv;
 use function max;
 use function min;
 use function register_shutdown_function;
@@ -158,10 +158,6 @@ class ImportDumpJob extends Job {
 
 	private function importPages( ImportStreamSource $importStreamSource, string $filePath ): void {
 		$user = User::newSystemUser( RequestManager::EXTENSION_USER, [ 'steal' => true ] );
-		if ( $user === null ) {
-			throw new RuntimeException( 'Could not load the ImportDump system user.' );
-		}
-
 		$importer = $this->wikiImporterFactory->getWikiImporter(
 			$importStreamSource, new UltimateAuthority( $user )
 		);
@@ -188,7 +184,7 @@ class ImportDumpJob extends Job {
 
 			$lastUpdate = $now;
 			$pages = min( $done, $total );
-			$this->requestManager->setImportPercent( (int)( $pages * 100 / $total ), done: $pages, total: $total );
+			$this->requestManager->setImportPercent( intdiv( $pages * 100, $total ), done: $pages, total: $total );
 		} );
 
 		$importer->doImport();
@@ -287,7 +283,7 @@ class ImportDumpJob extends Job {
 			if ( $total > 0 ) {
 				$done = $next === false ? $total : min( $total, $batches * $this->refreshLinksChunkSize );
 				$this->requestManager->setImportPercent(
-					$next === false ? 100 : min( 99, (int)( $done * 100 / $total ) ),
+					$next === false ? 100 : min( 99, intdiv( $done * 100, $total ) ),
 					$done,
 					$total
 				);
@@ -347,7 +343,7 @@ class ImportDumpJob extends Job {
 		$this->lastBeat = $now;
 
 		$hours = $this->config->get( ConfigNames::StalledImportHours );
-		$ttl = (int)( max( 1, (int)( $hours ?: 24 ) ) * 3600 );
+		$ttl = max( 1, (int)( $hours ?: 24 ) ) * 3600;
 
 		$this->heartbeat->beat( $this->requestID, $ttl );
 	}

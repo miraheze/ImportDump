@@ -377,7 +377,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 
 	public function testGzip(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
-		$status = $this->process( $this->newFile( (string)gzencode( $xml ) ) );
+		$status = $this->process( $this->newFile( gzencode( $xml ) ) );
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
@@ -387,7 +387,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testGzipWithInvalidXml(): void {
-		$status = $this->process( $this->newFile( (string)gzencode( 'content' ) ) );
+		$status = $this->process( $this->newFile( gzencode( 'content' ) ) );
 		$this->assertStatusError( 'importdump-xml-invalid', $status );
 	}
 
@@ -404,7 +404,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 
 	public function testGzippedTar(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
-		$status = $this->process( $this->newFile( (string)gzencode( TarFixture::build( [ 'dump.xml' => $xml ] ) ) ) );
+		$status = $this->process( $this->newFile( gzencode( TarFixture::build( [ 'dump.xml' => $xml ] ) ) ) );
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
@@ -418,7 +418,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		}
 
 		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
-		$status = $this->process( $this->newFile( (string)bzcompress( $xml ) ) );
+		$status = $this->process( $this->newFile( bzcompress( $xml ) ) );
 		$this->assertStatusGood( $status );
 		$this->assertSame( $xml, file_get_contents( $status->getValue()->path ) );
 	}
@@ -478,7 +478,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusError(
 			'importdump-archive-too-large',
-			$processor->process( $this->newFile( (string)gzencode( $xml ) ), null )
+			$processor->process( $this->newFile( gzencode( $xml ) ), null )
 		);
 
 		$this->assertStatusError(
@@ -493,10 +493,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusError(
 			'importdump-archive-too-large',
-			$processor->process(
-				$this->newFile( (string)gzencode( TarFixture::build( [ 'dump.xml' => $xml ] ) ) ),
-				null
-			)
+			$processor->process( $this->newFile( gzencode( TarFixture::build( [ 'dump.xml' => $xml ] ) ) ), null )
 		);
 	}
 

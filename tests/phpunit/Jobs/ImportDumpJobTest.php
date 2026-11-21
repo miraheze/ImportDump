@@ -313,9 +313,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 		$pageIds = [];
 		for ( $i = 1; $i <= 5; $i++ ) {
 			$status = $this->editPage( "RefreshLinksChunk$i", "[[RefreshLinksTarget$i]]" );
-			$revision = $status->getNewRevision();
-			$this->assertNotNull( $revision );
-			$pageIds[] = $revision->getPageId();
+			$pageIds[] = $status->getNewRevision()->getPageId();
 		}
 
 		$dbw = $this->getDb();

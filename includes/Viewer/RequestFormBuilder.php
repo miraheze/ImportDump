@@ -14,10 +14,10 @@ use Miraheze\ImportDump\Notices\NoticeResult;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
 use function array_unique;
+use function ctype_space;
 use function htmlspecialchars;
 use function in_array;
 use function parse_url;
-use function trim;
 use const PHP_URL_HOST;
 use const PHP_URL_SCHEME;
 
@@ -359,7 +359,7 @@ class RequestFormBuilder {
 	}
 
 	public function isValidComment( ?string $comment, array $alldata ): Message|true {
-		if ( isset( $alldata['submit-comment'] ) && ( $comment === null || trim( $comment ) === '' ) ) {
+		if ( isset( $alldata['submit-comment'] ) && ( !$comment || ctype_space( $comment ) ) ) {
 			return $this->context->msg( 'htmlform-required' );
 		}
 
@@ -375,7 +375,7 @@ class RequestFormBuilder {
 	}
 
 	public function isValidReason( ?string $reason ): Message|true {
-		if ( $reason === null || trim( $reason ) === '' ) {
+		if ( !$reason || ctype_space( $reason ) ) {
 			return $this->context->msg( 'htmlform-required' );
 		}
 
@@ -383,7 +383,7 @@ class RequestFormBuilder {
 	}
 
 	public function isValidInterwikiPrefix( ?string $prefix, array $alldata ): Message|true {
-		if ( isset( $alldata['submit-interwiki'] ) && ( $prefix === null || trim( $prefix ) === '' ) ) {
+		if ( isset( $alldata['submit-interwiki'] ) && ( !$prefix || ctype_space( $prefix ) ) ) {
 			return $this->context->msg( 'htmlform-required' );
 		}
 
@@ -395,7 +395,7 @@ class RequestFormBuilder {
 			return true;
 		}
 
-		if ( $url === null || trim( $url ) === '' ) {
+		if ( !$url || ctype_space( $url ) ) {
 			return $this->context->msg( 'htmlform-required' );
 		}
 

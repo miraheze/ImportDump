@@ -81,7 +81,7 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		}
 
 		$services = MediaWikiServices::getInstance();
-		$mime = $services->getMimeAnalyzer()->guessMimeType( (string)$this->getTempPath() );
+		$mime = $services->getMimeAnalyzer()->guessMimeType( $this->getTempPath() );
 
 		$definition = self::TYPES[$this->type];
 		$processor = $services->getService( 'ImportDumpDumpProcessor' );

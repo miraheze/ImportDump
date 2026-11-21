@@ -162,7 +162,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 
 		$status = $specialRequestImport->onSubmit( $formData );
 		$this->assertInstanceOf( Status::class, $status );
-		if ( $expectedError === null || $expectedError === '' ) {
+		if ( !$expectedError ) {
 			$this->assertStatusGood( $status );
 			$this->assertLatestRequest( $extraData['status'] ?? RequestStatus::Pending );
 		} else {
@@ -237,7 +237,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			[
 				'mime-type' => 'application/gzip',
 				'duplicate' => false,
-				'testfile' => (string)gzencode( self::DUMP ),
+				'testfile' => gzencode( self::DUMP ),
 				'status' => RequestStatus::Verifying,
 				'token' => true,
 			],
@@ -435,9 +435,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		file_put_contents( $path, self::DUMP );
 
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
-		$stashFile = new UploadStash( $repo, $user )->stashFile( $path, 'file' );
-		$this->assertNotNull( $stashFile );
-		return $stashFile->getFileKey();
+		return new UploadStash( $repo, $user )->stashFile( $path, 'file' )->getFileKey();
 	}
 
 	private function submitStashKey( User $user, string $fileKey ): Status {
@@ -519,7 +517,6 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 
 		$result = $this->specialRequestImport->isValidDatabase( $target );
 		if ( is_string( $expected ) ) {
-			$this->assertInstanceOf( Message::class, $result );
 			$this->assertSame( $expected, $result->getKey() );
 		} else {
 			$this->assertSame( $expected, $result );
@@ -538,7 +535,6 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	public function testIsValidReason( string $reason, string|true $expected ): void {
 		$result = $this->specialRequestImport->isValidReason( $reason );
 		if ( is_string( $expected ) ) {
-			$this->assertInstanceOf( Message::class, $result );
 			$this->assertSame( $expected, $result->getKey() );
 		} else {
 			$this->assertSame( $expected, $result );

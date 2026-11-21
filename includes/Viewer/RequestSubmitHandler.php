@@ -107,10 +107,7 @@ class RequestSubmitHandler {
 
 				$this->requestManager->logStatusUpdate( $comment, RequestStatus::Pending, $user );
 
-				$this->requestManager->addComment(
-					$comment,
-					RequestManager::getSystemUser( RequestManager::EXTENSION_USER )
-				);
+				$this->requestManager->addComment( $comment, User::newSystemUser( RequestManager::EXTENSION_USER ) );
 
 				$this->requestManager->sendNotification(
 					$comment, 'requestimport-request-status-update', $user
@@ -120,10 +117,7 @@ class RequestSubmitHandler {
 					implode( "\n\n", $changes )
 				)->inContentLanguage()->escaped();
 
-				$this->requestManager->addComment(
-					$comment,
-					RequestManager::getSystemUser( RequestManager::EXTENSION_USER )
-				);
+				$this->requestManager->addComment( $comment, User::newSystemUser( RequestManager::EXTENSION_USER ) );
 			}
 
 			$this->requestManager->endAtomic( __METHOD__ );
@@ -309,10 +303,7 @@ class RequestSubmitHandler {
 			$comment .= ' ' . $formData['handle-comment'];
 		}
 
-		$this->requestManager->addComment(
-			$comment,
-			RequestManager::getSystemUser( RequestManager::STATUS_UPDATE_USER )
-		);
+		$this->requestManager->addComment( $comment, User::newSystemUser( RequestManager::STATUS_UPDATE_USER ) );
 		$this->requestManager->logStatusUpdate(
 			$formData['handle-comment'], $status, $user
 		);

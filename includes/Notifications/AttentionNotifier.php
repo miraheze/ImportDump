@@ -7,6 +7,7 @@ namespace Miraheze\ImportDump\Notifications;
 use MediaWiki\Notification\NotificationService;
 use MediaWiki\Notification\RecipientSet;
 use MediaWiki\SpecialPage\SpecialPage;
+use MediaWiki\User\User;
 use Miraheze\ImportDump\Request\RequestHistory;
 use Miraheze\ImportDump\Request\RequestManager;
 
@@ -38,7 +39,7 @@ class AttentionNotifier {
 		$this->notificationService->notify(
 			new RequestNotification(
 				'requestimport-attention',
-				RequestManager::getSystemUser( RequestManager::STATUS_UPDATE_USER ),
+				User::newSystemUser( RequestManager::STATUS_UPDATE_USER ),
 				[
 					'request-id' => $requestID,
 					'request-url' => SpecialPage::getTitleFor(

@@ -313,7 +313,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->setService( 'NotificationService', $service );
 
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->addComment( 'Updated', RequestManager::getSystemUser( RequestManager::STATUS_UPDATE_USER ) );
+		$manager->addComment( 'Updated', User::newSystemUser( 'RequestImport Status Update' ) );
 		$manager->addComment( 'Hello', $this->getTestSysop()->getUser() );
 
 		$this->assertCount( 1, $captured );
@@ -332,7 +332,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->setService( 'NotificationService', $service );
 
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->addComment( 'Updated', RequestManager::getSystemUser( RequestManager::STATUS_UPDATE_USER ) );
+		$manager->addComment( 'Updated', User::newSystemUser( 'RequestImport Status Update' ) );
 	}
 
 	/**
@@ -654,9 +654,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$unverified = $manager->getUnverifiedFilePath();
 		$this->assertStatusGood( $backend->prepare( [ 'dir' => FileBackend::parentStoragePath( $unverified ) ] ) );
 		$this->assertStatusGood( $backend->quickCreate( [ 'dst' => $unverified, 'content' => 'unverified' ] ) );
-		$unverifiedFile = $manager->getLocalUnverifiedFile();
-		$this->assertNotNull( $unverifiedFile );
-		$this->assertSame( 'unverified', file_get_contents( $unverifiedFile->getPath() ) );
+		$this->assertSame( 'unverified', file_get_contents( $manager->getLocalUnverifiedFile()->getPath() ) );
 
 		$this->assertStatusGood( $manager->publishUnverifiedFile() );
 		$this->assertTrue( $manager->fileExists() );

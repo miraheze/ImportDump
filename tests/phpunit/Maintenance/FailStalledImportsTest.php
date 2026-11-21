@@ -105,10 +105,6 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase {
 
 		$queue = $this->getServiceContainer()->getJobQueueGroup()->get( ImportDumpNotifyJob::JOB_NAME );
 		$job = $queue->pop();
-		if ( $job === false ) {
-			$this->fail( 'No job was queued.' );
-		}
-
 		$this->assertSame( RequestStatus::Partial->value, $job->getParams()['status'] );
 	}
 

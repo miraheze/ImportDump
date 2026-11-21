@@ -15,7 +15,6 @@ use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\AssembleChunksJob;
-use StatusValue;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 use function str_repeat;
@@ -145,9 +144,7 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 		$status = UploadBase::getSessionStatus( $this->uploader, $filekey );
 		$this->assertSame( 'Success', $status['result'] );
 		$this->assertNotSame( $filekey, $status['filekey'] );
-		$sessionStatus = $status['status'];
-		'@phan-var StatusValue $sessionStatus';
-		$this->assertTrue( $sessionStatus->isGood() );
+		$this->assertTrue( $status['status']->isGood() );
 
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
 		$file = new UploadStash( $repo, $this->uploader )->getFile( $status['filekey'] );
@@ -166,9 +163,7 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 		$status = UploadBase::getSessionStatus( $this->uploader, $filekey );
 		$this->assertSame( 'Failure', $status['result'] );
 		$this->assertSame( 'assembling', $status['stage'] );
-		$sessionStatus = $status['status'];
-		'@phan-var StatusValue $sessionStatus';
-		$this->assertFalse( $sessionStatus->isGood() );
+		$this->assertFalse( $status['status']->isGood() );
 	}
 
 	public function testRunFailsWhenStashedFileIsMissing(): void {
@@ -185,9 +180,7 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 
 		$status = UploadBase::getSessionStatus( $this->uploader, $filekey );
 		$this->assertSame( 'Failure', $status['result'] );
-		$sessionStatus = $status['status'];
-		'@phan-var StatusValue $sessionStatus';
-		$this->assertFalse( $sessionStatus->isGood() );
+		$this->assertFalse( $status['status']->isGood() );
 	}
 
 	public function testRunSkipsUploadAlreadyAssembling(): void {

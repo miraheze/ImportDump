@@ -106,7 +106,7 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 
 		$path = $this->newFile( "<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>" );
 		$upload = $this->newUpload( type: 'xml' );
-		$upload->initializePathInfo( $upload->getStashName(), $path, (int)filesize( $path ) );
+		$upload->initializePathInfo( $upload->getStashName(), $path, filesize( $path ) );
 
 		$this->assertSame( UploadBase::OK, $upload->verifyUpload()['status'] );
 	}
@@ -134,7 +134,7 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 
 		$path = $this->newFile( $content );
 		$upload = $this->newUpload( type: 'xml' );
-		$upload->initializePathInfo( $upload->getStashName(), $path, (int)filesize( $path ) );
+		$upload->initializePathInfo( $upload->getStashName(), $path, filesize( $path ) );
 
 		$result = $upload->verifyUpload();
 		$this->assertSame( $expectedStatus, $result['status'] );
@@ -168,7 +168,7 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 		];
 
 		yield 'gzip archive' => [
-			(string)gzencode( "<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>" ),
+			gzencode( "<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>" ),
 			null,
 			UploadBase::OK,
 			null,
@@ -206,7 +206,7 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 
 		$path = $this->newFile( '<page><title>Test</title><script>x</script></page>' );
 		$upload = $this->newUpload( type: 'xml' );
-		$upload->initializePathInfo( $upload->getStashName(), $path, (int)filesize( $path ) );
+		$upload->initializePathInfo( $upload->getStashName(), $path, filesize( $path ) );
 
 		$wrapper = TestingAccessWrapper::newFromObject( $upload );
 		$this->assertTrue( $wrapper->verifyPartialFile() );

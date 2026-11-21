@@ -24,14 +24,14 @@ class ImportRightNoticesTest extends MediaWikiUnitTestCase {
 		$message->method( 'escaped' )->willReturn( 'no import right' );
 
 		$context = $this->createMock( IContextSource::class );
-		$context->method( 'msg' )->with( ...[ 'importdump-info-no-import-right', 'Requester', 'targetwiki' ] )
+		$context->method( 'msg' )->with( 'importdump-info-no-import-right', 'Requester', 'targetwiki' )
 			->willReturn( $message );
 
 		$requester = $this->createMock( User::class );
 		$requester->method( 'getName' )->willReturn( 'Requester' );
 
 		$requestManager = $this->createMock( RequestManager::class );
-		$requestManager->method( 'requesterHasTargetRight' )->with( ...[ 'import' ] )->willReturn( $hasRight );
+		$requestManager->method( 'requesterHasTargetRight' )->with( 'import' )->willReturn( $hasRight );
 		$requestManager->method( 'getRequester' )->willReturn( $requester );
 		$requestManager->method( 'getTarget' )->willReturn( 'targetwiki' );
 

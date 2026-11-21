@@ -280,9 +280,9 @@ final class ArchiveReader {
 			$input = $this->openStream( $path, $format );
 		}
 
-		$output = $input !== false ? fopen( $destination, 'wb' ) : false;
-		if ( $input === false || $output === false ) {
-			if ( $input !== false ) {
+		$output = $input ? fopen( $destination, 'wb' ) : false;
+		if ( !$input || !$output ) {
+			if ( $input ) {
 				fclose( $input );
 			}
 
@@ -617,9 +617,9 @@ final class ArchiveReader {
 		?Closure $onProgress
 	): Status {
 		$input = $this->openStream( $path, $format );
-		$output = $input !== false ? fopen( $destination, 'wb' ) : false;
-		if ( $input === false || $output === false ) {
-			if ( $input !== false ) {
+		$output = $input ? fopen( $destination, 'wb' ) : false;
+		if ( !$input || !$output ) {
+			if ( $input ) {
 				fclose( $input );
 			}
 
