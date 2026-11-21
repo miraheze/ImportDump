@@ -20,12 +20,14 @@ class HookRunner implements
 	/** @inheritDoc */
 	public function onImportDumpGetTargetState(
 		string $target,
+		array $requesterGroups,
 		?array &$extensions,
-		array &$settings
+		array &$settings,
+		array &$rights
 	): void {
 		$this->container->run(
 			'ImportDumpGetTargetState',
-			[ $target, &$extensions, &$settings ],
+			[ $target, $requesterGroups, &$extensions, &$settings, &$rights ],
 			[ 'abortable' => false ]
 		);
 	}

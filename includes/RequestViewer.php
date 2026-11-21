@@ -11,7 +11,13 @@ use MediaWiki\Linker\Linker;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
 use MediaWiki\User\User;
-use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\Notices\FileNotices;
+use Miraheze\ImportDump\Notices\HistoryNotices;
+use Miraheze\ImportDump\Notices\NoticeCollector;
+use Miraheze\ImportDump\Notices\RequesterNotices;
+use Miraheze\ImportDump\Notices\RequestNotice;
+use Miraheze\ImportDump\Notices\RequirementNotices;
+use Miraheze\ImportDump\Notices\TargetNotices;
 use OOUI\HtmlSnippet;
 use OOUI\MessageWidget;
 use OOUI\ProgressBarWidget;
@@ -44,7 +50,10 @@ class RequestViewer implements RequestStatus {
 		}
 
 		if ( !$authority->isAllowed( 'handle-import-requests' ) && $this->requestManager->hasFileExpired() ) {
-			$this->context->getOutput()->addHTML( Html::noticeBox( $this->getExpiredInfo(), '' ) );
+			$this->context->getOutput()->addHTML( Html::noticeBox(
+				FileNotices::getExpiredInfo( $this->requestManager, $this->context ),
+				''
+			) );
 		}
 
 		$this->context->getOutput()->enableOOUI();
@@ -102,6 +111,28 @@ class RequestViewer implements RequestStatus {
 		];
 
 		$formDescriptor += $this->getStageDescriptor();
+
+		if (
+			!$authority->isAllowed( 'handle-import-requests' ) &&
+			$user->getActorId() === $this->requestManager->getRequester()->getActorId()
+		) {
+			$result = $this->getNoticeCollector()->collect(
+				$this->requestManager,
+				$this->context,
+				$requestStatus,
+				forHandler: false,
+				hasTargetAccess: $this->requestManager->requesterHasTargetAccess()
+			);
+
+			if ( $result->notices ) {
+				$formDescriptor['request-notices'] = [
+					'type' => 'info',
+					'default' => $this->renderNotices( $result->notices ),
+					'raw' => true,
+					'section' => 'details',
+				];
+			}
+		}
 
 		$formDescriptor += [
 			'reason' => [
@@ -188,191 +219,18 @@ class RequestViewer implements RequestStatus {
 		}
 
 		if ( $authority->isAllowed( 'handle-import-requests' ) ) {
-			$validRequest = true;
-			$status = $this->requestManager->getStatus();
+			$result = $this->getNoticeCollector()->collect(
+				$this->requestManager,
+				$this->context,
+				$this->requestManager->getStatus(),
+				forHandler: true,
+				hasTargetAccess: true
+			);
 
-			if ( $status === self::STATUS_VERIFYING ) {
-				$info = new MessageWidget( [
-					'label' => new HtmlSnippet( $this->context->msg( 'importdump-info-verifying' )->escaped() ),
-					'type' => 'notice',
-				] );
-
-				$validRequest = false;
-			} elseif ( $this->requestManager->hasImported() ) {
-				$info = new MessageWidget( [
-					'label' => new HtmlSnippet( $this->getImportedInfo() ),
-					'type' => 'warning',
-				] );
-			} elseif ( $this->requestManager->fileExists() ) {
-				$fileInfo = $this->context->msg( 'importdump-info-command' )->plaintextParams(
-					$this->requestManager->getCommand()
-				)->parse();
-
-				$fileInfo .= Html::element( 'button', [
-						'type' => 'button',
-						'onclick' => 'navigator.clipboard.writeText(
-      								$( \'.oo-ui-flaggedElement-notice\' ).text() );',
-					],
-					$this->context->msg( 'importdump-button-copy' )->text()
-				);
-
-				if ( $this->config->get( ConfigNames::EnableAutomatedJob ) && $status !== self::STATUS_FAILED ) {
-					$fileInfo = '';
-				}
-
-				if ( $this->requestManager->getFileSize() > 0 ) {
-					if ( $fileInfo ) {
-						$fileInfo .= Html::element( 'br' );
-					}
-
-					$fileInfo .= $this->context->msg( 'importdump-info-filesize' )->sizeParams(
-						$this->requestManager->getFileSize()
-					)->parse();
-				}
-
-				$info = new MessageWidget( [
-					'label' => new HtmlSnippet( $fileInfo ),
-					'type' => 'notice',
-				] );
-			} elseif ( $this->requestManager->isPastFileExpiry() ) {
-				$info = new MessageWidget( [
-					'label' => new HtmlSnippet( $this->getExpiredInfo() ),
-					'type' => 'notice',
-				] );
-
-				$validRequest = false;
-				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
-					$status = self::STATUS_DECLINED;
-				}
-			} else {
-				$info = new MessageWidget( [
-					'label' => new HtmlSnippet(
-								$this->context->msg( 'importdump-info-no-file-found',
-								$this->requestManager->getFilePath()
-							)->escaped()
-						),
-					'type' => 'error',
-				] );
-
-				$validRequest = false;
-				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
-					$status = self::STATUS_DECLINED;
-				}
-			}
-
+			$validRequest = $result->valid;
+			$status = $result->status;
 			$targetExists = $this->requestManager->targetExists();
-			if ( $targetExists ) {
-				$info .= new MessageWidget( [
-					'label' => new HtmlSnippet(
-							$this->context->msg( 'importdump-info-groups',
-								$this->requestManager->getRequester()->getName(),
-								$this->requestManager->getTarget(),
-								$this->context->getLanguage()->commaList(
-									$this->requestManager->getUserGroupsFromTarget()
-								)
-							)->escaped(),
-						),
-					'type' => 'notice',
-				] );
-			} else {
-				$info .= new MessageWidget( [
-					'label' => new HtmlSnippet(
-							$this->context->msg( 'importdump-info-target-missing',
-								$this->requestManager->getTarget()
-							)->escaped()
-						),
-					'type' => 'error',
-				] );
-
-				$validRequest = false;
-				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
-					$status = self::STATUS_DECLINED;
-				}
-			}
-
-			$history = $this->requestManager->getHistory();
-			if ( $history !== null ) {
-				// Messages that can be used here:
-				// * importdump-info-history-full
-				// * importdump-info-history-partial
-				// * importdump-info-history-unknown
-				$info .= new MessageWidget( [
-					'label' => new HtmlSnippet(
-						$this->context->msg( 'importdump-info-history-' . $history )->escaped()
-					),
-					'type' => $history === RequestHistory::HISTORY_PARTIAL ? 'warning' : 'notice',
-				] );
-			}
-
-			if ( in_array( $status, [ self::STATUS_PENDING, self::STATUS_FAILED, self::STATUS_PARTIAL ], true ) ) {
-				foreach ( $this->requestManager->getRequirementProblems() as $problem ) {
-					if ( $problem['blocking'] ) {
-						$validRequest = false;
-					}
-
-					// Messages that can be used here:
-					// * importdump-requirement-unknown
-					// * importdump-requirement-missing
-					// * importdump-requirement-setting-unknown
-					// * importdump-requirement-setting
-					$info .= new MessageWidget( [
-						'label' => new HtmlSnippet(
-							$this->context->msg( 'importdump-requirement-' . $problem['problem'] )
-								->params( $problem['name'], $problem['setting'] )
-								->escaped()
-						),
-						'type' => in_array( $problem['problem'], [ 'missing', 'setting' ], true ) ?
-							'error' : 'warning',
-					] );
-				}
-			}
-
-			if ( $this->requestManager->isPrivate( forced: false ) ) {
-				$info .= new MessageWidget( [
-					'label' => new HtmlSnippet( $this->context->msg( 'importdump-info-request-private' )->escaped() ),
-					'type' => 'warning',
-				] );
-			}
-
-			if ( $this->requestManager->getRequester()->getBlock() ) {
-				$info .= new MessageWidget( [
-					'label' => new HtmlSnippet(
-							$this->context->msg( 'importdump-info-requester-blocked',
-								$this->requestManager->getRequester()->getName(),
-								WikiMap::getCurrentWikiId()
-							)->escaped()
-						),
-					'type' => 'warning',
-				] );
-			}
-
-			if ( $this->requestManager->getRequester()->isLocked() ) {
-				$info .= new MessageWidget( [
-					'label' => new HtmlSnippet(
-							$this->context->msg( 'importdump-info-requester-locked',
-								$this->requestManager->getRequester()->getName()
-							)->escaped()
-						),
-					'type' => 'error',
-				] );
-
-				$validRequest = false;
-				if ( $status === self::STATUS_PENDING || $status === self::STATUS_INPROGRESS ) {
-					$status = self::STATUS_DECLINED;
-				}
-			}
-
-			if ( $targetExists && !$this->requestManager->getInterwikiPrefix() ) {
-				$info .= new MessageWidget( [
-					'label' => new HtmlSnippet(
-							$this->context->msg( 'importdump-info-no-interwiki-prefix',
-								$this->requestManager->getTarget(),
-								parse_url( $this->requestManager->getSource(), PHP_URL_HOST )
-							)->escaped()
-						),
-					'type' => 'error',
-				] );
-			}
+			$info = $this->renderNotices( $result->notices );
 
 			$formDescriptor += [
 				'handle-info' => [
@@ -653,29 +511,28 @@ class RequestViewer implements RequestStatus {
 		];
 	}
 
-	private function getExpiredInfo(): string {
-		$status = mb_strtolower(
-			$this->context->msg( 'importdump-label-' . $this->requestManager->getStatus() )->text()
-		);
-
-		return $this->context->msg( 'importdump-info-file-expired' )
-			->numParams( $this->requestManager->getFileExpiryDays() )
-			->params( $status )
-			->escaped();
+	private function getNoticeCollector(): NoticeCollector {
+		return new NoticeCollector( [
+			new FileNotices( $this->config ),
+			new TargetNotices(),
+			new HistoryNotices(),
+			new RequirementNotices(),
+			new RequesterNotices(),
+		] );
 	}
 
-	private function getImportedInfo(): string {
-		$stage = $this->context->msg( 'importdump-stage-' . $this->requestManager->getStage() )->text();
-		$info = $this->context->msg( 'importdump-info-already-imported', $stage )->parse();
-
-		$commands = $this->requestManager->getRemainingCommands();
-		if ( $commands ) {
-			$info .= Html::element( 'br' ) . $this->context->msg( 'importdump-info-remaining-commands' )
-				->rawParams( Html::element( 'pre', [], implode( "\n", $commands ) ) )
-				->parse();
+	/** @param RequestNotice[] $notices */
+	private function renderNotices( array $notices ): string {
+		$html = '';
+		foreach ( $notices as $notice ) {
+			$html .= new MessageWidget( [
+				'label' => new HtmlSnippet( $notice->html ),
+				'type' => $notice->severity,
+				'classes' => [ 'ext-importdump-notice' ],
+			] );
 		}
 
-		return $info;
+		return $html;
 	}
 
 	public function isValidComment( ?string $comment, array $alldata ): Message|true {
