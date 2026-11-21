@@ -73,30 +73,26 @@ class ProgressStreamTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testEmptyFile(): void {
-		$url = ProgressStream::url( $this->newFile( '' ), static function ( int $percent ): void {
-		} );
+		$url = ProgressStream::url( $this->newFile( '' ), static fn ( int $unused ) => null );
 
 		$this->assertSame( '', file_get_contents( $url ) );
 	}
 
 	public function testUnknownUrlCannotBeOpened(): void {
-		ProgressStream::url( $this->newFile( 'content' ), static function ( int $percent ): void {
-		} );
+		ProgressStream::url( $this->newFile( 'content' ), static fn ( int $unused ) => null );
 
 		$this->assertFalse( AtEase::quietCall( 'file_get_contents', 'importdump-progress://unknown' ) );
 	}
 
 	public function testReleasedUrlCannotBeOpened(): void {
-		$url = ProgressStream::url( $this->newFile( 'content' ), static function ( int $percent ): void {
-		} );
+		$url = ProgressStream::url( $this->newFile( 'content' ), static fn ( int $unused ) => null );
 
 		ProgressStream::release( $url );
 		$this->assertFalse( AtEase::quietCall( 'file_get_contents', $url ) );
 	}
 
 	public function testUrlCannotBeOpenedTwice(): void {
-		$url = ProgressStream::url( $this->newFile( 'content' ), static function ( int $percent ): void {
-		} );
+		$url = ProgressStream::url( $this->newFile( 'content' ), static fn ( int $unused ) => null );
 
 		$this->assertSame( 'content', file_get_contents( $url ) );
 		$this->assertFalse( AtEase::quietCall( 'file_get_contents', $url ) );

@@ -125,7 +125,7 @@ final class FileNotices implements NoticeProvider {
 		}
 
 		if ( $requestManager->getFileSize() > 0 ) {
-			if ( $fileInfo ) {
+			if ( $fileInfo !== '' ) {
 				$fileInfo .= Html::element( 'br' );
 			}
 

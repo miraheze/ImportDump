@@ -26,7 +26,7 @@ class EchoImportFailedPresentationModel extends EchoEventPresentationModel {
 	/** @inheritDoc */
 	public function getBodyMessage(): Message {
 		$reason = DiscussionParser::getTextSnippet(
-			$this->event->getExtraParam( 'reason' ),
+			(string)$this->event->getExtraParam( 'reason' ),
 			$this->language,
 			1000
 		);

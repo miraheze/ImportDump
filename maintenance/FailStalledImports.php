@@ -15,9 +15,9 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+use Wikimedia\Timestamp\TimestampFormat;
 use function count;
 use function max;
-use const TS_UNIX;
 
 class FailStalledImports extends Maintenance {
 
@@ -63,7 +63,7 @@ class FailStalledImports extends Maintenance {
 
 		$dryRun = $this->hasOption( 'dry-run' );
 		$batchSize = max( 1, $this->getBatchSize() );
-		$cutoff = $dbr->timestamp( (int)ConvertibleTimestamp::now( TS_UNIX ) - $hours * 3600 );
+		$cutoff = $dbr->timestamp( (int)ConvertibleTimestamp::now( TimestampFormat::UNIX ) - $hours * 3600 );
 
 		$count = 0;
 		$lastId = 0;

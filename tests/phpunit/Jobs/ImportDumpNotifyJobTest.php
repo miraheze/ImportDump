@@ -90,10 +90,12 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase {
 
 	/** @return string[] */
 	private function getTypes(): array {
-		return array_map(
-			static fn ( array $pair ): string => $pair[0]->getType(),
-			$this->captured
-		);
+		$types = [];
+		foreach ( $this->captured as [ $notification ] ) {
+			$types[] = $notification->getType();
+		}
+
+		return $types;
 	}
 
 	private function getRequestManager( int $id ): RequestManager {
@@ -151,7 +153,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertSame( [ 'requestimport-request-status-update' ], $this->getTypes() );
 
-		[ $notification, $recipients ] = $this->captured[0];
+		[ , $recipients ] = $this->captured[0];
 		$this->assertSame( [ $this->getTestUser()->getUser()->getName() ], array_map(
 			static fn ( UserIdentity $user ): string => $user->getName(),
 			$recipients->getRecipients()
@@ -174,6 +176,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( [ 'requestimport-request-status-update' ], $this->getTypes() );
 
 		[ $notification, $recipients ] = $this->captured[0];
+		$this->assertInstanceOf( RequestNotification::class, $notification );
 		$this->assertSame( $actor->getName(), $notification->getAgent()->getName() );
 		$this->assertSame( [ $this->getTestUser()->getUser()->getName() ], array_map(
 			static fn ( UserIdentity $user ): string => $user->getName(),

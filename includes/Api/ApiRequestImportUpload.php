@@ -61,6 +61,10 @@ class ApiRequestImportUpload extends ApiBase {
 		}
 
 		$chunkPath = $chunk->getTempName();
+		if ( $chunkPath === null ) {
+			$this->dieWithError( 'apierror-invalid-chunk' );
+		}
+
 		$chunkSize = $chunk->getSize();
 		$offset = $params['offset'];
 		$fileSize = $params['filesize'];
@@ -250,7 +254,12 @@ class ApiRequestImportUpload extends ApiBase {
 		}
 
 		$upload->stash->removeFile( $fileKey );
-		$finalKey = $upload->getStashFile()->getFileKey();
+		$stashFile = $upload->getStashFile();
+		if ( $stashFile === null ) {
+			$this->dieWithError( 'apierror-stashfailed-complete', 'stashfailed' );
+		}
+
+		$finalKey = $stashFile->getFileKey();
 
 		UploadBase::setSessionStatus( $user, $fileKey, [
 			'result' => 'Success',

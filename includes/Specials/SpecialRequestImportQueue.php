@@ -43,7 +43,7 @@ class SpecialRequestImportQueue extends SpecialPage {
 			);
 		}
 
-		if ( $par ) {
+		if ( $par !== null && $par !== '' ) {
 			$this->getOutput()->addBacklinkSubtitle( $this->getPageTitle() );
 			$this->lookupRequest( $par );
 			return;
@@ -91,7 +91,7 @@ class SpecialRequestImportQueue extends SpecialPage {
 					'importdump-label-failed' => RequestStatus::Failed->value,
 					'importdump-label-all' => '*',
 				],
-				'default' => $status ?: RequestStatus::Pending->value,
+				'default' => $status !== '' ? $status : RequestStatus::Pending->value,
 			],
 		];
 

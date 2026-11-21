@@ -23,7 +23,7 @@ class LockedNoticesTest extends MediaWikiUnitTestCase {
 		$message->method( 'escaped' )->willReturn( 'locked' );
 
 		$context = $this->createMock( IContextSource::class );
-		$context->method( 'msg' )->with( 'importdump-request-locked' )->willReturn( $message );
+		$context->method( 'msg' )->with( ...[ 'importdump-request-locked' ] )->willReturn( $message );
 
 		$requestManager = $this->createMock( RequestManager::class );
 		$requestManager->method( 'isLocked' )->willReturn( $locked );

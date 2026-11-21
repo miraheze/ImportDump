@@ -56,7 +56,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 				] ),
 			],
 			[],
-			$this->getServiceContainer()->getMainWANObjectCache(),
+			$this->getServiceContainer()->getWANObjectCache(),
 			$this->createMock( MimeAnalyzer::class )
 		) );
 
@@ -167,9 +167,11 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 	public static function provideValidUploads(): Generator {
 		yield 'xml' => [ static fn (): string => self::DUMP ];
 		yield 'zip' => [ static fn (): string => ZipFixture::build( [ 'dump.xml' => self::DUMP ] ) ];
-		yield 'gzip' => [ static fn (): string => gzencode( self::DUMP ) ];
+		yield 'gzip' => [ static fn (): string => (string)gzencode( self::DUMP ) ];
 		yield 'tar' => [ static fn (): string => TarFixture::build( [ 'dump.xml' => self::DUMP ] ) ];
-		yield 'tar.gz' => [ static fn (): string => gzencode( TarFixture::build( [ 'dump.xml' => self::DUMP ] ) ) ];
+		yield 'tar.gz' => [
+			static fn (): string => (string)gzencode( TarFixture::build( [ 'dump.xml' => self::DUMP ] ) ),
+		];
 	}
 
 	public function testValidUploadWithoutHistoryDetection(): void {
@@ -209,7 +211,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 			static fn (): string => ZipFixture::build( [ '../dump.xml' => self::DUMP ] ),
 		];
 
-		yield 'gzip of something else' => [ static fn (): string => gzencode( 'content' ) ];
+		yield 'gzip of something else' => [ static fn (): string => (string)gzencode( 'content' ) ];
 	}
 
 	public function testMissingFile(): void {

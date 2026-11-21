@@ -15,6 +15,7 @@ use MediaWiki\User\User;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\AssembleChunksJob;
+use StatusValue;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 use function str_repeat;
@@ -48,7 +49,7 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 				] ),
 			],
 			[],
-			$this->getServiceContainer()->getMainWANObjectCache(),
+			$this->getServiceContainer()->getWANObjectCache(),
 			$this->createMock( MimeAnalyzer::class )
 		) );
 
@@ -113,7 +114,6 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 	 * @param string $filekey
 	 * @param int $size
 	 * @param array<string, mixed> $params
-	 * @return AssembleChunksJob
 	 */
 	private function newJob( string $filekey, int $size, array $params ): AssembleChunksJob {
 		return new AssembleChunksJob( $params + [
@@ -145,7 +145,9 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 		$status = UploadBase::getSessionStatus( $this->uploader, $filekey );
 		$this->assertSame( 'Success', $status['result'] );
 		$this->assertNotSame( $filekey, $status['filekey'] );
-		$this->assertTrue( $status['status']->isGood() );
+		$sessionStatus = $status['status'];
+		'@phan-var StatusValue $sessionStatus';
+		$this->assertTrue( $sessionStatus->isGood() );
 
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
 		$file = new UploadStash( $repo, $this->uploader )->getFile( $status['filekey'] );
@@ -164,7 +166,9 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 		$status = UploadBase::getSessionStatus( $this->uploader, $filekey );
 		$this->assertSame( 'Failure', $status['result'] );
 		$this->assertSame( 'assembling', $status['stage'] );
-		$this->assertFalse( $status['status']->isGood() );
+		$sessionStatus = $status['status'];
+		'@phan-var StatusValue $sessionStatus';
+		$this->assertFalse( $sessionStatus->isGood() );
 	}
 
 	public function testRunFailsWhenStashedFileIsMissing(): void {
@@ -181,7 +185,9 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 
 		$status = UploadBase::getSessionStatus( $this->uploader, $filekey );
 		$this->assertSame( 'Failure', $status['result'] );
-		$this->assertFalse( $status['status']->isGood() );
+		$sessionStatus = $status['status'];
+		'@phan-var StatusValue $sessionStatus';
+		$this->assertFalse( $sessionStatus->isGood() );
 	}
 
 	public function testRunSkipsUploadAlreadyAssembling(): void {

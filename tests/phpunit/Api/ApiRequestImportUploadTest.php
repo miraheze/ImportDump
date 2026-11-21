@@ -45,7 +45,7 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 				] ),
 			],
 			[],
-			$this->getServiceContainer()->getMainWANObjectCache(),
+			$this->getServiceContainer()->getWANObjectCache(),
 			$this->createMock( MimeAnalyzer::class )
 		) );
 

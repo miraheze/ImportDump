@@ -63,7 +63,7 @@ final class TargetNotices implements NoticeProvider {
 				severity: NoticeSeverity::Error,
 				html: $context->msg( 'importdump-info-no-interwiki-prefix',
 					$requestManager->getTarget(),
-					parse_url( $requestManager->getSource(), PHP_URL_HOST )
+					(string)parse_url( $requestManager->getSource(), PHP_URL_HOST )
 				)->escaped(),
 				invalidates: false,
 				declines: false,

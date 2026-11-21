@@ -8,7 +8,6 @@ use Generator;
 use InvalidArgumentException;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Upload\UploadBase;
-use MediaWiki\Upload\UploadFromChunks;
 use MediaWiki\Upload\UploadVerification;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
@@ -61,7 +60,6 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 	 */
 	public function testConstructor(): void {
 		$upload = $this->newUpload( type: 'xml' );
-		$this->assertInstanceOf( UploadFromChunks::class, $upload );
 		$this->assertSame( 'xml', $upload->getType() );
 	}
 
@@ -108,7 +106,7 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 
 		$path = $this->newFile( "<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>" );
 		$upload = $this->newUpload( type: 'xml' );
-		$upload->initializePathInfo( $upload->getStashName(), $path, filesize( $path ) );
+		$upload->initializePathInfo( $upload->getStashName(), $path, (int)filesize( $path ) );
 
 		$this->assertSame( UploadBase::OK, $upload->verifyUpload()['status'] );
 	}
@@ -136,7 +134,7 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 
 		$path = $this->newFile( $content );
 		$upload = $this->newUpload( type: 'xml' );
-		$upload->initializePathInfo( $upload->getStashName(), $path, filesize( $path ) );
+		$upload->initializePathInfo( $upload->getStashName(), $path, (int)filesize( $path ) );
 
 		$result = $upload->verifyUpload();
 		$this->assertSame( $expectedStatus, $result['status'] );
@@ -170,7 +168,7 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 		];
 
 		yield 'gzip archive' => [
-			gzencode( "<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>" ),
+			(string)gzencode( "<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>" ),
 			null,
 			UploadBase::OK,
 			null,
@@ -208,7 +206,7 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 
 		$path = $this->newFile( '<page><title>Test</title><script>x</script></page>' );
 		$upload = $this->newUpload( type: 'xml' );
-		$upload->initializePathInfo( $upload->getStashName(), $path, filesize( $path ) );
+		$upload->initializePathInfo( $upload->getStashName(), $path, (int)filesize( $path ) );
 
 		$wrapper = TestingAccessWrapper::newFromObject( $upload );
 		$this->assertTrue( $wrapper->verifyPartialFile() );

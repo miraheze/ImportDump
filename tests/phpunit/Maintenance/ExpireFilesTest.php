@@ -16,8 +16,9 @@ use Miraheze\ImportDump\Request\RequestStatus;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
+use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
-use const TS_UNIX;
+use Wikimedia\Timestamp\TimestampFormat;
 
 /**
  * @group ImportDump
@@ -46,7 +47,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 				] ),
 			],
 			[],
-			$this->getServiceContainer()->getMainWANObjectCache(),
+			$this->getServiceContainer()->getWANObjectCache(),
 			$this->createMock( MimeAnalyzer::class )
 		) );
 
@@ -82,7 +83,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 				'request_status' => $status->value,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
 				'request_timestamp' => $dbw->timestamp(
-					(int)ConvertibleTimestamp::now( TS_UNIX ) - $ageInDays * 86400
+					(int)ConvertibleTimestamp::now( TimestampFormat::UNIX ) - $ageInDays * 86400
 				),
 			] )
 			->caller( __METHOD__ )
@@ -157,12 +158,12 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 	}
 
 	public function testBatchSize(): void {
-		$this->assertSame( 100, $this->maintenance->getBatchSize() );
+		$this->assertSame( 100, TestingAccessWrapper::newFromObject( $this->maintenance )->getBatchSize() );
 
 		$ids = $this->addRequests();
 
-		$this->maintenance->setBatchSize( 1 );
-		$this->assertSame( 1, $this->maintenance->getBatchSize() );
+		TestingAccessWrapper::newFromObject( $this->maintenance )->setBatchSize( 1 );
+		$this->assertSame( 1, TestingAccessWrapper::newFromObject( $this->maintenance )->getBatchSize() );
 
 		$this->expectOutputRegex( '/Deleted 2 file\(s\)\./' );
 		$this->maintenance->execute();

@@ -14,8 +14,9 @@ use Miraheze\ImportDump\Progress\ImportHeartbeat;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStage;
 use Miraheze\ImportDump\Request\RequestStatus;
+use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
-use const TS_UNIX;
+use Wikimedia\Timestamp\TimestampFormat;
 
 /**
  * @group ImportDump
@@ -67,7 +68,7 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase {
 				'request_status' => $status->value,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
 				'request_timestamp' => $dbw->timestamp(
-					(int)ConvertibleTimestamp::now( TS_UNIX ) - $ageInHours * 3600
+					(int)ConvertibleTimestamp::now( TimestampFormat::UNIX ) - $ageInHours * 3600
 				),
 			] )
 			->caller( __METHOD__ )
@@ -104,6 +105,10 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase {
 
 		$queue = $this->getServiceContainer()->getJobQueueGroup()->get( ImportDumpNotifyJob::JOB_NAME );
 		$job = $queue->pop();
+		if ( $job === false ) {
+			$this->fail( 'No job was queued.' );
+		}
+
 		$this->assertSame( RequestStatus::Partial->value, $job->getParams()['status'] );
 	}
 
@@ -124,8 +129,8 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase {
 		$this->addRequest( RequestStatus::InProgress, 11 );
 		$this->addRequest( RequestStatus::InProgress, 12 );
 
-		$this->maintenance->setBatchSize( 1 );
-		$this->assertSame( 1, $this->maintenance->getBatchSize() );
+		TestingAccessWrapper::newFromObject( $this->maintenance )->setBatchSize( 1 );
+		$this->assertSame( 1, TestingAccessWrapper::newFromObject( $this->maintenance )->getBatchSize() );
 
 		$this->expectOutputRegex( '/Marked 3 import\(s\) as failed\./' );
 		$this->maintenance->execute();

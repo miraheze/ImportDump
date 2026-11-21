@@ -24,6 +24,7 @@ use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
+use Miraheze\ImportDump\Notifications\AttentionNotifier;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\Request\RequestHistory;
 use Miraheze\ImportDump\Request\RequestManager;
@@ -37,13 +38,13 @@ use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+use Wikimedia\Timestamp\TimestampFormat;
 use function array_keys;
 use function array_map;
 use function file_get_contents;
 use function file_put_contents;
 use function wfMessage;
 use function wfTimestamp;
-use const TS_UNIX;
 
 /**
  * @group ImportDump
@@ -74,7 +75,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 				'request_reason' => 'test',
 				'request_status' => RequestStatus::Pending->value,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
-				'request_timestamp' => $this->db->timestamp(),
+				'request_timestamp' => $dbw->timestamp(),
 			] )
 			->caller( __METHOD__ )
 			->execute();
@@ -98,7 +99,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 				] ),
 			],
 			[],
-			$this->getServiceContainer()->getMainWANObjectCache(),
+			$this->getServiceContainer()->getWANObjectCache(),
 			$this->createMock( MimeAnalyzer::class )
 		) );
 	}
@@ -179,9 +180,9 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$first = $this->getMutableTestUser()->getUser();
 		$second = $this->getMutableTestUser()->getUser();
 
-		$manager->addHandler( $first );
-		$manager->addHandler( $first );
-		$manager->addHandler( $second );
+		foreach ( [ $first, $first, $second ] as $handler ) {
+			$manager->addHandler( $handler );
+		}
 
 		$names = array_map( static fn ( User $user ): string => $user->getName(), $manager->getHandlers() );
 		$this->assertEqualsCanonicalizing( [ $first->getName(), $second->getName() ], $names );
@@ -250,6 +251,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::addComment
 	 */
 	public function testCommentNotifiesTheOthersInvolved(): void {
+		/** @var list<array{Notification, RecipientSet}> $captured */
 		$captured = [];
 		$service = $this->createMock( NotificationService::class );
 		$service->method( 'notify' )->willReturnCallback(
@@ -299,10 +301,11 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::sendNotification
 	 */
 	public function testSystemUsersAreNeverNotified(): void {
+		/** @var list<RecipientSet> $captured */
 		$captured = [];
 		$service = $this->createMock( NotificationService::class );
 		$service->method( 'notify' )->willReturnCallback(
-			static function ( Notification $notification, RecipientSet $recipients ) use ( &$captured ): void {
+			static function ( Notification $unused, RecipientSet $recipients ) use ( &$captured ): void {
 				$captured[] = $recipients;
 			}
 		);
@@ -310,7 +313,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->setService( 'NotificationService', $service );
 
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->addComment( 'Updated', User::newSystemUser( 'RequestImport Status Update' ) );
+		$manager->addComment( 'Updated', RequestManager::getSystemUser( RequestManager::STATUS_UPDATE_USER ) );
 		$manager->addComment( 'Hello', $this->getTestSysop()->getUser() );
 
 		$this->assertCount( 1, $captured );
@@ -329,7 +332,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->setService( 'NotificationService', $service );
 
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->addComment( 'Updated', User::newSystemUser( 'RequestImport Status Update' ) );
+		$manager->addComment( 'Updated', RequestManager::getSystemUser( RequestManager::STATUS_UPDATE_USER ) );
 	}
 
 	/**
@@ -339,7 +342,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$calls = [];
 		$this->setTemporaryHook( 'ImportDumpRequestStatusUpdate',
 			static function (
-				RequestManager $manager,
+				RequestManager $unusedManager,
 				RequestStatus $newStatus,
 				RequestStatus $oldStatus
 			) use ( &$calls ): void {
@@ -575,7 +578,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$manager->setStatus( $status );
 
 		ConvertibleTimestamp::setFakeTime(
-			(int)wfTimestamp( TS_UNIX, $manager->getTimestamp() ) + $daysElapsed * 86400
+			(int)wfTimestamp( TimestampFormat::UNIX, $manager->getTimestamp() ) + $daysElapsed * 86400
 		);
 
 		$this->assertSame( $expectedDays, $manager->getFileExpiryDays() );
@@ -651,7 +654,9 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$unverified = $manager->getUnverifiedFilePath();
 		$this->assertStatusGood( $backend->prepare( [ 'dir' => FileBackend::parentStoragePath( $unverified ) ] ) );
 		$this->assertStatusGood( $backend->quickCreate( [ 'dst' => $unverified, 'content' => 'unverified' ] ) );
-		$this->assertSame( 'unverified', file_get_contents( $manager->getLocalUnverifiedFile()->getPath() ) );
+		$unverifiedFile = $manager->getLocalUnverifiedFile();
+		$this->assertNotNull( $unverifiedFile );
+		$this->assertSame( 'unverified', file_get_contents( $unverifiedFile->getPath() ) );
 
 		$this->assertStatusGood( $manager->publishUnverifiedFile() );
 		$this->assertTrue( $manager->fileExists() );
@@ -775,7 +780,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$received = null;
 		$this->setTemporaryHook( 'ImportDumpGetTargetState',
 			static function (
-				string $target,
+				string $unusedTarget,
 				array $requesterGroups,
 				?array &$extensions,
 				array &$settings,
@@ -794,6 +799,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 	/** @covers \Miraheze\ImportDump\Notifications\AttentionNotifier::notify */
 	public function testRequesterIsToldWhenTheImportCannotStart(): void {
+		/** @var list<array{Notification, RecipientSet}> $captured */
 		$captured = [];
 		$service = $this->createMock( NotificationService::class );
 		$service->method( 'notify' )->willReturnCallback(
@@ -863,6 +869,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 	/** @covers \Miraheze\ImportDump\Notifications\AttentionNotifier::notify */
 	public function testRequesterIsToldAboutPartialHistory(): void {
+		/** @var list<array{Notification, RecipientSet}> $captured */
 		$captured = [];
 		$service = $this->createMock( NotificationService::class );
 		$service->method( 'notify' )->willReturnCallback(
@@ -935,7 +942,9 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	}
 
 	private function notifyRequester( RequestManager $manager ): void {
-		$this->getServiceContainer()->getService( 'ImportDumpAttentionNotifier' )->notify( $manager );
+		$notifier = $this->getServiceContainer()->getService( 'ImportDumpAttentionNotifier' );
+		'@phan-var AttentionNotifier $notifier';
+		$notifier->notify( $manager );
 	}
 
 	/** @param ?string[] $groups The groups of the requester on the target, or null for no account there. */
@@ -979,8 +988,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 		$this->setTemporaryHook( 'ImportDumpGetTargetState',
 			static function (
-				string $target,
-				array $requesterGroups,
+				string $unusedTarget,
+				array $unusedGroups,
 				?array &$enabled,
 				array &$enabledSettings,
 				array &$grantedRights

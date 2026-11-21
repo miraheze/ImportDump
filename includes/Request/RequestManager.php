@@ -33,6 +33,7 @@ use Miraheze\ImportDump\Requirements\RequirementProblem;
 use Miraheze\ImportDump\Requirements\TargetState;
 use Miraheze\ImportDump\Requirements\TargetStateProvider;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
+use RuntimeException;
 use stdClass;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFile\FSFile;
@@ -43,6 +44,7 @@ use Wikimedia\Rdbms\LikeValue;
 use Wikimedia\Rdbms\Platform\ISQLPlatform;
 use Wikimedia\Rdbms\SelectQueryBuilder;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+use Wikimedia\Timestamp\TimestampFormat;
 use function array_column;
 use function array_filter;
 use function array_map;
@@ -55,6 +57,7 @@ use function boolval;
 use function explode;
 use function in_array;
 use function is_array;
+use function is_string;
 use function json_decode;
 use function json_encode;
 use function parse_url;
@@ -64,7 +67,6 @@ use function trim;
 use function wfTimestamp;
 use const MW_INSTALL_PATH;
 use const PHP_URL_HOST;
-use const TS_UNIX;
 
 class RequestManager {
 
@@ -100,7 +102,8 @@ class RequestManager {
 	public const string IMPORT_RIGHT = 'import';
 
 	private IDatabase $dbw;
-	private stdClass|false $row;
+	private stdClass $row;
+	private bool $exists = false;
 	private int $ID;
 
 	public function __construct(
@@ -122,17 +125,25 @@ class RequestManager {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
 	}
 
+	/** Gets a system user, creating it when it does not exist. */
+	public static function getSystemUser( string $name ): User {
+		return User::newSystemUser( $name ) ?? throw new RuntimeException( "Could not load the system user $name." );
+	}
+
 	public function loadFromID( int $requestID ): void {
 		$this->dbw = $this->connectionProvider->getPrimaryDatabase( self::VIRTUAL_DOMAIN );
 		$this->ID = $requestID;
 		$this->targetStateProvider->clear();
 
-		$this->row = $this->dbw->newSelectQueryBuilder()
+		$row = $this->dbw->newSelectQueryBuilder()
 			->select( ISQLPlatform::ALL_ROWS )
 			->from( 'import_requests' )
 			->where( [ 'request_id' => $requestID ] )
 			->caller( __METHOD__ )
 			->fetchRow();
+
+		$this->exists = $row !== false;
+		$this->row = $row !== false ? $row : new stdClass();
 	}
 
 	public function getID(): int {
@@ -140,7 +151,7 @@ class RequestManager {
 	}
 
 	public function exists(): bool {
-		return (bool)$this->row;
+		return $this->exists;
 	}
 
 	public function addComment( string $comment, User $user ): void {
@@ -171,7 +182,7 @@ class RequestManager {
 		$logEntry->setPerformer( $user );
 		$logEntry->setTarget( $requestQueueLink );
 
-		if ( $comment ) {
+		if ( $comment !== '' ) {
 			$logEntry->setComment( $comment );
 		}
 
@@ -247,6 +258,7 @@ class RequestManager {
 
 		$comments = [];
 		foreach ( $res as $row ) {
+			'@phan-var stdClass $row';
 			$user = $this->userFactory->newFromActorId( (int)$row->request_comment_actor );
 			$comments[] = [
 				'comment' => $row->request_comment_text,
@@ -345,7 +357,7 @@ class RequestManager {
 
 	public function getInterwikiPrefix(): string {
 		$sourceHost = parse_url( $this->getSource(), PHP_URL_HOST );
-		if ( !$sourceHost ) {
+		if ( !is_string( $sourceHost ) || $sourceHost === '' ) {
 			return '';
 		}
 
@@ -361,8 +373,8 @@ class RequestManager {
 				->caller( __METHOD__ )
 				->fetchRow();
 
-			if ( $row->iw_prefix ?? '' ) {
-				return $row->iw_prefix;
+			if ( $row !== false && $row->iw_prefix !== '' ) {
+				return (string)$row->iw_prefix;
 			}
 		}
 
@@ -376,19 +388,20 @@ class RequestManager {
 			->caller( __METHOD__ )
 			->fetchRow();
 
-		if ( $row->iw_prefix ?? '' ) {
-			return $row->iw_prefix;
+		if ( $row !== false && $row->iw_prefix !== '' ) {
+			return (string)$row->iw_prefix;
 		}
 
 		if ( $this->options->get( ConfigNames::InterwikiMap ) ) {
-			$parsedSource = parse_url( $this->getSource(), PHP_URL_HOST ) ?: '';
+			$host = parse_url( $this->getSource(), PHP_URL_HOST );
+			$parsedSource = is_string( $host ) ? $host : '';
 			$domain = explode( '.', $parsedSource )[1] ?? '';
-			if ( $domain ) {
+			if ( $domain !== '' ) {
 				$domain .= '.' . ( explode( '.', $parsedSource )[2] ?? '' );
 				if ( $this->options->get( ConfigNames::InterwikiMap )[$domain] ?? '' ) {
 					$domain = $this->options->get( ConfigNames::InterwikiMap )[$domain];
 					$subdomain = explode( '.', $parsedSource )[0] ?? '';
-					if ( $subdomain ) {
+					if ( $subdomain !== '' ) {
 						return $domain . ':' . $subdomain;
 					}
 				}
@@ -577,8 +590,8 @@ class RequestManager {
 			return false;
 		}
 
-		$expires = (int)wfTimestamp( TS_UNIX, $this->getTimestamp() ) + $days * 86400;
-		return $expires <= (int)ConvertibleTimestamp::now( TS_UNIX );
+		$expires = (int)wfTimestamp( TimestampFormat::UNIX, $this->getTimestamp() ) + $days * 86400;
+		return $expires <= (int)ConvertibleTimestamp::now( TimestampFormat::UNIX );
 	}
 
 	public function hasFileExpired(): bool {
@@ -689,11 +702,12 @@ class RequestManager {
 			return true;
 		}
 
-		if ( !$this->moduleFactory?->isEnabled( 'core' ) ) {
+		$moduleFactory = $this->moduleFactory;
+		if ( $moduleFactory === null || !$moduleFactory->isEnabled( 'core' ) ) {
 			return false;
 		}
 
-		$mwCore = $this->moduleFactory->core( $this->getTarget() );
+		$mwCore = $moduleFactory->core( $this->getTarget() );
 		if ( !$mwCore->isEnabled( 'private-wikis' ) ) {
 			return false;
 		}
@@ -829,7 +843,11 @@ class RequestManager {
 	/** @return array<string, bool> The extensions that the dump needs, and if it is certain. */
 	public function getRequirements(): array {
 		$value = $this->row->request_requirements ?? null;
-		return $value ? array_map( boolval( ... ), (array)json_decode( $value, true ) ) : [];
+		if ( !is_string( $value ) || $value === '' ) {
+			return [];
+		}
+
+		return array_map( boolval( ... ), (array)json_decode( $value, true ) );
 	}
 
 	/** @return list<RequirementProblem> */

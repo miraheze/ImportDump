@@ -6,6 +6,7 @@ namespace Miraheze\ImportDump\Tests\Upload;
 
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Utils\ExecutableFinder;
+use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
@@ -13,7 +14,11 @@ use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use function file_put_contents;
 use function is_string;
 
-/** Builds the files that the archive tests read. Used by classes that extend MediaWikiIntegrationTestCase. */
+/**
+ * Builds the files that the archive tests read.
+ *
+ * @phan-require-extends MediaWikiIntegrationTestCase
+ */
 trait ArchiveFixtures {
 
 	private function newFile( string $contents ): string {

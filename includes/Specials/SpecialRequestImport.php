@@ -50,11 +50,12 @@ use function array_filter;
 use function array_map;
 use function array_push;
 use function array_values;
-use function ctype_space;
 use function get_class;
 use function in_array;
+use function is_string;
 use function max;
 use function min;
+use function trim;
 use const PHP_INT_MAX;
 
 class SpecialRequestImport extends FormSpecialPage {
@@ -117,7 +118,7 @@ class SpecialRequestImport extends FormSpecialPage {
 		}
 
 		$form = $this->getForm();
-		if ( $form->show() ) {
+		if ( $form !== null && $form->show() ) {
 			$this->onSuccess();
 		}
 	}
@@ -256,25 +257,26 @@ class SpecialRequestImport extends FormSpecialPage {
 			$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] ?? 'File' );
 		}
 
-		if ( !$uploadBase->isEnabled() ) {
+		if ( $uploadBase === null || !$uploadBase->isEnabled() ) {
 			return Status::newFatal( 'uploaddisabled' );
 		}
 
 		$permission = $uploadBase->isAllowed( $this->getUser() );
 		if ( $permission !== true ) {
-			throw new PermissionsError( $permission );
+			throw new PermissionsError( is_string( $permission ) ? $permission : null );
 		}
 
 		if ( $uploadBase->isEmptyFile() ) {
 			return Status::newFatal( 'empty-file' );
 		}
 
-		$virus = $this->uploadVerification->detectVirus( $uploadBase->getTempPath() );
-		if ( $virus ) {
-			return Status::newFatal( 'uploadvirus', $virus );
+		$tempPath = (string)$uploadBase->getTempPath();
+		$virus = $this->uploadVerification->detectVirus( $tempPath );
+		if ( $virus !== false && $virus !== null ) {
+			return Status::newFatal( 'uploadvirus', is_string( $virus ) ? $virus : '' );
 		}
 
-		$mime = $this->mimeAnalyzer->guessMimeType( $uploadBase->getTempPath() );
+		$mime = $this->mimeAnalyzer->guessMimeType( $tempPath );
 		if ( !in_array( $mime, $this->dumpProcessor->getAcceptedMimeTypes(), true ) ) {
 			return Status::newFatal( 'filetype-mime-mismatch', 'xml', $mime );
 		}
@@ -287,7 +289,7 @@ class SpecialRequestImport extends FormSpecialPage {
 		$history = null;
 		$requirements = [];
 		if ( !$verifyLater ) {
-			$processed = $this->dumpProcessor->process( $uploadBase->getTempPath(), null );
+			$processed = $this->dumpProcessor->process( $tempPath, null );
 			if ( !$processed->isOK() ) {
 				return $processed;
 			}
@@ -320,8 +322,13 @@ class SpecialRequestImport extends FormSpecialPage {
 			return Status::newFatal( 'uploadstash-exception', get_class( $e ), $e->getMessage() );
 		}
 
+		$filePath = $file->getPath();
+		if ( $filePath === false ) {
+			return Status::newFatal( 'uploadstash-file-not-found', $fileKey );
+		}
+
 		$status = $repo->publish(
-			$file->getPath(),
+			$filePath,
 			$verifyLater ? "/ImportDump/unverified/$fileName" : "/ImportDump/$fileName",
 			"/ImportDump/archive/$fileName",
 			FileRepo::DELETE_SOURCE
@@ -450,11 +457,12 @@ class SpecialRequestImport extends FormSpecialPage {
 	}
 
 	public function getLogType( string $target ): string {
-		if ( !$this->moduleFactory?->isEnabled( 'core' ) ) {
+		$moduleFactory = $this->moduleFactory;
+		if ( $moduleFactory === null || !$moduleFactory->isEnabled( 'core' ) ) {
 			return 'requestimport';
 		}
 
-		$mwCore = $this->moduleFactory->core( $target );
+		$mwCore = $moduleFactory->core( $target );
 		if ( !$mwCore->isEnabled( 'private-wikis' ) ) {
 			return 'requestimport';
 		}
@@ -508,7 +516,7 @@ class SpecialRequestImport extends FormSpecialPage {
 	}
 
 	public function isValidReason( ?string $reason ): Message|true {
-		if ( !$reason || ctype_space( $reason ) ) {
+		if ( $reason === null || trim( $reason ) === '' ) {
 			return $this->msg( 'htmlform-required' );
 		}
 
@@ -522,7 +530,7 @@ class SpecialRequestImport extends FormSpecialPage {
 		$user = $this->getUser();
 		$permissionRequired = UploadBase::isAllowed( $user );
 		if ( $permissionRequired !== true ) {
-			throw new PermissionsError( $permissionRequired );
+			throw new PermissionsError( is_string( $permissionRequired ) ? $permissionRequired : null );
 		}
 
 		$block = $user->getBlock();

@@ -30,13 +30,15 @@ class AssembleChunksJob extends Job {
 
 	/** @inheritDoc */
 	public function run(): bool {
-		$scope = RequestContext::importScopedSession( $this->params['session'] );
+		$session = $this->params['session'];
+		'@phan-var array $session';
+		$scope = RequestContext::importScopedSession( $session );
 		$this->addTeardownCallback( static fn () => ScopedCallback::consume( $scope ) );
 
 		$logger = LoggerFactory::getInstance( 'ImportDump' );
 		$context = RequestContext::getMain();
 		$user = $context->getUser();
-		$fileKey = $this->params['filekey'];
+		$fileKey = (string)$this->params['filekey'];
 
 		if ( !$user->isRegistered() ) {
 			$this->setLastError( 'Could not load the author user from session.' );
@@ -73,7 +75,7 @@ class AssembleChunksJob extends Job {
 				'status' => Status::newGood(),
 			] );
 
-			$upload = new RequestImportUploadFromChunks( $user, $this->params['type'] );
+			$upload = new RequestImportUploadFromChunks( $user, (string)$this->params['type'] );
 			$upload->continueChunks(
 				$upload->getStashName(),
 				$fileKey,
@@ -109,7 +111,12 @@ class AssembleChunksJob extends Job {
 				return true;
 			}
 
-			$newFileKey = $upload->getStashFile()->getFileKey();
+			$stashFile = $upload->getStashFile();
+			if ( $stashFile === null ) {
+				throw new UnexpectedValueException( 'The assembled upload was not stashed.' );
+			}
+
+			$newFileKey = $stashFile->getFileKey();
 			$upload->stash->removeFileNoAuth( $fileKey );
 			$upload->cleanupTempFile();
 

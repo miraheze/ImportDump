@@ -11,11 +11,11 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+use Wikimedia\Timestamp\TimestampFormat;
 use function count;
 use function in_array;
 use function is_array;
 use function max;
-use const TS_UNIX;
 
 class ExpireFiles extends Maintenance {
 
@@ -72,7 +72,7 @@ class ExpireFiles extends Maintenance {
 				continue;
 			}
 
-			$cutoff = $dbr->timestamp( (int)ConvertibleTimestamp::now( TS_UNIX ) - (int)$days * 86400 );
+			$cutoff = $dbr->timestamp( (int)ConvertibleTimestamp::now( TimestampFormat::UNIX ) - (int)$days * 86400 );
 			$lastId = 0;
 
 			do {

@@ -17,6 +17,7 @@ use XMLReader;
 use function array_any;
 use function array_filter;
 use function count;
+use function is_string;
 use function ksort;
 use function libxml_clear_errors;
 use function libxml_get_errors;
@@ -123,8 +124,8 @@ class DumpProcessor {
 			$xmlPath = $tempFile->getPath();
 
 			$virus = $this->uploadVerification->detectVirus( $xmlPath );
-			if ( $virus ) {
-				return Status::newFatal( 'uploadvirus', $virus );
+			if ( $virus !== false && $virus !== null ) {
+				return Status::newFatal( 'uploadvirus', is_string( $virus ) ? $virus : '' );
 			}
 		}
 

@@ -89,18 +89,18 @@ class RequestImportQueuePager extends TablePager {
 			'joins_conds' => [],
 		];
 
-		if ( $this->target ) {
+		if ( $this->target !== '' ) {
 			$info['conds']['request_target'] = $this->target;
 		}
 
-		if ( $this->requester ) {
+		if ( $this->requester !== '' ) {
 			$user = $this->userFactory->newFromName( $this->requester );
-			$info['conds']['request_actor'] = $user->getActorId();
+			$info['conds']['request_actor'] = $user?->getActorId() ?? 0;
 		}
 
-		if ( $this->status && $this->status !== '*' ) {
+		if ( $this->status !== '' && $this->status !== '*' ) {
 			$info['conds']['request_status'] = $this->status;
-		} elseif ( !$this->status ) {
+		} elseif ( $this->status === '' ) {
 			$info['conds']['request_status'] = RequestStatus::Pending->value;
 		}
 

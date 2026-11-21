@@ -169,7 +169,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * @param string[] $revisions The model and the text of each revision, oldest first.
+	 * @param list<array{string, string}> $revisions The model and the text of each revision, oldest first.
 	 *  The model is empty if the revision has none.
 	 */
 	private static function pageWithRevisions( array $revisions ): string {
@@ -273,6 +273,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 	public function testProgressOfPlainXml(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
 
+		/** @var list<array{string, ?int}> $calls */
 		$calls = [];
 		$status = $this->newProcessor( self::MAX_SIZE, true, [] )->process(
 			$this->newFile( $xml ),
@@ -307,6 +308,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 	public function testProgressOfZip(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
 
+		/** @var list<array{string, ?int}> $calls */
 		$calls = [];
 		$status = $this->newProcessor( self::MAX_SIZE, true, [] )->process(
 			$this->newZip( [ 'dump.xml' => $xml ] ),
@@ -375,7 +377,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 
 	public function testGzip(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
-		$status = $this->process( $this->newFile( gzencode( $xml ) ) );
+		$status = $this->process( $this->newFile( (string)gzencode( $xml ) ) );
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
@@ -385,7 +387,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testGzipWithInvalidXml(): void {
-		$status = $this->process( $this->newFile( gzencode( 'content' ) ) );
+		$status = $this->process( $this->newFile( (string)gzencode( 'content' ) ) );
 		$this->assertStatusError( 'importdump-xml-invalid', $status );
 	}
 
@@ -402,7 +404,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 
 	public function testGzippedTar(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
-		$status = $this->process( $this->newFile( gzencode( TarFixture::build( [ 'dump.xml' => $xml ] ) ) ) );
+		$status = $this->process( $this->newFile( (string)gzencode( TarFixture::build( [ 'dump.xml' => $xml ] ) ) ) );
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
@@ -416,7 +418,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		}
 
 		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
-		$status = $this->process( $this->newFile( bzcompress( $xml ) ) );
+		$status = $this->process( $this->newFile( (string)bzcompress( $xml ) ) );
 		$this->assertStatusGood( $status );
 		$this->assertSame( $xml, file_get_contents( $status->getValue()->path ) );
 	}
@@ -424,6 +426,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 	public function testProgressOfTar(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
 
+		/** @var list<array{string, ?int}> $calls */
 		$calls = [];
 		$status = $this->newProcessor( self::MAX_SIZE, true, [] )->process(
 			$this->newTar( [ 'dump.xml' => $xml ] ),
@@ -475,7 +478,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusError(
 			'importdump-archive-too-large',
-			$processor->process( $this->newFile( gzencode( $xml ) ), null )
+			$processor->process( $this->newFile( (string)gzencode( $xml ) ), null )
 		);
 
 		$this->assertStatusError(
@@ -490,7 +493,10 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusError(
 			'importdump-archive-too-large',
-			$processor->process( $this->newFile( gzencode( TarFixture::build( [ 'dump.xml' => $xml ] ) ) ), null )
+			$processor->process(
+				$this->newFile( (string)gzencode( TarFixture::build( [ 'dump.xml' => $xml ] ) ) ),
+				null
+			)
 		);
 	}
 

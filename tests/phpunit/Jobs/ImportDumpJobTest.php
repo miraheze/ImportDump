@@ -117,7 +117,9 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 
 	public function testRunReportsFailureWhenFileFetchThrows(): void {
 		$this->setTemporaryHook( 'ImportDumpJobGetFile',
-			static fn (): never => throw new RuntimeException( 'Download failed' )
+			static function (): never {
+				throw new RuntimeException( 'Download failed' );
+			}
 		);
 
 		$id = $this->addRequest();
@@ -204,7 +206,9 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 
 		$this->setTemporaryHook( 'ImportDumpJobGetFile', $this->writeEmptyDump( ... ) );
 		$this->setTemporaryHook( 'ImportDumpJobAfterImport',
-			static fn (): never => throw new RuntimeException( 'After import failed' )
+			static function (): never {
+				throw new RuntimeException( 'After import failed' );
+			}
 		);
 
 		$id = $this->addRequest();
@@ -285,7 +289,9 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 
 	public function testRunResumeFailureStaysPartial(): void {
 		$this->setTemporaryHook( 'ImportDumpJobAfterImport',
-			static fn (): never => throw new RuntimeException( 'Still failing' )
+			static function (): never {
+				throw new RuntimeException( 'Still failing' );
+			}
 		);
 
 		$id = $this->addRequest();
@@ -307,15 +313,18 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 		$pageIds = [];
 		for ( $i = 1; $i <= 5; $i++ ) {
 			$status = $this->editPage( "RefreshLinksChunk$i", "[[RefreshLinksTarget$i]]" );
-			$pageIds[] = $status->getNewRevision()->getPageId();
+			$revision = $status->getNewRevision();
+			$this->assertNotNull( $revision );
+			$pageIds[] = $revision->getPageId();
 		}
 
 		$dbw = $this->getDb();
+		$caller = __METHOD__;
 		$getLinkedPages = static fn (): array => $dbw->newSelectQueryBuilder()
 			->select( 'pl_from' )
 			->from( 'pagelinks' )
 			->where( [ 'pl_from' => $pageIds ] )
-			->caller( __METHOD__ )
+			->caller( $caller )
 			->fetchFieldValues();
 
 		$this->assertEqualsCanonicalizing( $pageIds, array_map( 'intval', $getLinkedPages() ) );

@@ -61,7 +61,8 @@ class OOUIHTMLFormTabs extends OOUIHTMLForm {
 				continue;
 			}
 
-			$label = $this->getLegend( $key );
+			$section = (string)$key;
+			$label = $this->getLegend( $section );
 
 			$content =
 				$this->getHeaderHtml( $key ) .
@@ -70,7 +71,7 @@ class OOUIHTMLFormTabs extends OOUIHTMLForm {
 					'',
 					"mw-section-$key-"
 				) .
-				$this->getFooterHtml( $key );
+				$this->getFooterHtml( $section );
 
 			$tabPanels[] = new TabPanelLayout( "mw-section-$key", [
 				'classes' => [ 'mw-htmlform-autoinfuse-lazy' ],

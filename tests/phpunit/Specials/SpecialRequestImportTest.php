@@ -15,6 +15,7 @@ use MediaWiki\Notification\RecipientSet;
 use MediaWiki\Request\FauxRequest;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
+use MediaWiki\Tests\Specials\SpecialPageTestBase;
 use MediaWiki\Upload\UploadStash;
 use MediaWiki\User\User;
 use MediaWiki\User\UserIdentity;
@@ -26,10 +27,10 @@ use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
-use SpecialPageTestBase;
 use Wikimedia\Rdbms\SelectQueryBuilder;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+use Wikimedia\Timestamp\TimestampFormat;
 use function array_map;
 use function basename;
 use function crc32;
@@ -39,7 +40,6 @@ use function filesize;
 use function gzencode;
 use function is_string;
 use function unlink;
-use const TS_UNIX;
 use const UPLOAD_ERR_OK;
 
 /**
@@ -162,7 +162,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 
 		$status = $specialRequestImport->onSubmit( $formData );
 		$this->assertInstanceOf( Status::class, $status );
-		if ( !$expectedError ) {
+		if ( $expectedError === null || $expectedError === '' ) {
 			$this->assertStatusGood( $status );
 			$this->assertLatestRequest( $extraData['status'] ?? RequestStatus::Pending );
 		} else {
@@ -237,7 +237,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			[
 				'mime-type' => 'application/gzip',
 				'duplicate' => false,
-				'testfile' => gzencode( self::DUMP ),
+				'testfile' => (string)gzencode( self::DUMP ),
 				'status' => RequestStatus::Verifying,
 				'token' => true,
 			],
@@ -435,11 +435,13 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		file_put_contents( $path, self::DUMP );
 
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
-		return new UploadStash( $repo, $user )->stashFile( $path, 'file' )->getFileKey();
+		$stashFile = new UploadStash( $repo, $user )->stashFile( $path, 'file' );
+		$this->assertNotNull( $stashFile );
+		return $stashFile->getFileKey();
 	}
 
 	private function submitStashKey( User $user, string $fileKey ): Status {
-		ConvertibleTimestamp::setFakeTime( (int)ConvertibleTimestamp::now( TS_UNIX ) + 86400 );
+		ConvertibleTimestamp::setFakeTime( (int)ConvertibleTimestamp::now( TimestampFormat::UNIX ) + 86400 );
 
 		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
 		$context->setUser( $user );
@@ -517,6 +519,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 
 		$result = $this->specialRequestImport->isValidDatabase( $target );
 		if ( is_string( $expected ) ) {
+			$this->assertInstanceOf( Message::class, $result );
 			$this->assertSame( $expected, $result->getKey() );
 		} else {
 			$this->assertSame( $expected, $result );
@@ -535,6 +538,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	public function testIsValidReason( string $reason, string|true $expected ): void {
 		$result = $this->specialRequestImport->isValidReason( $reason );
 		if ( is_string( $expected ) ) {
+			$this->assertInstanceOf( Message::class, $result );
 			$this->assertSame( $expected, $result->getKey() );
 		} else {
 			$this->assertSame( $expected, $result );
@@ -670,6 +674,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			'Nobody that exists',
 		] );
 
+		/** @var list<array{Notification, RecipientSet}> $captured */
 		$captured = [];
 		$service = $this->createMock( NotificationService::class );
 		$service->method( 'notify' )->willReturnCallback(
