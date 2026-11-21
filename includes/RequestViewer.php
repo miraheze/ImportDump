@@ -12,10 +12,12 @@ use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
 use MediaWiki\Permissions\Authority;
 use MediaWiki\User\User;
+use Miraheze\ImportDump\Notices\ActionOutcomeNotices;
 use Miraheze\ImportDump\Notices\FileNotices;
 use Miraheze\ImportDump\Notices\HistoryNotices;
 use Miraheze\ImportDump\Notices\LockedNotices;
 use Miraheze\ImportDump\Notices\NoticeCollector;
+use Miraheze\ImportDump\Notices\NoticeResult;
 use Miraheze\ImportDump\Notices\RequesterNotices;
 use Miraheze\ImportDump\Notices\RequestNotice;
 use Miraheze\ImportDump\Notices\RequirementNotices;
@@ -26,12 +28,15 @@ use OOUI\ProgressBarWidget;
 
 class RequestViewer implements RequestStatus {
 
+	private readonly ActionOutcomeNotices $outcomes;
+
 	public function __construct(
 		private readonly Config $config,
 		private readonly IContextSource $context,
 		private readonly ExtensionNames $extensionNames,
 		private readonly RequestManager $requestManager,
 	) {
+		$this->outcomes = new ActionOutcomeNotices();
 	}
 
 	public function getFormDescriptor(): array {
@@ -55,23 +60,7 @@ class RequestViewer implements RequestStatus {
 
 		$this->context->getOutput()->enableOOUI();
 
-		$role = $this->getNoticeRole( $authority, $user );
-		$noticeResult = $this->getNoticeCollector()->collect(
-			$this->requestManager,
-			$this->context,
-			$this->requestManager->getStatus(),
-			role: $role,
-			hasTargetAccess: $role === NoticeCollector::ROLE_REQUESTER &&
-				$this->requestManager->requesterHasTargetAccess()
-		);
-
-		if ( $noticeResult->topNotices ) {
-			$this->context->getOutput()->addHTML( Html::rawElement(
-				'div',
-				[ 'class' => 'ext-importdump-notices' ],
-				$this->renderNotices( $noticeResult->topNotices )
-			) );
-		}
+		$noticeResult = $this->collectNotices();
 
 		$requestStatus = $this->requestManager->getStatus();
 		if ( $requestStatus === self::STATUS_VERIFYING ) {
@@ -496,6 +485,40 @@ class RequestViewer implements RequestStatus {
 		];
 	}
 
+	private function collectNotices(): NoticeResult {
+		$role = $this->getNoticeRole( $this->context->getAuthority(), $this->context->getUser() );
+		return $this->getNoticeCollector()->collect(
+			$this->requestManager,
+			$this->context,
+			$this->requestManager->getStatus(),
+			role: $role,
+			hasTargetAccess: $role === NoticeCollector::ROLE_REQUESTER &&
+				$this->requestManager->requesterHasTargetAccess()
+		);
+	}
+
+	/** Collected again every time, so that it shows the state after a submitted action. */
+	private function renderTopNotices(): string {
+		$notices = $this->collectNotices()->topNotices;
+		if ( !$notices ) {
+			return '';
+		}
+
+		return Html::rawElement(
+			'div',
+			[ 'class' => 'ext-importdump-notices' ],
+			$this->renderNotices( $notices )
+		);
+	}
+
+	private function addSuccess( Message $message ): void {
+		$this->outcomes->add( RequestNotice::SEVERITY_SUCCESS, $message->escaped() );
+	}
+
+	private function addError( Message $message ): void {
+		$this->outcomes->add( RequestNotice::SEVERITY_ERROR, $message->escaped() );
+	}
+
 	/** @return string One of the NoticeCollector::ROLE_* constants. */
 	private function getNoticeRole( Authority $authority, User $user ): string {
 		if ( $authority->isAllowed( 'handle-import-requests' ) ) {
@@ -513,6 +536,7 @@ class RequestViewer implements RequestStatus {
 			new TargetNotices(),
 			new HistoryNotices(),
 			new LockedNotices(),
+			$this->outcomes,
 			new RequirementNotices( $this->extensionNames ),
 			new RequesterNotices(),
 		] );
@@ -601,6 +625,7 @@ class RequestViewer implements RequestStatus {
 		$formDescriptor = $this->getFormDescriptor();
 		$htmlForm = new OOUIHTMLFormTabs( $formDescriptor, $this->context, 'importdump-section' );
 
+		$htmlForm->setNoticesRenderer( fn (): string => $this->renderTopNotices() );
 		$htmlForm->setId( 'importdump-request-viewer' );
 		$htmlForm->suppressDefaultSubmit();
 		$htmlForm->setSubmitCallback(
@@ -622,18 +647,17 @@ class RequestViewer implements RequestStatus {
 			throw new UserNotLoggedIn( 'exception-nologin-text', 'exception-nologin' );
 		}
 
-		$out = $form->getContext()->getOutput();
 		$session = $form->getRequest()->getSession();
 
 		if ( isset( $formData['submit-comment'] ) ) {
 			if ( $session->get( 'previous_posted_comment' ) !== $formData['comment'] ) {
 				$session->set( 'previous_posted_comment', $formData['comment'] );
 				$this->requestManager->addComment( $formData['comment'], $user );
-				$out->addHTML( Html::successBox( $this->context->msg( 'importdump-comment-success' )->escaped() ) );
+				$this->addSuccess( $this->context->msg( 'importdump-comment-success' ) );
 				return;
 			}
 
-			$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-duplicate-comment' )->escaped() ) );
+			$this->addError( $this->context->msg( 'importdump-duplicate-comment' ) );
 			return;
 		}
 
@@ -674,7 +698,7 @@ class RequestViewer implements RequestStatus {
 			if ( !$changes ) {
 				$this->requestManager->endAtomic( __METHOD__ );
 
-				$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-no-changes' )->escaped() ) );
+				$this->addError( $this->context->msg( 'importdump-no-changes' ) );
 
 				return;
 			}
@@ -703,7 +727,7 @@ class RequestViewer implements RequestStatus {
 
 			$this->requestManager->endAtomic( __METHOD__ );
 
-			$out->addHTML( Html::successBox( $this->context->msg( 'importdump-edit-success' )->escaped() ) );
+			$this->addSuccess( $this->context->msg( 'importdump-edit-success' ) );
 
 			return;
 		}
@@ -714,35 +738,31 @@ class RequestViewer implements RequestStatus {
 				$formData['handle-interwiki-url'],
 				$user
 			) ) {
-				$out->addHTML( Html::successBox(
-					$this->context->msg( 'importdump-interwiki-success',
-						$this->requestManager->getTarget()
-					)->escaped() )
-				);
+				$this->addSuccess( $this->context->msg(
+					'importdump-interwiki-success',
+					$this->requestManager->getTarget()
+				) );
 
 				return;
 			}
 
-			$out->addHTML( Html::errorBox(
-				$this->context->msg( 'importdump-interwiki-failed',
-					$this->requestManager->getTarget()
-				)->escaped() )
-			);
+			$this->addError( $this->context->msg(
+				'importdump-interwiki-failed',
+				$this->requestManager->getTarget()
+			) );
 
 			return;
 		}
 
 		if ( isset( $formData['submit-verify'] ) ) {
 			if ( $this->requestManager->getStatus() !== self::STATUS_VERIFYING ) {
-				$out->addHTML(
-					Html::errorBox( $this->context->msg( 'importdump-verification-not-needed' )->escaped() )
-				);
+				$this->addError( $this->context->msg( 'importdump-verification-not-needed' ) );
 
 				return;
 			}
 
 			$this->requestManager->retryVerification();
-			$out->addHTML( Html::successBox( $this->context->msg( 'importdump-verification-retried' )->escaped() ) );
+			$this->addSuccess( $this->context->msg( 'importdump-verification-retried' ) );
 			return;
 		}
 
@@ -754,7 +774,7 @@ class RequestViewer implements RequestStatus {
 				!in_array( $formData['handle-status'], [ self::STATUS_DECLINED, self::STATUS_VERIFYING ], true )
 			) {
 				$this->requestManager->endAtomic( __METHOD__ );
-				$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-verifying-conflict' )->escaped() ) );
+				$this->addError( $this->context->msg( 'importdump-verifying-conflict' ) );
 				return;
 			}
 
@@ -784,32 +804,24 @@ class RequestViewer implements RequestStatus {
 				$this->requestManager->endAtomic( __METHOD__ );
 
 				if ( !$changes ) {
-					$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-no-changes' )->escaped() ) );
+					$this->addError( $this->context->msg( 'importdump-no-changes' ) );
 					return;
 				}
 
 				if ( in_array( 'private', $changes ) ) {
-					$out->addHTML(
-						Html::successBox( $this->context->msg( 'importdump-success-private' )->escaped() )
-					);
+					$this->addSuccess( $this->context->msg( 'importdump-success-private' ) );
 				}
 
 				if ( in_array( 'public', $changes ) ) {
-					$out->addHTML(
-						Html::successBox( $this->context->msg( 'importdump-success-public' )->escaped() )
-					);
+					$this->addSuccess( $this->context->msg( 'importdump-success-public' ) );
 				}
 
 				if ( in_array( 'locked', $changes ) ) {
-					$out->addHTML(
-						Html::successBox( $this->context->msg( 'importdump-success-locked' )->escaped() )
-					);
+					$this->addSuccess( $this->context->msg( 'importdump-success-locked' ) );
 				}
 
 				if ( in_array( 'unlocked', $changes ) ) {
-					$out->addHTML(
-						Html::successBox( $this->context->msg( 'importdump-success-unlocked' )->escaped() )
-					);
+					$this->addSuccess( $this->context->msg( 'importdump-success-unlocked' ) );
 				}
 
 				return;
@@ -831,9 +843,7 @@ class RequestViewer implements RequestStatus {
 			$this->requestManager->getStatus() === self::STATUS_INPROGRESS ||
 			$this->requestManager->getStatus() === self::STATUS_STARTING
 		) {
-			$out->addHTML( Html::errorBox(
-				$this->context->msg( 'importdump-status-conflict' )->escaped()
-			) );
+			$this->addError( $this->context->msg( 'importdump-status-conflict' ) );
 
 			return;
 		}
@@ -848,7 +858,7 @@ class RequestViewer implements RequestStatus {
 
 		if ( isset( $formData['submit-start'] ) ) {
 			if ( $this->requestManager->getStatus() === self::STATUS_VERIFYING ) {
-				$out->addHTML( Html::errorBox( $this->context->msg( 'importdump-verifying-conflict' )->escaped() ) );
+				$this->addError( $this->context->msg( 'importdump-verifying-conflict' ) );
 				return;
 			}
 
@@ -859,13 +869,12 @@ class RequestViewer implements RequestStatus {
 
 			$blocking = $this->requestManager->getBlockingRequirementProblems();
 			if ( $blocking ) {
-				$out->addHTML( Html::errorBox(
+				$this->addError(
 					$this->context->msg( 'importdump-requirement-blocked' )
 						->params( $this->context->getLanguage()->listToText( array_unique(
 							array_column( $blocking, 'name' )
 						) ) )
-						->escaped()
-				) );
+				);
 
 				return;
 			}
@@ -873,9 +882,7 @@ class RequestViewer implements RequestStatus {
 			$this->requestManager->addHandler( $user );
 			$this->requestManager->setStatus( self::STATUS_STARTING );
 			$this->requestManager->executeJob( $user->getName() );
-			$out->addHTML( Html::successBox(
-				$this->context->msg( 'importdump-import-started' )->escaped()
-			) );
+			$this->addSuccess( $this->context->msg( 'importdump-import-started' ) );
 		}
 	}
 
@@ -909,8 +916,6 @@ class RequestViewer implements RequestStatus {
 			$comment, 'requestimport-request-status-update', $user
 		);
 
-		$this->context->getOutput()->addHTML( Html::successBox(
-			$this->context->msg( 'importdump-status-updated-success' )->escaped()
-		) );
+		$this->addSuccess( $this->context->msg( 'importdump-status-updated-success' ) );
 	}
 }
