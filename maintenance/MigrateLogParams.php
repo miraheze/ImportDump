@@ -213,7 +213,7 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 	 */
 	private function getStatusMap(): array {
 		$map = [];
-		$statuses = array_values( ( new ReflectionClass( RequestStatus::class ) )->getConstants() );
+		$statuses = array_values( new ReflectionClass( RequestStatus::class )->getConstants() );
 
 		foreach ( $statuses as $status ) {
 			$status = (string)$status;

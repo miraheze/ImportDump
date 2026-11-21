@@ -42,7 +42,7 @@ class NoticeCollectorTest extends MediaWikiUnitTestCase {
 		string $role,
 		bool $hasTargetAccess
 	): NoticeResult {
-		return ( new NoticeCollector( $providers ) )->collect(
+		return new NoticeCollector( $providers )->collect(
 			$this->createMock( RequestManager::class ),
 			$this->createMock( IContextSource::class ),
 			$status,

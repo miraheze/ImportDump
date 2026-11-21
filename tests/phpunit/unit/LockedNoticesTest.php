@@ -26,7 +26,7 @@ class LockedNoticesTest extends MediaWikiUnitTestCase {
 		$requestManager = $this->createMock( RequestManager::class );
 		$requestManager->method( 'isLocked' )->willReturn( $locked );
 
-		return ( new LockedNotices() )->getNotices(
+		return new LockedNotices()->getNotices(
 			$requestManager,
 			$context,
 			RequestStatus::STATUS_PENDING
