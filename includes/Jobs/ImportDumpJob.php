@@ -139,7 +139,7 @@ class ImportDumpJob extends Job
 	}
 
 	private function importPages( ImportStreamSource $importStreamSource, string $filePath ): void {
-		$user = User::newSystemUser( 'ImportDump Extension', [ 'steal' => true ] );
+		$user = User::newSystemUser( 'RequestImport Extension', [ 'steal' => true ] );
 		$importer = $this->wikiImporterFactory->getWikiImporter(
 			$importStreamSource, new UltimateAuthority( $user )
 		);

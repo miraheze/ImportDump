@@ -40,8 +40,6 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
 class RequestManager {
 
 	private const array SYSTEM_USERS = [
-		'ImportDump Extension',
-		'ImportDump Status Update',
 		'RequestImport Extension',
 		'RequestImport Status Update',
 	];
@@ -889,7 +887,7 @@ class RequestManager {
 		$this->notificationService->notify(
 			new RequestNotification(
 				'requestimport-requirements',
-				User::newSystemUser( 'ImportDump Status Update' ),
+				User::newSystemUser( 'RequestImport Status Update' ),
 				[
 					'request-id' => $this->ID,
 					'request-url' => SpecialPage::getTitleFor(

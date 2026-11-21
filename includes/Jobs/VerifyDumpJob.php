@@ -85,7 +85,7 @@ class VerifyDumpJob extends Job implements RequestStatus {
 		$this->requestManager->deleteUnverifiedFile();
 		$this->progress->clear( $this->requestManager->getID() );
 
-		$user = User::newSystemUser( 'ImportDump Status Update' );
+		$user = User::newSystemUser( 'RequestImport Status Update' );
 		$reason = $this->formatterFactory->getStatusFormatter( $this->messageLocalizer )
 			->getMessage( $status, [] )
 			->inContentLanguage()

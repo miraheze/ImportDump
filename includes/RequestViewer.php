@@ -712,7 +712,7 @@ class RequestViewer implements RequestStatus {
 
 				$this->requestManager->logStatusUpdate( $comment, self::STATUS_PENDING, $user );
 
-				$this->requestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
+				$this->requestManager->addComment( $comment, User::newSystemUser( 'RequestImport Extension' ) );
 
 				$this->requestManager->sendNotification(
 					$comment, 'requestimport-request-status-update', $user
@@ -722,7 +722,7 @@ class RequestViewer implements RequestStatus {
 					implode( "\n\n", $changes )
 				)->inContentLanguage()->escaped();
 
-				$this->requestManager->addComment( $comment, User::newSystemUser( 'ImportDump Extension' ) );
+				$this->requestManager->addComment( $comment, User::newSystemUser( 'RequestImport Extension' ) );
 			}
 
 			$this->requestManager->endAtomic( __METHOD__ );
@@ -907,7 +907,7 @@ class RequestViewer implements RequestStatus {
 			$comment .= ' ' . $formData['handle-comment'];
 		}
 
-		$this->requestManager->addComment( $comment, User::newSystemUser( 'ImportDump Status Update' ) );
+		$this->requestManager->addComment( $comment, User::newSystemUser( 'RequestImport Status Update' ) );
 		$this->requestManager->logStatusUpdate(
 			$formData['handle-comment'], $formData['handle-status'], $user
 		);
