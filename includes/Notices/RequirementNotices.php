@@ -34,22 +34,35 @@ final class RequirementNotices implements NoticeProvider {
 			return [];
 		}
 
-		$notices = [];
+		$groups = [];
 		foreach ( $requestManager->getRequirementProblems() as $problem ) {
+			$type = $problem['problem'];
+			$groups[$type] ??= [ 'items' => [], 'blocking' => false ];
+			$groups[$type]['items'][] = $problem['setting'] !== '' ?
+				$problem['setting'] . ' (' . $problem['name'] . ')' :
+				$problem['name'];
+
+			$groups[$type]['blocking'] = $groups[$type]['blocking'] || $problem['blocking'];
+		}
+
+		$notices = [];
+		foreach ( $groups as $type => $group ) {
 			// Messages that can be used here:
 			// * importdump-requirement-unknown
 			// * importdump-requirement-missing
 			// * importdump-requirement-setting-unknown
 			// * importdump-requirement-setting
 			$notices[] = new RequestNotice(
-				severity: in_array( $problem['problem'], [ 'missing', 'setting' ], true ) ?
+				severity: in_array( $type, [ 'missing', 'setting' ], true ) ?
 					RequestNotice::SEVERITY_ERROR :
 					RequestNotice::SEVERITY_WARNING,
-				html: $context->msg( 'importdump-requirement-' . $problem['problem'] )
-					->params( $problem['name'], $problem['setting'] )
+				html: $context->msg( 'importdump-requirement-' . $type )
+					->params( $context->getLanguage()->listToText( $group['items'] ) )
+					->numParams( count( $group['items'] ) )
 					->escaped(),
-				invalidates: $problem['blocking'],
+				invalidates: $group['blocking'],
 				declines: false,
+				pinned: false,
 			);
 		}
 

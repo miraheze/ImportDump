@@ -36,6 +36,7 @@ final class RequesterNotices implements NoticeProvider {
 				html: $context->msg( 'importdump-info-request-private' )->escaped(),
 				invalidates: false,
 				declines: false,
+				pinned: false,
 			);
 		}
 
@@ -49,6 +50,7 @@ final class RequesterNotices implements NoticeProvider {
 				)->escaped(),
 				invalidates: false,
 				declines: false,
+				pinned: false,
 			);
 		}
 
@@ -58,6 +60,7 @@ final class RequesterNotices implements NoticeProvider {
 				html: $context->msg( 'importdump-info-requester-locked', $requester->getName() )->escaped(),
 				invalidates: true,
 				declines: true,
+				pinned: false,
 			);
 		}
 

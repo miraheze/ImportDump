@@ -54,8 +54,8 @@ final class NoticeCollector {
 		usort(
 			$notices,
 			static fn ( RequestNotice $a, RequestNotice $b ): int =>
-				array_search( $a->severity, RequestNotice::SEVERITIES, true ) <=>
-				array_search( $b->severity, RequestNotice::SEVERITIES, true )
+				[ !$a->pinned, array_search( $a->severity, RequestNotice::SEVERITIES, true ) ] <=>
+				[ !$b->pinned, array_search( $b->severity, RequestNotice::SEVERITIES, true ) ]
 		);
 
 		return new NoticeResult( $notices, $valid, $status );
