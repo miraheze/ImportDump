@@ -6,8 +6,8 @@ use MediaWiki\Extension\Notifications\Hooks\BeforeCreateEchoEventHook;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\Notifications\EchoImportFailedPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoNewRequestPresentationModel;
+use Miraheze\ImportDump\Notifications\EchoRequestAttentionPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestCommentPresentationModel;
-use Miraheze\ImportDump\Notifications\EchoRequestRequirementsPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestStatusUpdatePresentationModel;
 use Wikimedia\Rdbms\IConnectionProvider;
 
@@ -51,10 +51,10 @@ class Notifications implements BeforeCreateEchoEventHook {
 			'tooltip' => 'echo-pref-tooltip-requestimport-request-status-update',
 		];
 
-		$notificationCategories['requestimport-requirements'] = [
+		$notificationCategories['requestimport-attention'] = [
 			'priority' => 3,
 			'no-dismiss' => [ 'email' ],
-			'tooltip' => 'echo-pref-tooltip-requestimport-requirements',
+			'tooltip' => 'echo-pref-tooltip-requestimport-attention',
 		];
 
 		$notifications['requestimport-import-failed'] = [
@@ -81,11 +81,11 @@ class Notifications implements BeforeCreateEchoEventHook {
 			'immediate' => true,
 		];
 
-		$notifications['requestimport-requirements'] = [
-			'category' => 'requestimport-requirements',
+		$notifications['requestimport-attention'] = [
+			'category' => 'requestimport-attention',
 			'group' => 'neutral',
 			'section' => 'alert',
-			'presentation-model' => EchoRequestRequirementsPresentationModel::class,
+			'presentation-model' => EchoRequestAttentionPresentationModel::class,
 			'immediate' => true,
 		];
 

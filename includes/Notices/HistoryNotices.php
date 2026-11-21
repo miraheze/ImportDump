@@ -10,7 +10,7 @@ final class HistoryNotices implements NoticeProvider {
 
 	/** @inheritDoc */
 	public function getAudience(): string {
-		return self::AUDIENCE_HANDLERS;
+		return self::AUDIENCE_PARTIES;
 	}
 
 	/** @inheritDoc */

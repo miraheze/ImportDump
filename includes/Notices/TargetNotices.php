@@ -41,17 +41,20 @@ final class TargetNotices implements NoticeProvider {
 			) ];
 		}
 
-		$notices = [ new RequestNotice(
-			severity: RequestNotice::SEVERITY_NOTICE,
-			html: $context->msg( 'importdump-info-groups',
-				$requestManager->getRequester()->getName(),
-				$requestManager->getTarget(),
-				$context->getLanguage()->commaList( $requestManager->getUserGroupsFromTarget() )
-			)->escaped(),
-			invalidates: false,
-			declines: false,
-			pinned: false,
-		) ];
+		$notices = [];
+		if ( $requestManager->requesterHasTargetRight( RequestManager::IMPORT_RIGHT ) === null ) {
+			$notices[] = new RequestNotice(
+				severity: RequestNotice::SEVERITY_NOTICE,
+				html: $context->msg( 'importdump-info-groups',
+					$requestManager->getRequester()->getName(),
+					$requestManager->getTarget(),
+					$context->getLanguage()->commaList( $requestManager->getUserGroupsFromTarget() )
+				)->escaped(),
+				invalidates: false,
+				declines: false,
+				pinned: false,
+			);
+		}
 
 		if ( !$requestManager->getInterwikiPrefix() ) {
 			$notices[] = new RequestNotice(

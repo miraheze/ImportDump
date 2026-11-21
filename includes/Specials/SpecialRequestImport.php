@@ -335,7 +335,7 @@ class SpecialRequestImport extends FormSpecialPage
 		} else {
 			$this->requestManager->loadFromID( (int)$requestID );
 			$this->requestManager->setRequirements( $requirements );
-			$this->requestManager->notifyBlockingRequirements();
+			$this->requestManager->notifyRequester();
 		}
 
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', $requestID );
