@@ -14,7 +14,6 @@ use Miraheze\ImportDump\RequestHistory;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 use Miraheze\ImportDump\Tests\IsolatesManageWikiTrait;
-use Miraheze\ImportDump\Tests\MocksRemoteGroupsTrait;
 use Miraheze\ImportDump\Tests\Upload\TarFixture;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
 use Wikimedia\FileBackend\FileBackend;
@@ -32,7 +31,6 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 	implements RequestHistory, RequestStatus {
 
 	use IsolatesManageWikiTrait;
-	use MocksRemoteGroupsTrait;
 
 	private const string DUMP = '<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.11/" version="0.11">' .
 		'<page><title>A</title><ns>0</ns><id>1</id>' .
@@ -43,7 +41,6 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 	protected function setUp(): void {
 		parent::setUp();
 		$this->isolateFromManageWiki();
-		$this->setRemoteGroups( null );
 
 		$this->setService( 'RepoGroup', new RepoGroup(
 			[
@@ -64,7 +61,6 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 			MainConfigNames::VirtualDomainsMapping => [
 				'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
 			],
-			MainConfigNames::LocalDatabases => [ 'requestimporttest' ],
 			ConfigNames::EnableHistoryDetection => true,
 			ConfigNames::ExtensionRequirements => [
 				'WikibaseRepository' => [
