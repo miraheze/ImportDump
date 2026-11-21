@@ -46,11 +46,11 @@ class NoticeCollectorTest extends MediaWikiUnitTestCase {
 	public function testSortsBySeverity(): void {
 		$result = $this->collect( [
 			$this->newProvider( NoticeProvider::AUDIENCE_HANDLERS, [
-				new RequestNotice( RequestNotice::SEVERITY_NOTICE, 'a', false, false ),
-				new RequestNotice( RequestNotice::SEVERITY_ERROR, 'b', false, false ),
+				new RequestNotice( RequestNotice::SEVERITY_NOTICE, 'a', false, false, false ),
+				new RequestNotice( RequestNotice::SEVERITY_ERROR, 'b', false, false, false ),
 			], requiresTargetAccess: false ),
 			$this->newProvider( NoticeProvider::AUDIENCE_PARTIES, [
-				new RequestNotice( RequestNotice::SEVERITY_WARNING, 'c', false, false ),
+				new RequestNotice( RequestNotice::SEVERITY_WARNING, 'c', false, false, false ),
 			], requiresTargetAccess: false ),
 		], RequestStatus::STATUS_PENDING, true, true );
 
@@ -64,10 +64,10 @@ class NoticeCollectorTest extends MediaWikiUnitTestCase {
 	public function testRequestersOnlySeeEveryoneNotices(): void {
 		$result = $this->collect( [
 			$this->newProvider( NoticeProvider::AUDIENCE_HANDLERS, [
-				new RequestNotice( RequestNotice::SEVERITY_ERROR, 'handler', true, true ),
+				new RequestNotice( RequestNotice::SEVERITY_ERROR, 'handler', true, true, false ),
 			], requiresTargetAccess: false ),
 			$this->newProvider( NoticeProvider::AUDIENCE_PARTIES, [
-				new RequestNotice( RequestNotice::SEVERITY_WARNING, 'shared', false, false ),
+				new RequestNotice( RequestNotice::SEVERITY_WARNING, 'shared', false, false, false ),
 			], requiresTargetAccess: false ),
 		], RequestStatus::STATUS_PENDING, false, true );
 
@@ -76,14 +76,31 @@ class NoticeCollectorTest extends MediaWikiUnitTestCase {
 		$this->assertSame( RequestStatus::STATUS_PENDING, $result->status );
 	}
 
+	public function testPinnedNoticesComeFirst(): void {
+		$result = $this->collect( [
+			$this->newProvider( NoticeProvider::AUDIENCE_HANDLERS, [
+				new RequestNotice( RequestNotice::SEVERITY_NOTICE, 'pinned', false, false, true ),
+			], requiresTargetAccess: false ),
+			$this->newProvider( NoticeProvider::AUDIENCE_HANDLERS, [
+				new RequestNotice( RequestNotice::SEVERITY_ERROR, 'error', false, false, false ),
+				new RequestNotice( RequestNotice::SEVERITY_NOTICE, 'notice', false, false, false ),
+			], requiresTargetAccess: false ),
+		], RequestStatus::STATUS_PENDING, true, true );
+
+		$this->assertSame(
+			[ 'pinned', 'error', 'notice' ],
+			array_map( static fn ( RequestNotice $n ): string => $n->html, $result->notices )
+		);
+	}
+
 	/** @dataProvider provideTargetAccess */
 	public function testTargetNoticesNeedAccess( bool $hasTargetAccess, bool $forHandler, int $expected ): void {
 		$result = $this->collect( [
 			$this->newProvider( NoticeProvider::AUDIENCE_PARTIES, [
-				new RequestNotice( RequestNotice::SEVERITY_ERROR, 'remote', true, false ),
+				new RequestNotice( RequestNotice::SEVERITY_ERROR, 'remote', true, false, false ),
 			], requiresTargetAccess: true ),
 			$this->newProvider( NoticeProvider::AUDIENCE_PARTIES, [
-				new RequestNotice( RequestNotice::SEVERITY_NOTICE, 'local', false, false ),
+				new RequestNotice( RequestNotice::SEVERITY_NOTICE, 'local', false, false, false ),
 			], requiresTargetAccess: false ),
 		], RequestStatus::STATUS_PENDING, $forHandler, $hasTargetAccess );
 
@@ -102,7 +119,7 @@ class NoticeCollectorTest extends MediaWikiUnitTestCase {
 	public function testDeclines( string $status, string $expected ): void {
 		$result = $this->collect( [
 			$this->newProvider( NoticeProvider::AUDIENCE_HANDLERS, [
-				new RequestNotice( RequestNotice::SEVERITY_ERROR, 'x', true, true ),
+				new RequestNotice( RequestNotice::SEVERITY_ERROR, 'x', true, true, false ),
 			], requiresTargetAccess: false ),
 		], $status, true, true );
 

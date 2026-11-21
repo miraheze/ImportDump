@@ -49,6 +49,7 @@ final class FileNotices implements NoticeProvider {
 				html: $context->msg( 'importdump-info-verifying' )->escaped(),
 				invalidates: true,
 				declines: false,
+				pinned: true,
 			) ];
 		}
 
@@ -58,6 +59,7 @@ final class FileNotices implements NoticeProvider {
 				html: $this->getImportedInfo( $requestManager, $context ),
 				invalidates: false,
 				declines: false,
+				pinned: true,
 			) ];
 		}
 
@@ -67,6 +69,7 @@ final class FileNotices implements NoticeProvider {
 				html: $this->getFileInfo( $requestManager, $context, $status ),
 				invalidates: false,
 				declines: false,
+				pinned: true,
 			) ];
 		}
 
@@ -76,6 +79,7 @@ final class FileNotices implements NoticeProvider {
 				html: self::getExpiredInfo( $requestManager, $context ),
 				invalidates: true,
 				declines: true,
+				pinned: true,
 			) ];
 		}
 
@@ -84,6 +88,7 @@ final class FileNotices implements NoticeProvider {
 			html: $context->msg( 'importdump-info-no-file-found', $requestManager->getFilePath() )->escaped(),
 			invalidates: true,
 			declines: true,
+			pinned: true,
 		) ];
 	}
 

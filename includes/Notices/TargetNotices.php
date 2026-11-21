@@ -32,6 +32,7 @@ final class TargetNotices implements NoticeProvider {
 				html: $context->msg( 'importdump-info-target-missing', $requestManager->getTarget() )->escaped(),
 				invalidates: true,
 				declines: true,
+				pinned: false,
 			) ];
 		}
 
@@ -44,6 +45,7 @@ final class TargetNotices implements NoticeProvider {
 			)->escaped(),
 			invalidates: false,
 			declines: false,
+			pinned: false,
 		) ];
 
 		if ( !$requestManager->getInterwikiPrefix() ) {
@@ -55,6 +57,7 @@ final class TargetNotices implements NoticeProvider {
 				)->escaped(),
 				invalidates: false,
 				declines: false,
+				pinned: false,
 			);
 		}
 

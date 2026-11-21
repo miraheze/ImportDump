@@ -43,6 +43,7 @@ final class HistoryNotices implements NoticeProvider {
 			html: $context->msg( 'importdump-info-history-' . $history )->escaped(),
 			invalidates: false,
 			declines: false,
+			pinned: false,
 		) ];
 	}
 }
