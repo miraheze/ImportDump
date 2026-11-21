@@ -57,6 +57,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 		return new SpecialRequestImport(
 			$services->getConnectionProvider(),
 			$services->getService( 'ImportDumpDumpProcessor' ),
+			$services->getService( 'ImportDumpRequestManager' ),
 			$services->getJobQueueGroup(),
 			$services->getMimeAnalyzer(),
 			$notifications,
