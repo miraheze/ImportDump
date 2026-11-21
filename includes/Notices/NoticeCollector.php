@@ -25,7 +25,6 @@ final class NoticeCollector {
 	) {
 	}
 
-	/** @param string $role One of the ROLE_* constants. */
 	public function collect(
 		RequestManager $requestManager,
 		IContextSource $context,
