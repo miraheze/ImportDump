@@ -304,6 +304,29 @@ class RequestViewer implements RequestStatus {
 				] );
 			}
 
+			if ( in_array( $status, [ self::STATUS_PENDING, self::STATUS_FAILED, self::STATUS_PARTIAL ], true ) ) {
+				foreach ( $this->requestManager->getRequirementProblems() as $problem ) {
+					if ( $problem['blocking'] ) {
+						$validRequest = false;
+					}
+
+					// Messages that can be used here:
+					// * importdump-requirement-unknown
+					// * importdump-requirement-missing
+					// * importdump-requirement-setting-unknown
+					// * importdump-requirement-setting
+					$info .= new MessageWidget( [
+						'label' => new HtmlSnippet(
+							$this->context->msg( 'importdump-requirement-' . $problem['problem'] )
+								->params( $problem['name'], $problem['setting'] )
+								->escaped()
+						),
+						'type' => in_array( $problem['problem'], [ 'missing', 'setting' ], true ) ?
+							'error' : 'warning',
+					] );
+				}
+			}
+
 			if ( $this->requestManager->isPrivate( forced: false ) ) {
 				$info .= new MessageWidget( [
 					'label' => new HtmlSnippet( $this->context->msg( 'importdump-info-request-private' )->escaped() ),
@@ -977,6 +1000,19 @@ class RequestViewer implements RequestStatus {
 
 			if ( $this->requestManager->getStatus() === self::STATUS_COMPLETE ) {
 				// Don't rerun a job that is already completed.
+				return;
+			}
+
+			$blocking = $this->requestManager->getBlockingRequirementProblems();
+			if ( $blocking ) {
+				$out->addHTML( Html::errorBox(
+					$this->context->msg( 'importdump-requirement-blocked' )
+						->params( $this->context->getLanguage()->listToText( array_unique(
+							array_column( $blocking, 'name' )
+						) ) )
+						->escaped()
+				) );
+
 				return;
 			}
 

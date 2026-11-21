@@ -32,6 +32,10 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 			$this->newReader( $binaries ),
 			new ServiceOptions( DumpProcessor::CONSTRUCTOR_OPTIONS, [
 				ConfigNames::EnableHistoryDetection => $detectHistory,
+				ConfigNames::ExtensionRequirements => [
+					'PortableInfobox' => [ 'models' => [], 'patterns' => [ '/<infobox[\\s>\\/]/i' ], 'settings' => [] ],
+					'Wikibase' => [ 'models' => [ 'wikibase-' ], 'patterns' => [], 'settings' => [] ],
+				],
 				ConfigNames::MaxArchiveEntries => 100,
 				ConfigNames::MaxExtractedSize => $maxSize,
 			] ),
@@ -146,6 +150,74 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 			),
 			self::HISTORY_FULL,
 		];
+	}
+
+	/**
+	 * @param string[] $revisions The model and the text of each revision, oldest first.
+	 *  The model is empty if the revision has none.
+	 */
+	private static function pageWithRevisions( array $revisions ): string {
+		$xml = '<page><title>Page</title><ns>0</ns><id>1</id>';
+		foreach ( $revisions as $index => [ $model, $text ] ) {
+			$id = $index + 10;
+			$xml .= "<revision><id>$id</id>";
+			$xml .= $model !== '' ? "<model>$model</model>" : '';
+			$xml .= '<text xml:space="preserve">' . htmlspecialchars( $text ) . '</text></revision>';
+		}
+
+		return $xml . '</page>';
+	}
+
+	/**
+	 * @param list<array{string, string}> $revisions The model and the text of each revision.
+	 * @param array<string, bool> $expected
+	 * @dataProvider provideRequirements
+	 */
+	public function testRequirements( array $revisions, array $expected ): void {
+		$status = $this->process( $this->newFile( self::dump( self::pageWithRevisions( $revisions ) ) ) );
+		$this->assertStatusGood( $status );
+
+		$dump = $status->getValue();
+		$this->assertInstanceOf( DumpResult::class, $dump );
+		$this->assertSame( $expected, $dump->requirements );
+	}
+
+	public static function provideRequirements(): Generator {
+		yield 'nothing needed' => [ [ [ 'wikitext', 'Plain text' ] ], [] ];
+		yield 'no model' => [ [ [ '', 'Plain text' ] ], [] ];
+		yield 'entity model' => [ [ [ 'wikibase-item', '{}' ] ], [ 'Wikibase' => true ] ];
+		yield 'tag' => [ [ [ 'wikitext', '<infobox layout="stacked"></infobox>' ] ], [ 'PortableInfobox' => false ] ];
+		yield 'tag without attributes' => [
+			[ [ 'wikitext', '<infobox>x</infobox>' ] ],
+			[ 'PortableInfobox' => false ],
+		];
+		yield 'tag in other case' => [ [ [ 'wikitext', '<INFOBOX></INFOBOX>' ] ], [ 'PortableInfobox' => false ] ];
+		yield 'similar tag' => [ [ [ 'wikitext', '<infoboxes></infoboxes>' ] ], [] ];
+		yield 'both in the latest revision' => [
+			[ [ 'wikibase-property', '<infobox/>' ] ],
+			[ 'PortableInfobox' => false, 'Wikibase' => true ],
+		];
+		yield 'only the latest revision counts' => [
+			[ [ 'wikitext', '<infobox></infobox>' ], [ 'wikitext', 'Removed' ] ],
+			[],
+		];
+		yield 'latest revision uses it' => [
+			[ [ 'wikitext', 'Before' ], [ 'wikitext', '<infobox></infobox>' ] ],
+			[ 'PortableInfobox' => false ],
+		];
+		yield 'latest model counts' => [
+			[ [ 'wikibase-item', '{}' ], [ 'wikitext', 'Now plain' ] ],
+			[],
+		];
+	}
+
+	public function testRequirementsAcrossPages(): void {
+		$pages = self::pageWithRevisions( [ [ 'wikitext', 'Plain' ] ] ) .
+			self::pageWithRevisions( [ [ 'wikibase-item', '{}' ] ] );
+
+		$status = $this->process( $this->newFile( self::dump( $pages ) ) );
+		$this->assertStatusGood( $status );
+		$this->assertSame( [ 'Wikibase' => true ], $status->getValue()->requirements );
 	}
 
 	/** @dataProvider provideInvalidXml */

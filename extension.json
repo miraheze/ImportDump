@@ -282,6 +282,10 @@
 			"value": false,
 			"description": "Whether to check if an uploaded dump has the full revision history of its pages, and tell handlers what was found. The result is a guess, see the message that is shown on the request."
 		},
+		"ImportDumpExtensionRequirements": {
+			"value": [],
+			"description": "Extensions that a dump can need, by the name that the extension has in its extension.json, such as WikibaseRepository. Each one has models, content models or the start of one that need the extension, patterns, regular expressions that match the text of a page that needs it, and settings, names of settings that must be enabled on the target wiki. Only the latest revision of each page is checked. Verification records which extensions a dump needs, and handlers are warned when the ImportDumpGetTargetState hook says that the target wiki does not have them. Nothing is checked if this is empty."
+		},
 		"ImportDumpExternalBinaries": {
 			"value": [],
 			"description": "A mapping of 'format => settings' that turns on the archive formats that PHP cannot read itself. The formats are 'xz', for XZ files and TAR files compressed with XZ, and '7z', for 7z archives. The settings are an array with 'binary', the path to the program that unpacks the format, and optionally 'limits', for example [ '7z' => [ 'binary' => '/usr/bin/7z', 'limits' => [ 'memory' => 4294967296, 'time' => 3600, 'dictionary' => 1073741824 ] ] ]. Limits that are not set keep these values. 'memory' is the most memory in bytes that the program may use in the sandbox, 'time' is the most seconds it may run, and 'dictionary' is the most memory in bytes that unpacking an archive may need, which is read from how the archive was made. Just the path can be given instead of the array, as in [ 'xz' => '/usr/bin/xz' ]. The programs run through the shell command settings of MediaWiki, so they are sandboxed if $wgShellRestrictionMethod is set up, and they only ever get a copy of the uploaded file. Formats that are not listed are not accepted. Leave empty to turn all of them off."

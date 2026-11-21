@@ -53,6 +53,7 @@ class RequestManager {
 	];
 
 	public const array CONSTRUCTOR_OPTIONS = [
+		ConfigNames::ExtensionRequirements,
 		ConfigNames::FileExpiryDays,
 		ConfigNames::InterwikiMap,
 		ConfigNames::MaintenanceCommand,
@@ -737,6 +738,92 @@ class RequestManager {
 		if ( $oldStatus !== $status ) {
 			$this->hookRunner->onImportDumpRequestStatusUpdate( $this, $status, $oldStatus );
 		}
+	}
+
+	/** @param array<string, bool> $requirements The extensions that the dump needs, and if it is certain. */
+	public function setRequirements( array $requirements ): void {
+		$value = $requirements ? json_encode( $requirements ) : null;
+
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_requirements' => $value ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->row->request_requirements = $value;
+	}
+
+	/** @return array<string, bool> The extensions that the dump needs, and if it is certain. */
+	public function getRequirements(): array {
+		$value = $this->row->request_requirements ?? null;
+		return $value ? array_map( boolval( ... ), (array)json_decode( $value, true ) ) : [];
+	}
+
+	/**
+	 * Compares what the dump needs to what the target wiki has, as the ImportDumpGetTargetState
+	 * hook reports it. A problem blocks the import if the dump certainly needs the extension and
+	 * the wiki certainly does not have it or its setting.
+	 *
+	 * @return list<array{name: string, problem: string, setting: string, blocking: bool}>
+	 *  A problem is one of unknown, missing, setting-unknown and setting. The setting is empty
+	 *  when it does not apply.
+	 */
+	public function getRequirementProblems(): array {
+		$requirements = $this->getRequirements();
+		if ( !$requirements ) {
+			return [];
+		}
+
+		$extensions = null;
+		$settings = [];
+		$this->hookRunner->onImportDumpGetTargetState( $this->getTarget(), $extensions, $settings );
+
+		$definitions = ExtensionRequirement::fromConfig(
+			(array)$this->options->get( ConfigNames::ExtensionRequirements )
+		);
+
+		$problems = [];
+		foreach ( $requirements as $name => $certain ) {
+			$name = (string)$name;
+			if ( $extensions === null ) {
+				$problems[] = [ 'name' => $name, 'problem' => 'unknown', 'setting' => '', 'blocking' => false ];
+				continue;
+			}
+
+			if ( !in_array( $name, $extensions, true ) ) {
+				$problems[] = [ 'name' => $name, 'problem' => 'missing', 'setting' => '', 'blocking' => $certain ];
+				continue;
+			}
+
+			foreach ( isset( $definitions[$name] ) ? $definitions[$name]->settings : [] as $setting ) {
+				if ( !isset( $settings[$setting] ) ) {
+					$problems[] = [
+						'name' => $name,
+						'problem' => 'setting-unknown',
+						'setting' => $setting,
+						'blocking' => false,
+					];
+				} elseif ( !$settings[$setting] ) {
+					$problems[] = [
+						'name' => $name,
+						'problem' => 'setting',
+						'setting' => $setting,
+						'blocking' => $certain,
+					];
+				}
+			}
+		}
+
+		return $problems;
+	}
+
+	/** @return list<array{name: string, problem: string, setting: string, blocking: bool}> */
+	public function getBlockingRequirementProblems(): array {
+		return array_values( array_filter(
+			$this->getRequirementProblems(),
+			static fn ( array $problem ): bool => $problem['blocking']
+		) );
 	}
 
 	public function setHistory( ?string $history ): void {

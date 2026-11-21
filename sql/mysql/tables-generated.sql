@@ -16,6 +16,7 @@ CREATE TABLE /*_*/import_requests (
   ) NOT NULL,
   request_stage VARCHAR(32) DEFAULT NULL,
   request_history ENUM('full', 'partial', 'unknown') DEFAULT NULL,
+  request_requirements BLOB DEFAULT NULL,
   request_locked TINYINT UNSIGNED DEFAULT 0 NOT NULL,
   request_private TINYINT UNSIGNED DEFAULT 0 NOT NULL,
   INDEX request_actor_timestamp (

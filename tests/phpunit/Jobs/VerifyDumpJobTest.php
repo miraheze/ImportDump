@@ -59,6 +59,13 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 			],
 			MainConfigNames::LocalDatabases => [ 'requestimporttest' ],
 			ConfigNames::EnableHistoryDetection => true,
+			ConfigNames::ExtensionRequirements => [
+				'WikibaseRepository' => [
+					'models' => [ 'wikibase-item', 'wikibase-property' ],
+					'patterns' => [],
+					'settings' => [ 'allowEntityImport' ],
+				],
+			],
 		] );
 	}
 
@@ -113,6 +120,28 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 	private function fileContents( string $path ): string|false {
 		return $this->getServiceContainer()->getRepoGroup()->getLocalRepo()->getBackend()
 			->getFileContents( [ 'src' => $path ] );
+	}
+
+	public function testRequirementsAreRecorded(): void {
+		$dump = str_replace(
+			'<revision><id>11</id>',
+			'<revision><id>11</id><model>wikibase-item</model>',
+			self::DUMP
+		);
+
+		$manager = $this->newRequest( self::STATUS_VERIFYING, $dump );
+		$this->runJob( $manager );
+
+		$manager = $this->getManager( $manager->getID() );
+		$this->assertSame( self::STATUS_PENDING, $manager->getStatus() );
+		$this->assertSame( [ 'WikibaseRepository' => true ], $manager->getRequirements() );
+	}
+
+	public function testNoRequirementsAreRecordedForPlainDump(): void {
+		$manager = $this->newRequest( self::STATUS_VERIFYING, self::DUMP );
+		$this->runJob( $manager );
+
+		$this->assertSame( [], $this->getManager( $manager->getID() )->getRequirements() );
 	}
 
 	/** @dataProvider provideValidUploads */
