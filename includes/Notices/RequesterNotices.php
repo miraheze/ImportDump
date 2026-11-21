@@ -18,7 +18,10 @@ final class RequesterNotices implements NoticeProvider {
 		return false;
 	}
 
-	/** @inheritDoc */
+	/**
+	 * @inheritDoc
+	 * @param string $status @phan-unused-param
+	 */
 	public function getNotices(
 		RequestManager $requestManager,
 		IContextSource $context,
