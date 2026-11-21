@@ -4,7 +4,6 @@ declare( strict_types = 1 );
 
 namespace Miraheze\ImportDump\Tests;
 
-use MediaWikiIntegrationTestCase;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 
 /**
