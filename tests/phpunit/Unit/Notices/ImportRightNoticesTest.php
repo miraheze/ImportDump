@@ -24,6 +24,7 @@ class ImportRightNoticesTest extends MediaWikiUnitTestCase {
 		$message->method( 'escaped' )->willReturn( 'no import right' );
 
 		$context = $this->createMock( IContextSource::class );
+		// @phan-suppress-next-line PhanTypeMismatchArgumentProbablyReal
 		$context->method( 'msg' )->with( 'importdump-info-no-import-right', 'Requester', 'targetwiki' )
 			->willReturn( $message );
 
@@ -31,6 +32,7 @@ class ImportRightNoticesTest extends MediaWikiUnitTestCase {
 		$requester->method( 'getName' )->willReturn( 'Requester' );
 
 		$requestManager = $this->createMock( RequestManager::class );
+		// @phan-suppress-next-line PhanTypeMismatchArgumentProbablyReal
 		$requestManager->method( 'requesterHasTargetRight' )->with( 'import' )->willReturn( $hasRight );
 		$requestManager->method( 'getRequester' )->willReturn( $requester );
 		$requestManager->method( 'getTarget' )->willReturn( 'targetwiki' );

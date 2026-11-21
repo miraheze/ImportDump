@@ -10,7 +10,7 @@ use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
  * Stops ManageWiki from answering for the made up target wikis that the tests use,
  * so that the tests give the same results whether or not it is installed.
  *
- * @phan-require-extends MediaWikiIntegrationTestCase
+ * @require-extends MediaWikiIntegrationTestCase
  */
 trait IsolatesManageWikiTrait {
 

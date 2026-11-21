@@ -251,7 +251,6 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::addComment
 	 */
 	public function testCommentNotifiesTheOthersInvolved(): void {
-		/** @var list<array{Notification, RecipientSet}> $captured */
 		$captured = [];
 		$service = $this->createMock( NotificationService::class );
 		$service->method( 'notify' )->willReturnCallback(
@@ -268,6 +267,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 		$manager->addComment( 'Hello', $commenter );
 
+		'@phan-var list<array{Notification, RecipientSet}> $captured';
 		$this->assertCount( 1, $captured );
 		[ $notification, $recipients ] = $captured[0];
 
@@ -301,12 +301,11 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::sendNotification
 	 */
 	public function testSystemUsersAreNeverNotified(): void {
-		/** @var list<RecipientSet> $captured */
 		$captured = [];
 		$service = $this->createMock( NotificationService::class );
 		$service->method( 'notify' )->willReturnCallback(
-			static function ( Notification $unused, RecipientSet $recipients ) use ( &$captured ): void {
-				$captured[] = $recipients;
+			static function ( Notification $notification, RecipientSet $recipients ) use ( &$captured ): void {
+				$captured[] = [ $notification, $recipients ];
 			}
 		);
 
@@ -316,10 +315,11 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$manager->addComment( 'Updated', User::newSystemUser( 'RequestImport Status Update' ) );
 		$manager->addComment( 'Hello', $this->getTestSysop()->getUser() );
 
+		'@phan-var list<array{Notification, RecipientSet}> $captured';
 		$this->assertCount( 1, $captured );
 		$this->assertSame( [ $manager->getRequester()->getName() ], array_map(
 			static fn ( UserIdentity $user ): string => $user->getName(),
-			$captured[0]->getRecipients()
+			$captured[0][1]->getRecipients()
 		) );
 	}
 
@@ -342,7 +342,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$calls = [];
 		$this->setTemporaryHook( 'ImportDumpRequestStatusUpdate',
 			static function (
-				RequestManager $unusedManager,
+				// @phan-suppress-next-line PhanUnusedClosureParameter
+				RequestManager $manager,
 				RequestStatus $newStatus,
 				RequestStatus $oldStatus
 			) use ( &$calls ): void {
@@ -778,7 +779,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$received = null;
 		$this->setTemporaryHook( 'ImportDumpGetTargetState',
 			static function (
-				string $unusedTarget,
+				// @phan-suppress-next-line PhanUnusedClosureParameter
+				string $target,
 				array $requesterGroups,
 				?array &$extensions,
 				array &$settings,
@@ -797,7 +799,6 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 	/** @covers \Miraheze\ImportDump\Notifications\AttentionNotifier::notify */
 	public function testRequesterIsToldWhenTheImportCannotStart(): void {
-		/** @var list<array{Notification, RecipientSet}> $captured */
 		$captured = [];
 		$service = $this->createMock( NotificationService::class );
 		$service->method( 'notify' )->willReturnCallback(
@@ -813,6 +814,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$manager->setRequirements( [ 'PortableInfobox' => true ] );
 		$this->notifyRequester( $manager );
 
+		'@phan-var list<array{Notification, RecipientSet}> $captured';
 		$this->assertCount( 1, $captured );
 		[ $notification, $recipients ] = $captured[0];
 
@@ -867,7 +869,6 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 	/** @covers \Miraheze\ImportDump\Notifications\AttentionNotifier::notify */
 	public function testRequesterIsToldAboutPartialHistory(): void {
-		/** @var list<array{Notification, RecipientSet}> $captured */
 		$captured = [];
 		$service = $this->createMock( NotificationService::class );
 		$service->method( 'notify' )->willReturnCallback(
@@ -882,6 +883,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$manager->setHistory( RequestHistory::Partial );
 		$this->notifyRequester( $manager );
 
+		'@phan-var list<array{Notification, RecipientSet}> $captured';
 		$this->assertCount( 1, $captured );
 		[ $notification, $recipients ] = $captured[0];
 
@@ -986,8 +988,10 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 		$this->setTemporaryHook( 'ImportDumpGetTargetState',
 			static function (
-				string $unusedTarget,
-				array $unusedGroups,
+				// @phan-suppress-next-line PhanUnusedClosureParameter
+				string $target,
+				// @phan-suppress-next-line PhanUnusedClosureParameter
+				array $requesterGroups,
 				?array &$enabled,
 				array &$enabledSettings,
 				array &$grantedRights

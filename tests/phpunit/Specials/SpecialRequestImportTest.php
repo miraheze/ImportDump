@@ -670,7 +670,6 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			'Nobody that exists',
 		] );
 
-		/** @var list<array{Notification, RecipientSet}> $captured */
 		$captured = [];
 		$service = $this->createMock( NotificationService::class );
 		$service->method( 'notify' )->willReturnCallback(
@@ -683,6 +682,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		$this->newSpecialPageWithNotifications( $service )
 			->sendNotifications( 'A reason', '12', 'wikidb', $requester );
 
+		'@phan-var list<array{Notification, RecipientSet}> $captured';
 		$this->assertCount( 1, $captured );
 		[ $notification, $recipients ] = $captured[0];
 

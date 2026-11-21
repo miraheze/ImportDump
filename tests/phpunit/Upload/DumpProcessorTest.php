@@ -273,7 +273,6 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 	public function testProgressOfPlainXml(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
 
-		/** @var list<array{string, ?int}> $calls */
 		$calls = [];
 		$status = $this->newProcessor( self::MAX_SIZE, true, [] )->process(
 			$this->newFile( $xml ),
@@ -296,6 +295,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
+		'@phan-var DumpResult $dump';
 		$this->assertTrue( $dump->wasExtracted() );
 		$this->assertSame( RequestHistory::Full, $dump->history );
 		$this->assertSame( $xml, file_get_contents( $dump->path ) );
@@ -308,7 +308,6 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 	public function testProgressOfZip(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
 
-		/** @var list<array{string, ?int}> $calls */
 		$calls = [];
 		$status = $this->newProcessor( self::MAX_SIZE, true, [] )->process(
 			$this->newZip( [ 'dump.xml' => $xml ] ),
@@ -318,6 +317,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		);
 
 		$this->assertStatusGood( $status );
+		'@phan-var list<array{string, ?int}> $calls';
 		$this->assertSame( [ DumpProcessor::STAGE_EXTRACTING, null ], $calls[0] );
 		$this->assertContains( [ DumpProcessor::STAGE_EXTRACTING, 100 ], $calls );
 		$this->assertSame( [ DumpProcessor::STAGE_CHECKING, 100 ], end( $calls ) );
@@ -332,7 +332,9 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		] ) );
 
 		$this->assertStatusGood( $status );
-		$this->assertTrue( $status->getValue()->wasExtracted() );
+		$dump = $status->getValue();
+		'@phan-var DumpResult $dump';
+		$this->assertTrue( $dump->wasExtracted() );
 	}
 
 	public function testZipWithSeveralFiles(): void {
@@ -381,6 +383,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
+		'@phan-var DumpResult $dump';
 		$this->assertTrue( $dump->wasExtracted() );
 		$this->assertSame( RequestHistory::Full, $dump->history );
 		$this->assertSame( $xml, file_get_contents( $dump->path ) );
@@ -397,6 +400,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
+		'@phan-var DumpResult $dump';
 		$this->assertTrue( $dump->wasExtracted() );
 		$this->assertSame( RequestHistory::Full, $dump->history );
 		$this->assertSame( $xml, file_get_contents( $dump->path ) );
@@ -408,6 +412,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
+		'@phan-var DumpResult $dump';
 		$this->assertTrue( $dump->wasExtracted() );
 		$this->assertSame( $xml, file_get_contents( $dump->path ) );
 	}
@@ -426,7 +431,6 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 	public function testProgressOfTar(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) );
 
-		/** @var list<array{string, ?int}> $calls */
 		$calls = [];
 		$status = $this->newProcessor( self::MAX_SIZE, true, [] )->process(
 			$this->newTar( [ 'dump.xml' => $xml ] ),
@@ -436,6 +440,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		);
 
 		$this->assertStatusGood( $status );
+		'@phan-var list<array{string, ?int}> $calls';
 		$this->assertSame( [ DumpProcessor::STAGE_EXTRACTING, null ], $calls[0] );
 		$this->assertContains( [ DumpProcessor::STAGE_EXTRACTING, 100 ], $calls );
 		$this->assertSame( [ DumpProcessor::STAGE_CHECKING, 100 ], end( $calls ) );

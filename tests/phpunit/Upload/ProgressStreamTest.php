@@ -73,26 +73,30 @@ class ProgressStreamTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testEmptyFile(): void {
-		$url = ProgressStream::url( $this->newFile( '' ), static fn ( int $unused ) => null );
+		// @phan-suppress-next-line PhanUnusedClosureParameter
+		$url = ProgressStream::url( $this->newFile( '' ), static fn ( int $percent ) => null );
 
 		$this->assertSame( '', file_get_contents( $url ) );
 	}
 
 	public function testUnknownUrlCannotBeOpened(): void {
-		ProgressStream::url( $this->newFile( 'content' ), static fn ( int $unused ) => null );
+		// @phan-suppress-next-line PhanUnusedClosureParameter
+		ProgressStream::url( $this->newFile( 'content' ), static fn ( int $percent ) => null );
 
 		$this->assertFalse( AtEase::quietCall( 'file_get_contents', 'importdump-progress://unknown' ) );
 	}
 
 	public function testReleasedUrlCannotBeOpened(): void {
-		$url = ProgressStream::url( $this->newFile( 'content' ), static fn ( int $unused ) => null );
+		// @phan-suppress-next-line PhanUnusedClosureParameter
+		$url = ProgressStream::url( $this->newFile( 'content' ), static fn ( int $percent ) => null );
 
 		ProgressStream::release( $url );
 		$this->assertFalse( AtEase::quietCall( 'file_get_contents', $url ) );
 	}
 
 	public function testUrlCannotBeOpenedTwice(): void {
-		$url = ProgressStream::url( $this->newFile( 'content' ), static fn ( int $unused ) => null );
+		// @phan-suppress-next-line PhanUnusedClosureParameter
+		$url = ProgressStream::url( $this->newFile( 'content' ), static fn ( int $percent ) => null );
 
 		$this->assertSame( 'content', file_get_contents( $url ) );
 		$this->assertFalse( AtEase::quietCall( 'file_get_contents', $url ) );

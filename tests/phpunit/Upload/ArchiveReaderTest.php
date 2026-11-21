@@ -230,7 +230,6 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100, self::MAX_SIZE )->getValue()[0];
 		$destination = $this->getNewTempFile();
 
-		/** @var list<?int> $percentages */
 		$percentages = [];
 		$status = $this->reader->extractTo(
 			$path,
@@ -245,6 +244,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusGood( $status );
 		$this->assertSame( str_repeat( 'content ', 1000 ), file_get_contents( $destination ) );
+		'@phan-var list<?int> $percentages';
 		$this->assertSame( 0, $percentages[0] );
 		$this->assertSame( 100, end( $percentages ) );
 	}
@@ -254,7 +254,6 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_GZIP, 100, self::MAX_SIZE )->getValue()[0];
 		$destination = $this->getNewTempFile();
 
-		/** @var list<?int> $percentages */
 		$percentages = [];
 		$status = $this->reader->extractTo(
 			$path,
@@ -549,7 +548,6 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( 'folder/dump.xml', $entry->name );
 
 		$destination = $this->getNewTempFile();
-		/** @var list<?int> $percentages */
 		$percentages = [];
 		$status = $this->reader->extractTo(
 			$path,
@@ -564,6 +562,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusGood( $status );
 		$this->assertSame( str_repeat( 'content ', 1000 ), file_get_contents( $destination ) );
+		'@phan-var list<?int> $percentages';
 		$this->assertSame( 0, $percentages[0] );
 		$this->assertSame( 100, end( $percentages ) );
 	}
@@ -803,7 +802,6 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( '', $status->getValue()[0]->name );
 
 		$destination = $this->getNewTempFile();
-		/** @var list<?int> $percentages */
 		$percentages = [];
 		$extracted = $reader->extractTo(
 			$path,
@@ -922,7 +920,6 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( 28, $status->getValue()[0]->size );
 
 		$destination = $this->getNewTempFile();
-		/** @var list<?int> $percentages */
 		$percentages = [];
 		$extracted = $reader->extractTo(
 			$path,
