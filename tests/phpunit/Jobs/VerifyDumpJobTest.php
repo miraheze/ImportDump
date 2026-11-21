@@ -59,7 +59,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 
 		$this->overrideConfigValues( [
 			MainConfigNames::VirtualDomainsMapping => [
-				'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
+				'virtual-requestimport' => [ 'db' => WikiMap::getCurrentWikiId() ],
 			],
 			ConfigNames::EnableHistoryDetection => true,
 			ConfigNames::ExtensionRequirements => [

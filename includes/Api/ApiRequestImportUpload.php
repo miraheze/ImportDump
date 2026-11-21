@@ -261,7 +261,7 @@ class ApiRequestImportUpload extends ApiBase {
 			$this->dieWithError( 'importdump-apierror-chunking-disabled', 'chunkingdisabled' );
 		}
 
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			$this->dieWithError( 'importdump-notcentral-text', 'notcentral' );
 		}

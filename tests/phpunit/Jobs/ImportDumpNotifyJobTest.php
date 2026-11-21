@@ -38,8 +38,8 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 		$this->overrideConfigValues( [
 			MainConfigNames::LocalDatabases => [ WikiMap::getCurrentWikiId() ],
 			MainConfigNames::VirtualDomainsMapping => [
-				'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
 				'virtual-interwiki' => [ 'db' => WikiMap::getCurrentWikiId() ],
+				'virtual-requestimport' => [ 'db' => WikiMap::getCurrentWikiId() ],
 			],
 		] );
 
@@ -56,7 +56,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 
 	private function addRequest(): int {
 		$dbw = $this->getServiceContainer()->getConnectionProvider()
-			->getPrimaryDatabase( 'virtual-importdump' );
+			->getPrimaryDatabase( 'virtual-requestimport' );
 
 		$dbw->newInsertQueryBuilder()
 			->insertInto( 'import_requests' )

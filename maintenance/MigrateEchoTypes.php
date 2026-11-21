@@ -70,7 +70,7 @@ class MigrateEchoTypes extends LoggedUpdateMaintenance {
 			return 0;
 		}
 
-		$dbw = $this->getPrimaryDB( 'virtual-importdump' );
+		$dbw = $this->getPrimaryDB( 'virtual-requestimport' );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbw->getDomainID() ) ) {
 			return 0;
 		}
@@ -104,7 +104,7 @@ class MigrateEchoTypes extends LoggedUpdateMaintenance {
 			return 0;
 		}
 
-		$dbw = $this->getPrimaryDB( 'virtual-importdump' );
+		$dbw = $this->getPrimaryDB( 'virtual-requestimport' );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbw->getDomainID() ) ) {
 			return 0;
 		}

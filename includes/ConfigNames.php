@@ -9,37 +9,37 @@ namespace Miraheze\ImportDump;
  */
 class ConfigNames {
 
-	public const string EnableAutomatedJob = 'ImportDumpEnableAutomatedJob';
+	public const string DumpCommand = 'RequestImportDumpCommand';
 
-	public const string EnableChunkedUploads = 'ImportDumpEnableChunkedUploads';
+	public const string EnableAutomatedJob = 'RequestImportEnableAutomatedJob';
 
-	public const string EnableHistoryDetection = 'ImportDumpEnableHistoryDetection';
+	public const string EnableChunkedUploads = 'RequestImportEnableChunkedUploads';
 
-	public const string ExtensionRequirements = 'ImportDumpExtensionRequirements';
+	public const string EnableHistoryDetection = 'RequestImportEnableHistoryDetection';
 
-	public const string ExternalBinaries = 'ImportDumpExternalBinaries';
+	public const string ExtensionRequirements = 'RequestImportExtensionRequirements';
 
-	public const string FileExpiryDays = 'ImportDumpFileExpiryDays';
+	public const string ExternalBinaries = 'RequestImportExternalBinaries';
 
-	public const string HelpUrl = 'ImportDumpHelpUrl';
+	public const string FileExpiryDays = 'RequestImportFileExpiryDays';
 
-	public const string InterwikiMap = 'ImportDumpInterwikiMap';
+	public const string HelpUrl = 'RequestImportHelpUrl';
 
-	public const string MaintenanceCommand = 'ImportDumpMaintenanceCommand';
+	public const string InterwikiMap = 'RequestImportInterwikiMap';
 
-	public const string MaxArchiveEntries = 'ImportDumpMaxArchiveEntries';
+	public const string MaintenanceCommand = 'RequestImportMaintenanceCommand';
 
-	public const string MaxExtractedSize = 'ImportDumpMaxExtractedSize';
+	public const string MaxArchiveEntries = 'RequestImportMaxArchiveEntries';
 
-	public const string MaxUploadSize = 'ImportDumpMaxUploadSize';
+	public const string MaxExtractedSize = 'RequestImportMaxExtractedSize';
 
-	public const string ChunkedUploadThreshold = 'ImportDumpChunkedUploadThreshold';
+	public const string MaxUploadSize = 'RequestImportMaxUploadSize';
 
-	public const string ScriptCommand = 'ImportDumpScriptCommand';
+	public const string ChunkedUploadThreshold = 'RequestImportChunkedUploadThreshold';
 
-	public const string StalledImportHours = 'ImportDumpStalledImportHours';
+	public const string StalledImportHours = 'RequestImportStalledImportHours';
 
-	public const string UsersNotifiedOnAllRequests = 'ImportDumpUsersNotifiedOnAllRequests';
+	public const string UsersNotifiedOnAllRequests = 'RequestImportUsersNotifiedOnAllRequests';
 
-	public const string UsersNotifiedOnFailedImports = 'ImportDumpUsersNotifiedOnFailedImports';
+	public const string UsersNotifiedOnFailedImports = 'RequestImportUsersNotifiedOnFailedImports';
 }

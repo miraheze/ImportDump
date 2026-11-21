@@ -50,7 +50,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 
 		$this->overrideConfigValues( [
 			MainConfigNames::VirtualDomainsMapping => [
-				'virtual-importdump' => [ 'db' => WikiMap::getCurrentWikiId() ],
+				'virtual-requestimport' => [ 'db' => WikiMap::getCurrentWikiId() ],
 			],
 			ConfigNames::FileExpiryDays => [
 				self::STATUS_COMPLETE => 30,
@@ -69,7 +69,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 
 	private function addRequest( string $status, int $ageInDays ): int {
 		$dbw = $this->getServiceContainer()->getConnectionProvider()
-			->getPrimaryDatabase( 'virtual-importdump' );
+			->getPrimaryDatabase( 'virtual-requestimport' );
 
 		$dbw->newInsertQueryBuilder()
 			->insertInto( 'import_requests' )

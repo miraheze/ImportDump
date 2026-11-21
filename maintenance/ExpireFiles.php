@@ -18,7 +18,7 @@ class ExpireFiles extends Maintenance {
 		parent::__construct();
 
 		$this->addDescription(
-			'Deletes the stored XML files of old import requests using $wgImportDumpFileExpiryDays.'
+			'Deletes the stored XML files of old import requests using $wgRequestImportFileExpiryDays.'
 		);
 
 		$this->addOption( 'dry-run', 'List the files that would be deleted without deleting them.' );
@@ -36,14 +36,14 @@ class ExpireFiles extends Maintenance {
 	public function execute(): void {
 		$this->initServices();
 
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-importdump' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			$this->fatalError( 'This script must be run on the wiki that stores import requests.' );
 		}
 
 		$expiry = $this->getConfig()->get( ConfigNames::FileExpiryDays );
 		if ( !is_array( $expiry ) || $expiry === [] ) {
-			$this->output( "No expiry is configured in \$wgImportDumpFileExpiryDays. Nothing to do.\n" );
+			$this->output( "No expiry is configured in \$wgRequestImportFileExpiryDays. Nothing to do.\n" );
 			return;
 		}
 

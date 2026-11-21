@@ -17,7 +17,7 @@ use Miraheze\ImportDump\Upload\ExternalBinaries;
 
 return [
 	'ImportDumpConfig' => static function ( MediaWikiServices $services ): Config {
-		return $services->getConfigFactory()->makeConfig( 'ImportDump' );
+		return $services->getConfigFactory()->makeConfig( 'RequestImport' );
 	},
 	'ImportDumpDumpProcessor' => static function ( MediaWikiServices $services ): DumpProcessor {
 		return new DumpProcessor(

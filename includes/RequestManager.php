@@ -51,11 +51,11 @@ class RequestManager {
 	];
 
 	public const array CONSTRUCTOR_OPTIONS = [
+		ConfigNames::DumpCommand,
 		ConfigNames::ExtensionRequirements,
 		ConfigNames::FileExpiryDays,
 		ConfigNames::InterwikiMap,
 		ConfigNames::MaintenanceCommand,
-		ConfigNames::ScriptCommand,
 		MainConfigNames::LocalDatabases,
 	];
 
@@ -91,7 +91,7 @@ class RequestManager {
 	}
 
 	public function loadFromID( int $requestID ): void {
-		$this->dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-importdump' );
+		$this->dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-requestimport' );
 		$this->ID = $requestID;
 		$this->targetState = null;
 
@@ -365,7 +365,7 @@ class RequestManager {
 	}
 
 	public function getCommand(): string {
-		$command = $this->options->get( ConfigNames::ScriptCommand );
+		$command = $this->options->get( ConfigNames::DumpCommand );
 		if ( !$this->getInterwikiPrefix() ) {
 			$command = preg_replace( '/--username-prefix=?/', '', $command );
 		}
