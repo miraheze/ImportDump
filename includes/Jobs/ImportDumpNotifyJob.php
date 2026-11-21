@@ -69,7 +69,7 @@ class ImportDumpNotifyJob extends Job
 			return;
 		}
 
-		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
+		$commentUser = User::newSystemUser( 'RequestImport Status Update' );
 		$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . self::STATUS_COMPLETE )
 			->inContentLanguage()
 			->text();
@@ -98,7 +98,7 @@ class ImportDumpNotifyJob extends Job
 				( !$isPrivate || $receiver->isAllowed( 'view-private-import-requests' ) )
 		) );
 
-		$commentUser = User::newSystemUser( 'ImportDump Status Update' );
+		$commentUser = User::newSystemUser( 'RequestImport Status Update' );
 		if ( $receivers ) {
 			$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', (string)$this->requestID )->getFullURL();
 			$this->notificationService->notify(
@@ -138,7 +138,7 @@ class ImportDumpNotifyJob extends Job
 			$user->getName()
 		)->inContentLanguage()->escaped();
 
-		$this->requestManager->addComment( $comment, User::newSystemUser( 'ImportDump Status Update' ) );
+		$this->requestManager->addComment( $comment, User::newSystemUser( 'RequestImport Status Update' ) );
 		$this->requestManager->sendNotification( $comment, 'requestimport-request-status-update', $user );
 		$this->requestManager->setStatus( self::STATUS_INPROGRESS );
 	}
