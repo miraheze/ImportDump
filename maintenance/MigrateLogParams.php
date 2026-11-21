@@ -6,8 +6,8 @@ use MediaWiki\Logging\LogEntryBase;
 use MediaWiki\Maintenance\LoggedUpdateMaintenance;
 use MediaWiki\RecentChanges\RecentChange;
 use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
-use ReflectionClass;
 use stdClass;
 use Wikimedia\Rdbms\IDatabase;
 
@@ -34,7 +34,7 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 
 	/** @inheritDoc */
 	protected function doDBUpdates(): true {
-		$dbw = $this->getPrimaryDB( 'virtual-requestimport' );
+		$dbw = $this->getPrimaryDB( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbw->getDomainID() ) ) {
 			$this->output( "Import request logs are not stored on this wiki. Skipping.\n" );
 			return true;
@@ -152,13 +152,10 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 
 	/** @param array<string|int, mixed> $params */
 	private function needsMigration( array $params ): bool {
-		foreach ( array_keys( $params ) as $key ) {
-			if ( str_ends_with( (string)$key, '::requestLink' ) ) {
-				return true;
-			}
-		}
-
-		return false;
+		return array_any(
+			array_keys( $params ),
+			static fn ( int|string $key ): bool => str_ends_with( (string)$key, '::requestLink' )
+		);
 	}
 
 	/**
@@ -213,10 +210,8 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 	 */
 	private function getStatusMap(): array {
 		$map = [];
-		$statuses = array_values( new ReflectionClass( RequestStatus::class )->getConstants() );
-
-		foreach ( $statuses as $status ) {
-			$status = (string)$status;
+		foreach ( RequestStatus::cases() as $case ) {
+			$status = $case->value;
 			$label = wfMessage( "importdump-label-$status" )->inContentLanguage()->text();
 			$map[mb_strtolower( $label )] = $status;
 			$map[$status] = $status;

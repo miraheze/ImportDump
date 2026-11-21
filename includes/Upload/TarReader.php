@@ -403,12 +403,9 @@ final class TarReader {
 
 	/** @param array<string, string> $records */
 	private function isSparse( array $records ): bool {
-		foreach ( array_keys( $records ) as $key ) {
-			if ( str_starts_with( (string)$key, 'GNU.sparse.' ) ) {
-				return true;
-			}
-		}
-
-		return false;
+		return array_any(
+			array_keys( $records ),
+			static fn ( int|string $key ): bool => str_starts_with( (string)$key, 'GNU.sparse.' )
+		);
 	}
 }

@@ -32,8 +32,7 @@ use Throwable;
 use UpdateArticleCount;
 use Wikimedia\Rdbms\IConnectionProvider;
 
-class ImportDumpJob extends Job
-	implements RequestStage, RequestStatus {
+class ImportDumpJob extends Job {
 
 	public const string JOB_NAME = 'ImportDumpJob';
 
@@ -51,7 +50,7 @@ class ImportDumpJob extends Job
 
 	private bool $running = false;
 	private int $lastBeat = 0;
-	private string $startStage = self::STAGE_DOWNLOAD;
+	private RequestStage $startStage = RequestStage::Download;
 	private int $refreshLinksChunkSize = 1000;
 
 	public function __construct(
@@ -76,12 +75,12 @@ class ImportDumpJob extends Job
 	/** @inheritDoc */
 	public function run(): true {
 		$this->requestManager->loadFromID( $this->requestID );
-		if ( $this->requestManager->getStatus() === self::STATUS_COMPLETE ) {
+		if ( $this->requestManager->getStatus() === RequestStatus::Complete ) {
 			// Don't rerun a job that is already completed.
 			return true;
 		}
 
-		$this->startStage = $this->requestManager->getStage() ?: self::STAGE_DOWNLOAD;
+		$this->startStage = $this->requestManager->getStage() ?? RequestStage::Download;
 		$filePath = wfTempDir() . '/' . $this->requestManager->getFileName();
 
 		$this->running = true;
@@ -90,8 +89,8 @@ class ImportDumpJob extends Job
 
 		try {
 			$importStreamSource = null;
-			if ( in_array( $this->startStage, [ self::STAGE_DOWNLOAD, self::STAGE_IMPORT ], true ) ) {
-				$this->enterStage( self::STAGE_DOWNLOAD );
+			if ( !$this->startStage->hasImported() ) {
+				$this->enterStage( RequestStage::Download );
 				$this->hookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
 
 				// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
@@ -101,10 +100,10 @@ class ImportDumpJob extends Job
 				}
 			}
 
-			$this->queueNotification( self::STATUS_INPROGRESS, '' );
+			$this->queueNotification( RequestStatus::InProgress, '' );
 
 			if ( $importStreamSource ) {
-				$this->enterStage( self::STAGE_IMPORT );
+				$this->enterStage( RequestStage::Import );
 				// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
 				$this->importPages( $importStreamSource, $filePath );
 			}
@@ -122,7 +121,7 @@ class ImportDumpJob extends Job
 			$this->cleanup( $filePath );
 		}
 
-		$this->queueNotification( self::STATUS_COMPLETE, '' );
+		$this->queueNotification( RequestStatus::Complete, '' );
 		return true;
 	}
 
@@ -139,7 +138,7 @@ class ImportDumpJob extends Job
 	}
 
 	private function importPages( ImportStreamSource $importStreamSource, string $filePath ): void {
-		$user = User::newSystemUser( 'RequestImport Extension', [ 'steal' => true ] );
+		$user = User::newSystemUser( RequestManager::EXTENSION_USER, [ 'steal' => true ] );
 		$importer = $this->wikiImporterFactory->getWikiImporter(
 			$importStreamSource, new UltimateAuthority( $user )
 		);
@@ -178,7 +177,7 @@ class ImportDumpJob extends Job
 	}
 
 	private function updateSiteStats(): void {
-		if ( !$this->enterStage( self::STAGE_SITESTATS ) ) {
+		if ( !$this->enterStage( RequestStage::SiteStats ) ) {
 			return;
 		}
 
@@ -200,7 +199,7 @@ class ImportDumpJob extends Job
 	private function rebuildTextIndex( FakeMaintenance $maintenance ): void {
 		if (
 			$this->config->get( MainConfigNames::DisableSearchUpdate ) ||
-			!$this->enterStage( self::STAGE_TEXTINDEX )
+			!$this->enterStage( RequestStage::TextIndex )
 		) {
 			return;
 		}
@@ -211,7 +210,7 @@ class ImportDumpJob extends Job
 	}
 
 	private function rebuildRecentChanges( FakeMaintenance $maintenance ): void {
-		if ( !$this->enterStage( self::STAGE_RECENTCHANGES ) ) {
+		if ( !$this->enterStage( RequestStage::RecentChanges ) ) {
 			return;
 		}
 
@@ -221,7 +220,7 @@ class ImportDumpJob extends Job
 	}
 
 	private function refreshLinks( FakeMaintenance $maintenance ): void {
-		if ( !$this->enterStage( self::STAGE_REFRESHLINKS ) ) {
+		if ( !$this->enterStage( RequestStage::RefreshLinks ) ) {
 			return;
 		}
 
@@ -276,7 +275,7 @@ class ImportDumpJob extends Job
 	}
 
 	private function updateCounts( FakeMaintenance $maintenance ): void {
-		if ( !$this->enterStage( self::STAGE_COUNTS ) ) {
+		if ( !$this->enterStage( RequestStage::Counts ) ) {
 			return;
 		}
 
@@ -289,13 +288,12 @@ class ImportDumpJob extends Job
 	}
 
 	private function runAfterImport( string $filePath ): void {
-		$this->enterStage( self::STAGE_AFTERIMPORT );
+		$this->enterStage( RequestStage::AfterImport );
 		$this->hookRunner->onImportDumpJobAfterImport( $filePath, $this->requestManager );
 	}
 
-	private function enterStage( string $stage ): bool {
-		$order = array_flip( self::STAGES );
-		if ( $order[$stage] < $order[$this->startStage] ) {
+	private function enterStage( RequestStage $stage ): bool {
+		if ( $stage->getPosition() < $this->startStage->getPosition() ) {
 			return false;
 		}
 
@@ -356,18 +354,18 @@ class ImportDumpJob extends Job
 	}
 
 	private function notifyFailed(): void {
-		$status = $this->requestManager->hasImported() ? self::STATUS_PARTIAL : self::STATUS_FAILED;
+		$status = $this->requestManager->hasImported() ? RequestStatus::Partial : RequestStatus::Failed;
 		$this->queueNotification( $status, $this->jobError );
 	}
 
-	private function queueNotification( string $status, string $error ): void {
+	private function queueNotification( RequestStatus $status, string $error ): void {
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
 			new JobSpecification(
 				ImportDumpNotifyJob::JOB_NAME,
 				[
 					'joberror' => $error,
 					'requestid' => $this->requestID,
-					'status' => $status,
+					'status' => $status->value,
 					'username' => $this->username,
 				]
 			)
@@ -384,7 +382,7 @@ class ImportDumpJob extends Job
 	}
 
 	private function getLoggingWiki(): string {
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		return $dbr->getDomainID();
 	}
 

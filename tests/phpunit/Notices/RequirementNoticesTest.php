@@ -4,10 +4,13 @@ namespace Miraheze\ImportDump\Tests\Notices;
 
 use MediaWiki\Context\RequestContext;
 use MediaWikiIntegrationTestCase;
+use Miraheze\ImportDump\Notices\NoticeSeverity;
 use Miraheze\ImportDump\Notices\RequestNotice;
 use Miraheze\ImportDump\Notices\RequirementNotices;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\RequirementProblem;
+use Miraheze\ImportDump\RequirementProblemKind;
 
 /**
  * @covers \Miraheze\ImportDump\Notices\RequirementNotices
@@ -17,7 +20,7 @@ use Miraheze\ImportDump\RequestStatus;
 class RequirementNoticesTest extends MediaWikiIntegrationTestCase {
 
 	/** @return RequestNotice[] */
-	private function getNotices( array $problems, string $status ): array {
+	private function getNotices( array $problems, RequestStatus $status ): array {
 		$requestManager = $this->createMock( RequestManager::class );
 		$requestManager->method( 'getRequirementProblems' )->willReturn( $problems );
 
@@ -30,21 +33,26 @@ class RequirementNoticesTest extends MediaWikiIntegrationTestCase {
 		);
 	}
 
-	private static function problem( string $name, string $problem, string $setting, bool $blocking ): array {
-		return [ 'name' => $name, 'problem' => $problem, 'setting' => $setting, 'blocking' => $blocking ];
+	private static function problem(
+		string $name,
+		RequirementProblemKind $kind,
+		string $setting,
+		bool $blocking
+	): RequirementProblem {
+		return new RequirementProblem( $name, $kind, $setting, $blocking );
 	}
 
 	public function testOneNoticePerKindOfProblem(): void {
 		$notices = $this->getNotices( [
-			self::problem( 'PortableInfobox', 'missing', '', false ),
-			self::problem( 'TemplateStyles', 'missing', '', true ),
-			self::problem( 'WikibaseRepository', 'setting', 'allowEntityImport', true ),
-			self::problem( 'WikibaseLexeme', 'unknown', '', false ),
-		], RequestStatus::STATUS_PENDING );
+			self::problem( 'PortableInfobox', RequirementProblemKind::Missing, '', false ),
+			self::problem( 'TemplateStyles', RequirementProblemKind::Missing, '', true ),
+			self::problem( 'WikibaseRepository', RequirementProblemKind::Setting, 'allowEntityImport', true ),
+			self::problem( 'WikibaseLexeme', RequirementProblemKind::Unknown, '', false ),
+		], RequestStatus::Pending );
 
 		$this->assertCount( 3, $notices );
 
-		$this->assertSame( RequestNotice::SEVERITY_ERROR, $notices[0]->severity );
+		$this->assertSame( NoticeSeverity::Error, $notices[0]->severity );
 		$this->assertTrue( $notices[0]->invalidates );
 		$this->assertStringContainsString( '<bdi>PortableInfobox</bdi>', $notices[0]->html );
 		$this->assertStringContainsString( 'TemplateStyles', $notices[0]->html );
@@ -53,14 +61,14 @@ class RequirementNoticesTest extends MediaWikiIntegrationTestCase {
 		$this->assertStringContainsString( 'allowEntityImport', $notices[1]->html );
 		$this->assertStringContainsString( 'WikibaseRepository', $notices[1]->html );
 
-		$this->assertSame( RequestNotice::SEVERITY_WARNING, $notices[2]->severity );
+		$this->assertSame( NoticeSeverity::Warning, $notices[2]->severity );
 		$this->assertFalse( $notices[2]->invalidates );
 	}
 
 	public function testUncertainProblemsDoNotInvalidate(): void {
 		$notices = $this->getNotices( [
-			self::problem( 'PortableInfobox', 'missing', '', false ),
-		], RequestStatus::STATUS_FAILED );
+			self::problem( 'PortableInfobox', RequirementProblemKind::Missing, '', false ),
+		], RequestStatus::Failed );
 
 		$this->assertCount( 1, $notices );
 		$this->assertFalse( $notices[0]->invalidates );
@@ -68,7 +76,7 @@ class RequirementNoticesTest extends MediaWikiIntegrationTestCase {
 
 	public function testNothingWhenTheRequestIsNotOpen(): void {
 		$this->assertSame( [], $this->getNotices( [
-			self::problem( 'PortableInfobox', 'missing', '', true ),
-		], RequestStatus::STATUS_COMPLETE ) );
+			self::problem( 'PortableInfobox', RequirementProblemKind::Missing, '', true ),
+		], RequestStatus::Complete ) );
 	}
 }

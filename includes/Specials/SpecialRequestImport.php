@@ -29,6 +29,7 @@ use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserIdentity;
 use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\AttentionNotifier;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
@@ -42,8 +43,7 @@ use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\Platform\ISQLPlatform;
 
-class SpecialRequestImport extends FormSpecialPage
-	implements RequestStatus {
+class SpecialRequestImport extends FormSpecialPage {
 
 	/** What the archive formats are called in the help text. */
 	private const array FORMAT_NAMES = [
@@ -64,6 +64,7 @@ class SpecialRequestImport extends FormSpecialPage
 
 	public function __construct(
 		private readonly IConnectionProvider $connectionProvider,
+		private readonly AttentionNotifier $attentionNotifier,
 		private readonly DumpProcessor $dumpProcessor,
 		private readonly RequestManager $requestManager,
 		private readonly JobQueueGroup $jobQueueGroup,
@@ -86,7 +87,7 @@ class SpecialRequestImport extends FormSpecialPage
 		$this->setParameter( $par );
 		$this->setHeaders();
 
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
 		}
@@ -204,13 +205,13 @@ class SpecialRequestImport extends FormSpecialPage
 			return Status::newFatal( 'actionthrottledtext' );
 		}
 
-		$dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-requestimport' );
+		$dbw = $this->connectionProvider->getPrimaryDatabase( RequestManager::VIRTUAL_DOMAIN );
 		$duplicate = $dbw->newSelectQueryBuilder()
 			->select( ISQLPlatform::ALL_ROWS )
 			->from( 'import_requests' )
 			->where( [
 				'request_reason' => $data['reason'],
-				'request_status' => self::STATUS_PENDING,
+				'request_status' => RequestStatus::Pending->value,
 			] )
 			->caller( __METHOD__ )
 			->fetchRow();
@@ -319,8 +320,8 @@ class SpecialRequestImport extends FormSpecialPage
 				'request_source' => $data['source'],
 				'request_target' => $data['target'],
 				'request_reason' => $data['reason'],
-				'request_status' => $verifyLater ? self::STATUS_VERIFYING : self::STATUS_PENDING,
-				'request_history' => $history,
+				'request_status' => ( $verifyLater ? RequestStatus::Verifying : RequestStatus::Pending )->value,
+				'request_history' => $history?->value,
 				'request_actor' => $this->getUser()->getActorId(),
 				'request_timestamp' => $timestamp,
 			] )
@@ -335,7 +336,7 @@ class SpecialRequestImport extends FormSpecialPage
 		} else {
 			$this->requestManager->loadFromID( (int)$requestID );
 			$this->requestManager->setRequirements( $requirements );
-			$this->requestManager->notifyRequester();
+			$this->attentionNotifier->notify( $this->requestManager );
 		}
 
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', $requestID );

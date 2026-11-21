@@ -16,6 +16,7 @@ use MediaWiki\Upload\UploadFromStash;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\AssembleChunksJob;
+use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use StatusValue;
 use Wikimedia\ParamValidator\ParamValidator;
@@ -261,7 +262,7 @@ class ApiRequestImportUpload extends ApiBase {
 			$this->dieWithError( 'importdump-apierror-chunking-disabled', 'chunkingdisabled' );
 		}
 
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			$this->dieWithError( 'importdump-notcentral-text', 'notcentral' );
 		}

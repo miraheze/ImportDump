@@ -16,6 +16,9 @@ use Miraheze\ImportDump\Upload\ExternalBinaries;
 // @codeCoverageIgnoreStart
 
 return [
+	'ImportDumpAttentionNotifier' => static function ( MediaWikiServices $services ): AttentionNotifier {
+		return new AttentionNotifier( $services->getNotificationService() );
+	},
 	'ImportDumpConfig' => static function ( MediaWikiServices $services ): Config {
 		return $services->getConfigFactory()->makeConfig( 'RequestImport' );
 	},
@@ -59,7 +62,6 @@ return [
 	},
 	'ImportDumpRequestManager' => static function ( MediaWikiServices $services ): RequestManager {
 		return new RequestManager(
-			$services->getActorStoreFactory(),
 			$services->getConnectionProvider(),
 			$services->get( 'ImportDumpHookRunner' ),
 			$services->getInterwikiLookup(),
@@ -72,8 +74,9 @@ return [
 				$services->get( 'ImportDumpConfig' )
 			),
 			$services->getUserFactory(),
-			$services->getUserGroupManagerFactory(),
 			$services->get( 'ImportDumpImportProgress' ),
+			$services->get( 'ImportDumpRequirementChecker' ),
+			$services->get( 'ImportDumpTargetStateProvider' ),
 			$services->get( 'ImportDumpVerificationProgress' ),
 			$services->has( 'ManageWikiModuleFactory' ) ?
 				$services->get( 'ManageWikiModuleFactory' ) : null
@@ -81,6 +84,19 @@ return [
 	},
 	'ImportDumpImportProgress' => static function ( MediaWikiServices $services ): ImportProgress {
 		return new ImportProgress( $services->getMainObjectStash() );
+	},
+	'ImportDumpRequirementChecker' => static function ( MediaWikiServices $services ): RequirementChecker {
+		return new RequirementChecker( new ServiceOptions(
+			RequirementChecker::CONSTRUCTOR_OPTIONS,
+			$services->get( 'ImportDumpConfig' )
+		) );
+	},
+	'ImportDumpTargetStateProvider' => static function ( MediaWikiServices $services ): TargetStateProvider {
+		return new TargetStateProvider(
+			$services->getActorStoreFactory(),
+			$services->get( 'ImportDumpHookRunner' ),
+			$services->getUserGroupManagerFactory()
+		);
 	},
 	'ImportDumpVerificationProgress' => static function ( MediaWikiServices $services ): VerificationProgress {
 		return new VerificationProgress( $services->getMainObjectStash() );

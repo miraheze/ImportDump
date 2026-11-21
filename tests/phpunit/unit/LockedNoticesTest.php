@@ -6,8 +6,8 @@ use MediaWiki\Context\IContextSource;
 use MediaWiki\Message\Message;
 use MediaWikiUnitTestCase;
 use Miraheze\ImportDump\Notices\LockedNotices;
-use Miraheze\ImportDump\Notices\NoticeProvider;
-use Miraheze\ImportDump\Notices\RequestNotice;
+use Miraheze\ImportDump\Notices\NoticeAudience;
+use Miraheze\ImportDump\Notices\NoticeSeverity;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 
@@ -29,7 +29,7 @@ class LockedNoticesTest extends MediaWikiUnitTestCase {
 		return new LockedNotices()->getNotices(
 			$requestManager,
 			$context,
-			RequestStatus::STATUS_PENDING
+			RequestStatus::Pending
 		);
 	}
 
@@ -37,7 +37,7 @@ class LockedNoticesTest extends MediaWikiUnitTestCase {
 		$notices = $this->getNotices( locked: true );
 
 		$this->assertCount( 1, $notices );
-		$this->assertSame( RequestNotice::SEVERITY_ERROR, $notices[0]->severity );
+		$this->assertSame( NoticeSeverity::Error, $notices[0]->severity );
 		$this->assertSame( 'locked', $notices[0]->html );
 		$this->assertFalse( $notices[0]->invalidates );
 	}
@@ -49,7 +49,7 @@ class LockedNoticesTest extends MediaWikiUnitTestCase {
 	public function testIsForEveryoneAndAlwaysAtTheTop(): void {
 		$provider = new LockedNotices();
 
-		$this->assertSame( NoticeProvider::AUDIENCE_EVERYONE, $provider->getAudience() );
+		$this->assertSame( NoticeAudience::Everyone, $provider->getAudience() );
 		$this->assertTrue( $provider->isAlwaysAtTop() );
 		$this->assertFalse( $provider->requiresTargetAccess() );
 	}

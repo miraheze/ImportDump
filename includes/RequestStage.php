@@ -2,33 +2,30 @@
 
 namespace Miraheze\ImportDump;
 
-interface RequestStage {
+/** The stages of an import, in the order that the job runs them. */
+enum RequestStage: string {
 
-	public const string STAGE_DOWNLOAD = 'download';
+	case Download = 'download';
+	case Import = 'import';
+	case SiteStats = 'sitestats';
+	case TextIndex = 'textindex';
+	case RecentChanges = 'recentchanges';
+	case RefreshLinks = 'refreshlinks';
+	case Counts = 'counts';
+	case AfterImport = 'afterimport';
 
-	public const string STAGE_IMPORT = 'import';
+	/** The place of this stage in the order, starting at 0. */
+	public function getPosition(): int {
+		return (int)array_search( $this, self::cases(), true );
+	}
 
-	public const string STAGE_SITESTATS = 'sitestats';
+	/** Whether the pages are already in the wiki when this stage starts. */
+	public function hasImported(): bool {
+		return $this !== self::Download && $this !== self::Import;
+	}
 
-	public const string STAGE_TEXTINDEX = 'textindex';
-
-	public const string STAGE_RECENTCHANGES = 'recentchanges';
-
-	public const string STAGE_REFRESHLINKS = 'refreshlinks';
-
-	public const string STAGE_COUNTS = 'counts';
-
-	public const string STAGE_AFTERIMPORT = 'afterimport';
-
-	/** In the order that the job runs them. */
-	public const array STAGES = [
-		self::STAGE_DOWNLOAD,
-		self::STAGE_IMPORT,
-		self::STAGE_SITESTATS,
-		self::STAGE_TEXTINDEX,
-		self::STAGE_RECENTCHANGES,
-		self::STAGE_REFRESHLINKS,
-		self::STAGE_COUNTS,
-		self::STAGE_AFTERIMPORT,
-	];
+	/** The message key of the name of this stage. */
+	public function getLabelKey(): string {
+		return 'importdump-stage-' . $this->value;
+	}
 }

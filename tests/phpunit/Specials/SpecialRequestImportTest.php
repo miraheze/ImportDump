@@ -35,8 +35,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group medium
  * @coversDefaultClass \Miraheze\ImportDump\Specials\SpecialRequestImport
  */
-class SpecialRequestImportTest extends SpecialPageTestBase
-	implements RequestStatus {
+class SpecialRequestImportTest extends SpecialPageTestBase {
 
 	private const string DUMP = '<?xml version="1.0"?>' .
 		'<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.11/" version="0.11">' .
@@ -56,6 +55,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 		$services = $this->getServiceContainer();
 		return new SpecialRequestImport(
 			$services->getConnectionProvider(),
+			$services->getService( 'ImportDumpAttentionNotifier' ),
 			$services->getService( 'ImportDumpDumpProcessor' ),
 			$services->getService( 'ImportDumpRequestManager' ),
 			$services->getJobQueueGroup(),
@@ -151,7 +151,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 		$this->assertInstanceOf( Status::class, $status );
 		if ( !$expectedError ) {
 			$this->assertStatusGood( $status );
-			$this->assertLatestRequest( $extraData['status'] ?? self::STATUS_PENDING );
+			$this->assertLatestRequest( $extraData['status'] ?? RequestStatus::Pending );
 		} else {
 			$this->assertStatusError( $expectedError, $status );
 		}
@@ -163,7 +163,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 		}
 	}
 
-	private function assertLatestRequest( string $expectedStatus ): void {
+	private function assertLatestRequest( RequestStatus $expectedStatus ): void {
 		$row = $this->getDb()->newSelectQueryBuilder()
 			->select( [ 'request_status', 'request_history' ] )
 			->from( 'import_requests' )
@@ -171,11 +171,11 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 			->caller( __METHOD__ )
 			->fetchRow();
 
-		$this->assertSame( $expectedStatus, $row->request_status );
+		$this->assertSame( $expectedStatus->value, $row->request_status );
 		$this->assertNull( $row->request_history );
 
 		$queued = $this->getServiceContainer()->getJobQueueGroup()->get( VerifyDumpJob::JOB_NAME )->getSize();
-		$this->assertSame( $expectedStatus === self::STATUS_VERIFYING ? 1 : 0, $queued );
+		$this->assertSame( $expectedStatus === RequestStatus::Verifying ? 1 : 0, $queued );
 	}
 
 	public static function onSubmitDataProvider(): Generator {
@@ -207,7 +207,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 				'mime-type' => 'application/zip',
 				'duplicate' => false,
 				'testfile' => ZipFixture::build( [ 'dump.xml' => self::DUMP ] ),
-				'status' => self::STATUS_VERIFYING,
+				'status' => RequestStatus::Verifying,
 				'token' => true,
 			],
 			null,
@@ -225,7 +225,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 				'mime-type' => 'application/gzip',
 				'duplicate' => false,
 				'testfile' => gzencode( self::DUMP ),
-				'status' => self::STATUS_VERIFYING,
+				'status' => RequestStatus::Verifying,
 				'token' => true,
 			],
 			null,

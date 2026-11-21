@@ -4,9 +4,12 @@ namespace Miraheze\ImportDump\Tests\Unit;
 
 use MediaWiki\Context\IContextSource;
 use MediaWikiUnitTestCase;
+use Miraheze\ImportDump\Notices\NoticeAudience;
 use Miraheze\ImportDump\Notices\NoticeCollector;
 use Miraheze\ImportDump\Notices\NoticeProvider;
 use Miraheze\ImportDump\Notices\NoticeResult;
+use Miraheze\ImportDump\Notices\NoticeRole;
+use Miraheze\ImportDump\Notices\NoticeSeverity;
 use Miraheze\ImportDump\Notices\RequestNotice;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
@@ -19,7 +22,7 @@ use Miraheze\ImportDump\RequestStatus;
 class NoticeCollectorTest extends MediaWikiUnitTestCase {
 
 	private function newProvider(
-		string $audience,
+		NoticeAudience $audience,
 		array $notices,
 		bool $requiresTargetAccess,
 		bool $alwaysAtTop
@@ -32,14 +35,19 @@ class NoticeCollectorTest extends MediaWikiUnitTestCase {
 		return $provider;
 	}
 
-	private function newNotice( string $severity, string $html, bool $invalidates, bool $pinned ): RequestNotice {
+	private function newNotice(
+		NoticeSeverity $severity,
+		string $html,
+		bool $invalidates,
+		bool $pinned
+	): RequestNotice {
 		return new RequestNotice( $severity, $html, $invalidates, $invalidates, $pinned );
 	}
 
 	private function collect(
 		array $providers,
-		string $status,
-		string $role,
+		RequestStatus $status,
+		NoticeRole $role,
 		bool $hasTargetAccess
 	): NoticeResult {
 		return new NoticeCollector( $providers )->collect(
@@ -61,14 +69,14 @@ class NoticeCollectorTest extends MediaWikiUnitTestCase {
 
 	public function testSortsBySeverity(): void {
 		$result = $this->collect( [
-			$this->newProvider( NoticeProvider::AUDIENCE_HANDLERS, [
-				$this->newNotice( RequestNotice::SEVERITY_NOTICE, 'a', false, false ),
-				$this->newNotice( RequestNotice::SEVERITY_ERROR, 'b', false, false ),
+			$this->newProvider( NoticeAudience::Handlers, [
+				$this->newNotice( NoticeSeverity::Notice, 'a', false, false ),
+				$this->newNotice( NoticeSeverity::Error, 'b', false, false ),
 			], requiresTargetAccess: false, alwaysAtTop: false ),
-			$this->newProvider( NoticeProvider::AUDIENCE_PARTIES, [
-				$this->newNotice( RequestNotice::SEVERITY_WARNING, 'c', false, false ),
+			$this->newProvider( NoticeAudience::Parties, [
+				$this->newNotice( NoticeSeverity::Warning, 'c', false, false ),
 			], requiresTargetAccess: false, alwaysAtTop: false ),
-		], RequestStatus::STATUS_PENDING, NoticeCollector::ROLE_HANDLER, true );
+		], RequestStatus::Pending, NoticeRole::Handler, true );
 
 		$this->assertSame( [ 'b', 'c', 'a' ], $this->getHtml( $result->notices ) );
 		$this->assertSame( [], $result->topNotices );
@@ -77,31 +85,31 @@ class NoticeCollectorTest extends MediaWikiUnitTestCase {
 
 	public function testPinnedNoticesComeFirst(): void {
 		$result = $this->collect( [
-			$this->newProvider( NoticeProvider::AUDIENCE_HANDLERS, [
-				$this->newNotice( RequestNotice::SEVERITY_NOTICE, 'pinned', false, true ),
+			$this->newProvider( NoticeAudience::Handlers, [
+				$this->newNotice( NoticeSeverity::Notice, 'pinned', false, true ),
 			], requiresTargetAccess: false, alwaysAtTop: false ),
-			$this->newProvider( NoticeProvider::AUDIENCE_HANDLERS, [
-				$this->newNotice( RequestNotice::SEVERITY_ERROR, 'error', false, false ),
-				$this->newNotice( RequestNotice::SEVERITY_NOTICE, 'notice', false, false ),
+			$this->newProvider( NoticeAudience::Handlers, [
+				$this->newNotice( NoticeSeverity::Error, 'error', false, false ),
+				$this->newNotice( NoticeSeverity::Notice, 'notice', false, false ),
 			], requiresTargetAccess: false, alwaysAtTop: false ),
-		], RequestStatus::STATUS_PENDING, NoticeCollector::ROLE_HANDLER, true );
+		], RequestStatus::Pending, NoticeRole::Handler, true );
 
 		$this->assertSame( [ 'pinned', 'error', 'notice' ], $this->getHtml( $result->notices ) );
 	}
 
 	/** @dataProvider provideAudiences */
-	public function testAudiences( string $role, array $expected ): void {
+	public function testAudiences( NoticeRole $role, array $expected ): void {
 		$result = $this->collect( [
-			$this->newProvider( NoticeProvider::AUDIENCE_HANDLERS, [
-				$this->newNotice( RequestNotice::SEVERITY_NOTICE, 'handlers', false, false ),
+			$this->newProvider( NoticeAudience::Handlers, [
+				$this->newNotice( NoticeSeverity::Notice, 'handlers', false, false ),
 			], requiresTargetAccess: false, alwaysAtTop: false ),
-			$this->newProvider( NoticeProvider::AUDIENCE_PARTIES, [
-				$this->newNotice( RequestNotice::SEVERITY_NOTICE, 'parties', false, false ),
+			$this->newProvider( NoticeAudience::Parties, [
+				$this->newNotice( NoticeSeverity::Notice, 'parties', false, false ),
 			], requiresTargetAccess: false, alwaysAtTop: false ),
-			$this->newProvider( NoticeProvider::AUDIENCE_EVERYONE, [
-				$this->newNotice( RequestNotice::SEVERITY_NOTICE, 'everyone', false, false ),
+			$this->newProvider( NoticeAudience::Everyone, [
+				$this->newNotice( NoticeSeverity::Notice, 'everyone', false, false ),
 			], requiresTargetAccess: false, alwaysAtTop: false ),
-		], RequestStatus::STATUS_PENDING, $role, true );
+		], RequestStatus::Pending, $role, true );
 
 		$this->assertSame(
 			$expected,
@@ -111,31 +119,31 @@ class NoticeCollectorTest extends MediaWikiUnitTestCase {
 
 	public static function provideAudiences(): array {
 		return [
-			'handler' => [ NoticeCollector::ROLE_HANDLER, [ 'handlers', 'parties', 'everyone' ] ],
-			'requester' => [ NoticeCollector::ROLE_REQUESTER, [ 'parties', 'everyone' ] ],
-			'anyone else' => [ NoticeCollector::ROLE_VIEWER, [ 'everyone' ] ],
+			'handler' => [ NoticeRole::Handler, [ 'handlers', 'parties', 'everyone' ] ],
+			'requester' => [ NoticeRole::Requester, [ 'parties', 'everyone' ] ],
+			'anyone else' => [ NoticeRole::Viewer, [ 'everyone' ] ],
 		];
 	}
 
 	public function testPlacement(): void {
 		$providers = [
-			$this->newProvider( NoticeProvider::AUDIENCE_EVERYONE, [
-				$this->newNotice( RequestNotice::SEVERITY_ERROR, 'always at the top', false, false ),
+			$this->newProvider( NoticeAudience::Everyone, [
+				$this->newNotice( NoticeSeverity::Error, 'always at the top', false, false ),
 			], requiresTargetAccess: false, alwaysAtTop: true ),
-			$this->newProvider( NoticeProvider::AUDIENCE_PARTIES, [
-				$this->newNotice( RequestNotice::SEVERITY_NOTICE, 'other', false, false ),
+			$this->newProvider( NoticeAudience::Parties, [
+				$this->newNotice( NoticeSeverity::Notice, 'other', false, false ),
 			], requiresTargetAccess: false, alwaysAtTop: false ),
 		];
 
 		$handler = $this->collect(
-			$providers, RequestStatus::STATUS_PENDING, NoticeCollector::ROLE_HANDLER, true
+			$providers, RequestStatus::Pending, NoticeRole::Handler, true
 		);
 
 		$this->assertSame( [ 'other' ], $this->getHtml( $handler->notices ) );
 		$this->assertSame( [ 'always at the top' ], $this->getHtml( $handler->topNotices ) );
 
 		$requester = $this->collect(
-			$providers, RequestStatus::STATUS_PENDING, NoticeCollector::ROLE_REQUESTER, true
+			$providers, RequestStatus::Pending, NoticeRole::Requester, true
 		);
 
 		$this->assertSame( [], $requester->notices );
@@ -143,34 +151,34 @@ class NoticeCollectorTest extends MediaWikiUnitTestCase {
 	}
 
 	/** @dataProvider provideTargetAccess */
-	public function testTargetNoticesNeedAccess( bool $hasTargetAccess, string $role, int $expected ): void {
+	public function testTargetNoticesNeedAccess( bool $hasTargetAccess, NoticeRole $role, int $expected ): void {
 		$result = $this->collect( [
-			$this->newProvider( NoticeProvider::AUDIENCE_PARTIES, [
-				$this->newNotice( RequestNotice::SEVERITY_ERROR, 'remote', true, false ),
+			$this->newProvider( NoticeAudience::Parties, [
+				$this->newNotice( NoticeSeverity::Error, 'remote', true, false ),
 			], requiresTargetAccess: true, alwaysAtTop: false ),
-			$this->newProvider( NoticeProvider::AUDIENCE_PARTIES, [
-				$this->newNotice( RequestNotice::SEVERITY_NOTICE, 'local', false, false ),
+			$this->newProvider( NoticeAudience::Parties, [
+				$this->newNotice( NoticeSeverity::Notice, 'local', false, false ),
 			], requiresTargetAccess: false, alwaysAtTop: false ),
-		], RequestStatus::STATUS_PENDING, $role, $hasTargetAccess );
+		], RequestStatus::Pending, $role, $hasTargetAccess );
 
 		$this->assertCount( $expected, array_merge( $result->notices, $result->topNotices ) );
 	}
 
 	public static function provideTargetAccess(): array {
 		return [
-			'requester with access' => [ true, NoticeCollector::ROLE_REQUESTER, 2 ],
-			'requester without access' => [ false, NoticeCollector::ROLE_REQUESTER, 1 ],
-			'handler' => [ false, NoticeCollector::ROLE_HANDLER, 2 ],
+			'requester with access' => [ true, NoticeRole::Requester, 2 ],
+			'requester without access' => [ false, NoticeRole::Requester, 1 ],
+			'handler' => [ false, NoticeRole::Handler, 2 ],
 		];
 	}
 
 	/** @dataProvider provideDeclines */
-	public function testDeclines( string $status, string $expected ): void {
+	public function testDeclines( RequestStatus $status, RequestStatus $expected ): void {
 		$result = $this->collect( [
-			$this->newProvider( NoticeProvider::AUDIENCE_HANDLERS, [
-				$this->newNotice( RequestNotice::SEVERITY_ERROR, 'x', true, false ),
+			$this->newProvider( NoticeAudience::Handlers, [
+				$this->newNotice( NoticeSeverity::Error, 'x', true, false ),
 			], requiresTargetAccess: false, alwaysAtTop: false ),
-		], $status, NoticeCollector::ROLE_HANDLER, true );
+		], $status, NoticeRole::Handler, true );
 
 		$this->assertFalse( $result->valid );
 		$this->assertSame( $expected, $result->status );
@@ -178,9 +186,9 @@ class NoticeCollectorTest extends MediaWikiUnitTestCase {
 
 	public static function provideDeclines(): array {
 		return [
-			'pending' => [ RequestStatus::STATUS_PENDING, RequestStatus::STATUS_DECLINED ],
-			'inprogress' => [ RequestStatus::STATUS_INPROGRESS, RequestStatus::STATUS_DECLINED ],
-			'complete' => [ RequestStatus::STATUS_COMPLETE, RequestStatus::STATUS_COMPLETE ],
+			'pending' => [ RequestStatus::Pending, RequestStatus::Declined ],
+			'inprogress' => [ RequestStatus::InProgress, RequestStatus::Declined ],
+			'complete' => [ RequestStatus::Complete, RequestStatus::Complete ],
 		];
 	}
 }

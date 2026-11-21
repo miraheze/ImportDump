@@ -45,7 +45,7 @@ class FailStalledImports extends Maintenance {
 	public function execute(): void {
 		$this->initServices();
 
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			$this->fatalError( 'This script must be run on the wiki that stores import requests.' );
 		}
@@ -67,7 +67,7 @@ class FailStalledImports extends Maintenance {
 			$ids = $dbr->newSelectQueryBuilder()
 				->select( 'request_id' )
 				->from( 'import_requests' )
-				->where( [ 'request_status' => RequestStatus::STATUS_INPROGRESS ] )
+				->where( [ 'request_status' => RequestStatus::InProgress->value ] )
 				->andWhere( $dbr->expr( 'request_timestamp', '<', $cutoff ) )
 				->andWhere( $dbr->expr( 'request_id', '>', $lastId ) )
 				->orderBy( 'request_id' )
@@ -90,8 +90,8 @@ class FailStalledImports extends Maintenance {
 
 				$this->requestManager->loadFromID( $lastId );
 				$status = $this->requestManager->hasImported() ?
-					RequestStatus::STATUS_PARTIAL :
-					RequestStatus::STATUS_FAILED;
+					RequestStatus::Partial :
+					RequestStatus::Failed;
 
 				$this->jobQueueGroupFactory->makeJobQueueGroup( $dbr->getDomainID() )->push(
 					new JobSpecification(
@@ -99,7 +99,7 @@ class FailStalledImports extends Maintenance {
 						[
 							'joberror' => "The import did not report progress for $hours hours.",
 							'requestid' => $lastId,
-							'status' => $status,
+							'status' => $status->value,
 							'username' => $this->requestManager->getRequester()->getName(),
 						]
 					)

@@ -5,6 +5,7 @@ namespace Miraheze\ImportDump\Maintenance;
 use MediaWiki\Maintenance\LoggedUpdateMaintenance;
 use MediaWiki\RecentChanges\RecentChange;
 use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\RequestManager;
 
 class MigrateLogTypes extends LoggedUpdateMaintenance {
 
@@ -28,7 +29,7 @@ class MigrateLogTypes extends LoggedUpdateMaintenance {
 
 	/** @inheritDoc */
 	protected function doDBUpdates(): true {
-		$dbw = $this->getPrimaryDB( 'virtual-requestimport' );
+		$dbw = $this->getPrimaryDB( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbw->getDomainID() ) ) {
 			$this->output( "Import request logs are not stored on this wiki. Skipping.\n" );
 			return true;

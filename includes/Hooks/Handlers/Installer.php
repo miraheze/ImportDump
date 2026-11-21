@@ -6,6 +6,7 @@ use MediaWiki\Installer\Hook\LoadExtensionSchemaUpdatesHook;
 use Miraheze\ImportDump\Maintenance\MigrateEchoTypes;
 use Miraheze\ImportDump\Maintenance\MigrateLogParams;
 use Miraheze\ImportDump\Maintenance\MigrateLogTypes;
+use Miraheze\ImportDump\RequestManager;
 
 class Installer implements LoadExtensionSchemaUpdatesHook {
 
@@ -15,7 +16,7 @@ class Installer implements LoadExtensionSchemaUpdatesHook {
 		$dir = __DIR__ . '/../../../sql';
 
 		$updater->addExtensionUpdateOnVirtualDomain( [
-			'virtual-requestimport',
+			RequestManager::VIRTUAL_DOMAIN,
 			'addTable',
 			'import_requests',
 			"$dir/$dbType/tables-generated.sql",

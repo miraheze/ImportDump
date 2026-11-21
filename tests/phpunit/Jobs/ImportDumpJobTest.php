@@ -22,8 +22,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group medium
  * @covers \Miraheze\ImportDump\Jobs\ImportDumpJob
  */
-class ImportDumpJobTest extends MediaWikiIntegrationTestCase
-	implements RequestStage, RequestStatus {
+class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -47,7 +46,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 				'request_source' => 'https://requestimporttest.com',
 				'request_target' => WikiMap::getCurrentWikiId(),
 				'request_reason' => 'test',
-				'request_status' => self::STATUS_STARTING,
+				'request_status' => RequestStatus::Starting->value,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
 				'request_timestamp' => $dbw->timestamp( ConvertibleTimestamp::now() ),
 			] )
@@ -97,10 +96,10 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 
 	/**
 	 * @param array[] $notifications
-	 * @return string[]
+	 * @return RequestStatus[]
 	 */
 	private function getStatuses( array $notifications ): array {
-		return array_column( $notifications, 'status' );
+		return array_map( RequestStatus::from( ... ), array_column( $notifications, 'status' ) );
 	}
 
 	private function writeEmptyDump( string $filePath ): void {
@@ -121,7 +120,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 		$this->assertTrue( $job->run() );
 
 		$notifications = $this->popNotifications();
-		$this->assertSame( [ self::STATUS_FAILED ], $this->getStatuses( $notifications ) );
+		$this->assertSame( [ RequestStatus::Failed ], $this->getStatuses( $notifications ) );
 		$this->assertStringContainsString( 'Download failed', $notifications[0]['joberror'] );
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
 	}
@@ -134,7 +133,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 		$this->assertStringContainsString( 'Import source', $job->getLastError() );
 
 		$notifications = $this->popNotifications();
-		$this->assertSame( [ self::STATUS_FAILED ], $this->getStatuses( $notifications ) );
+		$this->assertSame( [ RequestStatus::Failed ], $this->getStatuses( $notifications ) );
 		$this->assertStringContainsString( 'Import source', $notifications[0]['joberror'] );
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
 	}
@@ -160,13 +159,13 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 
 		$notifications = $this->popNotifications();
 		$this->assertSame(
-			[ self::STATUS_INPROGRESS, self::STATUS_COMPLETE ],
+			[ RequestStatus::InProgress, RequestStatus::Complete ],
 			$this->getStatuses( $notifications )
 		);
 
 		$this->assertSame( '', $notifications[1]['joberror'] );
 		$this->assertSame( $id, $notifications[1]['requestid'] );
-		$this->assertSame( self::STAGE_AFTERIMPORT, $this->getRequestManager( $id )->getStage() );
+		$this->assertSame( RequestStage::AfterImport, $this->getRequestManager( $id )->getStage() );
 		$this->assertFileDoesNotExist( $path );
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
 	}
@@ -209,13 +208,13 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 
 		$notifications = $this->popNotifications();
 		$this->assertSame(
-			[ self::STATUS_INPROGRESS, self::STATUS_PARTIAL ],
+			[ RequestStatus::InProgress, RequestStatus::Partial ],
 			$this->getStatuses( $notifications )
 		);
 
 		$this->assertStringContainsString( 'RuntimeException', $notifications[1]['joberror'] );
 		$this->assertStringContainsString( 'After import failed', $notifications[1]['joberror'] );
-		$this->assertSame( self::STAGE_AFTERIMPORT, $this->getRequestManager( $id )->getStage() );
+		$this->assertSame( RequestStage::AfterImport, $this->getRequestManager( $id )->getStage() );
 		$this->assertFileDoesNotExist( $path );
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
 	}
@@ -224,8 +223,8 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 		$id = $this->addRequest();
 
 		$this->assertTrue( $this->newJob( $id )->run() );
-		$this->assertSame( [ self::STATUS_FAILED ], $this->getStatuses( $this->popNotifications() ) );
-		$this->assertSame( self::STAGE_DOWNLOAD, $this->getRequestManager( $id )->getStage() );
+		$this->assertSame( [ RequestStatus::Failed ], $this->getStatuses( $this->popNotifications() ) );
+		$this->assertSame( RequestStage::Download, $this->getRequestManager( $id )->getStage() );
 	}
 
 	public function testRunResumesAfterImportWithoutFetchingFile(): void {
@@ -248,14 +247,14 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 		);
 
 		$id = $this->addRequest();
-		$this->getRequestManager( $id )->setStage( self::STAGE_COUNTS );
+		$this->getRequestManager( $id )->setStage( RequestStage::Counts );
 
 		$this->assertTrue( $this->newJob( $id )->run() );
 
 		$this->assertFalse( $fileRequested );
 		$this->assertTrue( $afterImportCalled );
 		$this->assertSame(
-			[ self::STATUS_INPROGRESS, self::STATUS_COMPLETE ],
+			[ RequestStatus::InProgress, RequestStatus::Complete ],
 			$this->getStatuses( $this->popNotifications() )
 		);
 	}
@@ -271,11 +270,11 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 		);
 
 		$id = $this->addRequest();
-		$this->getRequestManager( $id )->setStage( self::STAGE_AFTERIMPORT );
+		$this->getRequestManager( $id )->setStage( RequestStage::AfterImport );
 
 		$this->assertTrue( $this->newJob( $id )->run() );
 		$this->assertTrue( $afterImportCalled );
-		$this->assertSame( self::STAGE_AFTERIMPORT, $this->getRequestManager( $id )->getStage() );
+		$this->assertSame( RequestStage::AfterImport, $this->getRequestManager( $id )->getStage() );
 	}
 
 	public function testRunResumeFailureStaysPartial(): void {
@@ -284,11 +283,11 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 		);
 
 		$id = $this->addRequest();
-		$this->getRequestManager( $id )->setStage( self::STAGE_AFTERIMPORT );
+		$this->getRequestManager( $id )->setStage( RequestStage::AfterImport );
 
 		$this->assertTrue( $this->newJob( $id )->run() );
 		$this->assertSame(
-			[ self::STATUS_INPROGRESS, self::STATUS_PARTIAL ],
+			[ RequestStatus::InProgress, RequestStatus::Partial ],
 			$this->getStatuses( $this->popNotifications() )
 		);
 	}
@@ -332,7 +331,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 
 		$this->assertEqualsCanonicalizing( $pageIds, array_map( 'intval', $getLinkedPages() ) );
 		$this->assertSame(
-			[ self::STATUS_INPROGRESS, self::STATUS_COMPLETE ],
+			[ RequestStatus::InProgress, RequestStatus::Complete ],
 			$this->getStatuses( $this->popNotifications() )
 		);
 
@@ -345,7 +344,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 			->fetchField();
 
 		$this->assertSame(
-			[ 'stage' => self::STAGE_REFRESHLINKS, 'percent' => 100, 'done' => $total, 'total' => $total ],
+			[ 'stage' => RequestStage::RefreshLinks->value, 'percent' => 100, 'done' => $total, 'total' => $total ],
 			$progress->get( $id )
 		);
 	}
@@ -373,7 +372,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase
 
 	public function testRunSkipsCompletedRequest(): void {
 		$id = $this->addRequest();
-		$this->getRequestManager( $id )->setStatus( self::STATUS_COMPLETE );
+		$this->getRequestManager( $id )->setStatus( RequestStatus::Complete );
 
 		$this->assertTrue( $this->newJob( $id )->run() );
 		$this->assertSame( [], $this->popNotifications() );

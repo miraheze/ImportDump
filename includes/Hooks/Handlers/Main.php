@@ -6,6 +6,7 @@ use MediaWiki\Block\Hook\GetAllBlockActionsHook;
 use MediaWiki\Specials\Hook\LoginFormValidErrorMessagesHook;
 use MediaWiki\User\Hook\UserGetReservedNamesHook;
 use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\RequestManager;
 use Wikimedia\Rdbms\IConnectionProvider;
 
 class Main implements
@@ -21,7 +22,7 @@ class Main implements
 
 	/** @inheritDoc */
 	public function onGetAllBlockActions( &$actions ) {
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			return;
 		}
@@ -36,7 +37,7 @@ class Main implements
 
 	/** @inheritDoc */
 	public function onUserGetReservedNames( &$reservedUsernames ) {
-		$reservedUsernames[] = 'RequestImport Extension';
-		$reservedUsernames[] = 'RequestImport Status Update';
+		$reservedUsernames[] = RequestManager::EXTENSION_USER;
+		$reservedUsernames[] = RequestManager::STATUS_UPDATE_USER;
 	}
 }

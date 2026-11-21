@@ -22,8 +22,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group medium
  * @covers \Miraheze\ImportDump\Maintenance\ExpireFiles
  */
-class ExpireFilesTest extends MaintenanceBaseTestCase
-	implements RequestStatus {
+class ExpireFilesTest extends MaintenanceBaseTestCase {
 
 	/** @inheritDoc */
 	protected function getMaintenanceClass(): string {
@@ -53,9 +52,9 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 				'virtual-requestimport' => [ 'db' => WikiMap::getCurrentWikiId() ],
 			],
 			ConfigNames::FileExpiryDays => [
-				self::STATUS_COMPLETE => 30,
-				self::STATUS_DECLINED => 30,
-				self::STATUS_PENDING => 1,
+				RequestStatus::Complete->value => 30,
+				RequestStatus::Declined->value => 30,
+				RequestStatus::Pending->value => 1,
 			],
 		] );
 	}
@@ -67,7 +66,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 		return $manager;
 	}
 
-	private function addRequest( string $status, int $ageInDays ): int {
+	private function addRequest( RequestStatus $status, int $ageInDays ): int {
 		$dbw = $this->getServiceContainer()->getConnectionProvider()
 			->getPrimaryDatabase( 'virtual-requestimport' );
 
@@ -76,8 +75,8 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 			->row( [
 				'request_source' => 'https://requestimporttest.com',
 				'request_target' => 'requestimporttest',
-				'request_reason' => "test $status $ageInDays",
-				'request_status' => $status,
+				'request_reason' => "test {$status->value} $ageInDays",
+				'request_status' => $status->value,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
 				'request_timestamp' => $dbw->timestamp(
 					(int)ConvertibleTimestamp::now( TS_UNIX ) - $ageInDays * 86400
@@ -113,11 +112,11 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 	 */
 	private function addRequests(): array {
 		return [
-			'oldComplete' => $this->addRequest( self::STATUS_COMPLETE, 40 ),
-			'recentComplete' => $this->addRequest( self::STATUS_COMPLETE, 10 ),
-			'oldDeclined' => $this->addRequest( self::STATUS_DECLINED, 35 ),
-			'oldFailed' => $this->addRequest( self::STATUS_FAILED, 41 ),
-			'oldPending' => $this->addRequest( self::STATUS_PENDING, 400 ),
+			'oldComplete' => $this->addRequest( RequestStatus::Complete, 40 ),
+			'recentComplete' => $this->addRequest( RequestStatus::Complete, 10 ),
+			'oldDeclined' => $this->addRequest( RequestStatus::Declined, 35 ),
+			'oldFailed' => $this->addRequest( RequestStatus::Failed, 41 ),
+			'oldPending' => $this->addRequest( RequestStatus::Pending, 400 ),
 		];
 	}
 
@@ -182,7 +181,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase
 	}
 
 	public function testMissingFilesAreIgnored(): void {
-		$id = $this->addRequest( self::STATUS_COMPLETE, 40 );
+		$id = $this->addRequest( RequestStatus::Complete, 40 );
 		$this->assertTrue( $this->getRequestManager( $id )->deleteFile() );
 
 		$this->expectOutputRegex( '/Deleted 0 file\(s\)\. 0 failure\(s\)\./' );

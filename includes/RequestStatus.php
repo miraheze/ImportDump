@@ -2,21 +2,24 @@
 
 namespace Miraheze\ImportDump;
 
-interface RequestStatus {
+enum RequestStatus: string {
 
-	public const string STATUS_COMPLETE = 'complete';
+	case Complete = 'complete';
+	case Declined = 'declined';
+	case Failed = 'failed';
+	case InProgress = 'inprogress';
+	case Partial = 'partial';
+	case Pending = 'pending';
+	case Starting = 'starting';
+	case Verifying = 'verifying';
 
-	public const string STATUS_DECLINED = 'declined';
+	/** The message key of the name of this status. */
+	public function getLabelKey(): string {
+		return 'importdump-label-' . $this->value;
+	}
 
-	public const string STATUS_FAILED = 'failed';
-
-	public const string STATUS_INPROGRESS = 'inprogress';
-
-	public const string STATUS_PARTIAL = 'partial';
-
-	public const string STATUS_PENDING = 'pending';
-
-	public const string STATUS_STARTING = 'starting';
-
-	public const string STATUS_VERIFYING = 'verifying';
+	/** Whether the import is running or about to run. */
+	public function isRunning(): bool {
+		return $this === self::Starting || $this === self::InProgress;
+	}
 }

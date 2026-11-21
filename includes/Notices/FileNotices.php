@@ -7,6 +7,7 @@ use MediaWiki\Context\IContextSource;
 use MediaWiki\Html\Html;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\RequestStage;
 use Miraheze\ImportDump\RequestStatus;
 
 final class FileNotices implements NoticeProvider {
@@ -18,7 +19,7 @@ final class FileNotices implements NoticeProvider {
 
 	public static function getExpiredInfo( RequestManager $requestManager, IContextSource $context ): string {
 		$status = mb_strtolower(
-			$context->msg( 'importdump-label-' . $requestManager->getStatus() )->text()
+			$context->msg( $requestManager->getStatus()->getLabelKey() )->text()
 		);
 
 		return $context->msg( 'importdump-info-file-expired' )
@@ -28,8 +29,8 @@ final class FileNotices implements NoticeProvider {
 	}
 
 	/** @inheritDoc */
-	public function getAudience(): string {
-		return self::AUDIENCE_HANDLERS;
+	public function getAudience(): NoticeAudience {
+		return NoticeAudience::Handlers;
 	}
 
 	/** @inheritDoc */
@@ -46,11 +47,11 @@ final class FileNotices implements NoticeProvider {
 	public function getNotices(
 		RequestManager $requestManager,
 		IContextSource $context,
-		string $status
+		RequestStatus $status
 	): array {
-		if ( $status === RequestStatus::STATUS_VERIFYING ) {
+		if ( $status === RequestStatus::Verifying ) {
 			return [ new RequestNotice(
-				severity: RequestNotice::SEVERITY_NOTICE,
+				severity: NoticeSeverity::Notice,
 				html: $context->msg( 'importdump-info-verifying' )->escaped(),
 				invalidates: true,
 				declines: false,
@@ -58,10 +59,11 @@ final class FileNotices implements NoticeProvider {
 			) ];
 		}
 
-		if ( $requestManager->hasImported() ) {
+		$stage = $requestManager->getStage();
+		if ( $stage?->hasImported() ) {
 			return [ new RequestNotice(
-				severity: RequestNotice::SEVERITY_WARNING,
-				html: $this->getImportedInfo( $requestManager, $context ),
+				severity: NoticeSeverity::Warning,
+				html: $this->getImportedInfo( $requestManager, $context, $stage ),
 				invalidates: false,
 				declines: false,
 				pinned: true,
@@ -70,7 +72,7 @@ final class FileNotices implements NoticeProvider {
 
 		if ( $requestManager->fileExists() ) {
 			return [ new RequestNotice(
-				severity: RequestNotice::SEVERITY_NOTICE,
+				severity: NoticeSeverity::Notice,
 				html: $this->getFileInfo( $requestManager, $context, $status ),
 				invalidates: false,
 				declines: false,
@@ -80,7 +82,7 @@ final class FileNotices implements NoticeProvider {
 
 		if ( $requestManager->isPastFileExpiry() ) {
 			return [ new RequestNotice(
-				severity: RequestNotice::SEVERITY_NOTICE,
+				severity: NoticeSeverity::Notice,
 				html: self::getExpiredInfo( $requestManager, $context ),
 				invalidates: true,
 				declines: true,
@@ -89,7 +91,7 @@ final class FileNotices implements NoticeProvider {
 		}
 
 		return [ new RequestNotice(
-			severity: RequestNotice::SEVERITY_ERROR,
+			severity: NoticeSeverity::Error,
 			html: $context->msg( 'importdump-info-no-file-found', $requestManager->getFilePath() )->escaped(),
 			invalidates: true,
 			declines: true,
@@ -100,7 +102,7 @@ final class FileNotices implements NoticeProvider {
 	private function getFileInfo(
 		RequestManager $requestManager,
 		IContextSource $context,
-		string $status
+		RequestStatus $status
 	): string {
 		$fileInfo = $context->msg( 'importdump-info-command' )->plaintextParams(
 			$requestManager->getCommand()
@@ -114,7 +116,7 @@ final class FileNotices implements NoticeProvider {
 			$context->msg( 'importdump-button-copy' )->text()
 		);
 
-		if ( $this->config->get( ConfigNames::EnableAutomatedJob ) && $status !== RequestStatus::STATUS_FAILED ) {
+		if ( $this->config->get( ConfigNames::EnableAutomatedJob ) && $status !== RequestStatus::Failed ) {
 			$fileInfo = '';
 		}
 
@@ -131,9 +133,13 @@ final class FileNotices implements NoticeProvider {
 		return $fileInfo;
 	}
 
-	private function getImportedInfo( RequestManager $requestManager, IContextSource $context ): string {
-		$stage = $context->msg( 'importdump-stage-' . $requestManager->getStage() )->text();
-		$info = $context->msg( 'importdump-info-already-imported', $stage )->parse();
+	private function getImportedInfo(
+		RequestManager $requestManager,
+		IContextSource $context,
+		RequestStage $stage
+	): string {
+		$info = $context->msg( 'importdump-info-already-imported', $context->msg( $stage->getLabelKey() )->text() )
+			->parse();
 
 		$commands = $requestManager->getRemainingCommands();
 		if ( $commands ) {

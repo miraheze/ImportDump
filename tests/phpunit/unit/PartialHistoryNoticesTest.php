@@ -5,9 +5,9 @@ namespace Miraheze\ImportDump\Tests\Unit;
 use MediaWiki\Context\IContextSource;
 use MediaWiki\Message\Message;
 use MediaWikiUnitTestCase;
-use Miraheze\ImportDump\Notices\NoticeProvider;
+use Miraheze\ImportDump\Notices\NoticeAudience;
+use Miraheze\ImportDump\Notices\NoticeSeverity;
 use Miraheze\ImportDump\Notices\PartialHistoryNotices;
-use Miraheze\ImportDump\Notices\RequestNotice;
 use Miraheze\ImportDump\RequestHistory;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
@@ -17,7 +17,7 @@ use Miraheze\ImportDump\RequestStatus;
  */
 class PartialHistoryNoticesTest extends MediaWikiUnitTestCase {
 
-	private function getNotices( ?string $history ): array {
+	private function getNotices( ?RequestHistory $history ): array {
 		$message = $this->createMock( Message::class );
 		$message->method( 'escaped' )->willReturn( 'history' );
 
@@ -27,26 +27,26 @@ class PartialHistoryNoticesTest extends MediaWikiUnitTestCase {
 		$requestManager = $this->createMock( RequestManager::class );
 		$requestManager->method( 'getHistory' )->willReturn( $history );
 
-		return new PartialHistoryNotices()->getNotices( $requestManager, $context, RequestStatus::STATUS_PENDING );
+		return new PartialHistoryNotices()->getNotices( $requestManager, $context, RequestStatus::Pending );
 	}
 
 	public function testWarnsAboutMissingRevisions(): void {
-		$notices = $this->getNotices( RequestHistory::HISTORY_PARTIAL );
+		$notices = $this->getNotices( RequestHistory::Partial );
 
 		$this->assertCount( 1, $notices );
-		$this->assertSame( RequestNotice::SEVERITY_WARNING, $notices[0]->severity );
+		$this->assertSame( NoticeSeverity::Warning, $notices[0]->severity );
 		$this->assertFalse( $notices[0]->invalidates );
 	}
 
 	/** @dataProvider provideOtherHistory */
-	public function testShowsNothingOtherwise( ?string $history ): void {
+	public function testShowsNothingOtherwise( ?RequestHistory $history ): void {
 		$this->assertSame( [], $this->getNotices( $history ) );
 	}
 
 	public static function provideOtherHistory(): array {
 		return [
-			'full' => [ RequestHistory::HISTORY_FULL ],
-			'unknown' => [ RequestHistory::HISTORY_UNKNOWN ],
+			'full' => [ RequestHistory::Full ],
+			'unknown' => [ RequestHistory::Unknown ],
 			'not checked' => [ null ],
 		];
 	}
@@ -54,7 +54,7 @@ class PartialHistoryNoticesTest extends MediaWikiUnitTestCase {
 	public function testIsForThePartiesAndNeedsNoAccessToTheTarget(): void {
 		$provider = new PartialHistoryNotices();
 
-		$this->assertSame( NoticeProvider::AUDIENCE_PARTIES, $provider->getAudience() );
+		$this->assertSame( NoticeAudience::Parties, $provider->getAudience() );
 		$this->assertFalse( $provider->requiresTargetAccess() );
 	}
 }

@@ -2,11 +2,14 @@
 
 namespace Miraheze\ImportDump;
 
-interface RequestHistory {
+enum RequestHistory: string {
 
-	public const string HISTORY_FULL = 'full';
+	case Full = 'full';
+	case Partial = 'partial';
+	case Unknown = 'unknown';
 
-	public const string HISTORY_PARTIAL = 'partial';
-
-	public const string HISTORY_UNKNOWN = 'unknown';
+	/** The message key of the explanation of this result. */
+	public function getInfoKey(): string {
+		return 'importdump-info-history-' . $this->value;
+	}
 }

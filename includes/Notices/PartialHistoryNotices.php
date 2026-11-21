@@ -5,13 +5,14 @@ namespace Miraheze\ImportDump\Notices;
 use MediaWiki\Context\IContextSource;
 use Miraheze\ImportDump\RequestHistory;
 use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\RequestStatus;
 
 /** Missing revisions are the only thing about the history that the requester needs to know. */
 final class PartialHistoryNotices implements NoticeProvider {
 
 	/** @inheritDoc */
-	public function getAudience(): string {
-		return self::AUDIENCE_PARTIES;
+	public function getAudience(): NoticeAudience {
+		return NoticeAudience::Parties;
 	}
 
 	/** @inheritDoc */
@@ -26,19 +27,19 @@ final class PartialHistoryNotices implements NoticeProvider {
 
 	/**
 	 * @inheritDoc
-	 * @param string $status @phan-unused-param
+	 * @param RequestStatus $status @phan-unused-param
 	 */
 	public function getNotices(
 		RequestManager $requestManager,
 		IContextSource $context,
-		string $status
+		RequestStatus $status
 	): array {
-		if ( $requestManager->getHistory() !== RequestHistory::HISTORY_PARTIAL ) {
+		if ( $requestManager->getHistory() !== RequestHistory::Partial ) {
 			return [];
 		}
 
 		return [ new RequestNotice(
-			severity: RequestNotice::SEVERITY_WARNING,
+			severity: NoticeSeverity::Warning,
 			html: $context->msg( 'importdump-info-history-partial' )->escaped(),
 			invalidates: false,
 			declines: false,

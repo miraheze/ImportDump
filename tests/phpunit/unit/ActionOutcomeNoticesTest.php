@@ -5,8 +5,8 @@ namespace Miraheze\ImportDump\Tests\Unit;
 use MediaWiki\Context\IContextSource;
 use MediaWikiUnitTestCase;
 use Miraheze\ImportDump\Notices\ActionOutcomeNotices;
-use Miraheze\ImportDump\Notices\NoticeProvider;
-use Miraheze\ImportDump\Notices\RequestNotice;
+use Miraheze\ImportDump\Notices\NoticeAudience;
+use Miraheze\ImportDump\Notices\NoticeSeverity;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 
@@ -19,7 +19,7 @@ class ActionOutcomeNoticesTest extends MediaWikiUnitTestCase {
 		return $provider->getNotices(
 			$this->createMock( RequestManager::class ),
 			$this->createMock( IContextSource::class ),
-			RequestStatus::STATUS_PENDING
+			RequestStatus::Pending
 		);
 	}
 
@@ -29,21 +29,21 @@ class ActionOutcomeNoticesTest extends MediaWikiUnitTestCase {
 
 	public function testShowsTheResultsInTheOrderTheyWereAdded(): void {
 		$provider = new ActionOutcomeNotices();
-		$provider->add( RequestNotice::SEVERITY_SUCCESS, 'saved' );
-		$provider->add( RequestNotice::SEVERITY_ERROR, 'refused' );
+		$provider->add( NoticeSeverity::Success, 'saved' );
+		$provider->add( NoticeSeverity::Error, 'refused' );
 
 		$notices = $this->getNotices( $provider );
 
 		$this->assertCount( 2, $notices );
-		$this->assertSame( RequestNotice::SEVERITY_SUCCESS, $notices[0]->severity );
+		$this->assertSame( NoticeSeverity::Success, $notices[0]->severity );
 		$this->assertSame( 'saved', $notices[0]->html );
-		$this->assertSame( RequestNotice::SEVERITY_ERROR, $notices[1]->severity );
+		$this->assertSame( NoticeSeverity::Error, $notices[1]->severity );
 		$this->assertSame( 'refused', $notices[1]->html );
 	}
 
 	public function testResultsArePinnedAndNeverChangeTheRequest(): void {
 		$provider = new ActionOutcomeNotices();
-		$provider->add( RequestNotice::SEVERITY_ERROR, 'refused' );
+		$provider->add( NoticeSeverity::Error, 'refused' );
 
 		$notice = $this->getNotices( $provider )[0];
 
@@ -55,7 +55,7 @@ class ActionOutcomeNoticesTest extends MediaWikiUnitTestCase {
 	public function testIsForEveryoneAndAlwaysAtTheTop(): void {
 		$provider = new ActionOutcomeNotices();
 
-		$this->assertSame( NoticeProvider::AUDIENCE_EVERYONE, $provider->getAudience() );
+		$this->assertSame( NoticeAudience::Everyone, $provider->getAudience() );
 		$this->assertTrue( $provider->isAlwaysAtTop() );
 		$this->assertFalse( $provider->requiresTargetAccess() );
 	}

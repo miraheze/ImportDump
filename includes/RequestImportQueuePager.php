@@ -9,8 +9,7 @@ use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
 use Wikimedia\Rdbms\IConnectionProvider;
 
-class RequestImportQueuePager extends TablePager
-	implements RequestStatus {
+class RequestImportQueuePager extends TablePager {
 
 	public function __construct(
 		IContextSource $context,
@@ -22,7 +21,7 @@ class RequestImportQueuePager extends TablePager
 		private readonly string $target,
 	) {
 		parent::__construct( $context, $linkRenderer );
-		$this->mDb = $connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
+		$this->mDb = $connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 	}
 
 	/** @inheritDoc */
@@ -97,7 +96,7 @@ class RequestImportQueuePager extends TablePager
 		if ( $this->status && $this->status !== '*' ) {
 			$info['conds']['request_status'] = $this->status;
 		} elseif ( !$this->status ) {
-			$info['conds']['request_status'] = self::STATUS_PENDING;
+			$info['conds']['request_status'] = RequestStatus::Pending->value;
 		}
 
 		return $info;

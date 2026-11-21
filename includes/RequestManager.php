@@ -16,10 +16,8 @@ use MediaWiki\Notification\RecipientSet;
 use MediaWiki\Permissions\Authority;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
-use MediaWiki\User\ActorStoreFactory;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
-use MediaWiki\User\UserGroupManagerFactory;
 use MediaWiki\User\UserIdentity;
 use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
@@ -39,20 +37,26 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 class RequestManager {
 
+	public const string EXTENSION_USER = 'RequestImport Extension';
+	public const string STATUS_UPDATE_USER = 'RequestImport Status Update';
+
+	/** The virtual domain of the database that has the requests. */
+	public const string VIRTUAL_DOMAIN = 'virtual-requestimport';
+
 	private const array SYSTEM_USERS = [
-		'RequestImport Extension',
-		'RequestImport Status Update',
+		self::EXTENSION_USER,
+		self::STATUS_UPDATE_USER,
 	];
 
+	/** @var RequestStatus[] */
 	public const array EXPIRABLE_STATUSES = [
-		RequestStatus::STATUS_COMPLETE,
-		RequestStatus::STATUS_DECLINED,
-		RequestStatus::STATUS_FAILED,
+		RequestStatus::Complete,
+		RequestStatus::Declined,
+		RequestStatus::Failed,
 	];
 
 	public const array CONSTRUCTOR_OPTIONS = [
 		ConfigNames::DumpCommand,
-		ConfigNames::ExtensionRequirements,
 		ConfigNames::FileExpiryDays,
 		ConfigNames::InterwikiMap,
 		ConfigNames::MaintenanceCommand,
@@ -68,11 +72,7 @@ class RequestManager {
 	private stdClass|false $row;
 	private int $ID;
 
-	/** @var ?array{extensions: ?string[], settings: array<string, bool>, rights: string[]} */
-	private ?array $targetState = null;
-
 	public function __construct(
-		private readonly ActorStoreFactory $actorStoreFactory,
 		private readonly IConnectionProvider $connectionProvider,
 		private readonly HookRunner $hookRunner,
 		private readonly InterwikiLookup $interwikiLookup,
@@ -82,8 +82,9 @@ class RequestManager {
 		private readonly MessageLocalizer $messageLocalizer,
 		private readonly ServiceOptions $options,
 		private readonly UserFactory $userFactory,
-		private readonly UserGroupManagerFactory $userGroupManagerFactory,
 		private readonly ImportProgress $importProgress,
+		private readonly RequirementChecker $requirementChecker,
+		private readonly TargetStateProvider $targetStateProvider,
 		private readonly VerificationProgress $verificationProgress,
 		private readonly ?ModuleFactory $moduleFactory,
 	) {
@@ -91,9 +92,9 @@ class RequestManager {
 	}
 
 	public function loadFromID( int $requestID ): void {
-		$this->dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-requestimport' );
+		$this->dbw = $this->connectionProvider->getPrimaryDatabase( self::VIRTUAL_DOMAIN );
 		$this->ID = $requestID;
-		$this->targetState = null;
+		$this->targetStateProvider->clear();
 
 		$this->row = $this->dbw->newSelectQueryBuilder()
 			->select( ISQLPlatform::ALL_ROWS )
@@ -128,11 +129,11 @@ class RequestManager {
 		}
 	}
 
-	public function logStatusUpdate( string $comment, string $newStatus, User $user ): void {
+	public function logStatusUpdate( string $comment, RequestStatus $newStatus, User $user ): void {
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
 
 		$logEntry = new ManualLogEntry(
-			$this->isPrivate( forced: false ) ? 'requestimportprivate' : 'requestimport',
+			$this->isPrivate() ? 'requestimportprivate' : 'requestimport',
 			'statusupdate'
 		);
 
@@ -146,7 +147,7 @@ class RequestManager {
 		$logEntry->setParameters(
 			[
 				'4:request-link:requestID' => $this->ID,
-				'5:request-status:requestStatus' => $newStatus,
+				'5:request-status:requestStatus' => $newStatus->value,
 			]
 		);
 
@@ -158,7 +159,7 @@ class RequestManager {
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
 
 		$logEntry = new ManualLogEntry(
-			$this->isPrivate( forced: false ) ? 'requestimportprivate' : 'requestimport',
+			$this->isPrivate() ? 'requestimportprivate' : 'requestimport',
 			'started'
 		);
 
@@ -284,7 +285,7 @@ class RequestManager {
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$this->ID );
 
 		$logEntry = new ManualLogEntry(
-			$this->isPrivate( forced: false ) ? 'requestimportprivate' : 'requestimport',
+			$this->isPrivate() ? 'requestimportprivate' : 'requestimport',
 			'interwiki'
 		);
 
@@ -391,7 +392,7 @@ class RequestManager {
 			return false;
 		}
 
-		return array_diff( self::REQUIRED_TARGET_RIGHTS, $this->getTargetState()['rights'] ) === [];
+		return $this->getTargetState()->hasRights( self::REQUIRED_TARGET_RIGHTS );
 	}
 
 	/**
@@ -404,52 +405,21 @@ class RequestManager {
 			return null;
 		}
 
-		$rights = $this->getTargetState()['rights'];
+		$rights = $this->getTargetState()->rights;
 		return $rights === [] ? null : in_array( $right, $rights, true );
 	}
 
 	/** @return ?string[] The groups of the requester on the target wiki, or null without an account there. */
 	private function getRequesterGroupsOnTarget(): ?array {
-		$remoteUser = $this->actorStoreFactory
-			->getUserIdentityLookup( $this->getTarget() )
-			->getUserIdentityByName( $this->getRequester()->getName() );
-
-		if ( !$remoteUser ) {
-			return null;
-		}
-
-		return $this->userGroupManagerFactory
-			->getUserGroupManager( $this->getTarget() )
-			->getUserGroups( $remoteUser );
+		return $this->targetStateProvider->getGroups( $this->getTarget(), $this->getRequester()->getName() );
 	}
 
-	/** @return array{extensions: ?string[], settings: array<string, bool>, rights: string[]} */
-	private function getTargetState(): array {
-		if ( $this->targetState !== null ) {
-			return $this->targetState;
+	private function getTargetState(): TargetState {
+		if ( !$this->targetExists() ) {
+			return TargetState::empty();
 		}
 
-		$extensions = null;
-		$settings = [];
-		$rights = [];
-
-		if ( $this->targetExists() ) {
-			$this->hookRunner->onImportDumpGetTargetState(
-				$this->getTarget(),
-				$this->getRequesterGroupsOnTarget() ?? [],
-				$extensions,
-				$settings,
-				$rights
-			);
-		}
-
-		$this->targetState = [
-			'extensions' => $extensions,
-			'settings' => $settings,
-			'rights' => $rights,
-		];
-
-		return $this->targetState;
+		return $this->targetStateProvider->getState( $this->getTarget(), $this->getRequester()->getName() );
 	}
 
 	public function getUserGroupsFromTarget(): array {
@@ -564,7 +534,7 @@ class RequestManager {
 		}
 
 		$expiry = $this->options->get( ConfigNames::FileExpiryDays );
-		return is_array( $expiry ) ? (int)( $expiry[$this->getStatus()] ?? 0 ) : 0;
+		return is_array( $expiry ) ? (int)( $expiry[$this->getStatus()->value] ?? 0 ) : 0;
 	}
 
 	public function isPastFileExpiry(): bool {
@@ -604,8 +574,8 @@ class RequestManager {
 		return $this->row->request_source;
 	}
 
-	public function getHistory(): ?string {
-		return $this->row->request_history ?? null;
+	public function getHistory(): ?RequestHistory {
+		return RequestHistory::tryFrom( $this->row->request_history ?? '' );
 	}
 
 	/** @return ?array{stage: string, percent: ?int} */
@@ -613,40 +583,36 @@ class RequestManager {
 		return $this->verificationProgress->get( $this->ID );
 	}
 
-	public function getStage(): string {
-		return $this->row->request_stage ?? '';
+	public function getStage(): ?RequestStage {
+		return RequestStage::tryFrom( $this->row->request_stage ?? '' );
 	}
 
-	public function getStatus(): string {
-		return $this->row->request_status;
+	public function getStatus(): RequestStatus {
+		return RequestStatus::from( $this->row->request_status );
 	}
 
 	public function hasImported(): bool {
-		$stage = $this->getStage();
-		return !in_array( $stage, [ '', RequestStage::STAGE_DOWNLOAD, RequestStage::STAGE_IMPORT ], true );
+		return $this->getStage()?->hasImported() ?? false;
 	}
 
 	/** @return string[] */
 	public function getRemainingCommands(): array {
 		$scripts = [
-			RequestStage::STAGE_SITESTATS => [ 'initSiteStats.php' => '--update' ],
-			RequestStage::STAGE_TEXTINDEX => [ 'rebuildtextindex.php' => '' ],
-			RequestStage::STAGE_RECENTCHANGES => [ 'rebuildrecentchanges.php' => '' ],
-			RequestStage::STAGE_REFRESHLINKS => [ 'refreshLinks.php' => '' ],
-			RequestStage::STAGE_COUNTS => [
+			RequestStage::SiteStats->value => [ 'initSiteStats.php' => '--update' ],
+			RequestStage::TextIndex->value => [ 'rebuildtextindex.php' => '' ],
+			RequestStage::RecentChanges->value => [ 'rebuildrecentchanges.php' => '' ],
+			RequestStage::RefreshLinks->value => [ 'refreshLinks.php' => '' ],
+			RequestStage::Counts->value => [
 				'initEditCount.php' => '',
 				'updateArticleCount.php' => '--update',
 			],
 		];
 
 		$commands = [];
-		$remaining = array_slice(
-			RequestStage::STAGES,
-			(int)array_search( $this->getStage(), RequestStage::STAGES, true )
-		);
+		$remaining = array_slice( RequestStage::cases(), $this->getStage()?->getPosition() ?? 0 );
 
 		foreach ( $remaining as $stage ) {
-			foreach ( $scripts[$stage] ?? [] as $script => $arguments ) {
+			foreach ( $scripts[$stage->value] ?? [] as $script => $arguments ) {
 				$commands[] = trim( str_replace(
 					[ '{IP}', '{wiki}', '{script}', '{script-name}', '{arguments}' ],
 					[ MW_INSTALL_PATH, $this->getTarget(), $script, basename( $script, '.php' ), $arguments ],
@@ -672,16 +638,18 @@ class RequestManager {
 
 	/** Private requests can only be seen by their requester and by those who may view private requests. */
 	public function isViewableBy( Authority $authority ): bool {
-		return !$this->isPrivate( forced: false ) ||
+		return !$this->isPrivate() ||
 			$authority->getUser()->getName() === $this->getRequester()->getName() ||
 			$authority->isAllowed( 'view-private-import-requests' );
 	}
 
-	public function isPrivate( bool $forced ): bool {
-		if ( !$forced && $this->row->request_private ) {
-			return true;
-		}
+	/** Whether the request was marked as private, or the target wiki is private. */
+	public function isPrivate(): bool {
+		return (bool)$this->row->request_private || $this->isTargetPrivate();
+	}
 
+	/** Whether the target wiki is private, whatever the request is marked as. */
+	public function isTargetPrivate(): bool {
 		// The privacy of a deleted wiki cannot be known, so assume it was private.
 		if ( !$this->targetExists() ) {
 			return true;
@@ -703,22 +671,26 @@ class RequestManager {
 		$this->dbw->startAtomic( $fname );
 	}
 
-	public function setLocked( int $locked ): void {
+	public function setLocked( bool $locked ): void {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
-			->set( [ 'request_locked' => $locked ] )
+			->set( [ 'request_locked' => (int)$locked ] )
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();
+
+		$this->row->request_locked = (int)$locked;
 	}
 
-	public function setPrivate( int $private ): void {
+	public function setPrivate( bool $private ): void {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
-			->set( [ 'request_private' => $private ] )
+			->set( [ 'request_private' => (int)$private ] )
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();
+
+		$this->row->request_private = (int)$private;
 	}
 
 	public function setReason( string $reason ): void {
@@ -728,6 +700,8 @@ class RequestManager {
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();
+
+		$this->row->request_reason = $reason;
 	}
 
 	public function setSource( string $source ): void {
@@ -737,10 +711,12 @@ class RequestManager {
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();
+
+		$this->row->request_source = $source;
 	}
 
 	public function setImportPercent( int $percent, ?int $done, ?int $total ): void {
-		$this->importProgress->set( $this->ID, $this->getStage(), $percent, $done, $total );
+		$this->importProgress->set( $this->ID, $this->getStage()?->value ?? '', $percent, $done, $total );
 	}
 
 	/** The percentage of the current stage that is done, or null if it is not known. */
@@ -761,29 +737,29 @@ class RequestManager {
 	/** @return ?array{stage: string, percent: int, done: ?int, total: ?int} */
 	private function getImportProgress(): ?array {
 		$progress = $this->importProgress->get( $this->ID );
-		if ( $progress === null || $progress['stage'] !== $this->getStage() ) {
+		if ( $progress === null || $progress['stage'] !== $this->getStage()?->value ) {
 			return null;
 		}
 
 		return $progress;
 	}
 
-	public function setStage( string $stage ): void {
+	public function setStage( ?RequestStage $stage ): void {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
-			->set( [ 'request_stage' => $stage ?: null ] )
+			->set( [ 'request_stage' => $stage?->value ] )
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();
 
-		$this->row->request_stage = $stage ?: null;
+		$this->row->request_stage = $stage?->value;
 	}
 
-	public function setStatus( string $status ): void {
+	public function setStatus( RequestStatus $status ): void {
 		$oldStatus = $this->getStatus();
 
-		$set = [ 'request_status' => $status ];
-		if ( $status === RequestStatus::STATUS_PENDING || $status === RequestStatus::STATUS_COMPLETE ) {
+		$set = [ 'request_status' => $status->value ];
+		if ( $status === RequestStatus::Pending || $status === RequestStatus::Complete ) {
 			$set['request_stage'] = null;
 			$this->row->request_stage = null;
 		}
@@ -795,7 +771,7 @@ class RequestManager {
 			->caller( __METHOD__ )
 			->execute();
 
-		$this->row->request_status = $status;
+		$this->row->request_status = $status->value;
 
 		if ( $oldStatus !== $status ) {
 			$this->hookRunner->onImportDumpRequestStatusUpdate( $this, $status, $oldStatus );
@@ -822,113 +798,25 @@ class RequestManager {
 		return $value ? array_map( boolval( ... ), (array)json_decode( $value, true ) ) : [];
 	}
 
-	/**
-	 * Compares what the dump needs to what the target wiki has, as the ImportDumpGetTargetState
-	 * hook reports it. A problem blocks the import if the dump certainly needs the extension and
-	 * the wiki certainly does not have it or its setting.
-	 *
-	 * @return list<array{name: string, problem: string, setting: string, blocking: bool}>
-	 *  A problem is one of unknown, missing, setting-unknown and setting. The setting is empty
-	 *  when it does not apply.
-	 */
+	/** @return list<RequirementProblem> */
 	public function getRequirementProblems(): array {
-		$requirements = $this->getRequirements();
-		if ( !$requirements ) {
-			return [];
-		}
-
-		$state = $this->getTargetState();
-		$extensions = $state['extensions'];
-		$settings = $state['settings'];
-
-		$definitions = ExtensionRequirement::fromConfig(
-			(array)$this->options->get( ConfigNames::ExtensionRequirements )
-		);
-
-		$problems = [];
-		foreach ( $requirements as $name => $certain ) {
-			$name = (string)$name;
-			if ( $extensions === null ) {
-				$problems[] = [ 'name' => $name, 'problem' => 'unknown', 'setting' => '', 'blocking' => false ];
-				continue;
-			}
-
-			if ( !in_array( $name, $extensions, true ) ) {
-				$problems[] = [ 'name' => $name, 'problem' => 'missing', 'setting' => '', 'blocking' => $certain ];
-				continue;
-			}
-
-			foreach ( isset( $definitions[$name] ) ? $definitions[$name]->settings : [] as $setting ) {
-				if ( !isset( $settings[$setting] ) ) {
-					$problems[] = [
-						'name' => $name,
-						'problem' => 'setting-unknown',
-						'setting' => $setting,
-						'blocking' => false,
-					];
-				} elseif ( !$settings[$setting] ) {
-					$problems[] = [
-						'name' => $name,
-						'problem' => 'setting',
-						'setting' => $setting,
-						'blocking' => $certain,
-					];
-				}
-			}
-		}
-
-		return $problems;
+		return $this->requirementChecker->getProblems( $this->getRequirements(), $this->getTargetState() );
 	}
 
-	/** @return list<array{name: string, problem: string, setting: string, blocking: bool}> */
+	/** @return list<RequirementProblem> */
 	public function getBlockingRequirementProblems(): array {
-		return array_values( array_filter(
-			$this->getRequirementProblems(),
-			static fn ( array $problem ): bool => $problem['blocking']
-		) );
+		return $this->requirementChecker->getBlocking( $this->getRequirementProblems() );
 	}
 
-	/**
-	 * Tells the requester that the request needs attention, which is when the dump seems to be
-	 * missing revisions, or when the import cannot start until something is enabled on the target
-	 * wiki. That the target lacks something is a fact about the target, so it only counts for a
-	 * requester who can read it, like the notices on the request. The notification does not say
-	 * what the matter is. That is left to the notices, which are up to date when the request is
-	 * opened.
-	 */
-	public function notifyRequester(): void {
-		$needsAttention = $this->getHistory() === RequestHistory::HISTORY_PARTIAL || (
-			$this->requesterHasTargetAccess() && $this->getBlockingRequirementProblems()
-		);
-
-		if ( !$needsAttention ) {
-			return;
-		}
-
-		$this->notificationService->notify(
-			new RequestNotification(
-				'requestimport-attention',
-				User::newSystemUser( 'RequestImport Status Update' ),
-				[
-					'request-id' => $this->ID,
-					'request-url' => SpecialPage::getTitleFor(
-						'RequestImportQueue', (string)$this->ID
-					)->getFullURL(),
-				]
-			),
-			new RecipientSet( [ $this->getRequester() ] )
-		);
-	}
-
-	public function setHistory( ?string $history ): void {
+	public function setHistory( ?RequestHistory $history ): void {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
-			->set( [ 'request_history' => $history ] )
+			->set( [ 'request_history' => $history?->value ] )
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();
 
-		$this->row->request_history = $history;
+		$this->row->request_history = $history?->value;
 	}
 
 	public function setTarget( string $target ): void {
@@ -938,6 +826,8 @@ class RequestManager {
 			->where( [ 'request_id' => $this->ID ] )
 			->caller( __METHOD__ )
 			->execute();
+
+		$this->row->request_target = $target;
 	}
 
 	public function retryVerification(): void {

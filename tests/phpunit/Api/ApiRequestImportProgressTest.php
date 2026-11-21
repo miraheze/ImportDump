@@ -7,6 +7,7 @@ use MediaWiki\Permissions\SimpleAuthority;
 use MediaWiki\Tests\Api\ApiTestCase;
 use MediaWiki\User\UserIdentityValue;
 use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\RequestStage;
 use Miraheze\ImportDump\RequestStatus;
 use Miraheze\ImportDump\Tests\IsolatesManageWikiTrait;
 use Miraheze\ImportDump\VerificationProgress;
@@ -19,8 +20,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group medium
  * @covers \Miraheze\ImportDump\Api\ApiRequestImportProgress
  */
-class ApiRequestImportProgressTest extends ApiTestCase
-	implements RequestStatus {
+class ApiRequestImportProgressTest extends ApiTestCase {
 
 	use IsolatesManageWikiTrait;
 
@@ -36,7 +36,7 @@ class ApiRequestImportProgressTest extends ApiTestCase
 		] );
 	}
 
-	private function newRequest( string $status, int $private ): int {
+	private function newRequest( RequestStatus $status, int $private ): int {
 		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
 
 		$this->getDb()->newInsertQueryBuilder()
@@ -45,7 +45,7 @@ class ApiRequestImportProgressTest extends ApiTestCase
 				'request_source' => 'https://requestimporttest.com',
 				'request_target' => 'requestimporttest',
 				'request_reason' => 'test',
-				'request_status' => $status,
+				'request_status' => $status->value,
 				'request_private' => $private,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
 				'request_timestamp' => $this->getDb()->timestamp(),
@@ -63,33 +63,33 @@ class ApiRequestImportProgressTest extends ApiTestCase
 	}
 
 	public function testWaiting(): void {
-		$id = $this->newRequest( self::STATUS_VERIFYING, 0 );
+		$id = $this->newRequest( RequestStatus::Verifying, 0 );
 
 		[ $result ] = $this->doApiRequest( [ 'action' => 'requestimportprogress', 'requestid' => $id ] );
 		$this->assertSame(
-			[ 'status' => self::STATUS_VERIFYING, 'stage' => 'waiting', 'percent' => null ],
+			[ 'status' => RequestStatus::Verifying->value, 'stage' => 'waiting', 'percent' => null ],
 			$result['requestimportprogress']
 		);
 	}
 
 	public function testProgress(): void {
-		$id = $this->newRequest( self::STATUS_VERIFYING, 0 );
+		$id = $this->newRequest( RequestStatus::Verifying, 0 );
 		$this->getProgress()->set( $id, 'extracting', 42 );
 
 		[ $result ] = $this->doApiRequest( [ 'action' => 'requestimportprogress', 'requestid' => $id ] );
 		$this->assertSame(
-			[ 'status' => self::STATUS_VERIFYING, 'stage' => 'extracting', 'percent' => 42 ],
+			[ 'status' => RequestStatus::Verifying->value, 'stage' => 'extracting', 'percent' => 42 ],
 			$result['requestimportprogress']
 		);
 	}
 
 	public function testImportWaitingToStart(): void {
-		$id = $this->newRequest( self::STATUS_STARTING, 0 );
+		$id = $this->newRequest( RequestStatus::Starting, 0 );
 
 		[ $result ] = $this->doApiRequest( [ 'action' => 'requestimportprogress', 'requestid' => $id ] );
 		$this->assertSame(
 			[
-				'status' => self::STATUS_STARTING,
+				'status' => RequestStatus::Starting->value,
 				'stage' => '',
 				'step' => 0,
 				'steps' => 8,
@@ -102,17 +102,17 @@ class ApiRequestImportProgressTest extends ApiTestCase
 	}
 
 	public function testImportProgress(): void {
-		$id = $this->newRequest( self::STATUS_INPROGRESS, 0 );
+		$id = $this->newRequest( RequestStatus::InProgress, 0 );
 
 		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
 		'@phan-var \Miraheze\ImportDump\RequestManager $manager';
 		$manager->loadFromID( $id );
-		$manager->setStage( 'textindex' );
+		$manager->setStage( RequestStage::TextIndex );
 
 		[ $result ] = $this->doApiRequest( [ 'action' => 'requestimportprogress', 'requestid' => $id ] );
 		$this->assertSame(
 			[
-				'status' => self::STATUS_INPROGRESS,
+				'status' => RequestStatus::InProgress->value,
 				'stage' => 'textindex',
 				'step' => 4,
 				'steps' => 8,
@@ -137,10 +137,10 @@ class ApiRequestImportProgressTest extends ApiTestCase
 	}
 
 	public function testFinished(): void {
-		$id = $this->newRequest( self::STATUS_PENDING, 0 );
+		$id = $this->newRequest( RequestStatus::Pending, 0 );
 
 		[ $result ] = $this->doApiRequest( [ 'action' => 'requestimportprogress', 'requestid' => $id ] );
-		$this->assertSame( self::STATUS_PENDING, $result['requestimportprogress']['status'] );
+		$this->assertSame( RequestStatus::Pending->value, $result['requestimportprogress']['status'] );
 	}
 
 	public function testUnknownRequest(): void {
@@ -149,7 +149,7 @@ class ApiRequestImportProgressTest extends ApiTestCase
 	}
 
 	public function testPrivateRequestHiddenFromOthers(): void {
-		$id = $this->newRequest( self::STATUS_VERIFYING, 1 );
+		$id = $this->newRequest( RequestStatus::Verifying, 1 );
 
 		$this->expectApiErrorCode( 'permissiondenied' );
 		$this->doApiRequest(
@@ -161,7 +161,7 @@ class ApiRequestImportProgressTest extends ApiTestCase
 	}
 
 	public function testPrivateRequestVisibleToRequester(): void {
-		$id = $this->newRequest( self::STATUS_VERIFYING, 1 );
+		$id = $this->newRequest( RequestStatus::Verifying, 1 );
 
 		[ $result ] = $this->doApiRequest(
 			[ 'action' => 'requestimportprogress', 'requestid' => $id ],
@@ -170,11 +170,11 @@ class ApiRequestImportProgressTest extends ApiTestCase
 			$this->getTestUser()->getAuthority()
 		);
 
-		$this->assertSame( self::STATUS_VERIFYING, $result['requestimportprogress']['status'] );
+		$this->assertSame( RequestStatus::Verifying->value, $result['requestimportprogress']['status'] );
 	}
 
 	public function testPrivateRequestVisibleToThoseWithTheRight(): void {
-		$id = $this->newRequest( self::STATUS_VERIFYING, 1 );
+		$id = $this->newRequest( RequestStatus::Verifying, 1 );
 
 		[ $result ] = $this->doApiRequest(
 			[ 'action' => 'requestimportprogress', 'requestid' => $id ],
@@ -186,6 +186,6 @@ class ApiRequestImportProgressTest extends ApiTestCase
 			)
 		);
 
-		$this->assertSame( self::STATUS_VERIFYING, $result['requestimportprogress']['status'] );
+		$this->assertSame( RequestStatus::Verifying->value, $result['requestimportprogress']['status'] );
 	}
 }

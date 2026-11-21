@@ -13,12 +13,6 @@ use Miraheze\ImportDump\RequestStatus;
  */
 final class NoticeCollector {
 
-	public const string ROLE_HANDLER = 'handler';
-
-	public const string ROLE_REQUESTER = 'requester';
-
-	public const string ROLE_VIEWER = 'viewer';
-
 	/** @param NoticeProvider[] $providers In the order that they are asked. */
 	public function __construct(
 		private readonly array $providers,
@@ -28,8 +22,8 @@ final class NoticeCollector {
 	public function collect(
 		RequestManager $requestManager,
 		IContextSource $context,
-		string $status,
-		string $role,
+		RequestStatus $status,
+		NoticeRole $role,
 		bool $hasTargetAccess
 	): NoticeResult {
 		$notices = [];
@@ -41,7 +35,7 @@ final class NoticeCollector {
 				continue;
 			}
 
-			$atTop = $role !== self::ROLE_HANDLER || $provider->isAlwaysAtTop();
+			$atTop = $role !== NoticeRole::Handler || $provider->isAlwaysAtTop();
 			foreach ( $provider->getNotices( $requestManager, $context, $status ) as $notice ) {
 				if ( $atTop ) {
 					$topNotices[] = $notice;
@@ -53,9 +47,9 @@ final class NoticeCollector {
 
 				if (
 					$notice->declines &&
-					in_array( $status, [ RequestStatus::STATUS_PENDING, RequestStatus::STATUS_INPROGRESS ], true )
+					( $status === RequestStatus::Pending || $status === RequestStatus::InProgress )
 				) {
-					$status = RequestStatus::STATUS_DECLINED;
+					$status = RequestStatus::Declined;
 				}
 			}
 		}
@@ -63,8 +57,8 @@ final class NoticeCollector {
 		return new NoticeResult( $this->sort( $notices ), $this->sort( $topNotices ), $valid, $status );
 	}
 
-	private function isShownTo( NoticeProvider $provider, string $role, bool $hasTargetAccess ): bool {
-		if ( $role === self::ROLE_HANDLER ) {
+	private function isShownTo( NoticeProvider $provider, NoticeRole $role, bool $hasTargetAccess ): bool {
+		if ( $role === NoticeRole::Handler ) {
 			return true;
 		}
 
@@ -73,9 +67,9 @@ final class NoticeCollector {
 		}
 
 		return match ( $provider->getAudience() ) {
-			NoticeProvider::AUDIENCE_EVERYONE => true,
-			NoticeProvider::AUDIENCE_PARTIES => $role === self::ROLE_REQUESTER,
-			default => false,
+			NoticeAudience::Everyone => true,
+			NoticeAudience::Parties => $role === NoticeRole::Requester,
+			NoticeAudience::Handlers => false,
 		};
 	}
 
@@ -87,8 +81,7 @@ final class NoticeCollector {
 		usort(
 			$notices,
 			static fn ( RequestNotice $a, RequestNotice $b ): int =>
-				[ !$a->pinned, array_search( $a->severity, RequestNotice::SEVERITIES, true ) ] <=>
-				[ !$b->pinned, array_search( $b->severity, RequestNotice::SEVERITIES, true ) ]
+				[ !$a->pinned, $a->severity->getRank() ] <=> [ !$b->pinned, $b->severity->getRank() ]
 		);
 
 		return $notices;

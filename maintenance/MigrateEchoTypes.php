@@ -4,6 +4,7 @@ namespace Miraheze\ImportDump\Maintenance;
 
 use MediaWiki\Maintenance\LoggedUpdateMaintenance;
 use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\RequestManager;
 
 class MigrateEchoTypes extends LoggedUpdateMaintenance {
 
@@ -70,7 +71,7 @@ class MigrateEchoTypes extends LoggedUpdateMaintenance {
 			return 0;
 		}
 
-		$dbw = $this->getPrimaryDB( 'virtual-requestimport' );
+		$dbw = $this->getPrimaryDB( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbw->getDomainID() ) ) {
 			return 0;
 		}
@@ -104,7 +105,7 @@ class MigrateEchoTypes extends LoggedUpdateMaintenance {
 			return 0;
 		}
 
-		$dbw = $this->getPrimaryDB( 'virtual-requestimport' );
+		$dbw = $this->getPrimaryDB( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbw->getDomainID() ) ) {
 			return 0;
 		}

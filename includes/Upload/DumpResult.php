@@ -2,14 +2,14 @@
 
 namespace Miraheze\ImportDump\Upload;
 
+use Miraheze\ImportDump\RequestHistory;
 use Wikimedia\FileBackend\FSFile\TempFSFile;
 
 final readonly class DumpResult {
 
 	/**
 	 * @param string $path The XML file that will be imported.
-	 * @param ?string $history One of the RequestHistory::HISTORY_* constants, or null if history
-	 *  detection is off.
+	 * @param ?RequestHistory $history What the check found, or null if history detection is off.
 	 * @param array<string, bool> $requirements The extensions that the dump needs, such as
 	 *  WikibaseRepository, going by the latest revision of each page. The value is whether it is
 	 *  certain that it needs it, which is only the case for a content model.
@@ -18,7 +18,7 @@ final readonly class DumpResult {
 	 */
 	public function __construct(
 		public string $path,
-		public ?string $history,
+		public ?RequestHistory $history,
 		public array $requirements,
 		private ?TempFSFile $tempFile,
 	) {

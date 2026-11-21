@@ -27,6 +27,8 @@ use Miraheze\ImportDump\RequestHistory;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStage;
 use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\RequirementProblem;
+use Miraheze\ImportDump\RequirementProblemKind;
 use stdClass;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
@@ -39,8 +41,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group medium
  * @coversDefaultClass \Miraheze\ImportDump\RequestManager
  */
-class RequestManagerTest extends MediaWikiIntegrationTestCase
-	implements RequestStage, RequestStatus {
+class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 	use IsolatesManageWikiTrait;
 
@@ -61,7 +62,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 				'request_source' => 'https://requestimporttest.com',
 				'request_target' => 'requestimporttest',
 				'request_reason' => 'test',
-				'request_status' => self::STATUS_PENDING,
+				'request_status' => RequestStatus::Pending->value,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
 				'request_timestamp' => $this->db->timestamp(),
 			] )
@@ -175,7 +176,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$manager = $this->getRequestManager( id: 1 );
 		$user = $this->getTestUser()->getUser();
 
-		$manager->logStatusUpdate( 'Done', self::STATUS_COMPLETE, $user );
+		$manager->logStatusUpdate( 'Done', RequestStatus::Complete, $user );
 		$manager->logStarted( $user );
 
 		$rows = $this->getDb()->newSelectQueryBuilder()
@@ -194,7 +195,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$this->assertSame( [
 			'4:request-link:requestID' => 1,
-			'5:request-status:requestStatus' => self::STATUS_COMPLETE,
+			'5:request-status:requestStatus' => RequestStatus::Complete->value,
 		], $params['statusupdate'] );
 
 		$this->assertSame( [
@@ -298,8 +299,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->setTemporaryHook( 'ImportDumpRequestStatusUpdate',
 			static function (
 				RequestManager $manager,
-				string $newStatus,
-				string $oldStatus
+				RequestStatus $newStatus,
+				RequestStatus $oldStatus
 			) use ( &$calls ): void {
 				$calls[] = [ $newStatus, $oldStatus ];
 			}
@@ -307,8 +308,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$manager = $this->getRequestManager( id: 1 );
 		$oldStatus = $manager->getStatus();
-		$newStatus = $oldStatus === self::STATUS_DECLINED ?
-			self::STATUS_PENDING : self::STATUS_DECLINED;
+		$newStatus = $oldStatus === RequestStatus::Declined ?
+			RequestStatus::Pending : RequestStatus::Declined;
 
 		$manager->setStatus( $newStatus );
 
@@ -340,12 +341,12 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$this->getDb()->newUpdateQueryBuilder()
 			->update( 'import_requests' )
-			->set( [ 'request_history' => RequestHistory::HISTORY_PARTIAL ] )
+			->set( [ 'request_history' => RequestHistory::Partial->value ] )
 			->where( [ 'request_id' => 1 ] )
 			->caller( __METHOD__ )
 			->execute();
 
-		$this->assertSame( RequestHistory::HISTORY_PARTIAL, $this->getRequestManager( id: 1 )->getHistory() );
+		$this->assertSame( RequestHistory::Partial, $this->getRequestManager( id: 1 )->getHistory() );
 	}
 
 	/**
@@ -355,44 +356,44 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	 */
 	public function testStage(): void {
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->setStage( '' );
-		$this->assertSame( '', $manager->getStage() );
+		$manager->setStage( null );
+		$this->assertNull( $manager->getStage() );
 		$this->assertFalse( $manager->hasImported() );
 
-		$manager->setStage( self::STAGE_DOWNLOAD );
+		$manager->setStage( RequestStage::Download );
 		$this->assertFalse( $manager->hasImported() );
 
-		$manager->setStage( self::STAGE_IMPORT );
-		$this->assertSame( self::STAGE_IMPORT, $manager->getStage() );
+		$manager->setStage( RequestStage::Import );
+		$this->assertSame( RequestStage::Import, $manager->getStage() );
 		$this->assertFalse( $manager->hasImported() );
 
-		$manager->setStage( self::STAGE_SITESTATS );
+		$manager->setStage( RequestStage::SiteStats );
 		$this->assertTrue( $manager->hasImported() );
 
-		$this->assertSame( self::STAGE_SITESTATS, $this->getRequestManager( id: 1 )->getStage() );
+		$this->assertSame( RequestStage::SiteStats, $this->getRequestManager( id: 1 )->getStage() );
 	}
 
 	/**
 	 * @covers ::setStatus
 	 * @dataProvider provideStatusesThatClearStage
 	 */
-	public function testSetStatusClearsStage( string $status, bool $cleared ): void {
+	public function testSetStatusClearsStage( RequestStatus $status, bool $cleared ): void {
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->setStage( self::STAGE_REFRESHLINKS );
+		$manager->setStage( RequestStage::RefreshLinks );
 		$manager->setStatus( $status );
 
 		$this->assertSame(
-			$cleared ? '' : self::STAGE_REFRESHLINKS,
+			$cleared ? null : RequestStage::RefreshLinks,
 			$this->getRequestManager( id: 1 )->getStage()
 		);
 	}
 
 	public static function provideStatusesThatClearStage(): array {
 		return [
-			'pending' => [ self::STATUS_PENDING, true ],
-			'complete' => [ self::STATUS_COMPLETE, true ],
-			'partial' => [ self::STATUS_PARTIAL, false ],
-			'failed' => [ self::STATUS_FAILED, false ],
+			'pending' => [ RequestStatus::Pending, true ],
+			'complete' => [ RequestStatus::Complete, true ],
+			'partial' => [ RequestStatus::Partial, false ],
+			'failed' => [ RequestStatus::Failed, false ],
 		];
 	}
 
@@ -401,7 +402,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	 */
 	public function testGetRemainingCommands(): void {
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->setStage( self::STAGE_REFRESHLINKS );
+		$manager->setStage( RequestStage::RefreshLinks );
 
 		$commands = $manager->getRemainingCommands();
 		$this->assertCount( 3, $commands );
@@ -409,7 +410,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->assertStringContainsString( 'initEditCount.php', $commands[1] );
 		$this->assertStringContainsString( 'updateArticleCount.php --wiki=requestimporttest --update', $commands[2] );
 
-		$manager->setStage( self::STAGE_AFTERIMPORT );
+		$manager->setStage( RequestStage::AfterImport );
 		$this->assertSame( [], $manager->getRemainingCommands() );
 	}
 
@@ -420,7 +421,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->overrideConfigValue( ConfigNames::MaintenanceCommand, 'mwscript {script-name} {wiki} {arguments}' );
 
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->setStage( self::STAGE_COUNTS );
+		$manager->setStage( RequestStage::Counts );
 
 		$this->assertSame(
 			[
@@ -444,6 +445,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	/**
 	 * @covers ::getUserGroupsFromTarget
 	 * @covers ::isPrivate
+	 * @covers ::isTargetPrivate
 	 */
 	public function testDeletedTargetDoesNotQueryTargetDatabase(): void {
 		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [] );
@@ -466,8 +468,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 			$manager->getUserGroupsFromTarget()
 		);
 
-		$this->assertTrue( $manager->isPrivate( forced: false ) );
-		$this->assertTrue( $manager->isPrivate( forced: true ) );
+		$this->assertTrue( $manager->isPrivate() );
+		$this->assertTrue( $manager->isTargetPrivate() );
 	}
 
 	/**
@@ -520,7 +522,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	 * @dataProvider provideFileExpiry
 	 */
 	public function testFileExpiry(
-		string $status,
+		RequestStatus $status,
 		array $config,
 		int $daysElapsed,
 		int $expectedDays,
@@ -543,13 +545,18 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	}
 
 	public static function provideFileExpiry(): array {
+		$complete = [ RequestStatus::Complete->value => 7 ];
 		return [
-			'past the retention period' => [ self::STATUS_COMPLETE, [ self::STATUS_COMPLETE => 7 ], 8, 7, true ],
-			'exactly at the retention period' => [ self::STATUS_FAILED, [ self::STATUS_FAILED => 3 ], 3, 3, true ],
-			'within the retention period' => [ self::STATUS_COMPLETE, [ self::STATUS_COMPLETE => 7 ], 6, 7, false ],
-			'status is not configured' => [ self::STATUS_DECLINED, [ self::STATUS_COMPLETE => 7 ], 30, 0, false ],
-			'status that never expires' => [ self::STATUS_PARTIAL, [ self::STATUS_PARTIAL => 1 ], 30, 0, false ],
-			'nothing configured' => [ self::STATUS_COMPLETE, [], 30, 0, false ],
+			'past the retention period' => [ RequestStatus::Complete, $complete, 8, 7, true ],
+			'exactly at the retention period' => [
+				RequestStatus::Failed, [ RequestStatus::Failed->value => 3 ], 3, 3, true,
+			],
+			'within the retention period' => [ RequestStatus::Complete, $complete, 6, 7, false ],
+			'status is not configured' => [ RequestStatus::Declined, $complete, 30, 0, false ],
+			'status that never expires' => [
+				RequestStatus::Partial, [ RequestStatus::Partial->value => 1 ], 30, 0, false,
+			],
+			'nothing configured' => [ RequestStatus::Complete, [], 30, 0, false ],
 		];
 	}
 
@@ -637,10 +644,10 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	 */
 	public function testSetHistory(): void {
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->setHistory( RequestHistory::HISTORY_FULL );
-		$this->assertSame( RequestHistory::HISTORY_FULL, $manager->getHistory() );
+		$manager->setHistory( RequestHistory::Full );
+		$this->assertSame( RequestHistory::Full, $manager->getHistory() );
 		$this->assertSame(
-			RequestHistory::HISTORY_FULL,
+			RequestHistory::Full,
 			$this->getRequestManager( id: 1 )->getHistory()
 		);
 
@@ -686,8 +693,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$manager = $this->getRequestManager( id: 1 );
 		$manager->setRequirements( [ 'WikibaseRepository' => true ] );
 
-		$this->assertSame(
-			[ [ 'name' => 'WikibaseRepository', 'problem' => 'unknown', 'setting' => '', 'blocking' => false ] ],
+		$this->assertEquals(
+			[ new RequirementProblem( 'WikibaseRepository', RequirementProblemKind::Unknown, '', false ) ],
 			$manager->getRequirementProblems()
 		);
 
@@ -744,7 +751,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->assertSame( [ 'sysop', 'bureaucrat' ], $received );
 	}
 
-	/** @covers ::notifyRequester */
+	/** @covers \Miraheze\ImportDump\AttentionNotifier::notify */
 	public function testRequesterIsToldWhenTheImportCannotStart(): void {
 		$captured = [];
 		$service = $this->createMock( NotificationService::class );
@@ -759,7 +766,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$manager = $this->getRequestManager( id: 1 );
 		$manager->setRequirements( [ 'PortableInfobox' => true ] );
-		$manager->notifyRequester();
+		$this->notifyRequester( $manager );
 
 		$this->assertCount( 1, $captured );
 		[ $notification, $recipients ] = $captured[0];
@@ -783,7 +790,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	 * @param string[] $rights
 	 * @param ?string[] $groups
 	 * @param array<string, bool> $requirements
-	 * @covers ::notifyRequester
+	 * @covers \Miraheze\ImportDump\AttentionNotifier::notify
 	 * @dataProvider provideNoRequirementNotification
 	 */
 	public function testRequesterIsNotToldOtherwise(
@@ -799,7 +806,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$manager = $this->getRequestManager( id: 1 );
 		$manager->setRequirements( $requirements );
-		$manager->notifyRequester();
+		$this->notifyRequester( $manager );
 	}
 
 	public static function provideNoRequirementNotification(): array {
@@ -813,7 +820,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		];
 	}
 
-	/** @covers ::notifyRequester */
+	/** @covers \Miraheze\ImportDump\AttentionNotifier::notify */
 	public function testRequesterIsToldAboutPartialHistory(): void {
 		$captured = [];
 		$service = $this->createMock( NotificationService::class );
@@ -826,8 +833,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->setService( 'NotificationService', $service );
 
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->setHistory( RequestHistory::HISTORY_PARTIAL );
-		$manager->notifyRequester();
+		$manager->setHistory( RequestHistory::Partial );
+		$this->notifyRequester( $manager );
 
 		$this->assertCount( 1, $captured );
 		[ $notification, $recipients ] = $captured[0];
@@ -840,10 +847,10 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	}
 
 	/**
-	 * @covers ::notifyRequester
+	 * @covers \Miraheze\ImportDump\AttentionNotifier::notify
 	 * @dataProvider provideHistoryWithoutProblem
 	 */
-	public function testRequesterIsNotToldAboutOtherHistory( ?string $history ): void {
+	public function testRequesterIsNotToldAboutOtherHistory( ?RequestHistory $history ): void {
 		$service = $this->createMock( NotificationService::class );
 		$service->expects( $this->never() )->method( 'notify' );
 		$this->setService( 'NotificationService', $service );
@@ -851,13 +858,13 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$manager = $this->getRequestManager( id: 1 );
 		$manager->setHistory( $history );
-		$manager->notifyRequester();
+		$this->notifyRequester( $manager );
 	}
 
 	public static function provideHistoryWithoutProblem(): array {
 		return [
-			'full' => [ RequestHistory::HISTORY_FULL ],
-			'unknown' => [ RequestHistory::HISTORY_UNKNOWN ],
+			'full' => [ RequestHistory::Full ],
+			'unknown' => [ RequestHistory::Unknown ],
 			'not checked' => [ null ],
 		];
 	}
@@ -884,6 +891,10 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 			'no rights given' => [ [], [ 'sysop' ], null ],
 			'no account on the target' => [ [ 'read', 'import' ], null, null ],
 		];
+	}
+
+	private function notifyRequester( RequestManager $manager ): void {
+		$this->getServiceContainer()->getService( 'ImportDumpAttentionNotifier' )->notify( $manager );
 	}
 
 	/** @param ?string[] $groups The groups of the requester on the target, or null for no account there. */
@@ -945,7 +956,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	 *
 	 * @param ?string[] $extensions
 	 * @param array<string, bool> $settings
-	 * @param list<array{name: string, problem: string, setting: string, blocking: bool}> $expected
+	 * @param list<RequirementProblem> $expected
 	 * @covers ::getRequirementProblems
 	 * @dataProvider provideRequirementProblems
 	 */
@@ -955,7 +966,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$manager = $this->getRequestManager( id: 1 );
 		$manager->setRequirements( [ 'PortableInfobox' => false, 'WikibaseRepository' => true ] );
 
-		$this->assertSame( $expected, $manager->getRequirementProblems() );
+		$this->assertEquals( $expected, $manager->getRequirementProblems() );
 	}
 
 	public static function provideRequirementProblems(): Generator {
@@ -968,43 +979,43 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		yield 'certain extension is missing' => [
 			[ 'PortableInfobox' ],
 			[],
-			[ [ 'name' => 'WikibaseRepository', 'problem' => 'missing', 'setting' => '', 'blocking' => true ] ],
+			[ new RequirementProblem( 'WikibaseRepository', RequirementProblemKind::Missing, '', true ) ],
 		];
 
 		yield 'uncertain extension is missing' => [
 			[ 'WikibaseRepository' ],
 			[ 'allowEntityImport' => true ],
-			[ [ 'name' => 'PortableInfobox', 'problem' => 'missing', 'setting' => '', 'blocking' => false ] ],
+			[ new RequirementProblem( 'PortableInfobox', RequirementProblemKind::Missing, '', false ) ],
 		];
 
 		yield 'certain setting is off' => [
 			[ 'PortableInfobox', 'WikibaseRepository' ],
 			[ 'allowEntityImport' => false ],
-			[ [
-				'name' => 'WikibaseRepository',
-				'problem' => 'setting',
-				'setting' => 'allowEntityImport',
-				'blocking' => true,
-			] ],
+			[ new RequirementProblem(
+				'WikibaseRepository',
+				RequirementProblemKind::Setting,
+				'allowEntityImport',
+				true
+			) ],
 		];
 
 		yield 'setting is not known' => [
 			[ 'PortableInfobox', 'WikibaseRepository' ],
 			[],
-			[ [
-				'name' => 'WikibaseRepository',
-				'problem' => 'setting-unknown',
-				'setting' => 'allowEntityImport',
-				'blocking' => false,
-			] ],
+			[ new RequirementProblem(
+				'WikibaseRepository',
+				RequirementProblemKind::SettingUnknown,
+				'allowEntityImport',
+				false
+			) ],
 		];
 
 		yield 'nothing is enabled' => [
 			[],
 			[],
 			[
-				[ 'name' => 'PortableInfobox', 'problem' => 'missing', 'setting' => '', 'blocking' => false ],
-				[ 'name' => 'WikibaseRepository', 'problem' => 'missing', 'setting' => '', 'blocking' => true ],
+				new RequirementProblem( 'PortableInfobox', RequirementProblemKind::Missing, '', false ),
+				new RequirementProblem( 'WikibaseRepository', RequirementProblemKind::Missing, '', true ),
 			],
 		];
 
@@ -1012,8 +1023,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 			null,
 			[],
 			[
-				[ 'name' => 'PortableInfobox', 'problem' => 'unknown', 'setting' => '', 'blocking' => false ],
-				[ 'name' => 'WikibaseRepository', 'problem' => 'unknown', 'setting' => '', 'blocking' => false ],
+				new RequirementProblem( 'PortableInfobox', RequirementProblemKind::Unknown, '', false ),
+				new RequirementProblem( 'WikibaseRepository', RequirementProblemKind::Unknown, '', false ),
 			],
 		];
 	}
@@ -1027,8 +1038,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$manager = $this->getRequestManager( id: 1 );
 		$manager->setRequirements( [ 'PortableInfobox' => false, 'WikibaseRepository' => true ] );
 
-		$this->assertSame(
-			[ [ 'name' => 'WikibaseRepository', 'problem' => 'missing', 'setting' => '', 'blocking' => true ] ],
+		$this->assertEquals(
+			[ new RequirementProblem( 'WikibaseRepository', RequirementProblemKind::Missing, '', true ) ],
 			$manager->getBlockingRequirementProblems()
 		);
 	}
@@ -1054,7 +1065,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	 */
 	public function testImportPercentBelongsToTheCurrentStage(): void {
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->setStage( self::STAGE_IMPORT );
+		$manager->setStage( RequestStage::Import );
 		$this->assertNull( $manager->getImportPercent() );
 
 		$this->assertNull( $manager->getImportPages() );
@@ -1066,7 +1077,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$manager->setImportPercent( 40, 400, 1000 );
 		$this->assertSame( [ 'done' => 400, 'total' => 1000 ], $manager->getImportPages() );
 
-		$manager->setStage( self::STAGE_SITESTATS );
+		$manager->setStage( RequestStage::SiteStats );
 		$this->assertNull( $manager->getImportPercent() );
 		$this->assertNull( $manager->getImportPages() );
 
@@ -1097,6 +1108,41 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 	}
 
 	/**
+	 * @covers ::setLocked
+	 * @covers ::setPrivate
+	 * @covers ::setReason
+	 * @covers ::setSource
+	 * @covers ::setTarget
+	 */
+	public function testSettersUpdateTheLoadedRequest(): void {
+		$manager = $this->getRequestManager( id: 1 );
+
+		$manager->setLocked( true );
+		$this->assertTrue( $manager->isLocked() );
+
+		$manager->setPrivate( true );
+		$this->assertTrue( $manager->isPrivate() );
+
+		$manager->setReason( 'A new reason' );
+		$this->assertSame( 'A new reason', $manager->getReason() );
+
+		$manager->setSource( 'https://example.com' );
+		$this->assertSame( 'https://example.com', $manager->getSource() );
+
+		$manager->setTarget( 'otherwiki' );
+		$this->assertSame( 'otherwiki', $manager->getTarget() );
+
+		$stored = $this->getRequestManager( id: 1 );
+		$this->assertTrue( $stored->isLocked() );
+		$this->assertSame( 'A new reason', $stored->getReason() );
+		$this->assertSame( 'https://example.com', $stored->getSource() );
+		$this->assertSame( 'otherwiki', $stored->getTarget() );
+
+		$manager->setLocked( false );
+		$this->assertFalse( $manager->isLocked() );
+	}
+
+	/**
 	 * @covers ::isViewableBy
 	 */
 	public function testIsViewableBy(): void {
@@ -1110,7 +1156,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$manager = $this->getRequestManager( id: 1 );
 		$this->assertTrue( $manager->isViewableBy( $anon ) );
 
-		$manager->setPrivate( 1 );
+		$manager->setPrivate( true );
 
 		$manager = $this->getRequestManager( id: 1 );
 		$this->assertFalse( $manager->isViewableBy( $anon ) );

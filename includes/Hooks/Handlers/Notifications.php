@@ -9,6 +9,7 @@ use Miraheze\ImportDump\Notifications\EchoNewRequestPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestAttentionPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestCommentPresentationModel;
 use Miraheze\ImportDump\Notifications\EchoRequestStatusUpdatePresentationModel;
+use Miraheze\ImportDump\RequestManager;
 use Wikimedia\Rdbms\IConnectionProvider;
 
 class Notifications implements BeforeCreateEchoEventHook {
@@ -24,7 +25,7 @@ class Notifications implements BeforeCreateEchoEventHook {
 		array &$notificationCategories,
 		array &$icons
 	): void {
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			return;
 		}

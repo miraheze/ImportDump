@@ -80,11 +80,7 @@ class ExternalBinaries {
 		return $this->getBinary( $format ) !== '' && !Shell::isDisabled();
 	}
 
-	/**
-	 * @param string $format
-	 * @return array{binary: string, memory: int, time: int, dictionary: int}
-	 */
-	public function getSettings( string $format ): array {
+	public function getSettings( string $format ): ExternalBinary {
 		$configured = $this->options->get( ConfigNames::ExternalBinaries )[$format] ?? null;
 		if ( is_string( $configured ) ) {
 			$configured = [ 'binary' => $configured ];
@@ -96,14 +92,17 @@ class ExternalBinaries {
 
 		$binary = $configured['binary'] ?? '';
 		$limits = is_array( $configured['limits'] ?? null ) ? $configured['limits'] : [];
-		$settings = [ 'binary' => is_string( $binary ) ? $binary : '' ];
-
-		foreach ( self::DEFAULT_LIMITS as $name => $default ) {
+		$limit = static function ( string $name ) use ( $limits ): int {
 			$value = $limits[$name] ?? null;
-			$settings[$name] = is_int( $value ) && $value > 0 ? $value : $default;
-		}
+			return is_int( $value ) && $value > 0 ? $value : self::DEFAULT_LIMITS[$name];
+		};
 
-		return $settings;
+		return new ExternalBinary(
+			is_string( $binary ) ? $binary : '',
+			$limit( 'memory' ),
+			$limit( 'time' ),
+			$limit( 'dictionary' )
+		);
 	}
 
 	/** @return list<string> The MIME types of the formats that can be read. */
@@ -229,7 +228,7 @@ class ExternalBinaries {
 			return Status::newFatal( 'importdump-archive-too-many-entries', Message::numParam( $maxEntries ) );
 		}
 
-		$dictionaryLimit = $this->getSettings( self::SEVEN_ZIP )['dictionary'];
+		$dictionaryLimit = $this->getSettings( self::SEVEN_ZIP )->dictionary;
 		foreach ( $entries as $entry ) {
 			if ( $entry['memory'] > $dictionaryLimit ) {
 				return Status::newFatal( 'importdump-archive-memory', Message::sizeParam( $dictionaryLimit ) );
@@ -392,7 +391,7 @@ class ExternalBinaries {
 	}
 
 	private function getBinary( string $format ): string {
-		return $this->getSettings( $format )['binary'];
+		return $this->getSettings( $format )->binary;
 	}
 
 	private function xzCommand(): string {
@@ -400,7 +399,7 @@ class ExternalBinaries {
 			$this->getBinary( self::XZ ),
 			'--decompress',
 			'--stdout',
-			'--memlimit-decompress=' . $this->getSettings( self::XZ )['dictionary'],
+			'--memlimit-decompress=' . $this->getSettings( self::XZ )->dictionary,
 			'--',
 			self::XZ_INPUT
 		);
@@ -455,9 +454,9 @@ class ExternalBinaries {
 		try {
 			$boxed = $this->commandFactory->createBoxed()
 				->routeName( self::ROUTE_NAME )
-				->cpuTimeLimit( $settings['time'] )
-				->wallTimeLimit( $settings['time'] )
-				->memoryLimit( $settings['memory'] )
+				->cpuTimeLimit( $settings->time )
+				->wallTimeLimit( $settings->time )
+				->memoryLimit( $settings->memory )
 				->fileSizeLimit( $maxOutput )
 				->disableNetwork()
 				->privateUserNamespace()

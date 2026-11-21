@@ -7,8 +7,8 @@ use MediaWiki\Message\Message;
 use MediaWiki\User\User;
 use MediaWikiUnitTestCase;
 use Miraheze\ImportDump\Notices\ImportRightNotices;
-use Miraheze\ImportDump\Notices\NoticeProvider;
-use Miraheze\ImportDump\Notices\RequestNotice;
+use Miraheze\ImportDump\Notices\NoticeAudience;
+use Miraheze\ImportDump\Notices\NoticeSeverity;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 
@@ -33,14 +33,14 @@ class ImportRightNoticesTest extends MediaWikiUnitTestCase {
 		$requestManager->method( 'getRequester' )->willReturn( $requester );
 		$requestManager->method( 'getTarget' )->willReturn( 'targetwiki' );
 
-		return new ImportRightNotices()->getNotices( $requestManager, $context, RequestStatus::STATUS_PENDING );
+		return new ImportRightNotices()->getNotices( $requestManager, $context, RequestStatus::Pending );
 	}
 
 	public function testWarnsWhenTheRequesterLacksTheRight(): void {
 		$notices = $this->getNotices( hasRight: false );
 
 		$this->assertCount( 1, $notices );
-		$this->assertSame( RequestNotice::SEVERITY_WARNING, $notices[0]->severity );
+		$this->assertSame( NoticeSeverity::Warning, $notices[0]->severity );
 		$this->assertSame( 'no import right', $notices[0]->html );
 		$this->assertFalse( $notices[0]->invalidates );
 		$this->assertFalse( $notices[0]->declines );
@@ -57,7 +57,7 @@ class ImportRightNoticesTest extends MediaWikiUnitTestCase {
 	public function testIsForThePartiesAndNeedsAccessToTheTarget(): void {
 		$provider = new ImportRightNotices();
 
-		$this->assertSame( NoticeProvider::AUDIENCE_PARTIES, $provider->getAudience() );
+		$this->assertSame( NoticeAudience::Parties, $provider->getAudience() );
 		$this->assertTrue( $provider->requiresTargetAccess() );
 		$this->assertFalse( $provider->isAlwaysAtTop() );
 	}
