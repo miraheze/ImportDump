@@ -1,6 +1,10 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
+
+use function base64_decode;
 
 /**
  * Small archives made by the xz and 7z programs, because the tests cannot make them without those

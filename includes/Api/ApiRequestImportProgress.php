@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Api;
 
 use MediaWiki\Api\ApiBase;
@@ -8,6 +10,8 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStage;
 use Wikimedia\ParamValidator\ParamValidator;
 use Wikimedia\ParamValidator\TypeDef\IntegerDef;
+
+use function count;
 
 class ApiRequestImportProgress extends ApiBase {
 

@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Maintenance;
 
 use MediaWiki\JobQueue\JobQueueGroupFactory;
@@ -13,6 +15,10 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+
+use function count;
+use function max;
+use const TS_UNIX;
 
 class FailStalledImports extends Maintenance {
 

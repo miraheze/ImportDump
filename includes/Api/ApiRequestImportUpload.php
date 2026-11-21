@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Api;
 
 use MediaWiki\Api\ApiBase;
@@ -22,6 +24,8 @@ use StatusValue;
 use Wikimedia\ParamValidator\ParamValidator;
 use Wikimedia\ParamValidator\TypeDef\IntegerDef;
 use Wikimedia\Rdbms\IConnectionProvider;
+
+use const PHP_INT_MAX;
 
 class ApiRequestImportUpload extends ApiBase {
 

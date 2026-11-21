@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Unit\Notices;
 
 use MediaWiki\Context\IContextSource;
@@ -13,6 +15,9 @@ use Miraheze\ImportDump\Notices\NoticeSeverity;
 use Miraheze\ImportDump\Notices\RequestNotice;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
+
+use function array_map;
+use function array_merge;
 
 /**
  * @covers \Miraheze\ImportDump\Notices\NoticeCollector

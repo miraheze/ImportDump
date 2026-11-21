@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Request;
 
 use MediaWiki\Config\ServiceOptions;
@@ -40,6 +42,29 @@ use Wikimedia\Rdbms\LikeValue;
 use Wikimedia\Rdbms\Platform\ISQLPlatform;
 use Wikimedia\Rdbms\SelectQueryBuilder;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+
+use function array_column;
+use function array_filter;
+use function array_map;
+use function array_merge;
+use function array_slice;
+use function array_unique;
+use function array_values;
+use function basename;
+use function boolval;
+use function explode;
+use function in_array;
+use function is_array;
+use function json_decode;
+use function json_encode;
+use function parse_url;
+use function preg_replace;
+use function str_replace;
+use function trim;
+use function wfTimestamp;
+use const MW_INSTALL_PATH;
+use const PHP_URL_HOST;
+use const TS_UNIX;
 
 class RequestManager {
 

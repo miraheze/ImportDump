@@ -1,9 +1,13 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Unit\Requirements;
 
 use MediaWikiUnitTestCase;
 use Miraheze\ImportDump\Requirements\ExtensionRequirement;
+
+use function array_keys;
 
 /**
  * @covers \Miraheze\ImportDump\Requirements\ExtensionRequirement

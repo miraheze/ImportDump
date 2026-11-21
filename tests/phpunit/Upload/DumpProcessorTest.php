@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
 
 use Generator;
@@ -13,6 +15,21 @@ use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\DumpResult;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
+
+use function array_column;
+use function array_map;
+use function array_slice;
+use function array_unique;
+use function array_values;
+use function bzcompress;
+use function end;
+use function file_get_contents;
+use function function_exists;
+use function gzencode;
+use function htmlspecialchars;
+use function implode;
+use function range;
+use function strlen;
 
 /**
  * @group ImportDump

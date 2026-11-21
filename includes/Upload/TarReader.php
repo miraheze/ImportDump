@@ -1,10 +1,35 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Upload;
 
 use Closure;
 use MediaWiki\Message\Message;
 use MediaWiki\Status\Status;
+
+use function array_any;
+use function array_keys;
+use function count_chars;
+use function ctype_digit;
+use function feof;
+use function fread;
+use function fwrite;
+use function intdiv;
+use function max;
+use function min;
+use function octdec;
+use function ord;
+use function preg_match;
+use function rtrim;
+use function str_ends_with;
+use function str_repeat;
+use function str_starts_with;
+use function strlen;
+use function strpos;
+use function substr;
+use function trim;
+use const PHP_INT_MAX;
 
 /**
  * Reads entries one after another from a tar stream, which may be decompressed on the fly.

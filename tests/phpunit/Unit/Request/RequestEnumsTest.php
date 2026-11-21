@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Unit\Request;
 
 use Generator;
@@ -7,6 +9,8 @@ use MediaWikiUnitTestCase;
 use Miraheze\ImportDump\Request\RequestHistory;
 use Miraheze\ImportDump\Request\RequestStage;
 use Miraheze\ImportDump\Request\RequestStatus;
+
+use function array_column;
 
 /**
  * @covers \Miraheze\ImportDump\Request\RequestHistory

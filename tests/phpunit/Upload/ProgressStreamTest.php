@@ -1,11 +1,20 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
 
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\Upload\ProgressStream;
 use Wikimedia\AtEase\AtEase;
 use XMLReader;
+
+use function end;
+use function file_get_contents;
+use function file_put_contents;
+use function sort;
+use function str_repeat;
+use const LIBXML_NONET;
 
 /**
  * @group ImportDump

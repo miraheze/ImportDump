@@ -1,8 +1,16 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
 
 use ZipArchive;
+
+use function file_get_contents;
+use function str_ends_with;
+use function sys_get_temp_dir;
+use function tempnam;
+use function unlink;
 
 final class ZipFixture {
 

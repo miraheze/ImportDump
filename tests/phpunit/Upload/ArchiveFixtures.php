@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
 
 use MediaWiki\Config\ServiceOptions;
@@ -8,6 +10,9 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
+
+use function file_put_contents;
+use function is_string;
 
 /** Builds the files that the archive tests read. Used by classes that extend MediaWikiIntegrationTestCase. */
 trait ArchiveFixtures {

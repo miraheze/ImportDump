@@ -1,6 +1,12 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Requirements;
+
+use function array_map;
+use function array_values;
+use function strval;
 
 /**
  * What a dump needs from the target wiki when it uses a feature of an extension.

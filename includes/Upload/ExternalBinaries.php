@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Upload;
 
 use Exception;
@@ -11,6 +13,28 @@ use MediaWiki\Shell\Shell;
 use MediaWiki\Status\Status;
 use Miraheze\ImportDump\ConfigNames;
 use Shellbox\Command\BoxedResult;
+
+use function count;
+use function ctype_digit;
+use function defined;
+use function explode;
+use function file_exists;
+use function file_get_contents;
+use function filesize;
+use function in_array;
+use function is_array;
+use function is_int;
+use function is_string;
+use function max;
+use function min;
+use function preg_match;
+use function preg_split;
+use function realpath;
+use function str_contains;
+use function str_starts_with;
+use function strtolower;
+use function trim;
+use const MW_CONFIG_FILE;
 
 /**
  * Runs the programs that unpack the formats PHP cannot read itself. A format only works when

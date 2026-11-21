@@ -1,6 +1,11 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Notices;
+
+use function array_column;
+use function array_search;
 
 /** How serious a notice is. The values are the types of an OOUI message widget. */
 enum NoticeSeverity: string {

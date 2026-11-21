@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Requirements;
 
 use MediaWiki\Config\ServiceOptions;
@@ -7,6 +9,10 @@ use MediaWiki\Language\MessageLocalizer;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Registration\ExtensionProcessor;
 use Wikimedia\ObjectCache\BagOStuff;
+
+use function array_merge;
+use function glob;
+use const MW_VERSION;
 
 /**
  * Finds the name that an extension gives itself. It reads the extension files, so that

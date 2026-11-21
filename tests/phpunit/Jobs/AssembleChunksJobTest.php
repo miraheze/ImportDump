@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Jobs;
 
 use MediaWiki\FileRepo\LocalRepo;
@@ -15,6 +17,10 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\AssembleChunksJob;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
+
+use function str_repeat;
+use function strlen;
+use function substr;
 
 /**
  * @group API

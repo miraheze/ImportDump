@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Upload;
 
 use Closure;
@@ -7,6 +9,32 @@ use MediaWiki\Message\Message;
 use MediaWiki\Status\Status;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use ZipArchive;
+
+use function basename;
+use function bzopen;
+use function count;
+use function ctype_digit;
+use function explode;
+use function fclose;
+use function feof;
+use function filesize;
+use function fopen;
+use function fread;
+use function function_exists;
+use function fwrite;
+use function gzopen;
+use function in_array;
+use function intdiv;
+use function max;
+use function min;
+use function ord;
+use function preg_match;
+use function rtrim;
+use function str_ends_with;
+use function str_starts_with;
+use function strlen;
+use function substr;
+use const PHP_INT_MAX;
 
 /**
  * Reads ZIP, TAR, GZIP and BZIP2 archives, and XZ and 7z archives if the wiki has the programs

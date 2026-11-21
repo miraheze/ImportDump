@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Jobs;
 
 use MediaWiki\MainConfigNames;
@@ -15,6 +17,11 @@ use Miraheze\ImportDump\Request\RequestStatus;
 use RuntimeException;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+
+use function array_column;
+use function array_map;
+use function file_put_contents;
+use function wfTempDir;
 
 /**
  * @group ImportDump

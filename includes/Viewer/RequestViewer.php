@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Viewer;
 
 use MediaWiki\Config\Config;
@@ -28,6 +30,8 @@ use Miraheze\ImportDump\Requirements\ExtensionNames;
 use OOUI\HtmlSnippet;
 use OOUI\MessageWidget;
 use OOUI\ProgressBarWidget;
+
+use function count;
 
 class RequestViewer {
 

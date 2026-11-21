@@ -1,6 +1,17 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Upload;
+
+use function fclose;
+use function feof;
+use function fopen;
+use function fread;
+use function is_file;
+use function is_readable;
+use function preg_match_all;
+use function substr;
 
 /** Counts the pages in an XML export without loading the whole file. */
 class PageCounter {

@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Upload;
 
 use InvalidArgumentException;
@@ -7,6 +9,10 @@ use MediaWiki\MediaWikiServices;
 use MediaWiki\Upload\UploadFromChunks;
 use MediaWiki\User\User;
 use Miraheze\ImportDump\ConfigNames;
+
+use function array_keys;
+use function in_array;
+use const PHP_INT_MAX;
 
 class RequestImportUploadFromChunks extends UploadFromChunks {
 

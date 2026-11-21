@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Maintenance;
 
 use MediaWiki\Logging\LogEntryBase;
@@ -10,6 +12,16 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
 use stdClass;
 use Wikimedia\Rdbms\IDatabase;
+
+use function array_any;
+use function array_keys;
+use function is_array;
+use function is_object;
+use function is_string;
+use function max;
+use function preg_match;
+use function str_ends_with;
+use function wfMessage;
 
 class MigrateLogParams extends LoggedUpdateMaintenance {
 

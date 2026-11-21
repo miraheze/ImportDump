@@ -1,9 +1,14 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
 
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\Upload\PageCounter;
+
+use function file_put_contents;
+use function str_repeat;
 
 /**
  * @covers \Miraheze\ImportDump\Upload\PageCounter

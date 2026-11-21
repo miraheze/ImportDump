@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Specials;
 
 use MediaWiki\Api\ApiUpload;
@@ -43,6 +45,17 @@ use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\Platform\ISQLPlatform;
+
+use function array_filter;
+use function array_map;
+use function array_push;
+use function array_values;
+use function ctype_space;
+use function get_class;
+use function in_array;
+use function max;
+use function min;
+use const PHP_INT_MAX;
 
 class SpecialRequestImport extends FormSpecialPage {
 

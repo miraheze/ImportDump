@@ -1,8 +1,12 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Progress;
 
 use Wikimedia\ObjectCache\BagOStuff;
+
+use function is_array;
 
 /**
  * Where the verification job tells the request page how far it has come.

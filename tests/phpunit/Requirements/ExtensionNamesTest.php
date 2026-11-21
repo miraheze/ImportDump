@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Requirements;
 
 use MediaWiki\Config\ServiceOptions;
@@ -8,6 +10,10 @@ use MediaWiki\MainConfigNames;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\Requirements\ExtensionNames;
 use Wikimedia\ObjectCache\HashBagOStuff;
+
+use function file_put_contents;
+use function json_encode;
+use function mkdir;
 
 /**
  * @covers \Miraheze\ImportDump\Requirements\ExtensionNames

@@ -1,10 +1,15 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
 
 use Generator;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
+
+use function get_object_vars;
+use const PHP_INT_MAX;
 
 /**
  * @group ImportDump

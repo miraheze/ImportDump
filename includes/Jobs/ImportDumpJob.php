@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Jobs;
 
 use InitEditCount;
@@ -31,6 +33,19 @@ use RefreshLinks;
 use Throwable;
 use UpdateArticleCount;
 use Wikimedia\Rdbms\IConnectionProvider;
+
+use function error_get_last;
+use function file_exists;
+use function get_class;
+use function intdiv;
+use function max;
+use function min;
+use function register_shutdown_function;
+use function str_repeat;
+use function time;
+use function unlink;
+use function wfTempDir;
+use const E_RECOVERABLE_ERROR;
 
 class ImportDumpJob extends Job {
 

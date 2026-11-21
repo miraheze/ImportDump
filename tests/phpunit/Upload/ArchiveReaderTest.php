@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
 
 use Generator;
@@ -8,6 +10,17 @@ use Miraheze\ImportDump\Upload\ArchiveEntry;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
 use ZipArchive;
+
+use function bzcompress;
+use function end;
+use function file_get_contents;
+use function filesize;
+use function function_exists;
+use function gzencode;
+use function str_repeat;
+use function strlen;
+use function substr;
+use const PHP_INT_MAX;
 
 /**
  * @group ImportDump

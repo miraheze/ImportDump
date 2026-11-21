@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Upload;
 
 use Closure;
@@ -11,6 +13,19 @@ use Miraheze\ImportDump\Request\RequestHistory;
 use Miraheze\ImportDump\Requirements\ExtensionRequirement;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use XMLReader;
+
+use function array_any;
+use function array_filter;
+use function count;
+use function ksort;
+use function libxml_clear_errors;
+use function libxml_get_errors;
+use function libxml_use_internal_errors;
+use function preg_match;
+use function str_starts_with;
+use function version_compare;
+use const LIBXML_COMPACT;
+use const LIBXML_ERR_ERROR;
 
 /**
  * Unpacks and checks an uploaded dump. The upload may be a MediaWiki XML export,

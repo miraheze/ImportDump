@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
 
 use Generator;
@@ -12,6 +14,12 @@ use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use Wikimedia\TestingAccessWrapper;
+
+use function file_exists;
+use function file_put_contents;
+use function filesize;
+use function unlink;
+use const PHP_INT_MAX;
 
 /**
  * @group ImportDump

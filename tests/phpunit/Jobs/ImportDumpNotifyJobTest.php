@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Jobs;
 
 use MediaWiki\MainConfigNames;
@@ -16,6 +18,8 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Tests\IsolatesManageWikiTrait;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+
+use function array_map;
 
 /**
  * @group ImportDump

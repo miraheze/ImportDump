@@ -1,6 +1,11 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Request;
+
+use function array_column;
+use function array_search;
 
 /** The stages of an import, in the order that the job runs them. */
 enum RequestStage: string {

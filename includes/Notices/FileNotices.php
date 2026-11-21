@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Notices;
 
 use MediaWiki\Config\Config;
@@ -9,6 +11,9 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStage;
 use Miraheze\ImportDump\Request\RequestStatus;
+
+use function implode;
+use function mb_strtolower;
 
 final class FileNotices implements NoticeProvider {
 

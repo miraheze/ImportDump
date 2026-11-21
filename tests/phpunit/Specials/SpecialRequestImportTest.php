@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Specials;
 
 use Generator;
@@ -28,6 +30,18 @@ use SpecialPageTestBase;
 use Wikimedia\Rdbms\SelectQueryBuilder;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+
+use function array_map;
+use function basename;
+use function crc32;
+use function file_exists;
+use function file_put_contents;
+use function filesize;
+use function gzencode;
+use function is_string;
+use function unlink;
+use const TS_UNIX;
+use const UPLOAD_ERR_OK;
 
 /**
  * @group ImportDump

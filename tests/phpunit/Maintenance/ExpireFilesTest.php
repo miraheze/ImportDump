@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Maintenance;
 
 use MediaWiki\FileRepo\LocalRepo;
@@ -15,6 +17,8 @@ use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+
+use const TS_UNIX;
 
 /**
  * @group ImportDump

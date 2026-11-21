@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Viewer;
 
 use Closure;
@@ -11,6 +13,8 @@ use OOUI\IndexLayout;
 use OOUI\PanelLayout;
 use OOUI\TabPanelLayout;
 use OOUI\Widget;
+
+use function is_array;
 
 class OOUIHTMLFormTabs extends OOUIHTMLForm {
 

@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Maintenance;
 
 use MediaWiki\Maintenance\Maintenance;
@@ -9,6 +11,12 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+
+use function count;
+use function in_array;
+use function is_array;
+use function max;
+use const TS_UNIX;
 
 class ExpireFiles extends Maintenance {
 

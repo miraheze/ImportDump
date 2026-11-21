@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Jobs;
 
 use MediaWiki\Context\RequestContext;

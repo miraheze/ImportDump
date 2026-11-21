@@ -1,6 +1,11 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Requirements;
+
+use function array_all;
+use function in_array;
 
 /** What the ImportDumpGetTargetState hook reports about the target wiki. */
 final readonly class TargetState {

@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Jobs;
 
 use Generator;
@@ -20,6 +22,9 @@ use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+
+use function gzencode;
+use function str_replace;
 
 /**
  * @group ImportDump

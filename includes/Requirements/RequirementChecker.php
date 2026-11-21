@@ -1,9 +1,15 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Requirements;
 
 use MediaWiki\Config\ServiceOptions;
 use Miraheze\ImportDump\ConfigNames;
+
+use function array_filter;
+use function array_values;
+use function in_array;
 
 class RequirementChecker {
 

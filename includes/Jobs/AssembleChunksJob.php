@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Jobs;
 
 use Exception;
@@ -14,6 +16,9 @@ use MediaWiki\Upload\UploadBase;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use UnexpectedValueException;
 use Wikimedia\ScopedCallback;
+
+use function get_class;
+use function is_array;
 
 class AssembleChunksJob extends Job {
 

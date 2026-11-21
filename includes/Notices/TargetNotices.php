@@ -1,10 +1,15 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Notices;
 
 use MediaWiki\Context\IContextSource;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
+
+use function parse_url;
+use const PHP_URL_HOST;
 
 final class TargetNotices implements NoticeProvider {
 

@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Viewer;
 
 use MediaWiki\Config\Config;
@@ -11,6 +13,14 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Notices\NoticeResult;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
+
+use function array_unique;
+use function ctype_space;
+use function htmlspecialchars;
+use function in_array;
+use function parse_url;
+use const PHP_URL_HOST;
+use const PHP_URL_SCHEME;
 
 /** Describes the form of a request, and checks what is filled in. */
 class RequestFormBuilder {

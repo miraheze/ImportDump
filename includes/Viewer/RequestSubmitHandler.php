@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Viewer;
 
 use MediaWiki\Config\Config;
@@ -13,6 +15,12 @@ use Miraheze\ImportDump\Notices\ActionOutcomeNotices;
 use Miraheze\ImportDump\Notices\NoticeSeverity;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
+
+use function array_column;
+use function array_unique;
+use function implode;
+use function in_array;
+use function mb_strtolower;
 
 /** Carries out what was submitted on the form of a request, and reports how it went. */
 class RequestSubmitHandler {
