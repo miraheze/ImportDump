@@ -33,7 +33,7 @@ final class FileNotices implements NoticeProvider {
 	}
 
 	/** @inheritDoc */
-	public function requiresTargetAccess(): bool {
+	public function requiresTargetAccess(): false {
 		return false;
 	}
 

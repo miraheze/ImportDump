@@ -20,7 +20,7 @@ final class RequirementNotices implements NoticeProvider {
 	}
 
 	/** @inheritDoc */
-	public function requiresTargetAccess(): bool {
+	public function requiresTargetAccess(): true {
 		return true;
 	}
 
