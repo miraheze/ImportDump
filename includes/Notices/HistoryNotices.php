@@ -6,11 +6,12 @@ use MediaWiki\Context\IContextSource;
 use Miraheze\ImportDump\RequestHistory;
 use Miraheze\ImportDump\RequestManager;
 
+/** What the history check found when it did not find missing revisions. */
 final class HistoryNotices implements NoticeProvider {
 
 	/** @inheritDoc */
 	public function getAudience(): string {
-		return self::AUDIENCE_PARTIES;
+		return self::AUDIENCE_HANDLERS;
 	}
 
 	/** @inheritDoc */
@@ -33,18 +34,15 @@ final class HistoryNotices implements NoticeProvider {
 		string $status
 	): array {
 		$history = $requestManager->getHistory();
-		if ( $history === null ) {
+		if ( $history === null || $history === RequestHistory::HISTORY_PARTIAL ) {
 			return [];
 		}
 
 		// Messages that can be used here:
 		// * importdump-info-history-full
-		// * importdump-info-history-partial
 		// * importdump-info-history-unknown
 		return [ new RequestNotice(
-			severity: $history === RequestHistory::HISTORY_PARTIAL ?
-				RequestNotice::SEVERITY_WARNING :
-				RequestNotice::SEVERITY_NOTICE,
+			severity: RequestNotice::SEVERITY_NOTICE,
 			html: $context->msg( 'importdump-info-history-' . $history )->escaped(),
 			invalidates: false,
 			declines: false,
