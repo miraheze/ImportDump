@@ -21,7 +21,9 @@ class RequirementNoticesTest extends MediaWikiIntegrationTestCase {
 		$requestManager = $this->createMock( RequestManager::class );
 		$requestManager->method( 'getRequirementProblems' )->willReturn( $problems );
 
-		return ( new RequirementNotices() )->getNotices(
+		$extensionNames = $this->getServiceContainer()->get( 'ImportDumpExtensionNames' );
+
+		return ( new RequirementNotices( $extensionNames ) )->getNotices(
 			$requestManager,
 			RequestContext::getMain(),
 			$status

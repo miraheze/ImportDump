@@ -159,6 +159,7 @@
 			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportQueue",
 			"services": [
 				"ConnectionProvider",
+				"ImportDumpExtensionNames",
 				"ImportDumpRequestManager",
 				"UserFactory"
 			]

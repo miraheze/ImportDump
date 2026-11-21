@@ -5,7 +5,7 @@ namespace Miraheze\ImportDump\Notices;
 use MediaWiki\Context\IContextSource;
 use MediaWiki\Html\Html;
 use MediaWiki\Message\Message;
-use MediaWiki\Registration\ExtensionRegistry;
+use Miraheze\ImportDump\ExtensionNames;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 
@@ -16,6 +16,11 @@ final class RequirementNotices implements NoticeProvider {
 		RequestStatus::STATUS_FAILED,
 		RequestStatus::STATUS_PARTIAL,
 	];
+
+	public function __construct(
+		private readonly ExtensionNames $extensionNames,
+	) {
+	}
 
 	/** @inheritDoc */
 	public function getAudience(): string {
@@ -40,7 +45,7 @@ final class RequirementNotices implements NoticeProvider {
 		$groups = [];
 		foreach ( $requestManager->getRequirementProblems() as $problem ) {
 			$type = $problem['problem'];
-			$extension = $this->getDisplayName( $context, $problem['name'] );
+			$extension = $this->extensionNames->getName( $context, $problem['name'] );
 
 			$item = $problem['setting'] !== '' ?
 				$problem['setting'] . $context->msg( 'word-separator' )->text() .
@@ -76,13 +81,5 @@ final class RequirementNotices implements NoticeProvider {
 		}
 
 		return $notices;
-	}
-
-	/** Shows the name that the extension gives itself. */
-	private function getDisplayName( IContextSource $context, string $name ): string {
-		$credits = ExtensionRegistry::getInstance()->getAllThings()[$name] ?? [];
-		$nameMessage = $credits['namemsg'] ?? null;
-
-		return $nameMessage ? $context->msg( $nameMessage )->text() : $name;
 	}
 }

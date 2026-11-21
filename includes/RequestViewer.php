@@ -27,6 +27,7 @@ class RequestViewer implements RequestStatus {
 	public function __construct(
 		private readonly Config $config,
 		private readonly IContextSource $context,
+		private readonly ExtensionNames $extensionNames,
 		private readonly RequestManager $requestManager,
 	) {
 	}
@@ -516,7 +517,7 @@ class RequestViewer implements RequestStatus {
 			new FileNotices( $this->config ),
 			new TargetNotices(),
 			new HistoryNotices(),
-			new RequirementNotices(),
+			new RequirementNotices( $this->extensionNames ),
 			new RequesterNotices(),
 		] );
 	}
