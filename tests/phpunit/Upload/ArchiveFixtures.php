@@ -18,6 +18,7 @@ use function is_string;
  * Builds the files that the archive tests read.
  *
  * @require-extends MediaWikiIntegrationTestCase
+ * @phan-file-suppress PhanUndeclaredMethod, PhanPluginUnknownObjectMethodCall
  */
 trait ArchiveFixtures {
 
