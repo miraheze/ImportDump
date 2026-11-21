@@ -520,6 +520,7 @@ class RequestViewer implements RequestStatus {
 			$html .= new MessageWidget( [
 				'label' => new HtmlSnippet( $notice->html ),
 				'type' => $notice->severity,
+				'classes' => [ 'ext-importdump-notice' ],
 			] );
 		}
 
