@@ -2,8 +2,6 @@
 
 namespace Miraheze\ImportDump\Hooks;
 
-use MediaWiki\User\UserIdentity;
-
 interface ImportDumpGetTargetStateHook {
 
 	/**
@@ -16,7 +14,8 @@ interface ImportDumpGetTargetStateHook {
 	 * because it would otherwise reveal how a wiki that they have no access to is set up.
 	 *
 	 * @param string $target The database name of the target wiki.
-	 * @param UserIdentity $requester The requester, who may not have an account on the target wiki.
+	 * @param string[] $requesterGroups The groups that the requester has on the target wiki,
+	 *  without implicit ones such as '*' and 'user'. Empty if they have no account there.
 	 * @param ?string[] &$extensions The names of the enabled extensions, as ExtensionRegistry knows
 	 *  them, matching the names in $wgImportDumpExtensionRequirements.
 	 * @param array<string, bool> &$settings Whether each setting that a requirement names is
@@ -27,7 +26,7 @@ interface ImportDumpGetTargetStateHook {
 	 */
 	public function onImportDumpGetTargetState(
 		string $target,
-		UserIdentity $requester,
+		array $requesterGroups,
 		?array &$extensions,
 		array &$settings,
 		array &$rights
