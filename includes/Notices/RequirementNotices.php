@@ -47,7 +47,7 @@ final class RequirementNotices implements NoticeProvider {
 				$context->msg( 'parentheses', $extension )->text() :
 				$extension;
 
-			// Names are not in the language of the interface, so keep them from mixing with the text.
+			// Items can run in another direction than the interface, such as setting names, so isolate each one.
 			$groups[$type] ??= [ 'items' => [], 'blocking' => false ];
 			$groups[$type]['items'][] = Html::element( 'bdi', [], $item );
 			$groups[$type]['blocking'] = $groups[$type]['blocking'] || $problem['blocking'];
