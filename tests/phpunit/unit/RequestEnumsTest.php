@@ -2,6 +2,7 @@
 
 namespace Miraheze\ImportDump\Tests\Unit;
 
+use Generator;
 use MediaWikiUnitTestCase;
 use Miraheze\ImportDump\RequestHistory;
 use Miraheze\ImportDump\RequestStage;
@@ -30,14 +31,12 @@ class RequestEnumsTest extends MediaWikiUnitTestCase {
 		$this->assertSame( $expected, $status->isRunning() );
 	}
 
-	public static function provideRunning(): array {
-		return [
-			'starting' => [ RequestStatus::Starting, true ],
-			'inprogress' => [ RequestStatus::InProgress, true ],
-			'pending' => [ RequestStatus::Pending, false ],
-			'partial' => [ RequestStatus::Partial, false ],
-			'complete' => [ RequestStatus::Complete, false ],
-		];
+	public static function provideRunning(): Generator {
+		yield 'starting' => [ RequestStatus::Starting, true ];
+		yield 'inprogress' => [ RequestStatus::InProgress, true ];
+		yield 'pending' => [ RequestStatus::Pending, false ];
+		yield 'partial' => [ RequestStatus::Partial, false ];
+		yield 'complete' => [ RequestStatus::Complete, false ];
 	}
 
 	public function testStagesRunInOrder(): void {
@@ -58,13 +57,11 @@ class RequestEnumsTest extends MediaWikiUnitTestCase {
 		$this->assertSame( $expected, $stage->hasImported() );
 	}
 
-	public static function provideHasImported(): array {
-		return [
-			'download' => [ RequestStage::Download, false ],
-			'import' => [ RequestStage::Import, false ],
-			'sitestats' => [ RequestStage::SiteStats, true ],
-			'afterimport' => [ RequestStage::AfterImport, true ],
-		];
+	public static function provideHasImported(): Generator {
+		yield 'download' => [ RequestStage::Download, false ];
+		yield 'import' => [ RequestStage::Import, false ];
+		yield 'sitestats' => [ RequestStage::SiteStats, true ];
+		yield 'afterimport' => [ RequestStage::AfterImport, true ];
 	}
 
 	public function testStageLabelKey(): void {
