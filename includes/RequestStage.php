@@ -16,7 +16,7 @@ enum RequestStage: string {
 
 	/** The place of this stage in the order, starting at 0. */
 	public function getPosition(): int {
-		return (int)array_search( $this, self::cases(), true );
+		return (int)array_search( $this->value, array_column( self::cases(), 'value' ), true );
 	}
 
 	/** Whether the pages are already in the wiki when this stage starts. */

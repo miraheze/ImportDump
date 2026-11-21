@@ -12,6 +12,6 @@ enum NoticeSeverity: string {
 
 	/** Where the severity sorts, from the most important at 0. */
 	public function getRank(): int {
-		return (int)array_search( $this, self::cases(), true );
+		return (int)array_search( $this->value, array_column( self::cases(), 'value' ), true );
 	}
 }

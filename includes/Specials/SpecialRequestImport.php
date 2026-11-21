@@ -37,6 +37,7 @@ use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
+use Miraheze\ImportDump\Upload\DumpResult;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use Wikimedia\Mime\MimeAnalyzer;
@@ -278,8 +279,10 @@ class SpecialRequestImport extends FormSpecialPage {
 				return $processed;
 			}
 
-			$history = $processed->getValue()->history;
-			$requirements = $processed->getValue()->requirements;
+			$result = $processed->getValue();
+			'@phan-var DumpResult $result';
+			$history = $result->history;
+			$requirements = $result->requirements;
 		}
 
 		$repo = $this->repoGroup->getLocalRepo();

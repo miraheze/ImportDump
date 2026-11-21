@@ -8,7 +8,6 @@ use MediaWiki\Message\Message;
 use Miraheze\ImportDump\ExtensionNames;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
-use Miraheze\ImportDump\RequirementProblemKind;
 
 final class RequirementNotices implements NoticeProvider {
 
@@ -49,6 +48,7 @@ final class RequirementNotices implements NoticeProvider {
 		}
 
 		$groups = [];
+		$kinds = [];
 		foreach ( $requestManager->getRequirementProblems() as $problem ) {
 			$extension = $this->extensionNames->getName( $context, $problem->name );
 
@@ -59,15 +59,15 @@ final class RequirementNotices implements NoticeProvider {
 
 			// Items can run in another direction than the interface, such as setting names, so isolate each one.
 			$key = $problem->kind->value;
-			$groups[$key] ??= [ 'kind' => $problem->kind, 'items' => [], 'blocking' => false ];
+			$kinds[$key] = $problem->kind;
+			$groups[$key] ??= [ 'items' => [], 'blocking' => false ];
 			$groups[$key]['items'][] = Html::element( 'bdi', [], $item );
 			$groups[$key]['blocking'] = $groups[$key]['blocking'] || $problem->blocking;
 		}
 
 		$notices = [];
-		foreach ( $groups as $group ) {
-			/** @var RequirementProblemKind $kind */
-			$kind = $group['kind'];
+		foreach ( $groups as $key => $group ) {
+			$kind = $kinds[$key];
 
 			// Messages that can be used here:
 			// * importdump-requirement-unknown

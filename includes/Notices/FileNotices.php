@@ -60,7 +60,7 @@ final class FileNotices implements NoticeProvider {
 		}
 
 		$stage = $requestManager->getStage();
-		if ( $stage?->hasImported() ) {
+		if ( $stage !== null && $stage->hasImported() ) {
 			return [ new RequestNotice(
 				severity: NoticeSeverity::Warning,
 				html: $this->getImportedInfo( $requestManager, $context, $stage ),
