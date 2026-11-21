@@ -21,6 +21,7 @@ use Miraheze\ImportDump\Tests\Upload\ZipFixture;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
+use Wikimedia\ObjectCache\WANObjectCache;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use function gzencode;
 use function str_replace;
@@ -56,7 +57,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 				] ),
 			],
 			[],
-			$this->getServiceContainer()->getWANObjectCache(),
+			WANObjectCache::newEmpty(),
 			$this->createMock( MimeAnalyzer::class )
 		) );
 

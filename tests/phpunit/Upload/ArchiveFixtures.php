@@ -6,6 +6,7 @@ namespace Miraheze\ImportDump\Tests\Upload;
 
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Utils\ExecutableFinder;
+use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\ExternalBinaries;

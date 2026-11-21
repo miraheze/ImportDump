@@ -16,6 +16,7 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\AssembleChunksJob;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
+use Wikimedia\ObjectCache\WANObjectCache;
 use function floor;
 use function strlen;
 use function substr;
@@ -45,7 +46,7 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 				] ),
 			],
 			[],
-			$this->getServiceContainer()->getWANObjectCache(),
+			WANObjectCache::newEmpty(),
 			$this->createMock( MimeAnalyzer::class )
 		) );
 

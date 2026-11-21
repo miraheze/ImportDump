@@ -37,6 +37,7 @@ use stdClass;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
+use Wikimedia\ObjectCache\WANObjectCache;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use Wikimedia\Timestamp\TimestampFormat;
 use function array_keys;
@@ -99,7 +100,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 				] ),
 			],
 			[],
-			$this->getServiceContainer()->getWANObjectCache(),
+			WANObjectCache::newEmpty(),
 			$this->createMock( MimeAnalyzer::class )
 		) );
 	}

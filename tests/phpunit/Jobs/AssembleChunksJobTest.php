@@ -18,6 +18,7 @@ use Miraheze\ImportDump\Jobs\AssembleChunksJob;
 use StatusValue;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
+use Wikimedia\ObjectCache\WANObjectCache;
 use function str_repeat;
 use function strlen;
 use function substr;
@@ -49,7 +50,7 @@ class AssembleChunksJobTest extends ApiUploadTestCase {
 				] ),
 			],
 			[],
-			$this->getServiceContainer()->getWANObjectCache(),
+			WANObjectCache::newEmpty(),
 			$this->createMock( MimeAnalyzer::class )
 		) );
 

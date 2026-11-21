@@ -73,21 +73,21 @@ class ProgressStreamTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testEmptyFile(): void {
-		// @phan-suppress-next-line PhanUnusedClosureParameter
+		// @phan-suppress-next-line PhanUnusedPublicNoOverrideMethodParameter
 		$url = ProgressStream::url( $this->newFile( '' ), static fn ( int $percent ) => null );
 
 		$this->assertSame( '', file_get_contents( $url ) );
 	}
 
 	public function testUnknownUrlCannotBeOpened(): void {
-		// @phan-suppress-next-line PhanUnusedClosureParameter
+		// @phan-suppress-next-line PhanUnusedPublicNoOverrideMethodParameter
 		ProgressStream::url( $this->newFile( 'content' ), static fn ( int $percent ) => null );
 
 		$this->assertFalse( AtEase::quietCall( 'file_get_contents', 'importdump-progress://unknown' ) );
 	}
 
 	public function testReleasedUrlCannotBeOpened(): void {
-		// @phan-suppress-next-line PhanUnusedClosureParameter
+		// @phan-suppress-next-line PhanUnusedPublicNoOverrideMethodParameter
 		$url = ProgressStream::url( $this->newFile( 'content' ), static fn ( int $percent ) => null );
 
 		ProgressStream::release( $url );
@@ -95,7 +95,7 @@ class ProgressStreamTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testUrlCannotBeOpenedTwice(): void {
-		// @phan-suppress-next-line PhanUnusedClosureParameter
+		// @phan-suppress-next-line PhanUnusedPublicNoOverrideMethodParameter
 		$url = ProgressStream::url( $this->newFile( 'content' ), static fn ( int $percent ) => null );
 
 		$this->assertSame( 'content', file_get_contents( $url ) );

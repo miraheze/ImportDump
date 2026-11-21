@@ -521,7 +521,7 @@ final class ArchiveReader {
 	/**
 	 * Opens a file for reading its contents, decompressed if it is compressed.
 	 *
-	 * @return resource|false A stream resource, or false if the file could not be opened.
+	 * @return mixed A stream resource, or false if the file could not be opened.
 	 */
 	private function openStream( string $path, string $format ): mixed {
 		return match ( $format ) {

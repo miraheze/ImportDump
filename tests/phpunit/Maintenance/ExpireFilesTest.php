@@ -16,6 +16,7 @@ use Miraheze\ImportDump\Request\RequestStatus;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
+use Wikimedia\ObjectCache\WANObjectCache;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use Wikimedia\Timestamp\TimestampFormat;
@@ -47,7 +48,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 				] ),
 			],
 			[],
-			$this->getServiceContainer()->getWANObjectCache(),
+			WANObjectCache::newEmpty(),
 			$this->createMock( MimeAnalyzer::class )
 		) );
 
