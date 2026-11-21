@@ -3,6 +3,9 @@
 namespace Miraheze\ImportDump\Notices;
 
 use MediaWiki\Context\IContextSource;
+use MediaWiki\Html\Html;
+use MediaWiki\Message\Message;
+use MediaWiki\Registration\ExtensionRegistry;
 use Miraheze\ImportDump\RequestManager;
 use Miraheze\ImportDump\RequestStatus;
 
@@ -37,11 +40,16 @@ final class RequirementNotices implements NoticeProvider {
 		$groups = [];
 		foreach ( $requestManager->getRequirementProblems() as $problem ) {
 			$type = $problem['problem'];
-			$groups[$type] ??= [ 'items' => [], 'blocking' => false ];
-			$groups[$type]['items'][] = $problem['setting'] !== '' ?
-				$problem['setting'] . ' (' . $problem['name'] . ')' :
-				$problem['name'];
+			$extension = $this->getDisplayName( $context, $problem['name'] );
 
+			$item = $problem['setting'] !== '' ?
+				$problem['setting'] . $context->msg( 'word-separator' )->text() .
+				$context->msg( 'parentheses', $extension )->text() :
+				$extension;
+
+			// Names are not in the language of the interface, so keep them from mixing with the text.
+			$groups[$type] ??= [ 'items' => [], 'blocking' => false ];
+			$groups[$type]['items'][] = Html::element( 'bdi', [], $item );
 			$groups[$type]['blocking'] = $groups[$type]['blocking'] || $problem['blocking'];
 		}
 
@@ -56,9 +64,10 @@ final class RequirementNotices implements NoticeProvider {
 				severity: in_array( $type, [ 'missing', 'setting' ], true ) ?
 					RequestNotice::SEVERITY_ERROR :
 					RequestNotice::SEVERITY_WARNING,
-				html: $context->msg( 'importdump-requirement-' . $type )
-					->params( $context->getLanguage()->listToText( $group['items'] ) )
-					->numParams( count( $group['items'] ) )
+				html: $context->msg(
+					'importdump-requirement-' . $type,
+					Message::rawParam( $context->getLanguage()->listToText( $group['items'] ) )
+				)->numParams( count( $group['items'] ) )
 					->escaped(),
 				invalidates: $group['blocking'],
 				declines: false,
@@ -67,5 +76,13 @@ final class RequirementNotices implements NoticeProvider {
 		}
 
 		return $notices;
+	}
+
+	/** Shows the name that the extension gives itself. */
+	private function getDisplayName( IContextSource $context, string $name ): string {
+		$credits = ExtensionRegistry::getInstance()->getAllThings()[$name] ?? [];
+		$nameMessage = $credits['namemsg'] ?? null;
+
+		return $nameMessage ? $context->msg( $nameMessage )->text() : $name;
 	}
 }
