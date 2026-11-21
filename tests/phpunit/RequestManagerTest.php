@@ -268,7 +268,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->setService( 'NotificationService', $service );
 
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->addComment( 'Updated', User::newSystemUser( 'ImportDump Status Update' ) );
+		$manager->addComment( 'Updated', User::newSystemUser( 'RequestImport Status Update' ) );
 		$manager->addComment( 'Hello', $this->getTestSysop()->getUser() );
 
 		$this->assertCount( 1, $captured );
@@ -287,7 +287,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 		$this->setService( 'NotificationService', $service );
 
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->addComment( 'Updated', User::newSystemUser( 'ImportDump Status Update' ) );
+		$manager->addComment( 'Updated', User::newSystemUser( 'RequestImport Status Update' ) );
 	}
 
 	/**
@@ -766,7 +766,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase
 
 		$this->assertInstanceOf( RequestNotification::class, $notification );
 		$this->assertSame( 'requestimport-requirements', $notification->getType() );
-		$this->assertSame( 'ImportDump Status Update', $notification->getAgent()->getName() );
+		$this->assertSame( 'RequestImport Status Update', $notification->getAgent()->getName() );
 		$this->assertSame( [ $manager->getRequester()->getName() ], array_map(
 			static fn ( UserIdentity $user ): string => $user->getName(),
 			$recipients->getRecipients()
