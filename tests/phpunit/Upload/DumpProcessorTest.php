@@ -14,6 +14,7 @@ use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\DumpResult;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
+use Miraheze\ImportDump\Upload\PageCounter;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use function array_column;
 use function array_map;
@@ -29,7 +30,9 @@ use function htmlspecialchars;
 use function implode;
 use function range;
 use function strlen;
+use function strpos;
 use function substr;
+use function substr_count;
 
 /**
  * @group ImportDump
@@ -236,6 +239,39 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( [ 'Wikibase' => true ], $status->getValue()->requirements );
 	}
 
+	public function testMergedFilesWithASplitPageHaveFullHistory(): void {
+		$status = $this->process( $this->newZip( [
+			'part1.xml' => self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) ),
+			'part2.xml' => self::dump( self::page( 1, [ 12 => 11, 13 => 12 ] ) ),
+		] ) );
+
+		$this->assertStatusGood( $status );
+		$this->assertSame( RequestHistory::Full, $status->getValue()->history );
+	}
+
+	public function testMergedFilesWithASplitPageAndAGapHavePartialHistory(): void {
+		$status = $this->process( $this->newZip( [
+			'part1.xml' => self::dump( self::page( 1, [ 10 => 0 ] ) ),
+			'part2.xml' => self::dump( self::page( 1, [ 12 => 11 ] ) ),
+		] ) );
+
+		$this->assertStatusGood( $status );
+		$this->assertSame( RequestHistory::Partial, $status->getValue()->history );
+	}
+
+	public function testMergedFilesUseTheLatestRevisionOfASplitPage(): void {
+		$wikibase = self::dump( self::pageWithRevisions( [ [ 'wikibase-item', '{}' ] ] ) );
+		$plain = self::dump( self::pageWithRevisions( [ [ 'wikitext', 'Plain' ] ] ) );
+
+		$status = $this->process( $this->newZip( [ 'part1.xml' => $wikibase, 'part2.xml' => $plain ] ) );
+		$this->assertStatusGood( $status );
+		$this->assertSame( [], $status->getValue()->requirements );
+
+		$status = $this->process( $this->newZip( [ 'part1.xml' => $plain, 'part2.xml' => $wikibase ] ) );
+		$this->assertStatusGood( $status );
+		$this->assertSame( [ 'Wikibase' => true ], $status->getValue()->requirements );
+	}
+
 	/** @dataProvider provideInvalidXml */
 	public function testInvalidXml( string $xml, string $expectedError ): void {
 		$this->assertStatusError(
@@ -337,13 +373,63 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertTrue( $dump->wasExtracted() );
 	}
 
-	public function testZipWithSeveralFiles(): void {
+	public function testZipWithSeveralXmlFilesIsMerged(): void {
+		$status = $this->process( $this->newZip( [
+			'part10.xml' => self::dump( self::page( 3, [ 30 => 0 ] ) ),
+			'part2.xml' => self::dump( self::page( 2, [ 20 => 0, 21 => 20, 22 => 21 ] ) ),
+			'part1.xml' => self::dump( self::page( 1, [ 10 => 0 ] ) ),
+		] ) );
+
+		$this->assertStatusGood( $status );
+		$dump = $status->getValue();
+		'@phan-var DumpResult $dump';
+		$this->assertTrue( $dump->wasExtracted() );
+
+		$merged = (string)file_get_contents( $dump->path );
+		$this->assertSame( 1, substr_count( $merged, '<mediawiki' ) );
+		$this->assertSame( 1, substr_count( $merged, '<siteinfo' ) );
+		$this->assertSame( 3, PageCounter::count( $dump->path ) );
+		$this->assertSame( 5, substr_count( $merged, '<revision' ) );
+		$this->assertSame( 5, substr_count( $merged, '</revision>' ) );
+		$this->assertSame( 3, substr_count( $merged, '</page>' ) );
+		$this->assertLessThan( strpos( $merged, 'Page 2' ), strpos( $merged, 'Page 1' ) );
+		$this->assertLessThan( strpos( $merged, 'Page 3' ), strpos( $merged, 'Page 2' ) );
+	}
+
+	public function testArchiveWithXmlAndOtherFiles(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
-		$status = $this->process(
-			$this->newZip( [ 'a.xml' => $xml, 'b.xml' => $xml ] )
+		$status = $this->process( $this->newZip( [ 'a.xml' => $xml, 'b.txt' => 'text' ] ) );
+		$this->assertStatusError( 'importdump-archive-mixed', $status );
+	}
+
+	public function testMergedFilesMustShareAVersion(): void {
+		$status = $this->process( $this->newZip( [
+			'a.xml' => self::dumpWithVersion( self::page( 1, [ 10 => 0 ] ), '0.11' ),
+			'b.xml' => self::dumpWithVersion( self::page( 2, [ 20 => 0 ] ), '0.10' ),
+		] ) );
+
+		$this->assertStatusError( 'importdump-xml-version-mismatch', $status );
+	}
+
+	public function testMergedFilesMayNotHaveADocumentType(): void {
+		$withType = '<!DOCTYPE mediawiki [<!ENTITY a "b">]>' . self::dump( self::page( 2, [ 20 => 0 ] ) );
+		$status = $this->process( $this->newZip( [
+			'a.xml' => self::dump( self::page( 1, [ 10 => 0 ] ) ),
+			'b.xml' => $withType,
+		] ) );
+
+		$this->assertStatusError( 'importdump-xml-doctype', $status );
+	}
+
+	public function testMergedFilesStayUnderTheSizeLimit(): void {
+		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
+		$limit = strlen( $xml ) + 10;
+		$status = $this->newProcessor( $limit, true, [] )->process(
+			$this->newZip( [ 'a.xml' => $xml, 'b.xml' => $xml ] ),
+			null
 		);
 
-		$this->assertStatusError( 'importdump-archive-not-single', $status );
+		$this->assertStatusError( 'importdump-archive-too-large', $status );
 	}
 
 	public function testZipWithOnlyDirectories(): void {
@@ -351,7 +437,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 			$this->newZip( [ 'folder/' => '', 'other/' => '' ] )
 		);
 
-		$this->assertStatusError( 'importdump-archive-not-single', $status );
+		$this->assertStatusError( 'importdump-archive-empty', $status );
 	}
 
 	public function testZipWithUnsafeName(): void {
@@ -446,15 +532,21 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( [ DumpProcessor::STAGE_CHECKING, 100 ], end( $calls ) );
 	}
 
-	public function testTarWithSeveralFiles(): void {
-		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
-		$status = $this->process( $this->newTar( [ 'a.xml' => $xml, 'b.xml' => $xml ] ) );
-		$this->assertStatusError( 'importdump-archive-not-single', $status );
+	public function testTarWithSeveralXmlFilesIsMerged(): void {
+		$status = $this->process( $this->newTar( [
+			'a.xml' => self::dump( self::page( 1, [ 10 => 0 ] ) ),
+			'b.xml' => self::dump( self::page( 2, [ 20 => 0 ] ) ),
+		] ) );
+
+		$this->assertStatusGood( $status );
+		$dump = $status->getValue();
+		'@phan-var DumpResult $dump';
+		$this->assertSame( 2, PageCounter::count( $dump->path ) );
 	}
 
 	public function testTarWithOnlyDirectories(): void {
 		$status = $this->process( $this->newTar( [ 'folder/' => '', 'other/' => '' ] ) );
-		$this->assertStatusError( 'importdump-archive-not-single', $status );
+		$this->assertStatusError( 'importdump-archive-empty', $status );
 	}
 
 	public function testTarWithLink(): void {

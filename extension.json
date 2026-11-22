@@ -266,6 +266,7 @@
 				"importdump-verification-done",
 				"importdump-verification-extracting",
 				"importdump-verification-label",
+				"importdump-verification-merging",
 				"importdump-verification-rejected",
 				"importdump-verification-reload",
 				"importdump-verification-waiting"
