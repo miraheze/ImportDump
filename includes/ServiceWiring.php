@@ -20,6 +20,7 @@ use Miraheze\ImportDump\Requirements\TargetStateProvider;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
+use Miraheze\ImportDump\Upload\XmlMerger;
 
 // PHPUnit does not understand coverage for this file.
 // It is covered though, see ServiceWiringTest.
@@ -43,7 +44,8 @@ return [
 				$services->get( 'ImportDumpConfig' )
 			),
 			$services->getTempFSFileFactory(),
-			$services->getUploadVerification()
+			$services->getUploadVerification(),
+			new XmlMerger()
 		);
 	},
 	'ImportDumpExtensionNames' => static function ( MediaWikiServices $services ): ExtensionNames {
