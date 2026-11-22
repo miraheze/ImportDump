@@ -311,7 +311,7 @@
 			"description": "Whether to check if an uploaded dump has the full revision history of its pages, and tell handlers what was found. The result is a guess, see the message that is shown on the request."
 		},
 		"RequestImportEnableImageImports": {
-			"value": false,
+			"value": true,
 			"description": "Whether the form of Special:RequestImport has a field for an archive of image files. If one is uploaded, a second request is made with it that is linked to the one for the XML file, and the two are handled separately. The files are imported with the importImages.php maintenance script, which skips files that the wiki already has."
 		},
 		"RequestImportExtensionRequirements": {
