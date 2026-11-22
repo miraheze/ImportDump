@@ -17,16 +17,22 @@ use XMLReader;
 use function array_any;
 use function array_filter;
 use function count;
+use function intdiv;
 use function ksort;
 use function libxml_clear_errors;
 use function libxml_get_errors;
 use function libxml_use_internal_errors;
+use function pathinfo;
 use function preg_match;
 use function str_starts_with;
+use function strnatcasecmp;
+use function strtolower;
+use function usort;
 use function version_compare;
 use const LIBXML_COMPACT;
 use const LIBXML_ERR_ERROR;
 use const LIBXML_NONET;
+use const PATHINFO_EXTENSION;
 
 /**
  * Unpacks and checks an uploaded dump. The upload may be a MediaWiki XML export,
@@ -59,6 +65,8 @@ class DumpProcessor {
 	public const string STAGE_EXTRACTING = 'extracting';
 
 	public const string STAGE_CHECKING = 'checking';
+
+	public const string STAGE_MERGING = 'merging';
 
 	private const string EXPORT_NAMESPACE = 'http://www.mediawiki.org/xml/export-';
 
@@ -110,6 +118,7 @@ class DumpProcessor {
 	public function process( string $path, ?Closure $onProgress ): Status {
 		$tempFile = null;
 		$xmlPath = $path;
+		$merged = false;
 
 		$format = $this->archiveReader->detectFormat( $path );
 		if ( $format !== null ) {
@@ -118,8 +127,9 @@ class DumpProcessor {
 				return $extracted;
 			}
 
-			$tempFile = $extracted->getValue();
+			[ $tempFile, $merged ] = $extracted->getValue();
 			'@phan-var TempFSFile $tempFile';
+			'@phan-var bool $merged';
 			$xmlPath = $tempFile->getPath();
 
 			$virus = $this->uploadVerification->detectVirus( $xmlPath );
@@ -128,7 +138,7 @@ class DumpProcessor {
 			}
 		}
 
-		$inspected = $this->inspect( $xmlPath, $onProgress );
+		$inspected = $this->inspect( $xmlPath, $merged, $onProgress );
 		if ( !$inspected->isOK() ) {
 			return $inspected;
 		}
@@ -141,7 +151,8 @@ class DumpProcessor {
 	 * @param string $path
 	 * @param string $format
 	 * @param ?Closure( string, ?int ): void $onProgress
-	 * @return Status A good status with a TempFSFile as its value.
+	 * @return Status A good status with a list as its value. It holds a TempFSFile and whether
+	 *  several files were merged into it.
 	 */
 	private function extract( string $path, string $format, ?Closure $onProgress ): Status {
 		// Reading the list of a compressed TAR can take as long as extracting it.
@@ -161,8 +172,12 @@ class DumpProcessor {
 		}
 
 		$entries = $listed->getValue();
-		if ( count( $entries ) !== 1 ) {
-			return Status::newFatal( 'importdump-archive-not-single' );
+		if ( !$entries ) {
+			return Status::newFatal( 'importdump-archive-empty' );
+		}
+
+		if ( count( $entries ) > 1 ) {
+			return $this->extractAndMerge( $path, $format, $entries, $onProgress );
 		}
 
 		$tempFile = $this->tempFSFileFactory->newTempFSFile( 'importdump', 'xml' );
@@ -179,15 +194,89 @@ class DumpProcessor {
 			$onProgress ? static fn ( ?int $percent ) => $onProgress( self::STAGE_EXTRACTING, $percent ) : null
 		);
 
-		return $status->isOK() ? Status::newGood( $tempFile ) : $status;
+		return $status->isOK() ? Status::newGood( [ $tempFile, false ] ) : $status;
+	}
+
+	/**
+	 * An archive with more than one file must only have XML files. They are merged in the
+	 * order of their names, which is how a dump that was split up is usually numbered.
+	 *
+	 * @param string $path
+	 * @param string $format
+	 * @param list<ArchiveEntry> $entries
+	 * @param ?Closure( string, ?int ): void $onProgress
+	 * @return Status A good status with a list as its value. See extract().
+	 */
+	private function extractAndMerge( string $path, string $format, array $entries, ?Closure $onProgress ): Status {
+		foreach ( $entries as $entry ) {
+			if ( strtolower( pathinfo( $entry->name, PATHINFO_EXTENSION ) ) !== 'xml' ) {
+				return Status::newFatal( 'importdump-archive-mixed' );
+			}
+		}
+
+		usort( $entries, static fn ( ArchiveEntry $a, ArchiveEntry $b ): int =>
+			strnatcasecmp( $a->name, $b->name ) ?: $a->index <=> $b->index );
+
+		$maxSize = (int)$this->options->get( ConfigNames::MaxExtractedSize );
+		$total = count( $entries );
+
+		$merged = $this->tempFSFileFactory->newTempFSFile( 'importdump', 'xml' );
+		if ( !$merged ) {
+			return Status::newFatal( 'importdump-archive-unreadable' );
+		}
+
+		// Each file is added and removed before the next is extracted, so only one is on disk
+		// at a time besides the merged file, which may not go over the limit either.
+		$merger = new XmlMerger( $merged->getPath(), $maxSize );
+		foreach ( $entries as $position => $entry ) {
+			if ( $onProgress ) {
+				$onProgress( self::STAGE_EXTRACTING, intdiv( $position * 100, $total ) );
+			}
+
+			$tempFile = $this->tempFSFileFactory->newTempFSFile( 'importdump', 'xml' );
+			if ( !$tempFile ) {
+				return Status::newFatal( 'importdump-archive-unreadable' );
+			}
+
+			$status = $this->archiveReader->extractTo(
+				$path,
+				$format,
+				$entry,
+				$tempFile->getPath(),
+				$maxSize,
+				null
+			);
+
+			if ( !$status->isOK() ) {
+				return $status;
+			}
+
+			$virus = $this->uploadVerification->detectVirus( $tempFile->getPath() );
+			if ( $virus ) {
+				return Status::newFatal( 'uploadvirus', $virus );
+			}
+
+			if ( $onProgress ) {
+				$onProgress( self::STAGE_MERGING, null );
+			}
+
+			$status = $merger->add( $tempFile->getPath() );
+			if ( !$status->isOK() ) {
+				return $status;
+			}
+		}
+
+		$status = $merger->finish();
+		return $status->isOK() ? Status::newGood( [ $merged, true ] ) : $status;
 	}
 
 	/**
 	 * @param string $path
+	 * @param bool $splitPages Whether a page may be split over several elements.
 	 * @param ?Closure( string, ?int ): void $onProgress
 	 * @return Status A good status with an array as its value. See readDump().
 	 */
-	private function inspect( string $path, ?Closure $onProgress ): Status {
+	private function inspect( string $path, bool $splitPages, ?Closure $onProgress ): Status {
 		$source = $onProgress ?
 			ProgressStream::url( $path, static fn ( int $percent ) => $onProgress( self::STAGE_CHECKING, $percent ) ) :
 			$path;
@@ -201,7 +290,7 @@ class DumpProcessor {
 				return Status::newFatal( 'importdump-xml-invalid' );
 			}
 
-			return $this->readDump( $reader );
+			return $this->readDump( $reader, $splitPages );
 		} finally {
 			$reader->close();
 			if ( $onProgress ) {
@@ -217,30 +306,41 @@ class DumpProcessor {
 	 * Every revision in an export names its parent. If the parent is missing from the file,
 	 * the export was cut down, for example to only the current revisions.
 	 *
+	 * An export puts all revisions of a page in one element, so each is settled as it ends and
+	 * nothing is kept. Merged files can have a page in several elements, one for each file that
+	 * has it. Only for those, pages are told apart by title and settled at the end, which costs
+	 * memory for every revision, so history is unknown for a file that has too many.
+	 *
+	 * @param XMLReader $reader
+	 * @param bool $splitPages Whether a page may be split over several elements.
 	 * @return Status A good status with an array as its value. Its history is a RequestHistory,
 	 *  or null if history detection is off. Its requirements are the names
 	 *  of the extensions that the latest revision of any page needs, each with whether it is
 	 *  certain. It is for a content model, but not for text that only looks like a use.
 	 */
-	private function readDump( XMLReader $reader ): Status {
+	private function readDump( XMLReader $reader, bool $splitPages ): Status {
 		$detectHistory = (bool)$this->options->get( ConfigNames::EnableHistoryDetection );
 		$sawRoot = false;
 		$sawParent = false;
 		$schemaNamesParents = false;
 		$pages = 0;
 		$pagesWithGaps = 0;
+		$needed = [];
 
 		$requirements = ExtensionRequirement::fromConfig(
 			(array)$this->options->get( ConfigNames::ExtensionRequirements )
 		);
 		$scanText = array_filter( $requirements, static fn ( ExtensionRequirement $requirement ): bool =>
 			$requirement->patterns !== [] );
-		$needed = [];
 		$neededByRevision = [];
+		$sawRevision = false;
+		$pageKey = '';
 
+		$latestNeeds = [];
 		$revisionIds = [];
-		$parentIds = [];
+		$parentIdsByPage = [];
 		$tracked = $detectHistory;
+		$trackedCount = 0;
 
 		$more = $reader->read();
 		while ( $more ) {
@@ -252,14 +352,30 @@ class DumpProcessor {
 			if ( $reader->nodeType === XMLReader::END_ELEMENT ) {
 				if ( $reader->depth === 1 && $reader->localName === 'page' ) {
 					// Only the last revision counts, because it is the one that is current.
-					foreach ( $neededByRevision as $name => $certain ) {
-						$needed[$name] = ( $needed[$name] ?? false ) || $certain;
+					if ( !$splitPages ) {
+						foreach ( $neededByRevision as $name => $certain ) {
+							$needed[$name] = ( $needed[$name] ?? false ) || $certain;
+						}
+					} elseif ( $sawRevision ) {
+						// A later element of the same page holds later revisions, so it replaces an earlier one.
+						if ( $neededByRevision ) {
+							$latestNeeds[$pageKey] = $neededByRevision;
+						} else {
+							unset( $latestNeeds[$pageKey] );
+						}
 					}
 
 					$neededByRevision = [];
-
 					if ( $tracked ) {
-						$pagesWithGaps += $this->hasMissingParent( $revisionIds, $parentIds ) ? 1 : 0;
+						$parentIdsByPage[$pageKey] ??= [];
+						if ( !$splitPages ) {
+							$pagesWithGaps += $this->countPagesWithGaps( $revisionIds, $parentIdsByPage );
+						}
+					}
+
+					if ( !$splitPages ) {
+						$revisionIds = [];
+						$parentIdsByPage = [];
 					}
 				}
 			} elseif ( $reader->nodeType === XMLReader::ELEMENT ) {
@@ -280,11 +396,19 @@ class DumpProcessor {
 				} elseif ( $depth === 1 && $name === 'page' ) {
 					$pages++;
 					$neededByRevision = [];
-					$revisionIds = [];
-					$parentIds = [];
-					$tracked = $detectHistory;
+					$sawRevision = false;
+					// Used only until the title is read. A title cannot hold a null byte.
+					$pageKey = "\0" . $pages;
+					if ( !$splitPages ) {
+						$trackedCount = 0;
+						$tracked = $detectHistory;
+					}
+				} elseif ( $splitPages && $depth === 2 && $name === 'title' ) {
+					$pageKey = $reader->readString();
+					$skipChildren = true;
 				} elseif ( $depth === 2 && $name === 'revision' ) {
 					$neededByRevision = [];
+					$sawRevision = true;
 				} else {
 					if ( $depth === 3 && $name === 'model' ) {
 						$model = $reader->readString();
@@ -315,12 +439,19 @@ class DumpProcessor {
 							$sawParent = true;
 						}
 
-						if ( count( $revisionIds ) + count( $parentIds ) >= self::MAX_TRACKED_REVISIONS ) {
-							$tracked = false;
-						} elseif ( $name === 'id' ) {
-							$revisionIds[$id] = true;
-						} else {
-							$parentIds[] = $id;
+						if ( $tracked ) {
+							if ( $trackedCount >= self::MAX_TRACKED_REVISIONS ) {
+								// Too much to hold. For a merged file nothing can be said about the history then.
+								$tracked = false;
+								$revisionIds = [];
+								$parentIdsByPage = [];
+							} elseif ( $name === 'id' ) {
+								$revisionIds[$id] = true;
+								$trackedCount++;
+							} else {
+								$parentIdsByPage[$pageKey][] = $id;
+								$trackedCount++;
+							}
 						}
 					}
 
@@ -346,29 +477,54 @@ class DumpProcessor {
 			return Status::newFatal( 'importdump-xml-no-pages' );
 		}
 
+		foreach ( $latestNeeds as $pageNeeds ) {
+			foreach ( $pageNeeds as $name => $certain ) {
+				$needed[$name] = ( $needed[$name] ?? false ) || $certain;
+			}
+		}
+
 		ksort( $needed );
 		$names = [];
 		foreach ( $needed as $name => $certain ) {
 			$names[(string)$name] = $certain;
 		}
 
+		$history = null;
+		if ( $detectHistory ) {
+			if ( !$splitPages ) {
+				$history = $this->classifyHistory( $sawParent, $schemaNamesParents, $pages, $pagesWithGaps );
+			} elseif ( $tracked ) {
+				$history = $this->classifyHistory(
+					$sawParent,
+					$schemaNamesParents,
+					count( $parentIdsByPage ),
+					$this->countPagesWithGaps( $revisionIds, $parentIdsByPage )
+				);
+			} else {
+				$history = RequestHistory::Unknown;
+			}
+		}
+
 		return Status::newGood( [
-			'history' => $detectHistory ?
-				$this->classifyHistory( $sawParent, $schemaNamesParents, $pages, $pagesWithGaps ) :
-				null,
+			'history' => $history,
 			'requirements' => $names,
 		] );
 	}
 
 	/**
-	 * @param array<int, true> $revisionIds
-	 * @param int[] $parentIds
+	 * @param array<int, true> $revisionIds Every revision in the file, whichever element it is in.
+	 * @param array<string, int[]> $parentIdsByPage
 	 */
-	private function hasMissingParent( array $revisionIds, array $parentIds ): bool {
-		return array_any(
-			$parentIds,
-			static fn ( int $parentId ): bool => $parentId > 0 && !isset( $revisionIds[$parentId] )
-		);
+	private function countPagesWithGaps( array $revisionIds, array $parentIdsByPage ): int {
+		$gaps = 0;
+		foreach ( $parentIdsByPage as $parentIds ) {
+			$gaps += array_any(
+				$parentIds,
+				static fn ( int $parentId ): bool => $parentId > 0 && !isset( $revisionIds[$parentId] )
+			) ? 1 : 0;
+		}
+
+		return $gaps;
 	}
 
 	private function classifyHistory(

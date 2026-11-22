@@ -16,6 +16,7 @@
 		// Messages that can be used here:
 		// * importdump-verification-checking
 		// * importdump-verification-extracting
+		// * importdump-verification-merging
 		// * importdump-verification-waiting
 		const text = mw.msg( 'importdump-verification-' + stage );
 		if ( percent === null ) {
