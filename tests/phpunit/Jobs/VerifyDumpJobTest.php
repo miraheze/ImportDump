@@ -25,6 +25,7 @@ use Wikimedia\ObjectCache\WANObjectCache;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use function gzencode;
 use function str_replace;
+use function substr_count;
 
 /**
  * @group ImportDump
@@ -173,6 +174,24 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 		yield 'tar.gz' => [ static fn (): string => gzencode( TarFixture::build( [ 'dump.xml' => self::DUMP ] ) ) ];
 	}
 
+	public function testZipWithSeveralXmlFilesIsMerged(): void {
+		$manager = $this->newRequest( RequestStatus::Verifying, ZipFixture::build( [
+			'a.xml' => self::DUMP,
+			'b.xml' => str_replace( '<title>A</title>', '<title>B</title>', self::DUMP ),
+		] ) );
+
+		$this->runJob( $manager );
+
+		$manager = $this->getManager( $manager->getID() );
+		$this->assertSame( RequestStatus::Pending, $manager->getStatus() );
+		$this->assertTrue( $manager->fileExists() );
+		$this->assertFalse( $this->fileContents( $manager->getUnverifiedFilePath() ) );
+
+		$merged = (string)$this->fileContents( $manager->getFilePath() );
+		$this->assertSame( 2, substr_count( $merged, '</page>' ) );
+		$this->assertSame( 1, substr_count( $merged, '<mediawiki' ) );
+	}
+
 	public function testValidUploadWithoutHistoryDetection(): void {
 		$this->overrideConfigValue( ConfigNames::EnableHistoryDetection, false );
 
@@ -202,8 +221,8 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 
 	public static function provideRejectedUploads(): Generator {
 		yield 'not a dump' => [ static fn (): string => '<html/>' ];
-		yield 'zip with two files' => [
-			static fn (): string => ZipFixture::build( [ 'a.xml' => self::DUMP, 'b.xml' => self::DUMP ] ),
+		yield 'zip with an xml file and another file' => [
+			static fn (): string => ZipFixture::build( [ 'a.xml' => self::DUMP, 'b.txt' => 'text' ] ),
 		];
 
 		yield 'zip with an unsafe name' => [
