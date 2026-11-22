@@ -48,6 +48,9 @@ class ImageProcessor {
 	/** The most bytes that a file name may have, which is what the title of a file allows. */
 	private const int MAX_NAME_LENGTH = 240;
 
+	/** The most files that are named when some are rejected. */
+	private const int MAX_REPORTED = 10;
+
 	private readonly MWFileProps $fileProps;
 
 	public function __construct(
@@ -99,6 +102,8 @@ class ImageProcessor {
 		$total = count( $entries );
 		$position = 0;
 		$extracted = 0;
+		$rejected = Status::newGood();
+		$rejectedCount = 0;
 
 		foreach ( $entries as $name => $entry ) {
 			if ( $onProgress ) {
@@ -129,11 +134,22 @@ class ImageProcessor {
 
 			$problem = $this->checkFile( $extension, $tempFile->getPath() );
 			if ( !$problem->isOK() ) {
-				return $problem;
+				// Keep going, so that every file that has to be fixed is named at once.
+				if ( ++$rejectedCount <= self::MAX_REPORTED ) {
+					$rejected->fatal( 'importdump-images-file-rejected', $name, Message::newFromSpecifier(
+						$problem->getMessages()[0]
+					) );
+				}
+
+				continue;
 			}
 
 			$files[$name] = $tempFile->getPath();
 			$tempFiles[] = $tempFile;
+		}
+
+		if ( $rejectedCount ) {
+			return $rejected;
 		}
 
 		return Status::newGood( new ImageResult( $files, $tempFiles ) );

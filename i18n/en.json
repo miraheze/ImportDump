@@ -61,6 +61,7 @@
 	"importdump-images-duplicate": "The archive has more than one file named $1.",
 	"importdump-images-empty": "The archive has no files in it.",
 	"importdump-images-extension": "The file $1 has an extension that cannot be uploaded to this wiki.",
+	"importdump-images-file-rejected": "$1: $2",
 	"importdump-images-job-missing": "The images for this request are no longer stored.",
 	"importdump-images-name": "The file name $1 cannot be used. File names may not have slashes, colons or control characters.",
 	"importdump-images-not-archive": "The images must be uploaded as an archive.",

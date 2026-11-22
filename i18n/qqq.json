@@ -65,6 +65,7 @@
 	"importdump-images-duplicate": "Error shown when an uploaded archive of images has the same file name twice, in any of its folders.\n\nParameters:\n* $1 - The file name.",
 	"importdump-images-empty": "Error shown when an uploaded archive of images has no files in it.",
 	"importdump-images-extension": "Error shown when an uploaded archive of images has a file that has no extension, or one that this wiki does not allow.\n\nParameters:\n* $1 - The file name.",
+	"importdump-images-file-rejected": "Shown once for each file of an uploaded archive of images that was rejected, so that all of them can be fixed together. Up to ten are shown.\n\nParameters:\n* $1 - The file name.\n* $2 - The reason it was rejected, as a message.",
 	"importdump-images-job-missing": "Reason given when the job that imports images cannot find the stored files of the request.",
 	"importdump-images-name": "Error shown when an uploaded archive of images has a file whose name is empty, too long, not valid text, or has a slash, backslash, colon or control character.\n\nParameters:\n* $1 - The file name.",
 	"importdump-images-not-archive": "Error shown when the file uploaded for the images is not an archive.",

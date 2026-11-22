@@ -141,7 +141,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 			static fn ( self $test ): string => $test->newZip( [
 				'a.png' => self::png() . '<script>alert(1)</script>',
 			] ),
-			'uploadscripted',
+			'importdump-images-file-rejected',
 		];
 
 		yield 'same name twice' => [
@@ -154,7 +154,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 
 		yield 'contents that do not match the extension' => [
 			static fn ( self $test ): string => $test->newZip( [ 'a.png' => 'This is plain text.' ] ),
-			'filetype-mime-mismatch',
+			'importdump-images-file-rejected',
 		];
 	}
 
@@ -170,6 +170,19 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		$result = $status->getValue();
 		'@phan-var ImageResult $result';
 		$this->assertSame( [ 'a.png' ], array_keys( $result->files ) );
+	}
+
+	public function testNamesEveryRejectedFile(): void {
+		$status = $this->process( $this->newZip( [
+			'good.png' => self::png(),
+			'one.png' => 'plain text',
+			'two.png' => 'more text',
+		] ) );
+
+		$this->assertStatusError( 'importdump-images-file-rejected', $status );
+		$this->assertCount( 2, $status->getMessages() );
+		$this->assertSame( 'one.png', $status->getMessages()[0]->getParams()[0] );
+		$this->assertSame( 'two.png', $status->getMessages()[1]->getParams()[0] );
 	}
 
 	public function testRejectsTooMuchData(): void {
