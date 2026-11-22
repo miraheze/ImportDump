@@ -17,7 +17,6 @@ use XMLReader;
 use function array_any;
 use function array_filter;
 use function count;
-use function filesize;
 use function intdiv;
 use function ksort;
 use function libxml_clear_errors;
