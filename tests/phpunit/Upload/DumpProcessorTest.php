@@ -157,6 +157,18 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 			RequestHistory::Partial,
 		];
 
+		yield 'page split over several elements' => [
+			self::dump(
+				self::page( 1, [ 10 => 0, 11 => 10 ] ) . self::page( 1, [ 12 => 11, 13 => 12 ] )
+			),
+			RequestHistory::Full,
+		];
+
+		yield 'page split over several elements with a gap' => [
+			self::dump( self::page( 1, [ 10 => 0 ] ) . self::page( 1, [ 12 => 11 ] ) ),
+			RequestHistory::Partial,
+		];
+
 		yield 'old schema that does not name parents' => [
 			self::dumpWithVersion( self::pageWithoutParents( 1, [ 10 => 0, 11 => 10 ] ), '0.6' ),
 			RequestHistory::Unknown,
@@ -235,6 +247,19 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 			self::pageWithRevisions( [ [ 'wikibase-item', '{}' ] ] );
 
 		$status = $this->process( $this->newFile( self::dump( $pages ) ) );
+		$this->assertStatusGood( $status );
+		$this->assertSame( [ 'Wikibase' => true ], $status->getValue()->requirements );
+	}
+
+	public function testRequirementsOfPageSplitOverElements(): void {
+		$wikibase = self::pageWithRevisions( [ [ 'wikibase-item', '{}' ] ] );
+		$plain = self::pageWithRevisions( [ [ 'wikitext', 'Plain' ] ] );
+
+		$status = $this->process( $this->newFile( self::dump( $wikibase . $plain ) ) );
+		$this->assertStatusGood( $status );
+		$this->assertSame( [], $status->getValue()->requirements );
+
+		$status = $this->process( $this->newFile( self::dump( $plain . $wikibase ) ) );
 		$this->assertStatusGood( $status );
 		$this->assertSame( [ 'Wikibase' => true ], $status->getValue()->requirements );
 	}

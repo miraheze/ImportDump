@@ -313,19 +313,23 @@ class DumpProcessor {
 		$sawParent = false;
 		$schemaNamesParents = false;
 		$pages = 0;
-		$pagesWithGaps = 0;
 
 		$requirements = ExtensionRequirement::fromConfig(
 			(array)$this->options->get( ConfigNames::ExtensionRequirements )
 		);
 		$scanText = array_filter( $requirements, static fn ( ExtensionRequirement $requirement ): bool =>
 			$requirement->patterns !== [] );
-		$needed = [];
 		$neededByRevision = [];
+		$sawRevision = false;
+		$pageKey = '';
 
+		// A page can be split over several elements, for example when dumps are merged. Everything
+		// that decides something about a page is therefore kept by page and settled at the end.
+		$latestNeeds = [];
 		$revisionIds = [];
-		$parentIds = [];
+		$parentIdsByPage = [];
 		$tracked = $detectHistory;
+		$trackedCount = 0;
 
 		$more = $reader->read();
 		while ( $more ) {
@@ -336,15 +340,19 @@ class DumpProcessor {
 			$skipChildren = false;
 			if ( $reader->nodeType === XMLReader::END_ELEMENT ) {
 				if ( $reader->depth === 1 && $reader->localName === 'page' ) {
-					// Only the last revision counts, because it is the one that is current.
-					foreach ( $neededByRevision as $name => $certain ) {
-						$needed[$name] = ( $needed[$name] ?? false ) || $certain;
+					// Only the last revision counts, because it is the one that is current. A later
+					// element of the same page holds later revisions, so it replaces an earlier one.
+					if ( $sawRevision ) {
+						if ( $neededByRevision ) {
+							$latestNeeds[$pageKey] = $neededByRevision;
+						} else {
+							unset( $latestNeeds[$pageKey] );
+						}
 					}
 
 					$neededByRevision = [];
-
 					if ( $tracked ) {
-						$pagesWithGaps += $this->hasMissingParent( $revisionIds, $parentIds ) ? 1 : 0;
+						$parentIdsByPage[$pageKey] ??= [];
 					}
 				}
 			} elseif ( $reader->nodeType === XMLReader::ELEMENT ) {
@@ -365,11 +373,15 @@ class DumpProcessor {
 				} elseif ( $depth === 1 && $name === 'page' ) {
 					$pages++;
 					$neededByRevision = [];
-					$revisionIds = [];
-					$parentIds = [];
-					$tracked = $detectHistory;
+					$sawRevision = false;
+					// Used only until the title is read. A title cannot hold a null byte.
+					$pageKey = "\0" . $pages;
+				} elseif ( $depth === 2 && $name === 'title' ) {
+					$pageKey = $reader->readString();
+					$skipChildren = true;
 				} elseif ( $depth === 2 && $name === 'revision' ) {
 					$neededByRevision = [];
+					$sawRevision = true;
 				} else {
 					if ( $depth === 3 && $name === 'model' ) {
 						$model = $reader->readString();
@@ -400,12 +412,19 @@ class DumpProcessor {
 							$sawParent = true;
 						}
 
-						if ( count( $revisionIds ) + count( $parentIds ) >= self::MAX_TRACKED_REVISIONS ) {
-							$tracked = false;
-						} elseif ( $name === 'id' ) {
-							$revisionIds[$id] = true;
-						} else {
-							$parentIds[] = $id;
+						if ( $tracked ) {
+							if ( $trackedCount >= self::MAX_TRACKED_REVISIONS ) {
+								// Too much to hold, so nothing can be said about the history.
+								$tracked = false;
+								$revisionIds = [];
+								$parentIdsByPage = [];
+							} elseif ( $name === 'id' ) {
+								$revisionIds[$id] = true;
+								$trackedCount++;
+							} else {
+								$parentIdsByPage[$pageKey][] = $id;
+								$trackedCount++;
+							}
 						}
 					}
 
@@ -431,6 +450,13 @@ class DumpProcessor {
 			return Status::newFatal( 'importdump-xml-no-pages' );
 		}
 
+		$needed = [];
+		foreach ( $latestNeeds as $pageNeeds ) {
+			foreach ( $pageNeeds as $name => $certain ) {
+				$needed[$name] = ( $needed[$name] ?? false ) || $certain;
+			}
+		}
+
 		ksort( $needed );
 		$names = [];
 		foreach ( $needed as $name => $certain ) {
@@ -439,21 +465,33 @@ class DumpProcessor {
 
 		return Status::newGood( [
 			'history' => $detectHistory ?
-				$this->classifyHistory( $sawParent, $schemaNamesParents, $pages, $pagesWithGaps ) :
+				( $tracked ?
+					$this->classifyHistory(
+						$sawParent,
+						$schemaNamesParents,
+						count( $parentIdsByPage ),
+						$this->countPagesWithGaps( $revisionIds, $parentIdsByPage )
+					) :
+					RequestHistory::Unknown ) :
 				null,
 			'requirements' => $names,
 		] );
 	}
 
 	/**
-	 * @param array<int, true> $revisionIds
-	 * @param int[] $parentIds
+	 * @param array<int, true> $revisionIds Every revision in the file, whichever element it is in.
+	 * @param array<string, int[]> $parentIdsByPage
 	 */
-	private function hasMissingParent( array $revisionIds, array $parentIds ): bool {
-		return array_any(
-			$parentIds,
-			static fn ( int $parentId ): bool => $parentId > 0 && !isset( $revisionIds[$parentId] )
-		);
+	private function countPagesWithGaps( array $revisionIds, array $parentIdsByPage ): int {
+		$gaps = 0;
+		foreach ( $parentIdsByPage as $parentIds ) {
+			$gaps += array_any(
+				$parentIds,
+				static fn ( int $parentId ): bool => $parentId > 0 && !isset( $revisionIds[$parentId] )
+			) ? 1 : 0;
+		}
+
+		return $gaps;
 	}
 
 	private function classifyHistory(
