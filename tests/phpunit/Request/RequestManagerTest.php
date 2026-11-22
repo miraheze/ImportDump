@@ -576,6 +576,33 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * @covers ::getImportComment
 	 */
+	public function testImportCommentCannotMakeMarkupFromTheSource(): void {
+		$dbw = $this->getDb();
+		$dbw->newInsertQueryBuilder()
+			->insertInto( 'import_requests' )
+			->row( [
+				'request_source' => 'https://example.com/[[Category:A]]{{b}}<c>|~~~~__NOTOC__ d',
+				'request_target' => 'requestimporttest',
+				'request_reason' => 'test',
+				'request_status' => RequestStatus::Pending->value,
+				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
+				'request_timestamp' => $dbw->timestamp(),
+			] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$comment = $this->getRequestManager( $dbw->insertId() )->getImportComment();
+
+		$this->assertStringStartsWith(
+			'Imported from https://example.com/%5B%5BCategory:A%5D%5D%7B%7Bb%7D%7D%3Cc%3E' .
+				'%7C%7E%7E%7E%7E%5F%5FNOTOC%5F%5F%20d in ',
+			$comment
+		);
+	}
+
+	/**
+	 * @covers ::getImportComment
+	 */
 	public function testImportCommentNamesTheSourceAndTheRequest(): void {
 		$comment = $this->getRequestManager( id: 1 )->getImportComment();
 
@@ -588,6 +615,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::getImportComment
 	 */
 	public function testImagesCommandHasAnEscapedComment(): void {
+		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [] );
+
 		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
 		$command = $images->getCommand();
 
@@ -599,7 +628,11 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::getCommand
 	 */
 	public function testCommandWithoutACommentPlaceholder(): void {
-		$this->overrideConfigValue( ConfigNames::ImagesCommand, 'import {file-path}' );
+		$this->overrideConfigValues( [
+			ConfigNames::ImagesCommand => 'import {file-path}',
+			MainConfigNames::LocalDatabases => [],
+		] );
+
 		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
 
 		$this->assertStringNotContainsString( 'Imported from', $images->getCommand() );

@@ -351,7 +351,7 @@
 			"description": "Most bytes that an uploaded archive may expand to. Archives that expand to more, or that are compressed more than 200 times, are rejected while being extracted."
 		},
 		"RequestImportMaxSkippedImages": {
-			"value": 50,
+			"value": 25,
 			"description": "Highest percentage of the files in an uploaded archive of images that may be left out because they cannot be imported, such as files with a wrong extension or contents. The rest are still imported, and the request shows which were left out. If more are left out, or none can be imported, the whole archive is rejected, as it is probably not the right one."
 		},
 		"RequestImportMaxUploadSize": {

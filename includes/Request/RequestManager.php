@@ -69,8 +69,8 @@ use function parse_url;
 use function preg_replace;
 use function str_contains;
 use function str_replace;
+use function strtr;
 use function trim;
-use function wfEscapeWikiText;
 use function wfTimestamp;
 use const JSON_INVALID_UTF8_SUBSTITUTE;
 use const MW_INSTALL_PATH;
@@ -446,8 +446,21 @@ class RequestManager {
 
 		return $this->messageLocalizer->msg(
 			'importdump-images-comment',
-			// The source is used as wikitext on the pages of the files.
-			wfEscapeWikiText( $this->getSource() ),
+			// The source is used as wikitext on the pages of the files, so it cannot be left to make markup.
+			strtr( $this->getSource(), [
+				'[' => '%5B',
+				']' => '%5D',
+				'{' => '%7B',
+				'}' => '%7D',
+				'<' => '%3C',
+				'>' => '%3E',
+				'|' => '%7C',
+				'~' => '%7E',
+				'__' => '%5F%5F',
+				' ' => '%20',
+				"\n" => '%0A',
+				"\r" => '%0D',
+			] ),
 			$request
 		)->inContentLanguage()->text();
 	}
@@ -1007,7 +1020,7 @@ class RequestManager {
 		$this->row->request_skipped = $value;
 	}
 
-	/** @return array{ total: int, files: list<SkippedFile> } */
+	/** @return array{total:int,files:list<SkippedFile>} */
 	public function getSkippedImages(): array {
 		$value = $this->row->request_skipped ?? null;
 		$data = $value ? json_decode( $value, true ) : null;
