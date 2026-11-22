@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Specials;
 
 use MediaWiki\Api\ApiUpload;
@@ -24,6 +26,7 @@ use MediaWiki\Upload\UploadBase;
 use MediaWiki\Upload\UploadFromStash;
 use MediaWiki\Upload\UploadFromUrl;
 use MediaWiki\Upload\UploadStash;
+use MediaWiki\Upload\UploadStashFile;
 use MediaWiki\Upload\UploadVerification;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
@@ -31,19 +34,30 @@ use MediaWiki\User\UserIdentity;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
+use Miraheze\ImportDump\Notifications\AttentionNotifier;
 use Miraheze\ImportDump\Notifications\RequestNotification;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
+use Miraheze\ImportDump\Upload\DumpResult;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\Platform\ISQLPlatform;
+use function array_filter;
+use function array_map;
+use function array_push;
+use function array_values;
+use function ctype_space;
+use function get_class;
+use function in_array;
+use function max;
+use function min;
+use const PHP_INT_MAX;
 
-class SpecialRequestImport extends FormSpecialPage
-	implements RequestStatus {
+class SpecialRequestImport extends FormSpecialPage {
 
 	/** What the archive formats are called in the help text. */
 	private const array FORMAT_NAMES = [
@@ -64,6 +78,7 @@ class SpecialRequestImport extends FormSpecialPage
 
 	public function __construct(
 		private readonly IConnectionProvider $connectionProvider,
+		private readonly AttentionNotifier $attentionNotifier,
 		private readonly DumpProcessor $dumpProcessor,
 		private readonly RequestManager $requestManager,
 		private readonly JobQueueGroup $jobQueueGroup,
@@ -86,7 +101,7 @@ class SpecialRequestImport extends FormSpecialPage
 		$this->setParameter( $par );
 		$this->setHeaders();
 
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
 		}
@@ -204,13 +219,13 @@ class SpecialRequestImport extends FormSpecialPage
 			return Status::newFatal( 'actionthrottledtext' );
 		}
 
-		$dbw = $this->connectionProvider->getPrimaryDatabase( 'virtual-requestimport' );
+		$dbw = $this->connectionProvider->getPrimaryDatabase( RequestManager::VIRTUAL_DOMAIN );
 		$duplicate = $dbw->newSelectQueryBuilder()
 			->select( ISQLPlatform::ALL_ROWS )
 			->from( 'import_requests' )
 			->where( [
 				'request_reason' => $data['reason'],
-				'request_status' => self::STATUS_PENDING,
+				'request_status' => RequestStatus::Pending->value,
 			] )
 			->caller( __METHOD__ )
 			->fetchRow();
@@ -277,8 +292,10 @@ class SpecialRequestImport extends FormSpecialPage
 				return $processed;
 			}
 
-			$history = $processed->getValue()->history;
-			$requirements = $processed->getValue()->requirements;
+			$result = $processed->getValue();
+			'@phan-var DumpResult $result';
+			$history = $result->history;
+			$requirements = $result->requirements;
 		}
 
 		$repo = $this->repoGroup->getLocalRepo();
@@ -292,7 +309,9 @@ class SpecialRequestImport extends FormSpecialPage
 				return $status;
 			}
 
-			$fileKey = $status->getStatusValue()->getValue()->getFileKey();
+			$stashFile = $status->getStatusValue()->getValue();
+			'@phan-var UploadStashFile $stashFile';
+			$fileKey = $stashFile->getFileKey();
 		}
 
 		try {
@@ -319,8 +338,8 @@ class SpecialRequestImport extends FormSpecialPage
 				'request_source' => $data['source'],
 				'request_target' => $data['target'],
 				'request_reason' => $data['reason'],
-				'request_status' => $verifyLater ? self::STATUS_VERIFYING : self::STATUS_PENDING,
-				'request_history' => $history,
+				'request_status' => ( $verifyLater ? RequestStatus::Verifying : RequestStatus::Pending )->value,
+				'request_history' => $history?->value,
 				'request_actor' => $this->getUser()->getActorId(),
 				'request_timestamp' => $timestamp,
 			] )
@@ -335,7 +354,7 @@ class SpecialRequestImport extends FormSpecialPage
 		} else {
 			$this->requestManager->loadFromID( (int)$requestID );
 			$this->requestManager->setRequirements( $requirements );
-			$this->requestManager->notifyRequester();
+			$this->attentionNotifier->notify( $this->requestManager );
 		}
 
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', $requestID );

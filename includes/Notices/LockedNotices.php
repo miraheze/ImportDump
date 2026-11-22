@@ -1,15 +1,18 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Notices;
 
 use MediaWiki\Context\IContextSource;
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 
 final class LockedNotices implements NoticeProvider {
 
 	/** @inheritDoc */
-	public function getAudience(): string {
-		return self::AUDIENCE_EVERYONE;
+	public function getAudience(): NoticeAudience {
+		return NoticeAudience::Everyone;
 	}
 
 	/** @inheritDoc */
@@ -24,19 +27,19 @@ final class LockedNotices implements NoticeProvider {
 
 	/**
 	 * @inheritDoc
-	 * @param string $status @phan-unused-param
+	 * @param RequestStatus $status @phan-unused-param
 	 */
 	public function getNotices(
 		RequestManager $requestManager,
 		IContextSource $context,
-		string $status
+		RequestStatus $status
 	): array {
 		if ( !$requestManager->isLocked() ) {
 			return [];
 		}
 
 		return [ new RequestNotice(
-			severity: RequestNotice::SEVERITY_ERROR,
+			severity: NoticeSeverity::Error,
 			html: $context->msg( 'importdump-request-locked' )->escaped(),
 			invalidates: false,
 			declines: false,

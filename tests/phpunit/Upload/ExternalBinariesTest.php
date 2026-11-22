@@ -1,10 +1,14 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
 
 use Generator;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
+use function get_object_vars;
+use const PHP_INT_MAX;
 
 /**
  * @group ImportDump
@@ -25,7 +29,7 @@ class ExternalBinariesTest extends MediaWikiIntegrationTestCase {
 	public function testGetSettings( array $config, array $expected ): void {
 		$this->assertSame(
 			$expected,
-			$this->newExternalBinaries( $config )->getSettings( ExternalBinaries::SEVEN_ZIP )
+			get_object_vars( $this->newExternalBinaries( $config )->getSettings( ExternalBinaries::SEVEN_ZIP ) )
 		);
 	}
 
@@ -63,8 +67,8 @@ class ExternalBinariesTest extends MediaWikiIntegrationTestCase {
 			'7z' => '/usr/bin/7z',
 		] );
 
-		$this->assertSame( 10, $binaries->getSettings( ExternalBinaries::XZ )['time'] );
-		$this->assertSame( 3600, $binaries->getSettings( ExternalBinaries::SEVEN_ZIP )['time'] );
+		$this->assertSame( 10, $binaries->getSettings( ExternalBinaries::XZ )->time );
+		$this->assertSame( 3600, $binaries->getSettings( ExternalBinaries::SEVEN_ZIP )->time );
 		$this->assertTrue( $binaries->isEnabled( ExternalBinaries::XZ ) );
 		$this->assertTrue( $binaries->isEnabled( ExternalBinaries::SEVEN_ZIP ) );
 	}

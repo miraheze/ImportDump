@@ -1,17 +1,24 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
 
 use Generator;
 use InvalidArgumentException;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Upload\UploadBase;
-use MediaWiki\Upload\UploadFromChunks;
 use MediaWiki\Upload\UploadVerification;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use Wikimedia\TestingAccessWrapper;
+use function file_exists;
+use function file_put_contents;
+use function filesize;
+use function gzencode;
+use function unlink;
+use const PHP_INT_MAX;
 
 /**
  * @group ImportDump
@@ -53,7 +60,6 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 	 */
 	public function testConstructor(): void {
 		$upload = $this->newUpload( type: 'xml' );
-		$this->assertInstanceOf( UploadFromChunks::class, $upload );
 		$this->assertSame( 'xml', $upload->getType() );
 	}
 

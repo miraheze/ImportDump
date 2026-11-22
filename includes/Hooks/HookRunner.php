@@ -1,9 +1,12 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Hooks;
 
 use MediaWiki\HookContainer\HookContainer;
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 
 class HookRunner implements
 	ImportDumpJobAfterImportHook,
@@ -59,8 +62,8 @@ class HookRunner implements
 	/** @inheritDoc */
 	public function onImportDumpRequestStatusUpdate(
 		RequestManager $requestManager,
-		string $newStatus,
-		string $oldStatus
+		RequestStatus $newStatus,
+		RequestStatus $oldStatus
 	): void {
 		$this->container->run(
 			'ImportDumpRequestStatusUpdate',

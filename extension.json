@@ -74,6 +74,7 @@
 			"class": "Miraheze\\ImportDump\\Jobs\\VerifyDumpJob",
 			"services": [
 				"FormatterFactory",
+				"ImportDumpAttentionNotifier",
 				"ImportDumpDumpProcessor",
 				"ImportDumpRequestManager",
 				"ImportDumpVerificationProgress"
@@ -146,6 +147,7 @@
 			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImport",
 			"services": [
 				"ConnectionProvider",
+				"ImportDumpAttentionNotifier",
 				"ImportDumpDumpProcessor",
 				"ImportDumpRequestManager",
 				"JobQueueGroup",

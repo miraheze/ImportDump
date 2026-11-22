@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Specials;
 
 use MediaWiki\Exception\ErrorPageError;
@@ -8,15 +10,14 @@ use MediaWiki\Parser\ParserOptions;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\User\UserFactory;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\ImportDump\ExtensionNames;
-use Miraheze\ImportDump\RequestImportQueuePager;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStatus;
-use Miraheze\ImportDump\RequestViewer;
+use Miraheze\ImportDump\Pager\RequestImportQueuePager;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Requirements\ExtensionNames;
+use Miraheze\ImportDump\Viewer\RequestViewer;
 use Wikimedia\Rdbms\IConnectionProvider;
 
-class SpecialRequestImportQueue extends SpecialPage
-	implements RequestStatus {
+class SpecialRequestImportQueue extends SpecialPage {
 
 	public function __construct(
 		private readonly IConnectionProvider $connectionProvider,
@@ -34,7 +35,7 @@ class SpecialRequestImportQueue extends SpecialPage
 	public function execute( $par ): void {
 		$this->setHeaders();
 
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			throw new ErrorPageError(
 				'importdump-requestimportqueue-notcentral',
@@ -80,17 +81,17 @@ class SpecialRequestImportQueue extends SpecialPage
 				'name' => 'status',
 				'label-message' => 'importdump-label-status',
 				'options-messages' => [
-					'importdump-label-pending' => self::STATUS_PENDING,
-					'importdump-label-verifying' => self::STATUS_VERIFYING,
-					'importdump-label-starting' => self::STATUS_STARTING,
-					'importdump-label-inprogress' => self::STATUS_INPROGRESS,
-					'importdump-label-partial' => self::STATUS_PARTIAL,
-					'importdump-label-complete' => self::STATUS_COMPLETE,
-					'importdump-label-declined' => self::STATUS_DECLINED,
-					'importdump-label-failed' => self::STATUS_FAILED,
+					'importdump-label-pending' => RequestStatus::Pending->value,
+					'importdump-label-verifying' => RequestStatus::Verifying->value,
+					'importdump-label-starting' => RequestStatus::Starting->value,
+					'importdump-label-inprogress' => RequestStatus::InProgress->value,
+					'importdump-label-partial' => RequestStatus::Partial->value,
+					'importdump-label-complete' => RequestStatus::Complete->value,
+					'importdump-label-declined' => RequestStatus::Declined->value,
+					'importdump-label-failed' => RequestStatus::Failed->value,
 					'importdump-label-all' => '*',
 				],
-				'default' => $status ?: self::STATUS_PENDING,
+				'default' => $status ?: RequestStatus::Pending->value,
 			],
 		];
 

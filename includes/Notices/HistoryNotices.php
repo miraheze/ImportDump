@@ -1,17 +1,20 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Notices;
 
 use MediaWiki\Context\IContextSource;
-use Miraheze\ImportDump\RequestHistory;
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestHistory;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 
 /** What the history check found when it did not find missing revisions. */
 final class HistoryNotices implements NoticeProvider {
 
 	/** @inheritDoc */
-	public function getAudience(): string {
-		return self::AUDIENCE_HANDLERS;
+	public function getAudience(): NoticeAudience {
+		return NoticeAudience::Handlers;
 	}
 
 	/** @inheritDoc */
@@ -26,15 +29,15 @@ final class HistoryNotices implements NoticeProvider {
 
 	/**
 	 * @inheritDoc
-	 * @param string $status @phan-unused-param
+	 * @param RequestStatus $status @phan-unused-param
 	 */
 	public function getNotices(
 		RequestManager $requestManager,
 		IContextSource $context,
-		string $status
+		RequestStatus $status
 	): array {
 		$history = $requestManager->getHistory();
-		if ( $history === null || $history === RequestHistory::HISTORY_PARTIAL ) {
+		if ( $history === null || $history === RequestHistory::Partial ) {
 			return [];
 		}
 
@@ -42,8 +45,8 @@ final class HistoryNotices implements NoticeProvider {
 		// * importdump-info-history-full
 		// * importdump-info-history-unknown
 		return [ new RequestNotice(
-			severity: RequestNotice::SEVERITY_NOTICE,
-			html: $context->msg( 'importdump-info-history-' . $history )->escaped(),
+			severity: NoticeSeverity::Notice,
+			html: $context->msg( $history->getInfoKey() )->escaped(),
 			invalidates: false,
 			declines: false,
 			pinned: false,

@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Upload;
 
 use Closure;
@@ -7,6 +9,31 @@ use MediaWiki\Message\Message;
 use MediaWiki\Status\Status;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use ZipArchive;
+use function basename;
+use function bzopen;
+use function count;
+use function ctype_digit;
+use function explode;
+use function fclose;
+use function feof;
+use function filesize;
+use function fopen;
+use function fread;
+use function function_exists;
+use function fwrite;
+use function gzopen;
+use function in_array;
+use function intdiv;
+use function max;
+use function min;
+use function ord;
+use function preg_match;
+use function rtrim;
+use function str_ends_with;
+use function str_starts_with;
+use function strlen;
+use function substr;
+use const PHP_INT_MAX;
 
 /**
  * Reads ZIP, TAR, GZIP and BZIP2 archives, and XZ and 7z archives if the wiki has the programs
@@ -212,7 +239,6 @@ final class ArchiveReader {
 	 * @param string $destination The file to write it to.
 	 * @param int $maxSize Most bytes that may be written.
 	 * @param ?Closure( ?int ): void $onProgress Called with the percentage done, or null if it is not known.
-	 * @return Status
 	 */
 	public function extractTo(
 		string $path,
@@ -283,7 +309,6 @@ final class ArchiveReader {
 	 * @param ArchiveEntry $entry
 	 * @param int $maxSize
 	 * @param ?Closure( ?int ): void $onProgress
-	 * @return Status
 	 */
 	private function copy(
 		mixed $input,
@@ -496,8 +521,6 @@ final class ArchiveReader {
 	/**
 	 * Opens a file for reading its contents, decompressed if it is compressed.
 	 *
-	 * @param string $path
-	 * @param string $format
 	 * @return mixed A stream resource, or false if the file could not be opened.
 	 */
 	private function openStream( string $path, string $format ): mixed {

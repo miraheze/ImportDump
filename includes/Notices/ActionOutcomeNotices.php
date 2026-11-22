@@ -1,9 +1,12 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Notices;
 
 use MediaWiki\Context\IContextSource;
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 
 /**
  * The results of the action that was just submitted, like a saved change or a refused one.
@@ -15,10 +18,10 @@ final class ActionOutcomeNotices implements NoticeProvider {
 	private array $notices = [];
 
 	/**
-	 * @param string $severity One of the RequestNotice::SEVERITY_* constants.
+	 * @param NoticeSeverity $severity How serious the outcome is.
 	 * @param string $html The message, already escaped or parsed.
 	 */
-	public function add( string $severity, string $html ): void {
+	public function add( NoticeSeverity $severity, string $html ): void {
 		$this->notices[] = new RequestNotice(
 			severity: $severity,
 			html: $html,
@@ -29,8 +32,8 @@ final class ActionOutcomeNotices implements NoticeProvider {
 	}
 
 	/** @inheritDoc */
-	public function getAudience(): string {
-		return self::AUDIENCE_EVERYONE;
+	public function getAudience(): NoticeAudience {
+		return NoticeAudience::Everyone;
 	}
 
 	/** @inheritDoc */
@@ -47,12 +50,12 @@ final class ActionOutcomeNotices implements NoticeProvider {
 	 * @inheritDoc
 	 * @param RequestManager $requestManager @phan-unused-param
 	 * @param IContextSource $context @phan-unused-param
-	 * @param string $status @phan-unused-param
+	 * @param RequestStatus $status @phan-unused-param
 	 */
 	public function getNotices(
 		RequestManager $requestManager,
 		IContextSource $context,
-		string $status
+		RequestStatus $status
 	): array {
 		return $this->notices;
 	}

@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Logging;
 
 use MediaWiki\Logging\DatabaseLogEntry;
@@ -8,6 +10,9 @@ use MediaWiki\MainConfigNames;
 use MediaWiki\Title\TitleValue;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\Logging\RequestImportLogFormatter;
+use function html_entity_decode;
+use const ENT_QUOTES;
+use const NS_SPECIAL;
 
 /**
  * @group ImportDump

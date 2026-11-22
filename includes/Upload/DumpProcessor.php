@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Upload;
 
 use Closure;
@@ -7,17 +9,31 @@ use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Status\Status;
 use MediaWiki\Upload\UploadVerification;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\ExtensionRequirement;
-use Miraheze\ImportDump\RequestHistory;
+use Miraheze\ImportDump\Request\RequestHistory;
+use Miraheze\ImportDump\Requirements\ExtensionRequirement;
+use Wikimedia\FileBackend\FSFile\TempFSFile;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use XMLReader;
+use function array_any;
+use function array_filter;
+use function count;
+use function ksort;
+use function libxml_clear_errors;
+use function libxml_get_errors;
+use function libxml_use_internal_errors;
+use function preg_match;
+use function str_starts_with;
+use function version_compare;
+use const LIBXML_COMPACT;
+use const LIBXML_ERR_ERROR;
+use const LIBXML_NONET;
 
 /**
  * Unpacks and checks an uploaded dump. The upload may be a MediaWiki XML export,
  * or a ZIP, TAR, GZIP or BZIP2 archive that holds exactly one. A TAR can be compressed with
  * GZIP or BZIP2. XZ and 7z archives are read too if the wiki has set up the programs for them.
  */
-class DumpProcessor implements RequestHistory {
+class DumpProcessor {
 
 	public const array CONSTRUCTOR_OPTIONS = [
 		ConfigNames::EnableHistoryDetection,
@@ -103,6 +119,7 @@ class DumpProcessor implements RequestHistory {
 			}
 
 			$tempFile = $extracted->getValue();
+			'@phan-var TempFSFile $tempFile';
 			$xmlPath = $tempFile->getPath();
 
 			$virus = $this->uploadVerification->detectVirus( $xmlPath );
@@ -200,8 +217,8 @@ class DumpProcessor implements RequestHistory {
 	 * Every revision in an export names its parent. If the parent is missing from the file,
 	 * the export was cut down, for example to only the current revisions.
 	 *
-	 * @return Status A good status with an array as its value. Its history is one of the
-	 *  HISTORY_* constants, or null if history detection is off. Its requirements are the names
+	 * @return Status A good status with an array as its value. Its history is a RequestHistory,
+	 *  or null if history detection is off. Its requirements are the names
 	 *  of the extensions that the latest revision of any page needs, each with whether it is
 	 *  certain. It is for a content model, but not for text that only looks like a use.
 	 */
@@ -348,13 +365,10 @@ class DumpProcessor implements RequestHistory {
 	 * @param int[] $parentIds
 	 */
 	private function hasMissingParent( array $revisionIds, array $parentIds ): bool {
-		foreach ( $parentIds as $parentId ) {
-			if ( $parentId > 0 && !isset( $revisionIds[$parentId] ) ) {
-				return true;
-			}
-		}
-
-		return false;
+		return array_any(
+			$parentIds,
+			static fn ( int $parentId ): bool => $parentId > 0 && !isset( $revisionIds[$parentId] )
+		);
 	}
 
 	private function classifyHistory(
@@ -362,15 +376,15 @@ class DumpProcessor implements RequestHistory {
 		bool $schemaNamesParents,
 		int $pages,
 		int $pagesWithGaps
-	): string {
+	): RequestHistory {
 		if ( !$sawParent ) {
 			// Older exports never name the parent revision, so nothing can be said. Newer ones
 			// leave it out only for first revisions, which means that no page has more than one.
-			return $schemaNamesParents ? self::HISTORY_FULL : self::HISTORY_UNKNOWN;
+			return $schemaNamesParents ? RequestHistory::Full : RequestHistory::Unknown;
 		}
 
 		return $pagesWithGaps / $pages > self::PARTIAL_HISTORY_THRESHOLD ?
-			self::HISTORY_PARTIAL :
-			self::HISTORY_FULL;
+			RequestHistory::Partial :
+			RequestHistory::Full;
 	}
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Upload;
 
 /** A header read from a tar stream. The name is exactly what the archive says and is not checked. */

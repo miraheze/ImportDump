@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Jobs;
 
 use Generator;
@@ -10,16 +12,19 @@ use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
-use Miraheze\ImportDump\RequestHistory;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Request\RequestHistory;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Tests\IsolatesManageWikiTrait;
 use Miraheze\ImportDump\Tests\Upload\TarFixture;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
+use Wikimedia\ObjectCache\WANObjectCache;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+use function gzencode;
+use function str_replace;
 
 /**
  * @group ImportDump
@@ -27,8 +32,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group medium
  * @covers \Miraheze\ImportDump\Jobs\VerifyDumpJob
  */
-class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
-	implements RequestHistory, RequestStatus {
+class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 
 	use IsolatesManageWikiTrait;
 
@@ -53,7 +57,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 				] ),
 			],
 			[],
-			$this->getServiceContainer()->getMainWANObjectCache(),
+			WANObjectCache::newEmpty(),
 			$this->createMock( MimeAnalyzer::class )
 		) );
 
@@ -80,7 +84,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 	}
 
 	/** Makes a request that waits for verification, with the given upload stored for it. */
-	private function newRequest( string $status, string $upload ): RequestManager {
+	private function newRequest( RequestStatus $status, string $upload ): RequestManager {
 		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
 
 		$dbw = $this->getDb();
@@ -90,7 +94,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 				'request_source' => 'https://requestimporttest.com',
 				'request_target' => 'requestimporttest',
 				'request_reason' => 'test',
-				'request_status' => $status,
+				'request_status' => $status->value,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
 				'request_timestamp' => $dbw->timestamp(),
 			] )
@@ -112,6 +116,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 		$job = new VerifyDumpJob(
 			[ 'requestid' => $manager->getID() ],
 			$services->getFormatterFactory(),
+			$services->getService( 'ImportDumpAttentionNotifier' ),
 			$services->getService( 'ImportDumpDumpProcessor' ),
 			$manager,
 			$services->getService( 'ImportDumpVerificationProgress' )
@@ -132,16 +137,16 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 			self::DUMP
 		);
 
-		$manager = $this->newRequest( self::STATUS_VERIFYING, $dump );
+		$manager = $this->newRequest( RequestStatus::Verifying, $dump );
 		$this->runJob( $manager );
 
 		$manager = $this->getManager( $manager->getID() );
-		$this->assertSame( self::STATUS_PENDING, $manager->getStatus() );
+		$this->assertSame( RequestStatus::Pending, $manager->getStatus() );
 		$this->assertSame( [ 'WikibaseRepository' => true ], $manager->getRequirements() );
 	}
 
 	public function testNoRequirementsAreRecordedForPlainDump(): void {
-		$manager = $this->newRequest( self::STATUS_VERIFYING, self::DUMP );
+		$manager = $this->newRequest( RequestStatus::Verifying, self::DUMP );
 		$this->runJob( $manager );
 
 		$this->assertSame( [], $this->getManager( $manager->getID() )->getRequirements() );
@@ -149,12 +154,12 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 
 	/** @dataProvider provideValidUploads */
 	public function testValidUpload( callable $upload ): void {
-		$manager = $this->newRequest( self::STATUS_VERIFYING, $upload() );
+		$manager = $this->newRequest( RequestStatus::Verifying, $upload() );
 		$this->runJob( $manager );
 
 		$manager = $this->getManager( $manager->getID() );
-		$this->assertSame( self::STATUS_PENDING, $manager->getStatus() );
-		$this->assertSame( self::HISTORY_FULL, $manager->getHistory() );
+		$this->assertSame( RequestStatus::Pending, $manager->getStatus() );
+		$this->assertSame( RequestHistory::Full, $manager->getHistory() );
 		$this->assertSame( self::DUMP, $this->fileContents( $manager->getFilePath() ) );
 		$this->assertFalse( $this->fileContents( $manager->getUnverifiedFilePath() ) );
 		$this->assertNull( $manager->getVerificationProgress() );
@@ -171,21 +176,21 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 	public function testValidUploadWithoutHistoryDetection(): void {
 		$this->overrideConfigValue( ConfigNames::EnableHistoryDetection, false );
 
-		$manager = $this->newRequest( self::STATUS_VERIFYING, self::DUMP );
+		$manager = $this->newRequest( RequestStatus::Verifying, self::DUMP );
 		$this->runJob( $manager );
 
 		$manager = $this->getManager( $manager->getID() );
-		$this->assertSame( self::STATUS_PENDING, $manager->getStatus() );
+		$this->assertSame( RequestStatus::Pending, $manager->getStatus() );
 		$this->assertNull( $manager->getHistory() );
 	}
 
 	/** @dataProvider provideRejectedUploads */
 	public function testRejectedUpload( callable $upload ): void {
-		$manager = $this->newRequest( self::STATUS_VERIFYING, $upload() );
+		$manager = $this->newRequest( RequestStatus::Verifying, $upload() );
 		$this->runJob( $manager );
 
 		$manager = $this->getManager( $manager->getID() );
-		$this->assertSame( self::STATUS_DECLINED, $manager->getStatus() );
+		$this->assertSame( RequestStatus::Declined, $manager->getStatus() );
 		$this->assertNull( $manager->getHistory() );
 		$this->assertFalse( $manager->fileExists() );
 		$this->assertFalse( $this->fileContents( $manager->getUnverifiedFilePath() ) );
@@ -209,16 +214,16 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 	}
 
 	public function testMissingFile(): void {
-		$manager = $this->newRequest( self::STATUS_VERIFYING, self::DUMP );
+		$manager = $this->newRequest( RequestStatus::Verifying, self::DUMP );
 		$manager->deleteUnverifiedFile();
 
 		$this->runJob( $manager );
 
-		$this->assertSame( self::STATUS_DECLINED, $this->getManager( $manager->getID() )->getStatus() );
+		$this->assertSame( RequestStatus::Declined, $this->getManager( $manager->getID() )->getStatus() );
 	}
 
 	/** @dataProvider provideOtherStatuses */
-	public function testOtherStatusesAreLeftAlone( string $status ): void {
+	public function testOtherStatusesAreLeftAlone( RequestStatus $status ): void {
 		$manager = $this->newRequest( $status, self::DUMP );
 		$this->runJob( $manager );
 
@@ -229,7 +234,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase
 	}
 
 	public static function provideOtherStatuses(): Generator {
-		yield 'pending' => [ self::STATUS_PENDING ];
-		yield 'declined' => [ self::STATUS_DECLINED ];
+		yield 'pending' => [ RequestStatus::Pending ];
+		yield 'declined' => [ RequestStatus::Declined ];
 	}
 }

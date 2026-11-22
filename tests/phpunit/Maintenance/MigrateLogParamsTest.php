@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Maintenance;
 
 use MediaWiki\Logging\LogEntryBase;
@@ -11,6 +13,7 @@ use MediaWiki\Title\TitleValue;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\Maintenance\MigrateLogParams;
 use Wikimedia\TestingAccessWrapper;
+use const NS_SPECIAL;
 
 /**
  * @group ImportDump

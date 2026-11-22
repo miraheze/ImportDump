@@ -1,15 +1,20 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Notices;
 
 use MediaWiki\Context\IContextSource;
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
+use function parse_url;
+use const PHP_URL_HOST;
 
 final class TargetNotices implements NoticeProvider {
 
 	/** @inheritDoc */
-	public function getAudience(): string {
-		return self::AUDIENCE_HANDLERS;
+	public function getAudience(): NoticeAudience {
+		return NoticeAudience::Handlers;
 	}
 
 	/** @inheritDoc */
@@ -24,16 +29,16 @@ final class TargetNotices implements NoticeProvider {
 
 	/**
 	 * @inheritDoc
-	 * @param string $status @phan-unused-param
+	 * @param RequestStatus $status @phan-unused-param
 	 */
 	public function getNotices(
 		RequestManager $requestManager,
 		IContextSource $context,
-		string $status
+		RequestStatus $status
 	): array {
 		if ( !$requestManager->targetExists() ) {
 			return [ new RequestNotice(
-				severity: RequestNotice::SEVERITY_ERROR,
+				severity: NoticeSeverity::Error,
 				html: $context->msg( 'importdump-info-target-missing', $requestManager->getTarget() )->escaped(),
 				invalidates: true,
 				declines: true,
@@ -42,7 +47,7 @@ final class TargetNotices implements NoticeProvider {
 		}
 
 		$notices = [ new RequestNotice(
-			severity: RequestNotice::SEVERITY_NOTICE,
+			severity: NoticeSeverity::Notice,
 			html: $context->msg( 'importdump-info-groups',
 				$requestManager->getRequester()->getName(),
 				$requestManager->getTarget(),
@@ -55,7 +60,7 @@ final class TargetNotices implements NoticeProvider {
 
 		if ( !$requestManager->getInterwikiPrefix() ) {
 			$notices[] = new RequestNotice(
-				severity: RequestNotice::SEVERITY_ERROR,
+				severity: NoticeSeverity::Error,
 				html: $context->msg( 'importdump-info-no-interwiki-prefix',
 					$requestManager->getTarget(),
 					parse_url( $requestManager->getSource(), PHP_URL_HOST )

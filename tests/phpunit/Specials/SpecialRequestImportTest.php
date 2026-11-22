@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Specials;
 
 use Generator;
@@ -13,6 +15,7 @@ use MediaWiki\Notification\RecipientSet;
 use MediaWiki\Request\FauxRequest;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
+use MediaWiki\Tests\Specials\SpecialPageTestBase;
 use MediaWiki\Upload\UploadStash;
 use MediaWiki\User\User;
 use MediaWiki\User\UserIdentity;
@@ -20,14 +23,24 @@ use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
-use SpecialPageTestBase;
 use Wikimedia\Rdbms\SelectQueryBuilder;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+use Wikimedia\Timestamp\TimestampFormat;
+use function array_map;
+use function basename;
+use function crc32;
+use function file_exists;
+use function file_put_contents;
+use function filesize;
+use function gzencode;
+use function is_string;
+use function unlink;
+use const UPLOAD_ERR_OK;
 
 /**
  * @group ImportDump
@@ -35,8 +48,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group medium
  * @coversDefaultClass \Miraheze\ImportDump\Specials\SpecialRequestImport
  */
-class SpecialRequestImportTest extends SpecialPageTestBase
-	implements RequestStatus {
+class SpecialRequestImportTest extends SpecialPageTestBase {
 
 	private const string DUMP = '<?xml version="1.0"?>' .
 		'<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.11/" version="0.11">' .
@@ -56,6 +68,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 		$services = $this->getServiceContainer();
 		return new SpecialRequestImport(
 			$services->getConnectionProvider(),
+			$services->getService( 'ImportDumpAttentionNotifier' ),
 			$services->getService( 'ImportDumpDumpProcessor' ),
 			$services->getService( 'ImportDumpRequestManager' ),
 			$services->getJobQueueGroup(),
@@ -151,7 +164,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 		$this->assertInstanceOf( Status::class, $status );
 		if ( !$expectedError ) {
 			$this->assertStatusGood( $status );
-			$this->assertLatestRequest( $extraData['status'] ?? self::STATUS_PENDING );
+			$this->assertLatestRequest( $extraData['status'] ?? RequestStatus::Pending );
 		} else {
 			$this->assertStatusError( $expectedError, $status );
 		}
@@ -163,7 +176,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 		}
 	}
 
-	private function assertLatestRequest( string $expectedStatus ): void {
+	private function assertLatestRequest( RequestStatus $expectedStatus ): void {
 		$row = $this->getDb()->newSelectQueryBuilder()
 			->select( [ 'request_status', 'request_history' ] )
 			->from( 'import_requests' )
@@ -171,11 +184,11 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 			->caller( __METHOD__ )
 			->fetchRow();
 
-		$this->assertSame( $expectedStatus, $row->request_status );
+		$this->assertSame( $expectedStatus->value, $row->request_status );
 		$this->assertNull( $row->request_history );
 
 		$queued = $this->getServiceContainer()->getJobQueueGroup()->get( VerifyDumpJob::JOB_NAME )->getSize();
-		$this->assertSame( $expectedStatus === self::STATUS_VERIFYING ? 1 : 0, $queued );
+		$this->assertSame( $expectedStatus === RequestStatus::Verifying ? 1 : 0, $queued );
 	}
 
 	public static function onSubmitDataProvider(): Generator {
@@ -207,7 +220,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 				'mime-type' => 'application/zip',
 				'duplicate' => false,
 				'testfile' => ZipFixture::build( [ 'dump.xml' => self::DUMP ] ),
-				'status' => self::STATUS_VERIFYING,
+				'status' => RequestStatus::Verifying,
 				'token' => true,
 			],
 			null,
@@ -225,7 +238,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 				'mime-type' => 'application/gzip',
 				'duplicate' => false,
 				'testfile' => gzencode( self::DUMP ),
-				'status' => self::STATUS_VERIFYING,
+				'status' => RequestStatus::Verifying,
 				'token' => true,
 			],
 			null,
@@ -426,7 +439,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 	}
 
 	private function submitStashKey( User $user, string $fileKey ): Status {
-		ConvertibleTimestamp::setFakeTime( (int)ConvertibleTimestamp::now( TS_UNIX ) + 86400 );
+		ConvertibleTimestamp::setFakeTime( (int)ConvertibleTimestamp::now( TimestampFormat::UNIX ) + 86400 );
 
 		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
 		$context->setUser( $user );
@@ -669,6 +682,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase
 		$this->newSpecialPageWithNotifications( $service )
 			->sendNotifications( 'A reason', '12', 'wikidb', $requester );
 
+		'@phan-var list<array{Notification, RecipientSet}> $captured';
 		$this->assertCount( 1, $captured );
 		[ $notification, $recipients ] = $captured[0];
 

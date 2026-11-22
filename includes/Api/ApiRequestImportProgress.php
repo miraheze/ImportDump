@@ -1,14 +1,16 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Api;
 
 use MediaWiki\Api\ApiBase;
 use MediaWiki\Api\ApiMain;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStage;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStage;
 use Wikimedia\ParamValidator\ParamValidator;
 use Wikimedia\ParamValidator\TypeDef\IntegerDef;
+use function count;
 
 class ApiRequestImportProgress extends ApiBase {
 
@@ -31,16 +33,15 @@ class ApiRequestImportProgress extends ApiBase {
 		}
 
 		$status = $this->requestManager->getStatus();
-		if ( $status === RequestStatus::STATUS_STARTING || $status === RequestStatus::STATUS_INPROGRESS ) {
+		if ( $status->isRunning() ) {
 			$stage = $this->requestManager->getStage();
-			$position = array_search( $stage, RequestStage::STAGES, true );
 			$pages = $this->requestManager->getImportPages();
 
 			$this->getResult()->addValue( null, $this->getModuleName(), [
-				'status' => $status,
-				'stage' => $stage,
-				'step' => $position === false ? 0 : $position + 1,
-				'steps' => count( RequestStage::STAGES ),
+				'status' => $status->value,
+				'stage' => $stage?->value ?? '',
+				'step' => $stage ? $stage->getPosition() + 1 : 0,
+				'steps' => count( RequestStage::cases() ),
 				'percent' => $this->requestManager->getImportPercent(),
 				'done' => $pages['done'] ?? null,
 				'total' => $pages['total'] ?? null,
@@ -51,7 +52,7 @@ class ApiRequestImportProgress extends ApiBase {
 
 		$progress = $this->requestManager->getVerificationProgress();
 		$this->getResult()->addValue( null, $this->getModuleName(), [
-			'status' => $this->requestManager->getStatus(),
+			'status' => $status->value,
 			'stage' => $progress['stage'] ?? 'waiting',
 			'percent' => $progress['percent'] ?? null,
 		] );

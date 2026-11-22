@@ -1,15 +1,27 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Maintenance;
 
 use MediaWiki\Logging\LogEntryBase;
 use MediaWiki\Maintenance\LoggedUpdateMaintenance;
 use MediaWiki\RecentChanges\RecentChange;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\ImportDump\RequestStatus;
-use ReflectionClass;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 use stdClass;
 use Wikimedia\Rdbms\IDatabase;
+use function array_any;
+use function array_keys;
+use function is_array;
+use function is_object;
+use function is_string;
+use function max;
+use function mb_strtolower;
+use function preg_match;
+use function str_ends_with;
+use function wfMessage;
 
 class MigrateLogParams extends LoggedUpdateMaintenance {
 
@@ -34,7 +46,7 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 
 	/** @inheritDoc */
 	protected function doDBUpdates(): true {
-		$dbw = $this->getPrimaryDB( 'virtual-requestimport' );
+		$dbw = $this->getPrimaryDB( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbw->getDomainID() ) ) {
 			$this->output( "Import request logs are not stored on this wiki. Skipping.\n" );
 			return true;
@@ -152,19 +164,15 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 
 	/** @param array<string|int, mixed> $params */
 	private function needsMigration( array $params ): bool {
-		foreach ( array_keys( $params ) as $key ) {
-			if ( str_ends_with( (string)$key, '::requestLink' ) ) {
-				return true;
-			}
-		}
-
-		return false;
+		return array_any(
+			array_keys( $params ),
+			static fn ( int|string $key ): bool => str_ends_with( (string)$key, '::requestLink' )
+		);
 	}
 
 	/**
 	 * @param string $title
 	 * @param array<string|int, mixed> $params
-	 * @return int|null
 	 */
 	private function getRequestID( string $title, array $params ): ?int {
 		if ( preg_match( '!/(\d+)$!', $title, $matches ) ) {
@@ -209,14 +217,12 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 	/**
 	 * Old entries stored the status as lowercased text in the content language.
 	 *
-	 * @return array<string, string>
+	 * @return non-empty-array<string, string>
 	 */
 	private function getStatusMap(): array {
 		$map = [];
-		$statuses = array_values( new ReflectionClass( RequestStatus::class )->getConstants() );
-
-		foreach ( $statuses as $status ) {
-			$status = (string)$status;
+		foreach ( RequestStatus::cases() as $case ) {
+			$status = $case->value;
 			$label = wfMessage( "importdump-label-$status" )->inContentLanguage()->text();
 			$map[mb_strtolower( $label )] = $status;
 			$map[$status] = $status;

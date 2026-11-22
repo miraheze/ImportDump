@@ -1,9 +1,13 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Maintenance;
 
 use MediaWiki\Maintenance\LoggedUpdateMaintenance;
 use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\Request\RequestManager;
+use Wikimedia\Rdbms\IConnectionProvider;
 
 class MigrateEchoTypes extends LoggedUpdateMaintenance {
 
@@ -70,7 +74,7 @@ class MigrateEchoTypes extends LoggedUpdateMaintenance {
 			return 0;
 		}
 
-		$dbw = $this->getPrimaryDB( 'virtual-requestimport' );
+		$dbw = $this->getPrimaryDB( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbw->getDomainID() ) ) {
 			return 0;
 		}
@@ -78,6 +82,7 @@ class MigrateEchoTypes extends LoggedUpdateMaintenance {
 		$provider = $this->getServiceContainer()->get(
 			'GlobalPreferences.GlobalPreferencesConnectionProvider'
 		);
+		'@phan-var IConnectionProvider $provider';
 
 		$globalDbw = $provider->getPrimaryDatabase();
 
@@ -104,7 +109,7 @@ class MigrateEchoTypes extends LoggedUpdateMaintenance {
 			return 0;
 		}
 
-		$dbw = $this->getPrimaryDB( 'virtual-requestimport' );
+		$dbw = $this->getPrimaryDB( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbw->getDomainID() ) ) {
 			return 0;
 		}

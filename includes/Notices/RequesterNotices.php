@@ -1,16 +1,19 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Notices;
 
 use MediaWiki\Context\IContextSource;
 use MediaWiki\WikiMap\WikiMap;
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 
 final class RequesterNotices implements NoticeProvider {
 
 	/** @inheritDoc */
-	public function getAudience(): string {
-		return self::AUDIENCE_HANDLERS;
+	public function getAudience(): NoticeAudience {
+		return NoticeAudience::Handlers;
 	}
 
 	/** @inheritDoc */
@@ -25,19 +28,19 @@ final class RequesterNotices implements NoticeProvider {
 
 	/**
 	 * @inheritDoc
-	 * @param string $status @phan-unused-param
+	 * @param RequestStatus $status @phan-unused-param
 	 */
 	public function getNotices(
 		RequestManager $requestManager,
 		IContextSource $context,
-		string $status
+		RequestStatus $status
 	): array {
 		$notices = [];
 		$requester = $requestManager->getRequester();
 
-		if ( $requestManager->isPrivate( forced: false ) ) {
+		if ( $requestManager->isPrivate() ) {
 			$notices[] = new RequestNotice(
-				severity: RequestNotice::SEVERITY_WARNING,
+				severity: NoticeSeverity::Warning,
 				html: $context->msg( 'importdump-info-request-private' )->escaped(),
 				invalidates: false,
 				declines: false,
@@ -47,7 +50,7 @@ final class RequesterNotices implements NoticeProvider {
 
 		if ( $requester->getBlock() ) {
 			$notices[] = new RequestNotice(
-				severity: RequestNotice::SEVERITY_WARNING,
+				severity: NoticeSeverity::Warning,
 				html: $context->msg(
 					'importdump-info-requester-blocked',
 					$requester->getName(),
@@ -61,7 +64,7 @@ final class RequesterNotices implements NoticeProvider {
 
 		if ( $requester->isLocked() ) {
 			$notices[] = new RequestNotice(
-				severity: RequestNotice::SEVERITY_ERROR,
+				severity: NoticeSeverity::Error,
 				html: $context->msg( 'importdump-info-requester-locked', $requester->getName() )->escaped(),
 				invalidates: true,
 				declines: true,

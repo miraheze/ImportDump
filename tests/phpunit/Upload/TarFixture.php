@@ -1,6 +1,18 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
+
+use function count_chars;
+use function decoct;
+use function pack;
+use function str_ends_with;
+use function str_pad;
+use function str_repeat;
+use function strlen;
+use function substr;
+use const STR_PAD_LEFT;
 
 /** Writes TAR files byte by byte, so that the tests do not depend on a tar program. */
 final class TarFixture {

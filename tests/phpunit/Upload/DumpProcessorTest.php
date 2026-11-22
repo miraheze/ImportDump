@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
 
 use Generator;
@@ -7,12 +9,27 @@ use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Status\Status;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\RequestHistory;
+use Miraheze\ImportDump\Request\RequestHistory;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\DumpResult;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
+use function array_column;
+use function array_map;
+use function array_slice;
+use function array_unique;
+use function array_values;
+use function bzcompress;
+use function end;
+use function file_get_contents;
+use function function_exists;
+use function gzencode;
+use function htmlspecialchars;
+use function implode;
+use function range;
+use function strlen;
+use function substr;
 
 /**
  * @group ImportDump
@@ -20,8 +37,7 @@ use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
  * @covers \Miraheze\ImportDump\Upload\DumpProcessor
  * @covers \Miraheze\ImportDump\Upload\DumpResult
  */
-class DumpProcessorTest extends MediaWikiIntegrationTestCase
-	implements RequestHistory {
+class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 
 	use ArchiveFixtures;
 
@@ -95,7 +111,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 	}
 
 	/** @dataProvider provideHistory */
-	public function testHistory( string $xml, string $expected ): void {
+	public function testHistory( string $xml, RequestHistory $expected ): void {
 		$status = $this->process( $this->newFile( $xml ) );
 		$this->assertStatusGood( $status );
 
@@ -108,17 +124,17 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 	public static function provideHistory(): Generator {
 		yield 'full history' => [
 			self::dump( self::page( 1, [ 10 => 0, 11 => 10, 12 => 11 ] ) ),
-			self::HISTORY_FULL,
+			RequestHistory::Full,
 		];
 
 		yield 'only the current revision' => [
 			self::dump( self::page( 1, [ 12 => 11 ] ) ),
-			self::HISTORY_PARTIAL,
+			RequestHistory::Partial,
 		];
 
 		yield 'pages with a single revision' => [
 			self::dump( self::page( 1, [ 10 => 0 ] ) . self::page( 2, [ 20 => 0 ] ) ),
-			self::HISTORY_FULL,
+			RequestHistory::Full,
 		];
 
 		yield 'a few gaps are allowed' => [
@@ -128,19 +144,19 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 					range( 1, 30 )
 				) ) . self::page( 31, [ 311 => 310 ] )
 			),
-			self::HISTORY_FULL,
+			RequestHistory::Full,
 		];
 
 		yield 'mostly gaps' => [
 			self::dump(
 				self::page( 1, [ 11 => 10 ] ) . self::page( 2, [ 21 => 20 ] ) . self::page( 3, [ 30 => 0 ] )
 			),
-			self::HISTORY_PARTIAL,
+			RequestHistory::Partial,
 		];
 
 		yield 'old schema that does not name parents' => [
 			self::dumpWithVersion( self::pageWithoutParents( 1, [ 10 => 0, 11 => 10 ] ), '0.6' ),
-			self::HISTORY_UNKNOWN,
+			RequestHistory::Unknown,
 		];
 
 		yield 'page without revisions among others' => [
@@ -148,12 +164,12 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 				'<page><title>Empty</title><ns>0</ns><id>5</id></page>' .
 				self::page( 1, [ 10 => 0, 11 => 10 ] )
 			),
-			self::HISTORY_FULL,
+			RequestHistory::Full,
 		];
 	}
 
 	/**
-	 * @param string[] $revisions The model and the text of each revision, oldest first.
+	 * @param list<array{string, string}> $revisions The model and the text of each revision, oldest first.
 	 *  The model is empty if the revision has none.
 	 */
 	private static function pageWithRevisions( array $revisions ): string {
@@ -279,8 +295,9 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
+		'@phan-var DumpResult $dump';
 		$this->assertTrue( $dump->wasExtracted() );
-		$this->assertSame( self::HISTORY_FULL, $dump->history );
+		$this->assertSame( RequestHistory::Full, $dump->history );
 		$this->assertSame( $xml, file_get_contents( $dump->path ) );
 
 		$path = $dump->path;
@@ -300,6 +317,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		);
 
 		$this->assertStatusGood( $status );
+		'@phan-var list<array{string, ?int}> $calls';
 		$this->assertSame( [ DumpProcessor::STAGE_EXTRACTING, null ], $calls[0] );
 		$this->assertContains( [ DumpProcessor::STAGE_EXTRACTING, 100 ], $calls );
 		$this->assertSame( [ DumpProcessor::STAGE_CHECKING, 100 ], end( $calls ) );
@@ -314,7 +332,9 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		] ) );
 
 		$this->assertStatusGood( $status );
-		$this->assertTrue( $status->getValue()->wasExtracted() );
+		$dump = $status->getValue();
+		'@phan-var DumpResult $dump';
+		$this->assertTrue( $dump->wasExtracted() );
 	}
 
 	public function testZipWithSeveralFiles(): void {
@@ -363,8 +383,9 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
+		'@phan-var DumpResult $dump';
 		$this->assertTrue( $dump->wasExtracted() );
-		$this->assertSame( self::HISTORY_FULL, $dump->history );
+		$this->assertSame( RequestHistory::Full, $dump->history );
 		$this->assertSame( $xml, file_get_contents( $dump->path ) );
 	}
 
@@ -379,8 +400,9 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
+		'@phan-var DumpResult $dump';
 		$this->assertTrue( $dump->wasExtracted() );
-		$this->assertSame( self::HISTORY_FULL, $dump->history );
+		$this->assertSame( RequestHistory::Full, $dump->history );
 		$this->assertSame( $xml, file_get_contents( $dump->path ) );
 	}
 
@@ -390,6 +412,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		$this->assertStatusGood( $status );
 
 		$dump = $status->getValue();
+		'@phan-var DumpResult $dump';
 		$this->assertTrue( $dump->wasExtracted() );
 		$this->assertSame( $xml, file_get_contents( $dump->path ) );
 	}
@@ -417,6 +440,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase
 		);
 
 		$this->assertStatusGood( $status );
+		'@phan-var list<array{string, ?int}> $calls';
 		$this->assertSame( [ DumpProcessor::STAGE_EXTRACTING, null ], $calls[0] );
 		$this->assertContains( [ DumpProcessor::STAGE_EXTRACTING, 100 ], $calls );
 		$this->assertSame( [ DumpProcessor::STAGE_CHECKING, 100 ], end( $calls ) );

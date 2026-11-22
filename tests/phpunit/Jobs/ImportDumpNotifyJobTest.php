@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Jobs;
 
 use MediaWiki\MainConfigNames;
@@ -12,10 +14,11 @@ use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Tests\IsolatesManageWikiTrait;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+use function array_map;
 
 /**
  * @group ImportDump
@@ -23,8 +26,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group medium
  * @covers \Miraheze\ImportDump\Jobs\ImportDumpNotifyJob
  */
-class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
-	implements RequestStatus {
+class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase {
 
 	use IsolatesManageWikiTrait;
 
@@ -64,7 +66,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 				'request_source' => 'https://requestimporttest.com',
 				'request_target' => WikiMap::getCurrentWikiId(),
 				'request_reason' => 'test',
-				'request_status' => self::STATUS_INPROGRESS,
+				'request_status' => RequestStatus::InProgress->value,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
 				'request_timestamp' => $dbw->timestamp( ConvertibleTimestamp::now() ),
 			] )
@@ -74,11 +76,11 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 		return $dbw->insertId();
 	}
 
-	private function runJob( int $requestID, string $status, string $error, string $username ): void {
+	private function runJob( int $requestID, RequestStatus $status, string $error, string $username ): void {
 		$job = $this->getServiceContainer()->getJobFactory()->newJob( ImportDumpNotifyJob::JOB_NAME, [
 			'requestid' => $requestID,
 			'username' => $username,
-			'status' => $status,
+			'status' => $status->value,
 			'joberror' => $error,
 		] );
 
@@ -88,10 +90,12 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 
 	/** @return string[] */
 	private function getTypes(): array {
-		return array_map(
-			static fn ( array $pair ): string => $pair[0]->getType(),
-			$this->captured
-		);
+		$types = [];
+		foreach ( $this->captured as [ $notification ] ) {
+			$types[] = $notification->getType();
+		}
+
+		return $types;
 	}
 
 	private function getRequestManager( int $id ): RequestManager {
@@ -110,7 +114,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 		] );
 
 		$id = $this->addRequest();
-		$this->runJob( $id, self::STATUS_FAILED, 'The import broke', $this->getTestUser()->getUser()->getName() );
+		$this->runJob( $id, RequestStatus::Failed, 'The import broke', $this->getTestUser()->getUser()->getName() );
 
 		$this->assertSame(
 			[ 'requestimport-import-failed', 'requestimport-request-status-update' ],
@@ -130,39 +134,39 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 		$this->assertSame( 'The import broke', $properties['reason'] );
 		$this->assertStringContainsString( "RequestImportQueue/$id", $properties['request-url'] );
 
-		$this->assertSame( self::STATUS_FAILED, $this->getRequestManager( $id )->getStatus() );
+		$this->assertSame( RequestStatus::Failed, $this->getRequestManager( $id )->getStatus() );
 	}
 
 	public function testFailedImportWithNobodyToNotify(): void {
 		$this->overrideConfigValue( ConfigNames::UsersNotifiedOnFailedImports, [] );
 
 		$id = $this->addRequest();
-		$this->runJob( $id, self::STATUS_FAILED, 'The import broke', $this->getTestUser()->getUser()->getName() );
+		$this->runJob( $id, RequestStatus::Failed, 'The import broke', $this->getTestUser()->getUser()->getName() );
 
 		$this->assertNotContains( 'requestimport-import-failed', $this->getTypes() );
-		$this->assertSame( self::STATUS_FAILED, $this->getRequestManager( $id )->getStatus() );
+		$this->assertSame( RequestStatus::Failed, $this->getRequestManager( $id )->getStatus() );
 	}
 
 	public function testCompletedImportTellsTheRequester(): void {
 		$id = $this->addRequest();
-		$this->runJob( $id, self::STATUS_COMPLETE, '', $this->getTestUser()->getUser()->getName() );
+		$this->runJob( $id, RequestStatus::Complete, '', $this->getTestUser()->getUser()->getName() );
 
 		$this->assertSame( [ 'requestimport-request-status-update' ], $this->getTypes() );
 
-		[ $notification, $recipients ] = $this->captured[0];
+		[ , $recipients ] = $this->captured[0];
 		$this->assertSame( [ $this->getTestUser()->getUser()->getName() ], array_map(
 			static fn ( UserIdentity $user ): string => $user->getName(),
 			$recipients->getRecipients()
 		) );
 
-		$this->assertSame( self::STATUS_COMPLETE, $this->getRequestManager( $id )->getStatus() );
+		$this->assertSame( RequestStatus::Complete, $this->getRequestManager( $id )->getStatus() );
 	}
 
 	public function testStartedImportIsCommentedBySystemUserAndNamesTheActor(): void {
 		$actor = $this->getTestSysop()->getUser();
 
 		$id = $this->addRequest();
-		$this->runJob( $id, self::STATUS_INPROGRESS, '', $actor->getName() );
+		$this->runJob( $id, RequestStatus::InProgress, '', $actor->getName() );
 
 		$comments = $this->getRequestManager( $id )->getComments();
 		$this->assertCount( 1, $comments );
@@ -172,6 +176,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 		$this->assertSame( [ 'requestimport-request-status-update' ], $this->getTypes() );
 
 		[ $notification, $recipients ] = $this->captured[0];
+		$this->assertInstanceOf( RequestNotification::class, $notification );
 		$this->assertSame( $actor->getName(), $notification->getAgent()->getName() );
 		$this->assertSame( [ $this->getTestUser()->getUser()->getName() ], array_map(
 			static fn ( UserIdentity $user ): string => $user->getName(),
@@ -181,7 +186,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase
 
 	public function testStartedImportByTheRequesterNotifiesNobody(): void {
 		$id = $this->addRequest();
-		$this->runJob( $id, self::STATUS_INPROGRESS, '', $this->getTestUser()->getUser()->getName() );
+		$this->runJob( $id, RequestStatus::InProgress, '', $this->getTestUser()->getUser()->getName() );
 
 		$this->assertSame( [], $this->captured );
 		$this->assertCount( 1, $this->getRequestManager( $id )->getComments() );

@@ -1,22 +1,16 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Notices;
 
 use MediaWiki\Context\IContextSource;
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 
 interface NoticeProvider {
 
-	public const string AUDIENCE_HANDLERS = 'handlers';
-
-	/** Everyone who can see the request. Only for notices that show nothing from the target wiki. */
-	public const string AUDIENCE_EVERYONE = 'everyone';
-
-	/** The handlers and the requester of the request. */
-	public const string AUDIENCE_PARTIES = 'parties';
-
-	/** @return string One of the AUDIENCE_* constants. */
-	public function getAudience(): string;
+	public function getAudience(): NoticeAudience;
 
 	/**
 	 * Whether the notices are shown above the form to handlers too, instead of in the handling tab.
@@ -30,12 +24,12 @@ interface NoticeProvider {
 	/**
 	 * @param RequestManager $requestManager
 	 * @param IContextSource $context
-	 * @param string $status The status of the request, as earlier notices may have changed it.
+	 * @param RequestStatus $status The status of the request, as earlier notices may have changed it.
 	 * @return RequestNotice[]
 	 */
 	public function getNotices(
 		RequestManager $requestManager,
 		IContextSource $context,
-		string $status
+		RequestStatus $status
 	): array;
 }

@@ -1,10 +1,34 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Upload;
 
 use Closure;
 use MediaWiki\Message\Message;
 use MediaWiki\Status\Status;
+use function array_any;
+use function array_keys;
+use function count_chars;
+use function ctype_digit;
+use function feof;
+use function fread;
+use function fwrite;
+use function intdiv;
+use function max;
+use function min;
+use function octdec;
+use function ord;
+use function preg_match;
+use function rtrim;
+use function str_ends_with;
+use function str_repeat;
+use function str_starts_with;
+use function strlen;
+use function strpos;
+use function substr;
+use function trim;
+use const PHP_INT_MAX;
 
 /**
  * Reads entries one after another from a tar stream, which may be decompressed on the fly.
@@ -62,7 +86,6 @@ final class TarReader {
 	 *
 	 * @param mixed $stream A stream resource that can be read.
 	 * @param int $length
-	 * @return string
 	 */
 	public static function readUpTo( mixed $stream, int $length ): string {
 		$data = '';
@@ -193,7 +216,6 @@ final class TarReader {
 	 * @param TarEntry $entry
 	 * @param mixed $output A stream resource that can be written to.
 	 * @param ?Closure( ?int ): void $onProgress Called with the percentage that is done.
-	 * @return Status
 	 */
 	public function copyBody( TarEntry $entry, mixed $output, ?Closure $onProgress ): Status {
 		$remaining = $entry->size;
@@ -229,7 +251,7 @@ final class TarReader {
 		return Status::newGood();
 	}
 
-	/** @return string|false|null The block, null at a clean end of the stream, or false if it was cut off. */
+	/** @return non-empty-string|false|null The block, null at a clean end of the stream, or false if it was cut off. */
 	private function readBlock(): string|false|null {
 		$block = self::readUpTo( $this->stream, self::BLOCK_SIZE );
 		if ( $block === '' ) {
@@ -364,10 +386,7 @@ final class TarReader {
 		return preg_match( '/^[0-7]{1,12}$/', $digits ) ? (int)octdec( $digits ) : null;
 	}
 
-	/**
-	 * @param string $body
-	 * @return ?array<string, string> The records, or null if they are not well formed.
-	 */
+	/** @return ?array<string, string> The records, or null if they are not well formed. */
 	private function parsePax( string $body ): ?array {
 		$records = [];
 		$offset = 0;
@@ -403,12 +422,9 @@ final class TarReader {
 
 	/** @param array<string, string> $records */
 	private function isSparse( array $records ): bool {
-		foreach ( array_keys( $records ) as $key ) {
-			if ( str_starts_with( (string)$key, 'GNU.sparse.' ) ) {
-				return true;
-			}
-		}
-
-		return false;
+		return array_any(
+			array_keys( $records ),
+			static fn ( int|string $key ): bool => str_starts_with( (string)$key, 'GNU.sparse.' )
+		);
 	}
 }

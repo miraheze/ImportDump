@@ -1,11 +1,19 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
 
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\Upload\ProgressStream;
 use Wikimedia\AtEase\AtEase;
 use XMLReader;
+use function end;
+use function file_get_contents;
+use function file_put_contents;
+use function sort;
+use function str_repeat;
+use const LIBXML_NONET;
 
 /**
  * @group ImportDump
@@ -65,30 +73,30 @@ class ProgressStreamTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testEmptyFile(): void {
-		$url = ProgressStream::url( $this->newFile( '' ), static function ( int $percent ): void {
-		} );
+		// @phan-suppress-next-line PhanUnusedPublicNoOverrideMethodParameter
+		$url = ProgressStream::url( $this->newFile( '' ), static fn ( int $percent ) => null );
 
 		$this->assertSame( '', file_get_contents( $url ) );
 	}
 
 	public function testUnknownUrlCannotBeOpened(): void {
-		ProgressStream::url( $this->newFile( 'content' ), static function ( int $percent ): void {
-		} );
+		// @phan-suppress-next-line PhanUnusedPublicNoOverrideMethodParameter
+		ProgressStream::url( $this->newFile( 'content' ), static fn ( int $percent ) => null );
 
 		$this->assertFalse( AtEase::quietCall( 'file_get_contents', 'importdump-progress://unknown' ) );
 	}
 
 	public function testReleasedUrlCannotBeOpened(): void {
-		$url = ProgressStream::url( $this->newFile( 'content' ), static function ( int $percent ): void {
-		} );
+		// @phan-suppress-next-line PhanUnusedPublicNoOverrideMethodParameter
+		$url = ProgressStream::url( $this->newFile( 'content' ), static fn ( int $percent ) => null );
 
 		ProgressStream::release( $url );
 		$this->assertFalse( AtEase::quietCall( 'file_get_contents', $url ) );
 	}
 
 	public function testUrlCannotBeOpenedTwice(): void {
-		$url = ProgressStream::url( $this->newFile( 'content' ), static function ( int $percent ): void {
-		} );
+		// @phan-suppress-next-line PhanUnusedPublicNoOverrideMethodParameter
+		$url = ProgressStream::url( $this->newFile( 'content' ), static fn ( int $percent ) => null );
 
 		$this->assertSame( 'content', file_get_contents( $url ) );
 		$this->assertFalse( AtEase::quietCall( 'file_get_contents', $url ) );

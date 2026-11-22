@@ -1,8 +1,11 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Hooks;
 
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 
 interface ImportDumpRequestStatusUpdateHook {
 
@@ -11,13 +14,13 @@ interface ImportDumpRequestStatusUpdateHook {
 	 * This may run inside a database transaction. Defer any external work.
 	 *
 	 * @param RequestManager $requestManager
-	 * @param string $newStatus
-	 * @param string $oldStatus
-	 * @return void
+	 * @param RequestStatus $newStatus The new status.
+	 * @param RequestStatus $oldStatus The previous status.
+	 * @return void This hook must not abort, it must return no value.
 	 */
 	public function onImportDumpRequestStatusUpdate(
 		RequestManager $requestManager,
-		string $newStatus,
-		string $oldStatus
+		RequestStatus $newStatus,
+		RequestStatus $oldStatus
 	): void;
 }

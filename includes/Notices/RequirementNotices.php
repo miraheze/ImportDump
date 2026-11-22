@@ -1,20 +1,24 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Notices;
 
 use MediaWiki\Context\IContextSource;
 use MediaWiki\Html\Html;
 use MediaWiki\Message\Message;
-use Miraheze\ImportDump\ExtensionNames;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Requirements\ExtensionNames;
+use function count;
+use function in_array;
 
 final class RequirementNotices implements NoticeProvider {
 
 	private const array OPEN_STATUSES = [
-		RequestStatus::STATUS_PENDING,
-		RequestStatus::STATUS_FAILED,
-		RequestStatus::STATUS_PARTIAL,
+		RequestStatus::Pending,
+		RequestStatus::Failed,
+		RequestStatus::Partial,
 	];
 
 	public function __construct(
@@ -23,8 +27,8 @@ final class RequirementNotices implements NoticeProvider {
 	}
 
 	/** @inheritDoc */
-	public function getAudience(): string {
-		return self::AUDIENCE_PARTIES;
+	public function getAudience(): NoticeAudience {
+		return NoticeAudience::Parties;
 	}
 
 	/** @inheritDoc */
@@ -41,41 +45,43 @@ final class RequirementNotices implements NoticeProvider {
 	public function getNotices(
 		RequestManager $requestManager,
 		IContextSource $context,
-		string $status
+		RequestStatus $status
 	): array {
 		if ( !in_array( $status, self::OPEN_STATUSES, true ) ) {
 			return [];
 		}
 
 		$groups = [];
+		$kinds = [];
 		foreach ( $requestManager->getRequirementProblems() as $problem ) {
-			$type = $problem['problem'];
-			$extension = $this->extensionNames->getName( $context, $problem['name'] );
+			$extension = $this->extensionNames->getName( $context, $problem->name );
 
-			$item = $problem['setting'] !== '' ?
-				$problem['setting'] . $context->msg( 'word-separator' )->text() .
+			$item = $problem->setting !== '' ?
+				$problem->setting . $context->msg( 'word-separator' )->text() .
 				$context->msg( 'parentheses', $extension )->text() :
 				$extension;
 
 			// Items can run in another direction than the interface, such as setting names, so isolate each one.
-			$groups[$type] ??= [ 'items' => [], 'blocking' => false ];
-			$groups[$type]['items'][] = Html::element( 'bdi', [], $item );
-			$groups[$type]['blocking'] = $groups[$type]['blocking'] || $problem['blocking'];
+			$key = $problem->kind->value;
+			$kinds[$key] = $problem->kind;
+			$groups[$key] ??= [ 'items' => [], 'blocking' => false ];
+			$groups[$key]['items'][] = Html::element( 'bdi', [], $item );
+			$groups[$key]['blocking'] = $groups[$key]['blocking'] || $problem->blocking;
 		}
 
 		$notices = [];
-		foreach ( $groups as $type => $group ) {
+		foreach ( $groups as $key => $group ) {
+			$kind = $kinds[$key];
+
 			// Messages that can be used here:
 			// * importdump-requirement-unknown
 			// * importdump-requirement-missing
 			// * importdump-requirement-setting-unknown
 			// * importdump-requirement-setting
 			$notices[] = new RequestNotice(
-				severity: in_array( $type, [ 'missing', 'setting' ], true ) ?
-					RequestNotice::SEVERITY_ERROR :
-					RequestNotice::SEVERITY_WARNING,
+				severity: $kind->isError() ? NoticeSeverity::Error : NoticeSeverity::Warning,
 				html: $context->msg(
-					'importdump-requirement-' . $type,
+					$kind->getMessageKey(),
 					Message::rawParam( $context->getLanguage()->listToText( $group['items'] ) )
 				)->numParams( count( $group['items'] ) )
 					->escaped(),

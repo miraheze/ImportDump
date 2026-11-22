@@ -1,18 +1,22 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Maintenance;
 
 use MediaWiki\MainConfigNames;
 use MediaWiki\Tests\Maintenance\MaintenanceBaseTestCase;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\ImportHeartbeat;
 use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
 use Miraheze\ImportDump\Maintenance\FailStalledImports;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStage;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Progress\ImportHeartbeat;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStage;
+use Miraheze\ImportDump\Request\RequestStatus;
+use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+use Wikimedia\Timestamp\TimestampFormat;
 
 /**
  * @group ImportDump
@@ -20,8 +24,7 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group medium
  * @covers \Miraheze\ImportDump\Maintenance\FailStalledImports
  */
-class FailStalledImportsTest extends MaintenanceBaseTestCase
-	implements RequestStatus {
+class FailStalledImportsTest extends MaintenanceBaseTestCase {
 
 	/** @inheritDoc */
 	protected function getMaintenanceClass(): string {
@@ -52,7 +55,7 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase
 		return $manager;
 	}
 
-	private function addRequest( string $status, int $ageInHours ): int {
+	private function addRequest( RequestStatus $status, int $ageInHours ): int {
 		$dbw = $this->getServiceContainer()->getConnectionProvider()
 			->getPrimaryDatabase( 'virtual-requestimport' );
 
@@ -61,11 +64,11 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase
 			->row( [
 				'request_source' => 'https://requestimporttest.com',
 				'request_target' => 'requestimporttest',
-				'request_reason' => "test $status $ageInHours",
-				'request_status' => $status,
+				'request_reason' => "test {$status->value} $ageInHours",
+				'request_status' => $status->value,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
 				'request_timestamp' => $dbw->timestamp(
-					(int)ConvertibleTimestamp::now( TS_UNIX ) - $ageInHours * 3600
+					(int)ConvertibleTimestamp::now( TimestampFormat::UNIX ) - $ageInHours * 3600
 				),
 			] )
 			->caller( __METHOD__ )
@@ -75,10 +78,10 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase
 	}
 
 	public function testFailsStalledImports(): void {
-		$this->addRequest( self::STATUS_INPROGRESS, 10 );
-		$alive = $this->addRequest( self::STATUS_INPROGRESS, 10 );
-		$recent = $this->addRequest( self::STATUS_INPROGRESS, 1 );
-		$pending = $this->addRequest( self::STATUS_PENDING, 10 );
+		$this->addRequest( RequestStatus::InProgress, 10 );
+		$alive = $this->addRequest( RequestStatus::InProgress, 10 );
+		$recent = $this->addRequest( RequestStatus::InProgress, 1 );
+		$pending = $this->addRequest( RequestStatus::Pending, 10 );
 
 		$this->getHeartbeat()->beat( $alive, 3600 );
 
@@ -88,25 +91,25 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase
 		$this->assertSame( 1, $this->getServiceContainer()->getJobQueueGroup()
 			->get( ImportDumpNotifyJob::JOB_NAME )->getSize() );
 
-		$this->assertSame( self::STATUS_INPROGRESS, $this->getRequestManager( $alive )->getStatus() );
-		$this->assertSame( self::STATUS_INPROGRESS, $this->getRequestManager( $recent )->getStatus() );
-		$this->assertSame( self::STATUS_PENDING, $this->getRequestManager( $pending )->getStatus() );
+		$this->assertSame( RequestStatus::InProgress, $this->getRequestManager( $alive )->getStatus() );
+		$this->assertSame( RequestStatus::InProgress, $this->getRequestManager( $recent )->getStatus() );
+		$this->assertSame( RequestStatus::Pending, $this->getRequestManager( $pending )->getStatus() );
 	}
 
 	public function testMarksImportedRequestsAsPartial(): void {
-		$id = $this->addRequest( self::STATUS_INPROGRESS, 10 );
-		$this->getRequestManager( $id )->setStage( RequestStage::STAGE_REFRESHLINKS );
+		$id = $this->addRequest( RequestStatus::InProgress, 10 );
+		$this->getRequestManager( $id )->setStage( RequestStage::RefreshLinks );
 
 		$this->expectOutputRegex( '/Marked 1 import\(s\)/' );
 		$this->maintenance->execute();
 
 		$queue = $this->getServiceContainer()->getJobQueueGroup()->get( ImportDumpNotifyJob::JOB_NAME );
 		$job = $queue->pop();
-		$this->assertSame( self::STATUS_PARTIAL, $job->getParams()['status'] );
+		$this->assertSame( RequestStatus::Partial->value, $job->getParams()['status'] );
 	}
 
 	public function testDryRun(): void {
-		$stalled = $this->addRequest( self::STATUS_INPROGRESS, 10 );
+		$stalled = $this->addRequest( RequestStatus::InProgress, 10 );
 
 		$this->maintenance->loadWithArgv( [ '--dry-run' ] );
 
@@ -118,12 +121,14 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase
 	}
 
 	public function testBatchSize(): void {
-		$this->addRequest( self::STATUS_INPROGRESS, 10 );
-		$this->addRequest( self::STATUS_INPROGRESS, 11 );
-		$this->addRequest( self::STATUS_INPROGRESS, 12 );
+		$this->addRequest( RequestStatus::InProgress, 10 );
+		$this->addRequest( RequestStatus::InProgress, 11 );
+		$this->addRequest( RequestStatus::InProgress, 12 );
 
-		$this->maintenance->setBatchSize( 1 );
-		$this->assertSame( 1, $this->maintenance->getBatchSize() );
+		$maintenance = $this->maintenance;
+		'@phan-var TestingAccessWrapper $maintenance';
+		$maintenance->setBatchSize( 1 );
+		$this->assertSame( 1, $maintenance->getBatchSize() );
 
 		$this->expectOutputRegex( '/Marked 3 import\(s\) as failed\./' );
 		$this->maintenance->execute();
@@ -131,7 +136,7 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase
 
 	public function testNothingConfigured(): void {
 		$this->overrideConfigValue( ConfigNames::StalledImportHours, null );
-		$this->addRequest( self::STATUS_INPROGRESS, 100 );
+		$this->addRequest( RequestStatus::InProgress, 100 );
 
 		$this->expectOutputRegex( '/Nothing to do/' );
 		$this->maintenance->execute();

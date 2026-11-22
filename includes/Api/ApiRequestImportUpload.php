@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Api;
 
 use MediaWiki\Api\ApiBase;
@@ -13,14 +15,17 @@ use MediaWiki\Status\Status;
 use MediaWiki\Upload\Exception\UploadStashException;
 use MediaWiki\Upload\UploadBase;
 use MediaWiki\Upload\UploadFromStash;
+use MediaWiki\Upload\UploadStashFile;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\AssembleChunksJob;
+use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use StatusValue;
 use Wikimedia\ParamValidator\ParamValidator;
 use Wikimedia\ParamValidator\TypeDef\IntegerDef;
 use Wikimedia\Rdbms\IConnectionProvider;
+use const PHP_INT_MAX;
 
 class ApiRequestImportUpload extends ApiBase {
 
@@ -88,7 +93,9 @@ class ApiRequestImportUpload extends ApiBase {
 					$this->dieStatus( $status );
 				}
 
-				$fileKey = $status->getValue()->getFileKey();
+				$stashFile = $status->getValue();
+				'@phan-var UploadStashFile $stashFile';
+				$fileKey = $stashFile->getFileKey();
 			} else {
 				if ( $fileKey === null ) {
 					$this->dieWithError( 'apierror-upload-filekeyneeded', 'filekeyneeded' );
@@ -191,8 +198,10 @@ class ApiRequestImportUpload extends ApiBase {
 			$this->dieWithError( 'apierror-upload-missingresult', 'missingresult' );
 		}
 
-		if ( !$progress['status']->isGood() ) {
-			$this->dieStatusWithError( $progress['status'], 'stashfailed' );
+		$status = $progress['status'];
+		'@phan-var StatusValue $status';
+		if ( !$status->isGood() ) {
+			$this->dieStatusWithError( $status, 'stashfailed' );
 		}
 
 		$result = [
@@ -261,7 +270,7 @@ class ApiRequestImportUpload extends ApiBase {
 			$this->dieWithError( 'importdump-apierror-chunking-disabled', 'chunkingdisabled' );
 		}
 
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			$this->dieWithError( 'importdump-notcentral-text', 'notcentral' );
 		}

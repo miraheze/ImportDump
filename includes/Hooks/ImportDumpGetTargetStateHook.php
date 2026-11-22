@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Hooks;
 
 interface ImportDumpGetTargetStateHook {
@@ -22,7 +24,7 @@ interface ImportDumpGetTargetStateHook {
 	 *  enabled, by the name of the setting. Settings that are left out are treated as unknown.
 	 * @param string[] &$rights The rights that the requester has on the target wiki, including
 	 *  the ones from implicit groups. Leave it empty if they are not known.
-	 * @return void
+	 * @return void This hook must not abort, it must return no value.
 	 */
 	public function onImportDumpGetTargetState(
 		string $target,

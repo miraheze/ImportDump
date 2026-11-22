@@ -1,9 +1,28 @@
 <?php
 
+declare( strict_types = 1 );
+
 // phpcs:disable MediaWiki.NamingConventions.LowerCamelFunctionsName.FunctionName
 namespace Miraheze\ImportDump\Upload;
 
 use Closure;
+use function bin2hex;
+use function fclose;
+use function feof;
+use function filesize;
+use function fopen;
+use function fread;
+use function fstat;
+use function in_array;
+use function intdiv;
+use function is_file;
+use function min;
+use function random_bytes;
+use function stat;
+use function stream_get_wrappers;
+use function stream_wrapper_register;
+use function strlen;
+use function substr;
 
 /**
  * A read only stream that reports how much of a file was read, so that parsers
@@ -31,7 +50,6 @@ final class ProgressStream {
 	/**
 	 * @param string $path The file that will be read.
 	 * @param Closure( int ): void $onProgress Called with the percentage that was read.
-	 * @return string
 	 */
 	public static function url( string $path, Closure $onProgress ): string {
 		if ( !in_array( self::PROTOCOL, stream_get_wrappers(), true ) ) {

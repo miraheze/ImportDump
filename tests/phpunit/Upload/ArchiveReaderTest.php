@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Tests\Upload;
 
 use Generator;
@@ -8,6 +10,16 @@ use Miraheze\ImportDump\Upload\ArchiveEntry;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
 use ZipArchive;
+use function bzcompress;
+use function end;
+use function file_get_contents;
+use function filesize;
+use function function_exists;
+use function gzencode;
+use function str_repeat;
+use function strlen;
+use function substr;
+use const PHP_INT_MAX;
 
 /**
  * @group ImportDump
@@ -232,6 +244,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusGood( $status );
 		$this->assertSame( str_repeat( 'content ', 1000 ), file_get_contents( $destination ) );
+		'@phan-var list<?int> $percentages';
 		$this->assertSame( 0, $percentages[0] );
 		$this->assertSame( 100, end( $percentages ) );
 	}
@@ -549,6 +562,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusGood( $status );
 		$this->assertSame( str_repeat( 'content ', 1000 ), file_get_contents( $destination ) );
+		'@phan-var list<?int> $percentages';
 		$this->assertSame( 0, $percentages[0] );
 		$this->assertSame( 100, end( $percentages ) );
 	}

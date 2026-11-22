@@ -1,13 +1,21 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Maintenance;
 
 use MediaWiki\Maintenance\Maintenance;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\RequestManager;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+use Wikimedia\Timestamp\TimestampFormat;
+use function count;
+use function in_array;
+use function is_array;
+use function max;
 
 class ExpireFiles extends Maintenance {
 
@@ -36,7 +44,7 @@ class ExpireFiles extends Maintenance {
 	public function execute(): void {
 		$this->initServices();
 
-		$dbr = $this->connectionProvider->getReplicaDatabase( 'virtual-requestimport' );
+		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			$this->fatalError( 'This script must be run on the wiki that stores import requests.' );
 		}
@@ -54,7 +62,8 @@ class ExpireFiles extends Maintenance {
 		$failed = 0;
 
 		foreach ( $expiry as $status => $days ) {
-			if ( !in_array( $status, RequestManager::EXPIRABLE_STATUSES, true ) ) {
+			$expirable = RequestStatus::tryFrom( (string)$status );
+			if ( !$expirable || !in_array( $expirable, RequestManager::EXPIRABLE_STATUSES, true ) ) {
 				$this->output( "Skipping '$status'. Files for this status cannot be expired.\n" );
 				continue;
 			}
@@ -63,7 +72,7 @@ class ExpireFiles extends Maintenance {
 				continue;
 			}
 
-			$cutoff = $dbr->timestamp( (int)ConvertibleTimestamp::now( TS_UNIX ) - (int)$days * 86400 );
+			$cutoff = $dbr->timestamp( (int)ConvertibleTimestamp::now( TimestampFormat::UNIX ) - (int)$days * 86400 );
 			$lastId = 0;
 
 			do {

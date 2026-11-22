@@ -1,5 +1,7 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Miraheze\ImportDump\Jobs;
 
 use MediaWiki\Config\Config;
@@ -13,11 +15,14 @@ use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Notifications\RequestNotification;
-use Miraheze\ImportDump\RequestManager;
-use Miraheze\ImportDump\RequestStatus;
+use Miraheze\ImportDump\Request\RequestManager;
+use Miraheze\ImportDump\Request\RequestStatus;
+use function array_filter;
+use function array_map;
+use function array_values;
+use function mb_strtolower;
 
-class ImportDumpNotifyJob extends Job
-	implements RequestStatus {
+class ImportDumpNotifyJob extends Job {
 
 	public const string JOB_NAME = 'ImportDumpNotifyJob';
 
@@ -26,7 +31,7 @@ class ImportDumpNotifyJob extends Job
 	private readonly int $requestID;
 	private readonly string $jobError;
 	private readonly string $username;
-	private readonly string $status;
+	private readonly RequestStatus $status;
 
 	public function __construct(
 		array $params,
@@ -38,7 +43,7 @@ class ImportDumpNotifyJob extends Job
 		parent::__construct( self::JOB_NAME, $params );
 
 		$this->requestID = $params['requestid'];
-		$this->status = $params['status'];
+		$this->status = RequestStatus::from( $params['status'] );
 		$this->jobError = $params['joberror'];
 		$this->username = $params['username'];
 
@@ -48,15 +53,15 @@ class ImportDumpNotifyJob extends Job
 	/** @inheritDoc */
 	public function run(): true {
 		$this->requestManager->loadFromID( $this->requestID );
-		if ( $this->status === self::STATUS_COMPLETE ) {
+		if ( $this->status === RequestStatus::Complete ) {
 			$this->notifyComplete();
 		}
 
-		if ( $this->status === self::STATUS_FAILED || $this->status === self::STATUS_PARTIAL ) {
+		if ( $this->status === RequestStatus::Failed || $this->status === RequestStatus::Partial ) {
 			$this->notifyFailed( $this->status );
 		}
 
-		if ( $this->status === self::STATUS_INPROGRESS ) {
+		if ( $this->status === RequestStatus::InProgress ) {
 			$this->notifyStarted();
 		}
 
@@ -64,13 +69,13 @@ class ImportDumpNotifyJob extends Job
 	}
 
 	private function notifyComplete(): void {
-		if ( $this->requestManager->getStatus() === self::STATUS_COMPLETE ) {
+		if ( $this->requestManager->getStatus() === RequestStatus::Complete ) {
 			// Don't renotify for a job that is already completed.
 			return;
 		}
 
-		$commentUser = User::newSystemUser( 'RequestImport Status Update' );
-		$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . self::STATUS_COMPLETE )
+		$commentUser = User::newSystemUser( RequestManager::STATUS_UPDATE_USER );
+		$statusMessage = $this->messageLocalizer->msg( RequestStatus::Complete->getLabelKey() )
 			->inContentLanguage()
 			->text();
 
@@ -80,10 +85,10 @@ class ImportDumpNotifyJob extends Job
 
 		$this->requestManager->addComment( $comment, $commentUser );
 		$this->requestManager->sendNotification( $comment, 'requestimport-request-status-update', $commentUser );
-		$this->requestManager->setStatus( self::STATUS_COMPLETE );
+		$this->requestManager->setStatus( RequestStatus::Complete );
 	}
 
-	private function notifyFailed( string $status ): void {
+	private function notifyFailed( RequestStatus $status ): void {
 		$notifiedUsers = array_filter(
 			array_map(
 				fn ( string $userName ): ?User => $this->userFactory->newFromName( $userName ),
@@ -91,14 +96,14 @@ class ImportDumpNotifyJob extends Job
 			)
 		);
 
-		$isPrivate = $this->requestManager->isPrivate( forced: false );
+		$isPrivate = $this->requestManager->isPrivate();
 		$receivers = array_values( array_filter(
 			$notifiedUsers,
 			static fn ( User $receiver ): bool => $receiver->isAllowed( 'handle-import-requests' ) &&
 				( !$isPrivate || $receiver->isAllowed( 'view-private-import-requests' ) )
 		) );
 
-		$commentUser = User::newSystemUser( 'RequestImport Status Update' );
+		$commentUser = User::newSystemUser( RequestManager::STATUS_UPDATE_USER );
 		if ( $receivers ) {
 			$requestLink = SpecialPage::getTitleFor( 'RequestImportQueue', (string)$this->requestID )->getFullURL();
 			$this->notificationService->notify(
@@ -111,7 +116,7 @@ class ImportDumpNotifyJob extends Job
 			);
 		}
 
-		$comment = $this->messageLocalizer->msg( "importdump-import-$status-comment" )
+		$comment = $this->messageLocalizer->msg( "importdump-import-{$status->value}-comment" )
 			->inContentLanguage()
 			->escaped();
 
@@ -128,7 +133,7 @@ class ImportDumpNotifyJob extends Job
 		}
 
 		$this->requestManager->logStarted( $user );
-		$statusMessage = $this->messageLocalizer->msg( 'importdump-label-' . self::STATUS_INPROGRESS )
+		$statusMessage = $this->messageLocalizer->msg( RequestStatus::InProgress->getLabelKey() )
 			->inContentLanguage()
 			->text();
 
@@ -138,8 +143,8 @@ class ImportDumpNotifyJob extends Job
 			$user->getName()
 		)->inContentLanguage()->escaped();
 
-		$this->requestManager->addComment( $comment, User::newSystemUser( 'RequestImport Status Update' ) );
+		$this->requestManager->addComment( $comment, User::newSystemUser( RequestManager::STATUS_UPDATE_USER ) );
 		$this->requestManager->sendNotification( $comment, 'requestimport-request-status-update', $user );
-		$this->requestManager->setStatus( self::STATUS_INPROGRESS );
+		$this->requestManager->setStatus( RequestStatus::InProgress );
 	}
 }
