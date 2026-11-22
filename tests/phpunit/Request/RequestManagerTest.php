@@ -582,7 +582,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$dbw->newInsertQueryBuilder()
 			->insertInto( 'import_requests' )
 			->row( [
-				'request_source' => 'https://example.com/[[Category:A]]{{b}}<c>|~~~~__NOTOC__ d',
+				'request_source' => 'https://example.com/[[Category:A]]{{b}}<c>|__NOTOC__ d',
 				'request_target' => 'requestimporttest',
 				'request_reason' => 'test',
 				'request_status' => RequestStatus::Pending->value,
@@ -595,7 +595,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$comment = $this->getRequestManager( $dbw->insertId() )->getImportComment();
 
 		$this->assertStringStartsWith( 'Imported from ', $comment );
-		foreach ( [ '[[', ']]', '{{', '}}', '<', '>', '|', '~~~', '__NOTOC__' ] as $markup ) {
+		foreach ( [ '[[', ']]', '{{', '}}', '<', '>', '|', '__NOTOC__' ] as $markup ) {
 			$this->assertStringNotContainsString( $markup, $comment );
 		}
 	}

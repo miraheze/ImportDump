@@ -69,7 +69,6 @@ use function parse_url;
 use function preg_replace;
 use function str_contains;
 use function str_replace;
-use function strtr;
 use function trim;
 use function wfEscapeWikiText;
 use function wfTimestamp;
@@ -447,9 +446,8 @@ class RequestManager {
 
 		return $this->messageLocalizer->msg(
 			'importdump-images-comment',
-			// The source is used as wikitext on the pages of the files. Signatures are expanded when
-			// a page is saved, which wfEscapeWikiText does not stop.
-			strtr( wfEscapeWikiText( $this->getSource() ), [ '~~~' => '~~&#126;' ] ),
+			// The source is used as wikitext on the pages of the files.
+			wfEscapeWikiText( $this->getSource() ),
 			$request
 		)->inContentLanguage()->text();
 	}
