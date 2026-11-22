@@ -10,6 +10,7 @@ use MediaWiki\Message\Message;
 use MediaWikiUnitTestCase;
 use Miraheze\ImportDump\Notices\NoticeAudience;
 use Miraheze\ImportDump\Notices\NoticeSeverity;
+use Miraheze\ImportDump\Notices\RequestNotice;
 use Miraheze\ImportDump\Notices\SkippedImageNotices;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
@@ -22,7 +23,11 @@ use function substr_count;
  */
 class SkippedImageNoticesTest extends MediaWikiUnitTestCase {
 
-	/** @param list<SkippedFile> $files */
+	/**
+	 * @param int $total
+	 * @param list<SkippedFile> $files
+	 * @return RequestNotice[]
+	 */
 	private function getNotices( int $total, array $files ): array {
 		$message = $this->createMock( Message::class );
 		$message->method( 'numParams' )->willReturnSelf();
