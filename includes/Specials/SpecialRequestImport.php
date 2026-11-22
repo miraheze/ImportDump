@@ -475,6 +475,7 @@ class SpecialRequestImport extends FormSpecialPage {
 	/**
 	 * @return UploadFromFile|Status|null The upload of the images archive, a status with the problem if it
 	 *  cannot be used, or null if there is none.
+	 * @throws PermissionsError
 	 */
 	private function getImagesUpload(): UploadFromFile|Status|null {
 		if ( !$this->getConfig()->get( ConfigNames::EnableImageImports ) ) {

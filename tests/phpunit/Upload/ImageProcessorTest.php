@@ -28,6 +28,8 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 
 	use ArchiveFixtures;
 
+	private const int DEFAULT_SIZE = 1048576;
+
 	private const string PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4' .
 		'2mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
@@ -48,7 +50,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		);
 	}
 
-	private function process( string $path, int $maxSize = 1048576 ): Status {
+	private function process( string $path, int $maxSize ): Status {
 		return $this->newProcessor( $maxSize )->process( $path, null );
 	}
 
@@ -61,7 +63,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 			'folder/a.png' => self::png(),
 			'B.PNG' => self::png(),
 			'folder/' => '',
-		] ) );
+		] ), maxSize: self::DEFAULT_SIZE );
 
 		$this->assertStatusGood( $status );
 		$result = $status->getValue();
@@ -73,9 +75,9 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/** @dataProvider provideRejected */
-	public function testRejects( callable $build, string $message ): void {
-		$status = $this->process( $build( $this ) );
-		$this->assertStatusError( $message, $status );
+	public function testRejects( callable $build, string $messageKey ): void {
+		$status = $this->process( $build( $this ), maxSize: self::DEFAULT_SIZE );
+		$this->assertStatusError( $messageKey, $status );
 	}
 
 	public static function provideRejected(): Generator {
@@ -164,7 +166,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 			'__MACOSX/._a.png' => 'x',
 			'folder/._a.png' => 'x',
 			'a.png' => self::png(),
-		] ) );
+		] ), maxSize: self::DEFAULT_SIZE );
 
 		$this->assertStatusGood( $status );
 		$result = $status->getValue();
@@ -177,7 +179,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 			'good.png' => self::png(),
 			'one.png' => 'plain text',
 			'two.png' => 'more text',
-		] ) );
+		] ), maxSize: self::DEFAULT_SIZE );
 
 		$this->assertStatusError( 'importdump-images-file-rejected', $status );
 		$this->assertCount( 2, $status->getMessages() );

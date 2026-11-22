@@ -16,6 +16,7 @@ use Miraheze\ImportDump\ConfigNames;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use Wikimedia\Mime\MimeAnalyzer;
 use function array_map;
+use function array_slice;
 use function basename;
 use function count;
 use function filesize;
@@ -227,7 +228,7 @@ class ImageProcessor {
 		$props = $this->fileProps->getPropsFromPath( $path, $extension );
 		$result = $this->uploadVerification->verifyFile( $path, $extension, $props );
 		if ( $result !== true ) {
-			return Status::newFatal( ...$result );
+			return Status::newFatal( $result[0], ...array_slice( $result, 1 ) );
 		}
 
 		return Status::newGood();
