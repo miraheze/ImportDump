@@ -96,10 +96,7 @@ class ImportImagesJob extends Job {
 		$importImages->setArg( 0, $this->requestManager->getSplitFilePath() );
 		$importImages->setOption( 'user', $user->getName() );
 		$importImages->setOption( 'skip-dupes', true );
-		$importImages->setOption( 'comment', $this->messageLocalizer->msg(
-			'importdump-images-comment',
-			$this->requestManager->getSource()
-		)->inContentLanguage()->text() );
+		$importImages->setOption( 'comment', $this->requestManager->getImportComment() );
 
 		$importImages->execute();
 		$this->beat();

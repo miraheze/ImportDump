@@ -331,7 +331,7 @@
 			"description": "Full URL. If set, adds a help URL to Special:RequestImport."
 		},
 		"RequestImportImagesCommand": {
-			"value": "php {IP}/maintenance/importImages.php --wiki={wiki} --skip-dupes {file-path}",
+			"value": "php {IP}/maintenance/importImages.php --wiki={wiki} --skip-dupes --comment={comment} {file-path}",
 			"description": "Generated maintenance script command to use for a request of image files. If $wgRequestImportEnableAutomatedJob is enabled, this is not displayed unless the status is 'failed'."
 		},
 		"RequestImportInterwikiMap": {

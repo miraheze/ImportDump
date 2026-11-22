@@ -572,6 +572,38 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
+	 * @covers ::getImportComment
+	 */
+	public function testImportCommentNamesTheSourceAndTheRequest(): void {
+		$comment = $this->getRequestManager( id: 1 )->getImportComment();
+
+		$this->assertStringStartsWith( 'Imported from https://requestimporttest.com in ', $comment );
+		$this->assertMatchesRegularExpression( '~ in (\S+Special:RequestImportQueue/|#)1$~', $comment );
+	}
+
+	/**
+	 * @covers ::getCommand
+	 * @covers ::getImportComment
+	 */
+	public function testImagesCommandHasAnEscapedComment(): void {
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+		$command = $images->getCommand();
+
+		$this->assertStringContainsString( "--comment='Imported from https://requestimporttest.com in ", $command );
+		$this->assertStringNotContainsString( '{comment}', $command );
+	}
+
+	/**
+	 * @covers ::getCommand
+	 */
+	public function testCommandWithoutACommentPlaceholder(): void {
+		$this->overrideConfigValue( ConfigNames::ImagesCommand, 'import {file-path}' );
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+
+		$this->assertStringNotContainsString( 'Imported from', $images->getCommand() );
+	}
+
+	/**
 	 * @covers ::targetExists
 	 */
 	public function testTargetExists(): void {

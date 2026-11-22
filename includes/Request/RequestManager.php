@@ -21,6 +21,7 @@ use MediaWiki\Status\Status;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserIdentity;
+use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
@@ -54,6 +55,7 @@ use function array_unique;
 use function array_values;
 use function basename;
 use function boolval;
+use function escapeshellarg;
 use function explode;
 use function in_array;
 use function intval;
@@ -62,8 +64,10 @@ use function json_decode;
 use function json_encode;
 use function parse_url;
 use function preg_replace;
+use function str_contains;
 use function str_replace;
 use function trim;
+use function wfEscapeWikiText;
 use function wfTimestamp;
 use const MW_INSTALL_PATH;
 use const PHP_URL_HOST;
@@ -416,13 +420,29 @@ class RequestManager {
 			'{username-prefix}',
 			'{file-name}',
 			'{file-path}',
+			'{comment}',
 		], [
 			MW_INSTALL_PATH,
 			$this->getTarget(),
 			$this->getInterwikiPrefix(),
 			$this->getFileName(),
 			$this->getSplitFilePath(),
+			str_contains( $command, '{comment}' ) ? escapeshellarg( $this->getImportComment() ) : '',
 		], $command );
+	}
+
+	public function getImportComment(): string {
+		$wiki = WikiMap::getWiki( $this->dbw->getDomainID() );
+		$request = $wiki ?
+			$wiki->getCanonicalUrl( 'Special:RequestImportQueue/' . $this->ID ) :
+			'#' . $this->ID;
+
+		return $this->messageLocalizer->msg(
+			'importdump-images-comment',
+			// The source is used as wikitext on the pages of the files.
+			wfEscapeWikiText( $this->getSource() ),
+			$request
+		)->inContentLanguage()->text();
 	}
 
 	/** Whether the requester has all of the rights that are needed to see the state of the target wiki. */

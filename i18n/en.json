@@ -57,7 +57,7 @@
 	"importdump-help-upload-file-types": "Supported archive types are $1. A TAR file can also be compressed, for example as $2.",
 	"importdump-help-upload-file-url": "Only uncompressed XML files are permitted.",
 	"importdump-help-upload-images": "Optionally upload an archive of image files. Only file types that this wiki accepts for upload are allowed, files in folders are put together, and a name that is used twice is an error. Hidden files are ignored. If you also upload an XML file, the images get their own request that is linked to it. Without one, the images are requested alone.",
-	"importdump-images-comment": "Imported from $1",
+	"importdump-images-comment": "Imported from $1 in $2",
 	"importdump-images-duplicate": "The archive has more than one file named $1.",
 	"importdump-images-empty": "The archive has no files in it.",
 	"importdump-images-extension": "The file $1 has an extension that cannot be uploaded to this wiki.",

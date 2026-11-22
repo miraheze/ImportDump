@@ -13,6 +13,7 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Upload\ImageProcessor;
 use Miraheze\ImportDump\Upload\ImageResult;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
+use Wikimedia\Message\ScalarParam;
 use function array_keys;
 use function base64_decode;
 use function file_get_contents;
@@ -183,8 +184,14 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusError( 'importdump-images-file-rejected', $status );
 		$this->assertCount( 2, $status->getMessages() );
-		$this->assertSame( 'one.png', $status->getMessages()[0]->getParams()[0] );
-		$this->assertSame( 'two.png', $status->getMessages()[1]->getParams()[0] );
+
+		$first = $status->getMessages()[0]->getParams()[0];
+		$second = $status->getMessages()[1]->getParams()[0];
+		'@phan-var ScalarParam $first';
+		'@phan-var ScalarParam $second';
+
+		$this->assertSame( 'one.png', $first->getValue() );
+		$this->assertSame( 'two.png', $second->getValue() );
 	}
 
 	public function testRejectsTooMuchData(): void {

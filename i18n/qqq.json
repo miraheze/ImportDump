@@ -61,7 +61,7 @@
 	"importdump-help-upload-file-types": "Help for the 'Upload File' field, shown after {{msg-mw|importdump-help-upload-file}}. The archive types depend on what the wiki has set up.\n\nParameters:\n* $1 - A list of the archive types that can be uploaded, such as \"ZIP, TAR, GZIP and BZIP2\".\n* $2 - A list of file extensions that a compressed TAR file can have, such as \".tar.gz, .tgz and .tar.bz2\".",
 	"importdump-help-upload-file-url": "Help for the 'Source URL' field.",
 	"importdump-help-upload-images": "Help for the optional 'Upload images' field on the form of Special:RequestImport.",
-	"importdump-images-comment": "Upload comment given to each file that is imported from an archive of images.\n\nParameters:\n* $1 - The URL of the source wiki.",
+	"importdump-images-comment": "Upload comment given to each file that is imported from an archive of images.\n\nParameters:\n* $1 - The URL of the source wiki.\n* $2 - The URL of the request on the wiki that has the requests, or its number if that URL is not known.",
 	"importdump-images-duplicate": "Error shown when an uploaded archive of images has the same file name twice, in any of its folders.\n\nParameters:\n* $1 - The file name.",
 	"importdump-images-empty": "Error shown when an uploaded archive of images has no files in it.",
 	"importdump-images-extension": "Error shown when an uploaded archive of images has a file that has no extension, or one that this wiki does not allow.\n\nParameters:\n* $1 - The file name.",
