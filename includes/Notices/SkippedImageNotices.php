@@ -61,7 +61,11 @@ final class SkippedImageNotices implements NoticeProvider {
 		) ];
 	}
 
-	/** @param list<SkippedFile> $files */
+	/**
+	 * @param int $total
+	 * @param list<SkippedFile> $files
+	 * @param IContextSource $context
+	 */
 	private function getSummary( int $total, array $files, IContextSource $context ): string {
 		$names = array_map(
 			static fn ( SkippedFile $file ): string => $file->name,
@@ -79,7 +83,11 @@ final class SkippedImageNotices implements NoticeProvider {
 			->escaped();
 	}
 
-	/** @param list<SkippedFile> $files */
+	/**
+	 * @param int $total
+	 * @param list<SkippedFile> $files
+	 * @param IContextSource $context
+	 */
 	private function getList( int $total, array $files, IContextSource $context ): string {
 		$items = '';
 		foreach ( $files as $file ) {
