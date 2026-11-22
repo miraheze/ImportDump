@@ -157,18 +157,6 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 			RequestHistory::Partial,
 		];
 
-		yield 'page split over several elements' => [
-			self::dump(
-				self::page( 1, [ 10 => 0, 11 => 10 ] ) . self::page( 1, [ 12 => 11, 13 => 12 ] )
-			),
-			RequestHistory::Full,
-		];
-
-		yield 'page split over several elements with a gap' => [
-			self::dump( self::page( 1, [ 10 => 0 ] ) . self::page( 1, [ 12 => 11 ] ) ),
-			RequestHistory::Partial,
-		];
-
 		yield 'old schema that does not name parents' => [
 			self::dumpWithVersion( self::pageWithoutParents( 1, [ 10 => 0, 11 => 10 ] ), '0.6' ),
 			RequestHistory::Unknown,
@@ -251,15 +239,35 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( [ 'Wikibase' => true ], $status->getValue()->requirements );
 	}
 
-	public function testRequirementsOfPageSplitOverElements(): void {
-		$wikibase = self::pageWithRevisions( [ [ 'wikibase-item', '{}' ] ] );
-		$plain = self::pageWithRevisions( [ [ 'wikitext', 'Plain' ] ] );
+	public function testMergedFilesWithASplitPageHaveFullHistory(): void {
+		$status = $this->process( $this->newZip( [
+			'part1.xml' => self::dump( self::page( 1, [ 10 => 0, 11 => 10 ] ) ),
+			'part2.xml' => self::dump( self::page( 1, [ 12 => 11, 13 => 12 ] ) ),
+		] ) );
 
-		$status = $this->process( $this->newFile( self::dump( $wikibase . $plain ) ) );
+		$this->assertStatusGood( $status );
+		$this->assertSame( RequestHistory::Full, $status->getValue()->history );
+	}
+
+	public function testMergedFilesWithASplitPageAndAGapHavePartialHistory(): void {
+		$status = $this->process( $this->newZip( [
+			'part1.xml' => self::dump( self::page( 1, [ 10 => 0 ] ) ),
+			'part2.xml' => self::dump( self::page( 1, [ 12 => 11 ] ) ),
+		] ) );
+
+		$this->assertStatusGood( $status );
+		$this->assertSame( RequestHistory::Partial, $status->getValue()->history );
+	}
+
+	public function testMergedFilesUseTheLatestRevisionOfASplitPage(): void {
+		$wikibase = self::dump( self::pageWithRevisions( [ [ 'wikibase-item', '{}' ] ] ) );
+		$plain = self::dump( self::pageWithRevisions( [ [ 'wikitext', 'Plain' ] ] ) );
+
+		$status = $this->process( $this->newZip( [ 'part1.xml' => $wikibase, 'part2.xml' => $plain ] ) );
 		$this->assertStatusGood( $status );
 		$this->assertSame( [], $status->getValue()->requirements );
 
-		$status = $this->process( $this->newFile( self::dump( $plain . $wikibase ) ) );
+		$status = $this->process( $this->newZip( [ 'part1.xml' => $plain, 'part2.xml' => $wikibase ] ) );
 		$this->assertStatusGood( $status );
 		$this->assertSame( [ 'Wikibase' => true ], $status->getValue()->requirements );
 	}
