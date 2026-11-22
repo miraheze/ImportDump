@@ -88,9 +88,9 @@
 				"ConnectionProvider",
 				"ImportDumpConfig",
 				"ImportDumpHeartbeat",
+				"ImportDumpHookRunner",
 				"ImportDumpRequestManager",
-				"JobQueueGroupFactory",
-				"RepoGroup"
+				"JobQueueGroupFactory"
 			],
 			"needsPage": false
 		}

@@ -8,7 +8,6 @@ use ImportImages;
 use MediaWiki\Config\Config;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Exception\MWExceptionHandler;
-use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\JobQueue\Job;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
 use MediaWiki\JobQueue\JobSpecification;
@@ -16,6 +15,7 @@ use MediaWiki\Language\MessageLocalizer;
 use MediaWiki\Maintenance\FakeMaintenance;
 use MediaWiki\User\User;
 use Miraheze\ImportDump\ConfigNames;
+use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\Progress\ImportHeartbeat;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStage;
@@ -23,13 +23,10 @@ use Miraheze\ImportDump\Request\RequestStatus;
 use RuntimeException;
 use Throwable;
 use Wikimedia\Rdbms\IConnectionProvider;
-use function basename;
-use function bin2hex;
-use function copy;
 use function get_class;
 use function glob;
+use function is_dir;
 use function max;
-use function random_bytes;
 use function rmdir;
 use function unlink;
 
@@ -51,9 +48,9 @@ class ImportImagesJob extends Job {
 		private readonly IConnectionProvider $connectionProvider,
 		private readonly Config $config,
 		private readonly ImportHeartbeat $heartbeat,
+		private readonly HookRunner $hookRunner,
 		private readonly RequestManager $requestManager,
 		private readonly JobQueueGroupFactory $jobQueueGroupFactory,
-		private readonly RepoGroup $repoGroup,
 	) {
 		parent::__construct( self::JOB_NAME, $params );
 
@@ -74,7 +71,10 @@ class ImportImagesJob extends Job {
 		$this->beat();
 
 		try {
-			if ( !$this->requestManager->fileExists() ) {
+			$this->queueNotification( RequestStatus::InProgress, '' );
+			$this->enterStage();
+			$directory = $this->downloadImages();
+			if ( !$directory ) {
 				$this->queueNotification(
 					RequestStatus::Failed,
 					$this->messageLocalizer->msg( 'importdump-images-job-missing' )->inContentLanguage()->text()
@@ -83,9 +83,6 @@ class ImportImagesJob extends Job {
 				return true;
 			}
 
-			$this->queueNotification( RequestStatus::InProgress, '' );
-			$this->enterStage();
-			$directory = $this->downloadImages();
 			$this->importImages( $directory );
 		} catch ( Throwable $t ) {
 			MWExceptionHandler::rollbackPrimaryChangesAndLog( $t );
@@ -103,23 +100,21 @@ class ImportImagesJob extends Job {
 		return true;
 	}
 
-	/** Copies the stored files to a local directory, which is the only thing importImages can read. */
-	private function downloadImages(): string {
-		$directory = wfTempDir() . '/importdump-' . $this->requestID . '-' . bin2hex( random_bytes( 4 ) );
-		if ( !wfMkdirParents( $directory, null, __METHOD__ ) ) {
+	/** Asks the handlers to fill a local directory with the stored files. Returns null if nothing came back. */
+	private function downloadImages(): ?string {
+		$directory = wfTempDir() . '/' . $this->requestManager->getFileName();
+		if ( !is_dir( $directory ) && !wfMkdirParents( $directory, null, __METHOD__ ) ) {
 			throw new RuntimeException( "Could not create $directory" );
 		}
 
-		$backend = $this->repoGroup->getLocalRepo()->getBackend();
-		foreach ( $this->requestManager->listImageFiles() as $path ) {
-			$file = $backend->getLocalReference( [ 'src' => $path ] );
-			if ( !$file || !copy( $file->getPath(), $directory . '/' . basename( $path ) ) ) {
-				$this->removeDirectory( $directory );
-				throw new RuntimeException( "Could not read $path from storage" );
-			}
+		$this->hookRunner->onImportDumpJobGetFile( $directory, $this->requestManager );
+		$this->beat();
+
+		if ( !glob( $directory . '/*' ) ) {
+			$this->removeDirectory( $directory );
+			return null;
 		}
 
-		$this->beat();
 		return $directory;
 	}
 

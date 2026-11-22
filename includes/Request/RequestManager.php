@@ -607,7 +607,7 @@ class RequestManager {
 	}
 
 	/** @return list<string> The paths of the stored image files, or nothing for any other request. */
-	public function listImageFiles(): array {
+	private function listImageFiles(): array {
 		if ( $this->getType() !== RequestType::Images ) {
 			return [];
 		}
