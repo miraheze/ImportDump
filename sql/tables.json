@@ -72,6 +72,22 @@
 				"options": { "notnull": false, "length": 65530 }
 			},
 			{
+				"name": "request_type",
+				"comment": "What is imported, pages from an XML dump or image files",
+				"type": "mwenum",
+				"options": { "notnull": true, "default": "xml",
+					"CustomSchemaOptions": {
+						"enum_values": [ "images", "xml" ]
+					}
+				}
+			},
+			{
+				"name": "request_linked_id",
+				"comment": "The request that this one was made together with, or NULL if it stands alone",
+				"type": "bigint",
+				"options": { "notnull": false, "unsigned": true }
+			},
+			{
 				"name": "request_locked",
 				"comment": "",
 				"type": "mwtinyint",
@@ -107,6 +123,12 @@
 				"name": "request_status",
 				"comment": "",
 				"columns": [ "request_status" ],
+				"unique": false
+			},
+			{
+				"name": "request_linked_id",
+				"comment": "",
+				"columns": [ "request_linked_id" ],
 				"unique": false
 			}
 		],

@@ -16,17 +16,25 @@ use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use XMLReader;
 use function array_any;
 use function array_filter;
+use function array_map;
 use function count;
+use function filesize;
+use function intdiv;
 use function ksort;
 use function libxml_clear_errors;
 use function libxml_get_errors;
 use function libxml_use_internal_errors;
+use function pathinfo;
 use function preg_match;
 use function str_starts_with;
+use function strnatcasecmp;
+use function strtolower;
+use function usort;
 use function version_compare;
 use const LIBXML_COMPACT;
 use const LIBXML_ERR_ERROR;
 use const LIBXML_NONET;
+use const PATHINFO_EXTENSION;
 
 /**
  * Unpacks and checks an uploaded dump. The upload may be a MediaWiki XML export,
@@ -60,6 +68,8 @@ class DumpProcessor {
 
 	public const string STAGE_CHECKING = 'checking';
 
+	public const string STAGE_MERGING = 'merging';
+
 	private const string EXPORT_NAMESPACE = 'http://www.mediawiki.org/xml/export-';
 
 	/** Share of pages with a missing parent revision above which the history is called partial. */
@@ -79,6 +89,7 @@ class DumpProcessor {
 		private readonly ServiceOptions $options,
 		private readonly TempFSFileFactory $tempFSFileFactory,
 		private readonly UploadVerification $uploadVerification,
+		private readonly XmlMerger $xmlMerger,
 	) {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
 	}
@@ -161,6 +172,10 @@ class DumpProcessor {
 		}
 
 		$entries = $listed->getValue();
+		if ( count( $entries ) > 1 ) {
+			return $this->extractAndMerge( $path, $format, $entries, $onProgress );
+		}
+
 		if ( count( $entries ) !== 1 ) {
 			return Status::newFatal( 'importdump-archive-not-single' );
 		}
@@ -180,6 +195,81 @@ class DumpProcessor {
 		);
 
 		return $status->isOK() ? Status::newGood( $tempFile ) : $status;
+	}
+
+	/**
+	 * An archive with more than one file must only have XML files. They are merged in the
+	 * order of their names, which is how a dump that was split up is usually numbered.
+	 *
+	 * @param string $path
+	 * @param string $format
+	 * @param list<ArchiveEntry> $entries
+	 * @param ?Closure( string, ?int ): void $onProgress
+	 * @return Status A good status with a TempFSFile as its value.
+	 */
+	private function extractAndMerge( string $path, string $format, array $entries, ?Closure $onProgress ): Status {
+		foreach ( $entries as $entry ) {
+			if ( strtolower( pathinfo( $entry->name, PATHINFO_EXTENSION ) ) !== 'xml' ) {
+				return Status::newFatal( 'importdump-archive-mixed' );
+			}
+		}
+
+		usort( $entries, static fn ( ArchiveEntry $a, ArchiveEntry $b ): int =>
+			strnatcasecmp( $a->name, $b->name ) ?: $a->index <=> $b->index );
+
+		$maxSize = (int)$this->options->get( ConfigNames::MaxExtractedSize );
+		$total = count( $entries );
+		$files = [];
+		$extracted = 0;
+
+		foreach ( $entries as $position => $entry ) {
+			if ( $onProgress ) {
+				$onProgress( self::STAGE_EXTRACTING, intdiv( $position * 100, $total ) );
+			}
+
+			$tempFile = $this->tempFSFileFactory->newTempFSFile( 'importdump', 'xml' );
+			if ( !$tempFile ) {
+				return Status::newFatal( 'importdump-archive-unreadable' );
+			}
+
+			// What was already written counts against the limit, so the files together stay under it.
+			$status = $this->archiveReader->extractTo(
+				$path,
+				$format,
+				$entry,
+				$tempFile->getPath(),
+				$maxSize - $extracted,
+				null
+			);
+
+			if ( !$status->isOK() ) {
+				return $status;
+			}
+
+			$extracted += (int)filesize( $tempFile->getPath() );
+			$virus = $this->uploadVerification->detectVirus( $tempFile->getPath() );
+			if ( $virus ) {
+				return Status::newFatal( 'uploadvirus', $virus );
+			}
+
+			$files[] = $tempFile;
+		}
+
+		$merged = $this->tempFSFileFactory->newTempFSFile( 'importdump', 'xml' );
+		if ( !$merged ) {
+			return Status::newFatal( 'importdump-archive-unreadable' );
+		}
+
+		if ( $onProgress ) {
+			$onProgress( self::STAGE_MERGING, null );
+		}
+
+		$status = $this->xmlMerger->merge(
+			array_map( static fn ( TempFSFile $file ): string => $file->getPath(), $files ),
+			$merged->getPath()
+		);
+
+		return $status->isOK() ? Status::newGood( $merged ) : $status;
 	}
 
 	/**

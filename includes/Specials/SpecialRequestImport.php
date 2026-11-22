@@ -23,6 +23,7 @@ use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
 use MediaWiki\Upload\Exception\UploadStashException;
 use MediaWiki\Upload\UploadBase;
+use MediaWiki\Upload\UploadFromFile;
 use MediaWiki\Upload\UploadFromStash;
 use MediaWiki\Upload\UploadFromUrl;
 use MediaWiki\Upload\UploadStash;
@@ -38,6 +39,7 @@ use Miraheze\ImportDump\Notifications\AttentionNotifier;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Request\RequestType;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\DumpResult;
@@ -56,6 +58,7 @@ use function in_array;
 use function max;
 use function min;
 use const PHP_INT_MAX;
+use const UPLOAD_ERR_NO_FILE;
 
 class SpecialRequestImport extends FormSpecialPage {
 
@@ -180,6 +183,15 @@ class SpecialRequestImport extends FormSpecialPage {
 			];
 		}
 
+		if ( $this->getConfig()->get( ConfigNames::EnableImageImports ) ) {
+			$formDescriptor['UploadImages'] = [
+				'type' => 'file',
+				'label-message' => 'importdump-label-upload-images',
+				'help-message' => 'importdump-help-upload-images',
+				'accept' => $this->dumpProcessor->getArchiveMimeTypes(),
+			];
+		}
+
 		if ( $this->useChunkedUploads() ) {
 			$formDescriptor['UploadFileKey'] = [
 				'type' => 'hidden',
@@ -235,6 +247,17 @@ class SpecialRequestImport extends FormSpecialPage {
 		}
 
 		$timestamp = $dbw->timestamp();
+
+		$images = $this->getImagesUpload();
+		if ( $images instanceof Status ) {
+			return $images;
+		}
+
+		if ( $this->getConfig()->get( ConfigNames::EnableImageImports ) && !$this->hasXmlUpload( $data ) ) {
+			return $images ?
+				$this->submitImagesOnly( $data, $timestamp, $images ) :
+				Status::newFatal( 'importdump-upload-nothing' );
+		}
 		$fileName = $data['target'] . '-' . $timestamp . '.xml';
 
 		$request = $this->getRequest();
@@ -331,6 +354,22 @@ class SpecialRequestImport extends FormSpecialPage {
 			return $status;
 		}
 
+		$imagesName = $data['target'] . '-' . $timestamp . '-images';
+		if ( $images ) {
+			$stashed = $this->publishImages( $images, $imagesName );
+			if ( !$stashed->isOK() ) {
+				$backend = $repo->getBackend();
+				foreach ( [ "/ImportDump/unverified/$fileName", "/ImportDump/$fileName" ] as $path ) {
+					$backend->quickDelete( [
+						'src' => $repo->getZonePath( 'public' ) . $path,
+						'ignoreMissingSource' => true,
+					] );
+				}
+
+				return $stashed;
+			}
+		}
+
 		$dbw->newInsertQueryBuilder()
 			->insertInto( 'import_requests' )
 			->ignore()
@@ -342,6 +381,7 @@ class SpecialRequestImport extends FormSpecialPage {
 				'request_history' => $history?->value,
 				'request_actor' => $this->getUser()->getActorId(),
 				'request_timestamp' => $timestamp,
+				'request_type' => RequestType::Xml->value,
 			] )
 			->caller( __METHOD__ )
 			->execute();
@@ -389,11 +429,178 @@ class SpecialRequestImport extends FormSpecialPage {
 		$logID = $logEntry->insert( $dbw );
 		$logEntry->publish( $logID );
 
+		if ( $images && (int)$requestID > 0 ) {
+			$this->addImagesRequest( $data, $timestamp, (int)$requestID );
+		}
+
 		if ( $this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests ) ) {
 			$this->sendNotifications( $data['reason'], $requestID, $data['target'], $this->getUser() );
 		}
 
 		return Status::newGood();
+	}
+
+	private function hasXmlUpload( array $data ): bool {
+		if ( $this->useChunkedUploads() && (string)( $data['UploadFileKey'] ?? '' ) !== '' ) {
+			return true;
+		}
+
+		if ( ( $data['UploadSourceType'] ?? 'File' ) === 'Url' ) {
+			return true;
+		}
+
+		$upload = $this->getRequest()->getUpload( 'wpUploadFile' );
+		return $upload->exists() && $upload->getError() !== UPLOAD_ERR_NO_FILE;
+	}
+
+	/** A request for images that has no XML request to be linked to. */
+	private function submitImagesOnly( array $data, string $timestamp, UploadFromFile $images ): Status {
+		$stashed = $this->publishImages( $images, $data['target'] . '-' . $timestamp . '-images' );
+		if ( !$stashed->isOK() ) {
+			return $stashed;
+		}
+
+		$requestID = $this->addImagesRequest( $data, $timestamp, null );
+		if ( $requestID <= 0 ) {
+			return Status::newFatal( 'importdump-duplicate-request' );
+		}
+
+		if ( $this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests ) ) {
+			$this->sendNotifications( $data['reason'], (string)$requestID, $data['target'], $this->getUser() );
+		}
+
+		return Status::newGood();
+	}
+
+	/**
+	 * @return UploadFromFile|Status|null The upload of the images archive, a status with the problem if it
+	 *  cannot be used, or null if there is none.
+	 */
+	private function getImagesUpload(): UploadFromFile|Status|null {
+		if ( !$this->getConfig()->get( ConfigNames::EnableImageImports ) ) {
+			return null;
+		}
+
+		$upload = $this->getRequest()->getUpload( 'wpUploadImages' );
+		if ( !$upload->exists() || $upload->getError() === UPLOAD_ERR_NO_FILE ) {
+			return null;
+		}
+
+		$uploadBase = new UploadFromFile();
+		$uploadBase->initialize( $upload->getName() ?? '', $upload );
+
+		if ( !$uploadBase->isEnabled() ) {
+			return Status::newFatal( 'uploaddisabled' );
+		}
+
+		$permission = $uploadBase->isAllowed( $this->getUser() );
+		if ( $permission !== true ) {
+			throw new PermissionsError( $permission );
+		}
+
+		if ( $uploadBase->isEmptyFile() ) {
+			return Status::newFatal( 'empty-file' );
+		}
+
+		$virus = $this->uploadVerification->detectVirus( $uploadBase->getTempPath() );
+		if ( $virus ) {
+			return Status::newFatal( 'uploadvirus', $virus );
+		}
+
+		$mime = $this->mimeAnalyzer->guessMimeType( $uploadBase->getTempPath() );
+		if ( !in_array( $mime, $this->dumpProcessor->getArchiveMimeTypes(), true ) ) {
+			return Status::newFatal( 'importdump-images-not-archive' );
+		}
+
+		return $uploadBase;
+	}
+
+	/** The archive always waits for the job that checks it, then goes where the images import reads it from. */
+	private function publishImages( UploadFromFile $uploadBase, string $imagesName ): Status {
+		$status = $uploadBase->tryStashFile( $this->getUser() );
+		if ( !$status->isGood() ) {
+			return $status;
+		}
+
+		$stashFile = $status->getStatusValue()->getValue();
+		'@phan-var UploadStashFile $stashFile';
+
+		$repo = $this->repoGroup->getLocalRepo();
+		try {
+			$file = ( new UploadStash( $repo, $this->getUser() ) )->getFile( $stashFile->getFileKey() );
+		} catch ( UploadStashException $e ) {
+			return Status::newFatal( 'uploadstash-exception', get_class( $e ), $e->getMessage() );
+		}
+
+		return $repo->publish(
+			$file->getPath(),
+			"/ImportDump/unverified/$imagesName",
+			"/ImportDump/archive/$imagesName",
+			FileRepo::DELETE_SOURCE
+		);
+	}
+
+	/**
+	 * Adds the request for an archive of images, linked to the XML request that it was uploaded with, if any.
+	 *
+	 * @return int The ID of the new request, or 0 if it could not be added.
+	 */
+	private function addImagesRequest( array $data, string $timestamp, ?int $linkedID ): int {
+		$dbw = $this->connectionProvider->getPrimaryDatabase( RequestManager::VIRTUAL_DOMAIN );
+		$dbw->newInsertQueryBuilder()
+			->insertInto( 'import_requests' )
+			->ignore()
+			->row( [
+				'request_source' => $data['source'],
+				'request_target' => $data['target'],
+				'request_reason' => $data['reason'],
+				'request_status' => RequestStatus::Verifying->value,
+				'request_actor' => $this->getUser()->getActorId(),
+				'request_timestamp' => $timestamp,
+				'request_type' => RequestType::Images->value,
+				'request_linked_id' => $linkedID,
+			] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$requestID = $dbw->insertId();
+		if ( $requestID <= 0 ) {
+			return 0;
+		}
+
+		$this->jobQueueGroup->push(
+			new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => $requestID ] )
+		);
+
+		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$requestID );
+		$requestLink = $this->getLinkRenderer()->makeLink( $requestQueueLink, "#$requestID" );
+		$this->getOutput()->addHTML(
+			Html::successBox(
+				$this->msg( $linkedID === null ? 'importdump-success' : 'importdump-success-images' )
+					->rawParams( $requestLink )
+					->escaped()
+			)
+		);
+
+		if ( $linkedID === null ) {
+			$this->getOutput()->addHTML(
+				Html::noticeBox( $this->msg( 'importdump-success-verifying' )->escaped(), '' )
+			);
+		}
+
+		$logEntry = new ManualLogEntry( $this->getLogType( $data['target'] ), 'request' );
+		$logEntry->setPerformer( $this->getUser() );
+		$logEntry->setTarget( $requestQueueLink );
+		$logEntry->setComment( $data['reason'] );
+		$logEntry->setParameters( [
+			'4::requestTarget' => $data['target'],
+			'5:request-link:requestID' => $requestID,
+		] );
+
+		$logID = $logEntry->insert( $dbw );
+		$logEntry->publish( $logID );
+
+		return $requestID;
 	}
 
 	/** @return list<Message> */

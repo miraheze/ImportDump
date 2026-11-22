@@ -76,8 +76,20 @@
 				"FormatterFactory",
 				"ImportDumpAttentionNotifier",
 				"ImportDumpDumpProcessor",
+				"ImportDumpImageProcessor",
 				"ImportDumpRequestManager",
 				"ImportDumpVerificationProgress"
+			],
+			"needsPage": false
+		},
+		"ImportImagesJob": {
+			"class": "Miraheze\\ImportDump\\Jobs\\ImportImagesJob",
+			"services": [
+				"ConnectionProvider",
+				"ImportDumpConfig",
+				"ImportDumpHeartbeat",
+				"ImportDumpRequestManager",
+				"JobQueueGroupFactory"
 			],
 			"needsPage": false
 		}
@@ -266,6 +278,7 @@
 				"importdump-verification-done",
 				"importdump-verification-extracting",
 				"importdump-verification-label",
+				"importdump-verification-merging",
 				"importdump-verification-rejected",
 				"importdump-verification-reload",
 				"importdump-verification-waiting"
@@ -297,6 +310,10 @@
 			"value": false,
 			"description": "Whether to check if an uploaded dump has the full revision history of its pages, and tell handlers what was found. The result is a guess, see the message that is shown on the request."
 		},
+		"RequestImportEnableImageImports": {
+			"value": false,
+			"description": "Whether the form of Special:RequestImport has a field for an archive of image files. If one is uploaded, a second request is made with it that is linked to the one for the XML file, and the two are handled separately. The files are imported with the importImages.php maintenance script, which skips files that the wiki already has."
+		},
 		"RequestImportExtensionRequirements": {
 			"value": [],
 			"description": "Extensions that a dump can need, by the name that the extension has in its extension.json, such as WikibaseRepository. Each one has models, content models or the start of one that need the extension, patterns, regular expressions that match the text of a page that needs it, and settings, names of settings that must be enabled on the target wiki. Only the latest revision of each page is checked. Verification records which extensions a dump needs, and handlers are warned when the ImportDumpGetTargetState hook says that the target wiki does not have them. Nothing is checked if this is empty."
@@ -312,6 +329,10 @@
 		"RequestImportHelpUrl": {
 			"value": "",
 			"description": "Full URL. If set, adds a help URL to Special:RequestImport."
+		},
+		"RequestImportImagesCommand": {
+			"value": "php {IP}/maintenance/importImages.php --wiki={wiki} --skip-dupes {file-path}",
+			"description": "Generated maintenance script command to use for a request of image files. If $wgRequestImportEnableAutomatedJob is enabled, this is not displayed unless the status is 'failed'."
 		},
 		"RequestImportInterwikiMap": {
 			"value": [],

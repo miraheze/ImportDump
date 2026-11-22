@@ -30,6 +30,7 @@ use Miraheze\ImportDump\Request\RequestHistory;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStage;
 use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Request\RequestType;
 use Miraheze\ImportDump\Requirements\RequirementProblem;
 use Miraheze\ImportDump\Requirements\RequirementProblemKind;
 use Miraheze\ImportDump\Tests\IsolatesManageWikiTrait;
@@ -441,6 +442,98 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 			'partial' => [ RequestStatus::Partial, false ],
 			'failed' => [ RequestStatus::Failed, false ],
 		];
+	}
+
+	private function addImagesRequest( int $linkedID ): int {
+		$dbw = $this->getDb();
+		$dbw->newInsertQueryBuilder()
+			->insertInto( 'import_requests' )
+			->row( [
+				'request_source' => 'https://requestimporttest.com',
+				'request_target' => 'requestimporttest',
+				'request_reason' => 'test',
+				'request_status' => RequestStatus::Pending->value,
+				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
+				'request_timestamp' => $dbw->timestamp(),
+				'request_type' => RequestType::Images->value,
+				'request_linked_id' => $linkedID,
+			] )
+			->caller( __METHOD__ )
+			->execute();
+
+		return $dbw->insertId();
+	}
+
+	/**
+	 * @covers ::getType
+	 * @covers ::getLinkedID
+	 * @covers ::getLinkedIDs
+	 */
+	public function testRequestsWithoutImagesAreNotLinked(): void {
+		$manager = $this->getRequestManager( id: 1 );
+
+		$this->assertSame( RequestType::Xml, $manager->getType() );
+		$this->assertNull( $manager->getLinkedID() );
+		$this->assertSame( [], $manager->getLinkedIDs() );
+		$this->assertStringEndsWith( '.xml', $manager->getFileName() );
+	}
+
+	/**
+	 * @covers ::getType
+	 * @covers ::getLinkedID
+	 * @covers ::getLinkedIDs
+	 * @covers ::getLinkedStatus
+	 */
+	public function testLinkedRequestsPointAtEachOther(): void {
+		$imagesID = $this->addImagesRequest( linkedID: 1 );
+
+		$images = $this->getRequestManager( $imagesID );
+		$this->assertSame( RequestType::Images, $images->getType() );
+		$this->assertSame( 1, $images->getLinkedID() );
+		$this->assertSame( [ 1 ], $images->getLinkedIDs() );
+		$this->assertSame( RequestStatus::Pending, $images->getLinkedStatus( 1 ) );
+		$this->assertNull( $images->getLinkedStatus( 9999 ) );
+
+		$xml = $this->getRequestManager( id: 1 );
+		$this->assertSame( [ $imagesID ], $xml->getLinkedIDs() );
+	}
+
+	/**
+	 * @covers ::getFileName
+	 * @covers ::getRemainingCommands
+	 * @covers ::hasImported
+	 */
+	public function testImagesRequestHasItsOwnFiles(): void {
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+
+		$this->assertStringEndsWith( '-images', $images->getFileName() );
+
+		$images->setStage( RequestStage::Images );
+		$this->assertFalse( $images->hasImported() );
+		$this->assertSame( [], $images->getRemainingCommands() );
+	}
+
+	/**
+	 * @covers ::publishExtractedImages
+	 * @covers ::fileExists
+	 * @covers ::getFileSize
+	 * @covers ::deleteFile
+	 */
+	public function testImagesAreStoredAndDeleted(): void {
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+		$this->assertFalse( $images->fileExists() );
+
+		$first = $this->getNewTempFile();
+		$second = $this->getNewTempFile();
+		file_put_contents( $first, 'abc' );
+		file_put_contents( $second, 'de' );
+
+		$this->assertStatusGood( $images->publishExtractedImages( [ 'a.png' => $first, 'b.png' => $second ] ) );
+		$this->assertTrue( $images->fileExists() );
+		$this->assertSame( 5, $images->getFileSize() );
+
+		$this->assertTrue( $images->deleteFile() );
+		$this->assertFalse( $images->fileExists() );
 	}
 
 	/**

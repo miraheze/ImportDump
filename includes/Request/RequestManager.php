@@ -24,6 +24,7 @@ use MediaWiki\User\UserIdentity;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
+use Miraheze\ImportDump\Jobs\ImportImagesJob;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\Progress\ImportProgress;
@@ -55,6 +56,7 @@ use function basename;
 use function boolval;
 use function explode;
 use function in_array;
+use function intval;
 use function is_array;
 use function json_decode;
 use function json_encode;
@@ -89,6 +91,7 @@ class RequestManager {
 	public const array CONSTRUCTOR_OPTIONS = [
 		ConfigNames::DumpCommand,
 		ConfigNames::FileExpiryDays,
+		ConfigNames::ImagesCommand,
 		ConfigNames::InterwikiMap,
 		ConfigNames::MaintenanceCommand,
 		MainConfigNames::LocalDatabases,
@@ -399,7 +402,10 @@ class RequestManager {
 	}
 
 	public function getCommand(): string {
-		$command = $this->options->get( ConfigNames::DumpCommand );
+		$command = $this->options->get(
+			$this->getType() === RequestType::Images ? ConfigNames::ImagesCommand : ConfigNames::DumpCommand
+		);
+
 		if ( !$this->getInterwikiPrefix() ) {
 			$command = preg_replace( '/--username-prefix=?/', '', $command );
 		}
@@ -492,6 +498,33 @@ class RequestManager {
 		return $this->publishVerified( $this->getUnverifiedFilePath(), FileRepo::DELETE_SOURCE );
 	}
 
+	/**
+	 * Stores the files that were extracted from the unverified archive in the images directory of
+	 * this request, and removes the archive.
+	 *
+	 * @param array<string, string> $files The name that each file gets, and the path that it is read from.
+	 */
+	public function publishExtractedImages( array $files ): Status {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$directory = $this->getFilePath();
+
+		$status = Status::wrap( $backend->prepare( [ 'dir' => $directory ] ) );
+		foreach ( $files as $name => $source ) {
+			if ( !$status->isOK() ) {
+				return $status;
+			}
+
+			$status->merge( Status::wrap( $backend->quickStore( [ 'src' => $source, 'dst' => "$directory/$name" ] ) ) );
+		}
+
+		if ( !$status->isOK() ) {
+			return $status;
+		}
+
+		$this->deleteUnverifiedFile();
+		return $status;
+	}
+
 	/** Publishes a file that was extracted from the unverified file, which is then removed. */
 	public function publishExtractedFile( string $extractedPath ): Status {
 		return $this->publishVerified( $extractedPath, 0 );
@@ -531,25 +564,50 @@ class RequestManager {
 		return FileBackend::splitStoragePath( $this->getFilePath() )[2];
 	}
 
+	/** The images of a request are kept in a directory, which has no extension. */
 	public function getFileName(): string {
-		return $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
+		$name = $this->getTarget() . '-' . $this->getTimestamp();
+		return $this->getType() === RequestType::Images ? "$name-images" : "$name.xml";
 	}
 
 	public function fileExists(): bool {
-		$localRepo = $this->repoGroup->getLocalRepo();
-		$backend = $localRepo->getBackend();
-		if ( $backend->fileExists( [ 'src' => $this->getFilePath() ] ) ) {
-			return true;
+		if ( $this->getType() === RequestType::Images ) {
+			return $this->listImageFiles() !== [];
 		}
 
-		return false;
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		return $backend->fileExists( [ 'src' => $this->getFilePath() ] ) === true;
+	}
+
+	/** @return list<string> The paths of the stored image files, or nothing for any other request. */
+	private function listImageFiles(): array {
+		if ( $this->getType() !== RequestType::Images ) {
+			return [];
+		}
+
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$files = $backend->getFileList( [ 'dir' => $this->getFilePath() ] );
+		if ( $files === null ) {
+			return [];
+		}
+
+		$paths = [];
+		foreach ( $files as $file ) {
+			$paths[] = $this->getFilePath() . '/' . $file;
+		}
+
+		return $paths;
 	}
 
 	public function deleteFile(): bool {
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
 
-		$success = true;
 		$paths = [ $this->getFilePath(), $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
+		if ( $this->getType() === RequestType::Images ) {
+			$paths = [ ...$this->listImageFiles(), $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
+		}
+
+		$success = true;
 		foreach ( $paths as $path ) {
 			$status = $backend->quickDelete( [
 				'src' => $path,
@@ -557,6 +615,10 @@ class RequestManager {
 			] );
 
 			$success = $status->isOK() && $success;
+		}
+
+		if ( $this->getType() === RequestType::Images ) {
+			$backend->clean( [ 'dir' => $this->getFilePath() ] );
 		}
 
 		return $success;
@@ -590,8 +652,15 @@ class RequestManager {
 			return 0;
 		}
 
-		$localRepo = $this->repoGroup->getLocalRepo();
-		$backend = $localRepo->getBackend();
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		if ( $this->getType() === RequestType::Images ) {
+			$size = 0;
+			foreach ( $this->listImageFiles() as $path ) {
+				$size += (int)$backend->getFileSize( [ 'src' => $path ] );
+			}
+
+			return $size;
+		}
 
 		return (int)$backend->getFileSize( [ 'src' => $this->getFilePath() ] );
 	}
@@ -626,11 +695,63 @@ class RequestManager {
 	}
 
 	public function hasImported(): bool {
-		return $this->getStage()?->hasImported() ?? false;
+		return $this->getType() === RequestType::Xml && ( $this->getStage()?->hasImported() ?? false );
+	}
+
+	/** @return list<RequestStage> The stages that this request goes through, in order. */
+	public function getStages(): array {
+		return RequestStage::forType( $this->getType() );
+	}
+
+	public function getType(): RequestType {
+		return RequestType::tryFrom( $this->row->request_type ?? '' ) ?? RequestType::Xml;
+	}
+
+	/** The request that this one was made together with, which is the XML request for an images request. */
+	public function getLinkedID(): ?int {
+		$linked = $this->row->request_linked_id ?? null;
+		return $linked === null ? null : (int)$linked;
+	}
+
+	/**
+	 * The IDs of the requests that were made together with this one, whichever of them was made first.
+	 *
+	 * @return list<int>
+	 */
+	public function getLinkedIDs(): array {
+		$linked = $this->getLinkedID();
+		if ( $linked !== null ) {
+			return [ $linked ];
+		}
+
+		$ids = $this->dbw->newSelectQueryBuilder()
+			->select( 'request_id' )
+			->from( 'import_requests' )
+			->where( [ 'request_linked_id' => $this->ID ] )
+			->orderBy( 'request_id' )
+			->caller( __METHOD__ )
+			->fetchFieldValues();
+
+		return array_values( array_map( intval( ... ), $ids ) );
+	}
+
+	public function getLinkedStatus( int $linkedID ): ?RequestStatus {
+		$status = $this->dbw->newSelectQueryBuilder()
+			->select( 'request_status' )
+			->from( 'import_requests' )
+			->where( [ 'request_id' => $linkedID ] )
+			->caller( __METHOD__ )
+			->fetchField();
+
+		return $status === false ? null : RequestStatus::tryFrom( $status );
 	}
 
 	/** @return list<string> */
 	public function getRemainingCommands(): array {
+		if ( $this->getType() === RequestType::Images ) {
+			return [];
+		}
+
 		$scripts = [
 			RequestStage::SiteStats->value => [ 'initSiteStats.php' => '--update' ],
 			RequestStage::TextIndex->value => [ 'rebuildtextindex.php' => '' ],
@@ -877,9 +998,10 @@ class RequestManager {
 	}
 
 	public function executeJob( string $username ): void {
+		$jobName = $this->getType() === RequestType::Images ? ImportImagesJob::JOB_NAME : ImportDumpJob::JOB_NAME;
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getTarget() )->push(
 			new JobSpecification(
-				ImportDumpJob::JOB_NAME,
+				$jobName,
 				[
 					'requestid' => $this->ID,
 					'username' => $username,

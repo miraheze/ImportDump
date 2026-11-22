@@ -32,6 +32,7 @@ use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use Wikimedia\Timestamp\TimestampFormat;
 use function array_map;
+use function base64_decode;
 use function basename;
 use function crc32;
 use function file_exists;
@@ -174,6 +175,121 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			$this->assertInstanceOf( Status::class, $status );
 			$this->assertStatusError( 'importdump-duplicate-request', $status );
 		}
+	}
+
+	/**
+	 * @param array<string, string> $formData
+	 * @param array<string, string> $uploads Form field name, such as wpUploadImages, to the contents.
+	 */
+	private function submitWithUploads( array $formData, array $uploads ): Status {
+		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
+		$user = $this->getMutableTestUser()->getUser();
+		$context->setUser( $user );
+
+		$request = new FauxRequest(
+			[ 'wpEditToken' => $context->getCsrfTokenSet()->getToken()->toString() ],
+			true
+		);
+
+		foreach ( $uploads as $field => $contents ) {
+			$path = $this->getNewTempFile();
+			file_put_contents( $path, $contents );
+			$request->setUpload( $field, [
+				'name' => basename( $path ),
+				'type' => 'application/octet-stream',
+				'tmp_name' => $path,
+				'error' => UPLOAD_ERR_OK,
+				'size' => filesize( $path ),
+			] );
+		}
+
+		$context->setRequest( $request );
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$specialRequestImport->setContext( $context );
+
+		return $specialRequestImport->onSubmit( $formData + [
+			'source' => 'http://example.com',
+			'target' => 'wikidb',
+			'reason' => 'Test reason ' . $this->dataName() . $this->getName(),
+			'UploadSourceType' => 'File',
+			'UploadFile' => '',
+		] );
+	}
+
+	private static function imagesZip(): string {
+		return ZipFixture::build( [ 'a.png' => (string)base64_decode(
+			'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4' .
+			'2mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+		) ] );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testImagesOnlyRequestStandsAlone(): void {
+		ConvertibleTimestamp::setFakeTime( 1700000100 );
+		$this->overrideConfigValue( ConfigNames::EnableImageImports, true );
+
+		$status = $this->submitWithUploads( [], [ 'wpUploadImages' => self::imagesZip() ] );
+		$this->assertStatusGood( $status );
+
+		$row = $this->getDb()->newSelectQueryBuilder()
+			->select( [ 'request_type', 'request_status', 'request_linked_id' ] )
+			->from( 'import_requests' )
+			->orderBy( 'request_id', SelectQueryBuilder::SORT_DESC )
+			->caller( __METHOD__ )
+			->fetchRow();
+
+		$this->assertSame( 'images', $row->request_type );
+		$this->assertSame( RequestStatus::Verifying->value, $row->request_status );
+		$this->assertNull( $row->request_linked_id );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testImagesWithXmlMakeLinkedRequests(): void {
+		ConvertibleTimestamp::setFakeTime( 1700000200 );
+		$this->overrideConfigValue( ConfigNames::EnableImageImports, true );
+
+		$status = $this->submitWithUploads( [], [
+			'wpUploadFile' => self::DUMP,
+			'wpUploadImages' => self::imagesZip(),
+		] );
+		$this->assertStatusGood( $status );
+
+		$rows = $this->getDb()->newSelectQueryBuilder()
+			->select( [ 'request_id', 'request_type', 'request_linked_id' ] )
+			->from( 'import_requests' )
+			->orderBy( 'request_id', SelectQueryBuilder::SORT_DESC )
+			->limit( 2 )
+			->caller( __METHOD__ )
+			->fetchResultSet();
+
+		$images = $rows->fetchObject();
+		$xml = $rows->fetchObject();
+		$this->assertSame( 'images', $images->request_type );
+		$this->assertSame( 'xml', $xml->request_type );
+		$this->assertSame( (int)$xml->request_id, (int)$images->request_linked_id );
+		$this->assertNull( $xml->request_linked_id );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testNothingUploaded(): void {
+		$this->overrideConfigValue( ConfigNames::EnableImageImports, true );
+		$status = $this->submitWithUploads( [], [] );
+		$this->assertStatusError( 'importdump-upload-nothing', $status );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testImagesThatAreNotAnArchiveAreRejected(): void {
+		$this->overrideConfigValue( ConfigNames::EnableImageImports, true );
+		$status = $this->submitWithUploads( [], [ 'wpUploadImages' => 'plain text' ] );
+		$this->assertStatusError( 'importdump-images-not-archive', $status );
 	}
 
 	private function assertLatestRequest( RequestStatus $expectedStatus ): void {

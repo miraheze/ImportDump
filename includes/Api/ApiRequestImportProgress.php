@@ -7,9 +7,9 @@ namespace Miraheze\ImportDump\Api;
 use MediaWiki\Api\ApiBase;
 use MediaWiki\Api\ApiMain;
 use Miraheze\ImportDump\Request\RequestManager;
-use Miraheze\ImportDump\Request\RequestStage;
 use Wikimedia\ParamValidator\ParamValidator;
 use Wikimedia\ParamValidator\TypeDef\IntegerDef;
+use function array_search;
 use function count;
 
 class ApiRequestImportProgress extends ApiBase {
@@ -36,12 +36,13 @@ class ApiRequestImportProgress extends ApiBase {
 		if ( $status->isRunning() ) {
 			$stage = $this->requestManager->getStage();
 			$pages = $this->requestManager->getImportPages();
+			$stages = $this->requestManager->getStages();
 
 			$this->getResult()->addValue( null, $this->getModuleName(), [
 				'status' => $status->value,
 				'stage' => $stage?->value ?? '',
-				'step' => $stage ? $stage->getPosition() + 1 : 0,
-				'steps' => count( RequestStage::cases() ),
+				'step' => $stage ? (int)array_search( $stage, $stages, true ) + 1 : 0,
+				'steps' => count( $stages ),
 				'percent' => $this->requestManager->getImportPercent(),
 				'done' => $pages['done'] ?? null,
 				'total' => $pages['total'] ?? null,

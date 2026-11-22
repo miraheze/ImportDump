@@ -20,6 +20,8 @@ use Miraheze\ImportDump\Requirements\TargetStateProvider;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
+use Miraheze\ImportDump\Upload\ImageProcessor;
+use Miraheze\ImportDump\Upload\XmlMerger;
 
 // PHPUnit does not understand coverage for this file.
 // It is covered though, see ServiceWiringTest.
@@ -43,7 +45,8 @@ return [
 				$services->get( 'ImportDumpConfig' )
 			),
 			$services->getTempFSFileFactory(),
-			$services->getUploadVerification()
+			$services->getUploadVerification(),
+			new XmlMerger()
 		);
 	},
 	'ImportDumpExtensionNames' => static function ( MediaWikiServices $services ): ExtensionNames {
@@ -90,6 +93,23 @@ return [
 			$services->get( 'ImportDumpVerificationProgress' ),
 			$services->has( 'ManageWikiModuleFactory' ) ?
 				$services->get( 'ManageWikiModuleFactory' ) : null
+		);
+	},
+	'ImportDumpImageProcessor' => static function ( MediaWikiServices $services ): ImageProcessor {
+		return new ImageProcessor(
+			new ArchiveReader(
+				$services->get( 'ImportDumpExternalBinaries' ),
+				$services->getTempFSFileFactory()
+			),
+			$services->getMimeAnalyzer(),
+			new ServiceOptions(
+				ImageProcessor::CONSTRUCTOR_OPTIONS,
+				$services->get( 'ImportDumpConfig' ),
+				$services->getMainConfig()
+			),
+			$services->getTempFSFileFactory(),
+			$services->getTitleFactory(),
+			$services->getUploadVerification()
 		);
 	},
 	'ImportDumpImportProgress' => static function ( MediaWikiServices $services ): ImportProgress {

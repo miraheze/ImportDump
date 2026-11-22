@@ -14,6 +14,7 @@ use Miraheze\ImportDump\Notices\ActionOutcomeNotices;
 use Miraheze\ImportDump\Notices\FileNotices;
 use Miraheze\ImportDump\Notices\HistoryNotices;
 use Miraheze\ImportDump\Notices\ImportRightNotices;
+use Miraheze\ImportDump\Notices\LinkedNotices;
 use Miraheze\ImportDump\Notices\LockedNotices;
 use Miraheze\ImportDump\Notices\NoticeCollector;
 use Miraheze\ImportDump\Notices\NoticeResult;
@@ -24,12 +25,12 @@ use Miraheze\ImportDump\Notices\RequestNotice;
 use Miraheze\ImportDump\Notices\RequirementNotices;
 use Miraheze\ImportDump\Notices\TargetNotices;
 use Miraheze\ImportDump\Request\RequestManager;
-use Miraheze\ImportDump\Request\RequestStage;
 use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Requirements\ExtensionNames;
 use OOUI\HtmlSnippet;
 use OOUI\MessageWidget;
 use OOUI\ProgressBarWidget;
+use function array_search;
 use function count;
 
 class RequestViewer {
@@ -131,6 +132,7 @@ class RequestViewer {
 		$stage = $this->requestManager->getStage();
 		$percent = $this->requestManager->getImportPercent();
 		$pages = $this->requestManager->getImportPages();
+		$stages = $this->requestManager->getStages();
 
 		if ( $stage === null ) {
 			$label = $this->context->msg( 'importdump-import-waiting' )->text();
@@ -143,7 +145,7 @@ class RequestViewer {
 				$percent === null => 'importdump-import-step',
 				$pages !== null => 'importdump-import-step-pages',
 				default => 'importdump-import-step-percent',
-			} )->numParams( $stage->getPosition() + 1, count( RequestStage::cases() ) )
+			} )->numParams( (int)array_search( $stage, $stages, true ) + 1, count( $stages ) )
 				->params( $this->context->msg( $stage->getLabelKey() )->text() );
 
 			if ( $percent !== null && $pages !== null ) {
@@ -216,6 +218,7 @@ class RequestViewer {
 			new PartialHistoryNotices(),
 			new ImportRightNotices(),
 			new LockedNotices(),
+			new LinkedNotices(),
 			$this->outcomes,
 			new RequirementNotices( $this->extensionNames ),
 			new RequesterNotices(),
