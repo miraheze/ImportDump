@@ -34,6 +34,7 @@ use Miraheze\ImportDump\Request\RequestType;
 use Miraheze\ImportDump\Requirements\RequirementProblem;
 use Miraheze\ImportDump\Requirements\RequirementProblemKind;
 use Miraheze\ImportDump\Tests\IsolatesManageWikiTrait;
+use Miraheze\ImportDump\Upload\SkippedFile;
 use stdClass;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
@@ -122,6 +123,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 				'request_stage' => null,
 				'request_history' => null,
 				'request_requirements' => null,
+				'request_skipped' => null,
 				'request_locked' => 0,
 				'request_private' => 0,
 			] )
@@ -824,6 +826,49 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 		$manager->setHistory( null );
 		$this->assertNull( $this->getRequestManager( id: 1 )->getHistory() );
+	}
+
+	/**
+	 * @covers ::getSkippedImages
+	 * @covers ::setSkippedImages
+	 */
+	public function testSkippedImages(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$this->assertSame( [ 'total' => 0, 'files' => [] ], $manager->getSkippedImages() );
+
+		$files = [
+			new SkippedFile( 'a.png', 'importdump-images-skip-extension', [] ),
+			new SkippedFile( 'b.png', 'filetype-mime-mismatch', [ 'png', 'image/jpeg' ] ),
+		];
+
+		$manager->setSkippedImages( $files );
+		$this->assertEquals( [ 'total' => 2, 'files' => $files ], $manager->getSkippedImages() );
+		$this->assertEquals(
+			[ 'total' => 2, 'files' => $files ],
+			$this->getRequestManager( id: 1 )->getSkippedImages()
+		);
+
+		$manager->setSkippedImages( [] );
+		$this->assertSame( [ 'total' => 0, 'files' => [] ], $this->getRequestManager( id: 1 )->getSkippedImages() );
+	}
+
+	/**
+	 * @covers ::getSkippedImages
+	 * @covers ::setSkippedImages
+	 */
+	public function testOnlyTheFirstSkippedImagesAreKept(): void {
+		$files = [];
+		for ( $i = 0; $i < 600; $i++ ) {
+			$files[] = new SkippedFile( "$i.png", 'importdump-images-skip-extension', [] );
+		}
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setSkippedImages( $files );
+
+		$stored = $this->getRequestManager( id: 1 )->getSkippedImages();
+		$this->assertSame( 600, $stored['total'] );
+		$this->assertCount( 500, $stored['files'] );
+		$this->assertSame( '0.png', $stored['files'][0]->name );
 	}
 
 	/**

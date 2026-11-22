@@ -41,6 +41,8 @@ class ConfigNames {
 
 	public const string MaxExtractedSize = 'RequestImportMaxExtractedSize';
 
+	public const string MaxSkippedImages = 'RequestImportMaxSkippedImages';
+
 	public const string MaxUploadSize = 'RequestImportMaxUploadSize';
 
 	public const string StalledImportHours = 'RequestImportStalledImportHours';

@@ -116,6 +116,8 @@ class VerifyDumpJob extends Job {
 			return;
 		}
 
+		// The files that are left out are shown on the request, which the notification points to.
+		$this->requestManager->setSkippedImages( $result->skipped );
 		$this->requestManager->setStatus( RequestStatus::Pending );
 		$this->attentionNotifier->notify( $this->requestManager );
 		$this->progress->clear( $requestID );

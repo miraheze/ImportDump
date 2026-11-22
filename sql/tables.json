@@ -72,6 +72,12 @@
 				"options": { "notnull": false, "length": 65530 }
 			},
 			{
+				"name": "request_skipped",
+				"comment": "JSON list of the image files that are left out of the import and why, or NULL if none were",
+				"type": "blob",
+				"options": { "notnull": false, "length": 16777215 }
+			},
+			{
 				"name": "request_type",
 				"comment": "What is imported, pages from an XML dump or image files",
 				"type": "mwenum",

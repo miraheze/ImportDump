@@ -16,12 +16,17 @@ use Miraheze\ImportDump\ConfigNames;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use Wikimedia\Mime\MimeAnalyzer;
 use function array_map;
+use function array_shift;
 use function array_slice;
+use function array_values;
 use function basename;
 use function count;
 use function filesize;
 use function in_array;
 use function intdiv;
+use function is_float;
+use function is_int;
+use function is_scalar;
 use function pathinfo;
 use function preg_match;
 use function str_starts_with;
@@ -32,14 +37,19 @@ use const PATHINFO_EXTENSION;
 
 /**
  * Unpacks and checks an archive of image files. Only the file types that the wiki accepts
- * for upload are kept, and the files are put in one flat list, so a name used twice is an error.
+ * for upload are kept, and the files are put in one flat list.
  * Names inside the archive are only used to find the file name, never as a path.
+ *
+ * A file that cannot be imported is left out and reported, and the rest is kept. That is
+ * not done when too many are left out, as it is probably the wrong archive, or when a virus
+ * is found, as then none of the archive can be trusted.
  */
 class ImageProcessor {
 
 	public const array CONSTRUCTOR_OPTIONS = [
 		ConfigNames::MaxArchiveEntries,
 		ConfigNames::MaxExtractedSize,
+		ConfigNames::MaxSkippedImages,
 		MainConfigNames::FileExtensions,
 		MainConfigNames::ProhibitedFileExtensions,
 	];
@@ -49,7 +59,7 @@ class ImageProcessor {
 	/** The most bytes that a file name may have, which is what the title of a file allows. */
 	private const int MAX_NAME_LENGTH = 240;
 
-	/** The most files that are named when some are rejected. */
+	/** The most files that are named when the archive is rejected because of them. */
 	private const int MAX_REPORTED = 10;
 
 	private readonly MWFileProps $fileProps;
@@ -95,16 +105,16 @@ class ImageProcessor {
 			return $checked;
 		}
 
-		$entries = $checked->getValue();
+		[ 'entries' => $entries, 'skipped' => $skipped, 'considered' => $considered ] = $checked->getValue();
 		'@phan-var array<string, ArchiveEntry> $entries';
+		'@phan-var list<SkippedFile> $skipped';
+		'@phan-var int $considered';
 
 		$files = [];
 		$tempFiles = [];
 		$total = count( $entries );
 		$position = 0;
 		$extracted = 0;
-		$rejected = Status::newGood();
-		$rejectedCount = 0;
 
 		foreach ( $entries as $name => $entry ) {
 			if ( $onProgress ) {
@@ -133,15 +143,16 @@ class ImageProcessor {
 
 			$extracted += (int)filesize( $tempFile->getPath() );
 
-			$problem = $this->checkFile( $extension, $tempFile->getPath() );
-			if ( !$problem->isOK() ) {
-				// Keep going, so that every file that has to be fixed is named at once.
-				if ( ++$rejectedCount <= self::MAX_REPORTED ) {
-					$rejected->fatal( 'importdump-images-file-rejected', $name, Message::newFromSpecifier(
-						$problem->getMessages()[0]
-					) );
-				}
+			$virus = $this->uploadVerification->detectVirus( $tempFile->getPath() );
+			if ( $virus ) {
+				return Status::newFatal( 'uploadvirus', $virus );
+			}
 
+			$problem = $this->verifyFile( $name, $extension, $tempFile->getPath() );
+			if ( $problem ) {
+				// Only this file is deleted, and the others go on.
+				$tempFile->purge();
+				$skipped[] = $problem;
 				continue;
 			}
 
@@ -149,36 +160,58 @@ class ImageProcessor {
 			$tempFiles[] = $tempFile;
 		}
 
-		if ( $rejectedCount ) {
-			return $rejected;
+		$maxSkipped = (int)$this->options->get( ConfigNames::MaxSkippedImages );
+		if ( $skipped && ( !$files || count( $skipped ) * 100 > $considered * $maxSkipped ) ) {
+			return $this->tooManySkipped( $skipped, $considered );
 		}
 
-		return Status::newGood( new ImageResult( $files, $tempFiles ) );
+		return Status::newGood( new ImageResult( $files, $tempFiles, $skipped ) );
 	}
 
 	/**
-	 * Hidden files are skipped. Everything else must be a file that the wiki would accept as an
-	 * upload, under a name that cannot be mistaken for a path and that is not used by another file.
+	 * @param list<SkippedFile> $skipped
+	 * @param int $considered
+	 */
+	private function tooManySkipped( array $skipped, int $considered ): Status {
+		$status = Status::newFatal( 'importdump-images-too-many-skipped', count( $skipped ), $considered );
+		foreach ( array_slice( $skipped, 0, self::MAX_REPORTED ) as $file ) {
+			$status->fatal( 'importdump-images-file-rejected', $file->name, Message::newFromKey(
+				$file->reason,
+				...$file->params
+			) );
+		}
+
+		return $status;
+	}
+
+	/**
+	 * Hidden files are ignored. The others are kept if the wiki would accept them as an upload,
+	 * under a name that cannot be mistaken for a path and that no earlier file has. The rest are skipped.
 	 *
 	 * @param list<ArchiveEntry> $entries
 	 * @param int $maxSize
-	 * @return Status A good status with the entries to extract by the name that each file gets.
+	 * @return Status A good status with an array as its value. It has the entries to extract by the name that
+	 *  each file gets, the files that are skipped already, and how many files there are besides the hidden ones.
 	 */
 	private function checkEntries( array $entries, int $maxSize ): Status {
 		$allowed = array_map( strtolower( ... ), $this->options->get( MainConfigNames::FileExtensions ) );
 		$prohibited = array_map( strtolower( ... ), $this->options->get( MainConfigNames::ProhibitedFileExtensions ) );
 
 		$keep = [];
+		$skipped = [];
 		$keys = [];
 		$size = 0;
+		$considered = 0;
 		foreach ( $entries as $entry ) {
 			$name = basename( $entry->name );
 			if ( str_starts_with( $name, '.' ) ) {
 				continue;
 			}
 
+			$considered++;
 			if ( !$this->isValidName( $name ) ) {
-				return Status::newFatal( 'importdump-images-name', $name );
+				$skipped[] = new SkippedFile( $name, 'importdump-images-skip-name', [] );
+				continue;
 			}
 
 			$extension = strtolower( pathinfo( $name, PATHINFO_EXTENSION ) );
@@ -187,17 +220,20 @@ class ImageProcessor {
 				in_array( $extension, $prohibited, true ) ||
 				!in_array( $extension, $allowed, true )
 			) {
-				return Status::newFatal( 'importdump-images-extension', $name );
+				$skipped[] = new SkippedFile( $name, 'importdump-images-skip-extension', [] );
+				continue;
 			}
 
 			// Two names that make the same title would overwrite each other, such as a.png and A.png.
 			$key = $this->titleFactory->makeTitleSafe( NS_FILE, $name )?->getDBkey();
 			if ( $key === null ) {
-				return Status::newFatal( 'importdump-images-name', $name );
+				$skipped[] = new SkippedFile( $name, 'importdump-images-skip-name', [] );
+				continue;
 			}
 
 			if ( isset( $keys[$key] ) ) {
-				return Status::newFatal( 'importdump-images-duplicate', $name );
+				$skipped[] = new SkippedFile( $name, 'importdump-images-skip-duplicate', [] );
+				continue;
 			}
 
 			$keys[$key] = true;
@@ -208,7 +244,11 @@ class ImageProcessor {
 			}
 		}
 
-		return $keep ? Status::newGood( $keep ) : Status::newFatal( 'importdump-images-empty' );
+		if ( $considered === 0 ) {
+			return Status::newFatal( 'importdump-images-empty' );
+		}
+
+		return Status::newGood( [ 'entries' => $keep, 'skipped' => $skipped, 'considered' => $considered ] );
 	}
 
 	/** Names are used as the file name in storage and by the import script, so they must be plain. */
@@ -219,18 +259,21 @@ class ImageProcessor {
 			preg_match( '//u', $name ) === 1;
 	}
 
-	private function checkFile( string $extension, string $path ): Status {
-		$virus = $this->uploadVerification->detectVirus( $path );
-		if ( $virus ) {
-			return Status::newFatal( 'uploadvirus', $virus );
-		}
-
+	private function verifyFile( string $name, string $extension, string $path ): ?SkippedFile {
 		$props = $this->fileProps->getPropsFromPath( $path, $extension );
 		$result = $this->uploadVerification->verifyFile( $path, $extension, $props );
-		if ( $result !== true ) {
-			return Status::newFatal( $result[0], ...array_slice( $result, 1 ) );
+		if ( $result === true ) {
+			return null;
 		}
 
-		return Status::newGood();
+		$reason = (string)array_shift( $result );
+		$params = array_map(
+			static fn ( mixed $param ): string|int|float => is_int( $param ) || is_float( $param ) ?
+				$param :
+				( is_scalar( $param ) ? (string)$param : '' ),
+			$result
+		);
+
+		return new SkippedFile( $name, $reason, array_values( $params ) );
 	}
 }

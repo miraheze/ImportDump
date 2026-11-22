@@ -13,6 +13,7 @@ CREATE TABLE import_requests (
   request_stage VARCHAR(32) DEFAULT NULL,
   request_history TEXT DEFAULT NULL,
   request_requirements TEXT DEFAULT NULL,
+  request_skipped TEXT DEFAULT NULL,
   request_type TEXT DEFAULT 'xml' NOT NULL,
   request_linked_id BIGINT DEFAULT NULL,
   request_locked SMALLINT DEFAULT 0 NOT NULL,

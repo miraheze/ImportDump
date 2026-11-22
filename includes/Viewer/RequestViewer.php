@@ -23,6 +23,7 @@ use Miraheze\ImportDump\Notices\PartialHistoryNotices;
 use Miraheze\ImportDump\Notices\RequesterNotices;
 use Miraheze\ImportDump\Notices\RequestNotice;
 use Miraheze\ImportDump\Notices\RequirementNotices;
+use Miraheze\ImportDump\Notices\SkippedImageNotices;
 use Miraheze\ImportDump\Notices\TargetNotices;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
@@ -216,6 +217,7 @@ class RequestViewer {
 			new TargetNotices(),
 			new HistoryNotices(),
 			new PartialHistoryNotices(),
+			new SkippedImageNotices(),
 			new ImportRightNotices(),
 			new LockedNotices(),
 			new LinkedNotices(),

@@ -35,6 +35,7 @@ use Miraheze\ImportDump\Requirements\RequirementChecker;
 use Miraheze\ImportDump\Requirements\RequirementProblem;
 use Miraheze\ImportDump\Requirements\TargetState;
 use Miraheze\ImportDump\Requirements\TargetStateProvider;
+use Miraheze\ImportDump\Upload\SkippedFile;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use stdClass;
 use Wikimedia\FileBackend\FileBackend;
@@ -56,12 +57,14 @@ use function array_unique;
 use function array_values;
 use function basename;
 use function boolval;
+use function count;
 use function explode;
 use function in_array;
 use function intval;
 use function is_array;
 use function json_decode;
 use function json_encode;
+use function max;
 use function parse_url;
 use function preg_replace;
 use function str_contains;
@@ -69,6 +72,7 @@ use function str_replace;
 use function trim;
 use function wfEscapeWikiText;
 use function wfTimestamp;
+use const JSON_INVALID_UTF8_SUBSTITUTE;
 use const MW_INSTALL_PATH;
 use const PHP_URL_HOST;
 
@@ -79,6 +83,9 @@ class RequestManager {
 
 	/** The virtual domain of the database that has the requests. */
 	public const string VIRTUAL_DOMAIN = 'virtual-requestimport';
+
+	/** The most skipped files that are kept for a request. */
+	private const int MAX_STORED_SKIPPED = 500;
 
 	private const array SYSTEM_USERS = [
 		self::EXTENSION_USER,
@@ -971,6 +978,53 @@ class RequestManager {
 	public function getRequirements(): array {
 		$value = $this->row->request_requirements ?? null;
 		return $value ? array_map( boolval( ... ), (array)json_decode( $value, true ) ) : [];
+	}
+
+	/**
+	 * @param list<SkippedFile> $skipped The image files that are left out of the import.
+	 *  Only the first ones are kept, but the total is.
+	 */
+	public function setSkippedImages( array $skipped ): void {
+		$value = $skipped ? json_encode( [
+			'total' => count( $skipped ),
+			'files' => array_map(
+				static fn ( SkippedFile $file ): array => [
+					'name' => $file->name,
+					'reason' => $file->reason,
+					'params' => $file->params,
+				],
+				array_slice( $skipped, 0, self::MAX_STORED_SKIPPED )
+			),
+		], JSON_INVALID_UTF8_SUBSTITUTE ) : null;
+
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_skipped' => $value ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->row->request_skipped = $value;
+	}
+
+	/** @return array{ total: int, files: list<SkippedFile> } */
+	public function getSkippedImages(): array {
+		$value = $this->row->request_skipped ?? null;
+		$data = $value ? json_decode( $value, true ) : null;
+		if ( !is_array( $data ) ) {
+			return [ 'total' => 0, 'files' => [] ];
+		}
+
+		$files = [];
+		foreach ( (array)( $data['files'] ?? [] ) as $file ) {
+			$files[] = new SkippedFile(
+				(string)( $file['name'] ?? '' ),
+				(string)( $file['reason'] ?? '' ),
+				array_values( (array)( $file['params'] ?? [] ) )
+			);
+		}
+
+		return [ 'total' => max( (int)( $data['total'] ?? 0 ), count( $files ) ), 'files' => $files ];
 	}
 
 	/** @return list<RequirementProblem> */
