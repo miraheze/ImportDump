@@ -46,6 +46,9 @@ use function array_keys;
 use function array_map;
 use function file_get_contents;
 use function file_put_contents;
+use function strlen;
+use function strpos;
+use function substr;
 use function wfMessage;
 use function wfTimestamp;
 

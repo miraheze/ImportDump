@@ -4,6 +4,7 @@ declare( strict_types = 1 );
 
 namespace Miraheze\ImportDump\Jobs;
 
+use FilesystemIterator;
 use ImportImages;
 use MediaWiki\Config\Config;
 use MediaWiki\Context\RequestContext;
@@ -20,19 +21,23 @@ use Miraheze\ImportDump\Progress\ImportHeartbeat;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStage;
 use Miraheze\ImportDump\Request\RequestStatus;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use RuntimeException;
 use Throwable;
 use Wikimedia\Rdbms\IConnectionProvider;
-use function array_chunk;
-use function basename;
-use function count;
 use function get_class;
-use function glob;
 use function intdiv;
 use function is_dir;
 use function max;
-use function rename;
+use function mb_substr;
+use function min;
+use function ob_end_clean;
+use function ob_start;
+use function preg_match_all;
 use function rmdir;
+use function time;
+use function trim;
 use function unlink;
 use function wfMkdirParents;
 use function wfTempDir;
@@ -44,8 +49,6 @@ use function wfTempDir;
 class ImportImagesJob extends Job {
 
 	public const string JOB_NAME = 'ImportImagesJob';
-
-	private const int BATCH_SIZE = 25;
 
 	private readonly MessageLocalizer $messageLocalizer;
 
@@ -100,7 +103,6 @@ class ImportImagesJob extends Job {
 		} finally {
 			if ( isset( $directory ) ) {
 				$this->removeDirectory( $directory );
-				$this->removeDirectory( $directory . '-batch' );
 			}
 
 			$this->heartbeat->clear( $this->requestID );
@@ -120,7 +122,7 @@ class ImportImagesJob extends Job {
 		$this->hookRunner->onImportDumpJobGetFile( $directory, $this->requestManager );
 		$this->beat();
 
-		if ( !glob( $directory . '/*' ) ) {
+		if ( !$this->countFiles( $directory ) ) {
 			$this->removeDirectory( $directory );
 			return null;
 		}
@@ -128,49 +130,70 @@ class ImportImagesJob extends Job {
 		return $directory;
 	}
 
+	private function countFiles( string $directory ): int {
+		if ( !is_dir( $directory ) ) {
+			return 0;
+		}
+
+		$count = 0;
+		$iterator = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator( $directory, FilesystemIterator::SKIP_DOTS )
+		);
+
+		foreach ( $iterator as $file ) {
+			if ( $file->isFile() ) {
+				$count++;
+			}
+		}
+
+		return $count;
+	}
+
 	private function removeDirectory( string $directory ): void {
 		if ( !is_dir( $directory ) ) {
 			return;
 		}
 
-		foreach ( glob( $directory . '/*' ) ?: [] as $file ) {
-			unlink( $file );
+		$iterator = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator( $directory, FilesystemIterator::SKIP_DOTS ),
+			RecursiveIteratorIterator::CHILD_FIRST
+		);
+
+		foreach ( $iterator as $file ) {
+			if ( $file->isDir() && !$file->isLink() ) {
+				rmdir( $file->getPathname() );
+			} else {
+				unlink( $file->getPathname() );
+			}
 		}
 
 		rmdir( $directory );
 	}
 
-	/** Imports the files in batches, so that the request can show how many are done. */
 	private function importImages( string $directory ): void {
-		$files = glob( $directory . '/*' ) ?: [];
-		$total = count( $files );
+		$total = $this->countFiles( $directory );
 		$done = 0;
+		$lastUpdate = 0;
+		$log = '';
 
-		$batchDirectory = $directory . '-batch';
 		$this->requestManager->setImportPercent( 0, done: 0, total: $total );
 
-		foreach ( array_chunk( $files, self::BATCH_SIZE ) as $batch ) {
-			if ( !is_dir( $batchDirectory ) && !wfMkdirParents( $batchDirectory, null, __METHOD__ ) ) {
-				throw new RuntimeException( "Could not create $batchDirectory" );
+		// The script prints a line for each file it handles, which is how the progress is followed.
+		$follow = function ( string $output ) use ( $total, &$done, &$lastUpdate, &$log ): string {
+			$log .= $output;
+			$done = min( $total, $done + (int)preg_match_all( '/Importing (?!Files\n)|skipping\n/', $output ) );
+
+			$now = time();
+			if ( $now !== $lastUpdate ) {
+				$lastUpdate = $now;
+				$percent = intdiv( $done * 100, max( 1, $total ) );
+				$this->requestManager->setImportPercent( $percent, done: $done, total: $total );
+				$this->beat();
 			}
 
-			foreach ( $batch as $file ) {
-				rename( $file, $batchDirectory . '/' . basename( $file ) );
-			}
+			return '';
+		};
 
-			try {
-				$this->runImportImages( $batchDirectory );
-			} finally {
-				$this->removeDirectory( $batchDirectory );
-			}
-
-			$done += count( $batch );
-			$this->requestManager->setImportPercent( intdiv( $done * 100, $total ), done: $done, total: $total );
-			$this->beat();
-		}
-	}
-
-	private function runImportImages( string $directory ): void {
 		$user = User::newSystemUser( RequestManager::EXTENSION_USER, [ 'steal' => true ] );
 
 		$maintenance = new FakeMaintenance;
@@ -178,9 +201,23 @@ class ImportImagesJob extends Job {
 		$importImages->setArg( 0, $directory );
 		$importImages->setOption( 'user', $user->getName() );
 		$importImages->setOption( 'skip-dupes', true );
+		$importImages->setOption( 'search-recursively', true );
 		$importImages->setOption( 'comment', $this->requestManager->getImportComment() );
 
-		$importImages->execute();
+		ob_start( $follow, 1 );
+		try {
+			$success = $importImages->execute();
+		} finally {
+			ob_end_clean();
+		}
+
+		$this->requestManager->setImportPercent( 100, done: $total, total: $total );
+		$this->beat();
+
+		// The script returns false when a file failed or when it found nothing to import.
+		if ( $success === false ) {
+			throw new RuntimeException( 'importImages failed: ' . mb_substr( trim( $log ), -1000 ) );
+		}
 	}
 
 	private function enterStage(): void {
