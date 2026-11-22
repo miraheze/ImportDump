@@ -67,7 +67,7 @@ class SkippedImageNoticesTest extends MediaWikiUnitTestCase {
 		$this->assertStringStartsWith( 'summary<details', $notices[0]->html );
 		$this->assertSame( 2, substr_count( $notices[0]->html, '<li>' ) );
 		$this->assertStringContainsString( 'a.png: reason', $notices[0]->html );
-		$this->assertStringContainsString( 'b&lt;i&gt;.png: reason', $notices[0]->html );
+		$this->assertStringContainsString( 'b&lt;i>.png: reason', $notices[0]->html );
 		$this->assertStringNotContainsString( '<i>', $notices[0]->html );
 	}
 
