@@ -7,6 +7,7 @@ namespace Miraheze\ImportDump\Notices;
 use MediaWiki\Context\IContextSource;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Request\RequestType;
 use function parse_url;
 use const PHP_URL_HOST;
 
@@ -58,7 +59,7 @@ final class TargetNotices implements NoticeProvider {
 			pinned: false,
 		) ];
 
-		if ( !$requestManager->getInterwikiPrefix() ) {
+		if ( $requestManager->getType() !== RequestType::Images && !$requestManager->getInterwikiPrefix() ) {
 			$notices[] = new RequestNotice(
 				severity: NoticeSeverity::Error,
 				html: $context->msg( 'importdump-info-no-interwiki-prefix',

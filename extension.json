@@ -89,7 +89,8 @@
 				"ImportDumpConfig",
 				"ImportDumpHeartbeat",
 				"ImportDumpRequestManager",
-				"JobQueueGroupFactory"
+				"JobQueueGroupFactory",
+				"RepoGroup"
 			],
 			"needsPage": false
 		}
