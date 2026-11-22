@@ -169,12 +169,12 @@ class DumpProcessor {
 		}
 
 		$entries = $listed->getValue();
-		if ( count( $entries ) > 1 ) {
-			return $this->extractAndMerge( $path, $format, $entries, $onProgress );
+		if ( !$entries ) {
+			return Status::newFatal( 'importdump-archive-empty' );
 		}
 
-		if ( count( $entries ) !== 1 ) {
-			return Status::newFatal( 'importdump-archive-not-single' );
+		if ( count( $entries ) > 1 ) {
+			return $this->extractAndMerge( $path, $format, $entries, $onProgress );
 		}
 
 		$tempFile = $this->tempFSFileFactory->newTempFSFile( 'importdump', 'xml' );

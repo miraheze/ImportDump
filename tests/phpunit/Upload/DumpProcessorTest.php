@@ -403,7 +403,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 			$this->newZip( [ 'folder/' => '', 'other/' => '' ] )
 		);
 
-		$this->assertStatusError( 'importdump-archive-not-single', $status );
+		$this->assertStatusError( 'importdump-archive-empty', $status );
 	}
 
 	public function testZipWithUnsafeName(): void {
@@ -512,7 +512,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 
 	public function testTarWithOnlyDirectories(): void {
 		$status = $this->process( $this->newTar( [ 'folder/' => '', 'other/' => '' ] ) );
-		$this->assertStatusError( 'importdump-archive-not-single', $status );
+		$this->assertStatusError( 'importdump-archive-empty', $status );
 	}
 
 	public function testTarWithLink(): void {
