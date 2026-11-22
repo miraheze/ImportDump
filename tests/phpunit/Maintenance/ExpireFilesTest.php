@@ -159,12 +159,14 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 	}
 
 	public function testBatchSize(): void {
-		$this->assertSame( 100, TestingAccessWrapper::newFromObject( $this->maintenance )->getBatchSize() );
+		$maintenance = $this->maintenance;
+		'@phan-var TestingAccessWrapper $maintenance';
+		$this->assertSame( 100, $maintenance->getBatchSize() );
 
 		$ids = $this->addRequests();
 
-		TestingAccessWrapper::newFromObject( $this->maintenance )->setBatchSize( 1 );
-		$this->assertSame( 1, TestingAccessWrapper::newFromObject( $this->maintenance )->getBatchSize() );
+		$maintenance->setBatchSize( 1 );
+		$this->assertSame( 1, $maintenance->getBatchSize() );
 
 		$this->expectOutputRegex( '/Deleted 2 file\(s\)\./' );
 		$this->maintenance->execute();

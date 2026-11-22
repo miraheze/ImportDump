@@ -125,8 +125,10 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase {
 		$this->addRequest( RequestStatus::InProgress, 11 );
 		$this->addRequest( RequestStatus::InProgress, 12 );
 
-		TestingAccessWrapper::newFromObject( $this->maintenance )->setBatchSize( 1 );
-		$this->assertSame( 1, TestingAccessWrapper::newFromObject( $this->maintenance )->getBatchSize() );
+		$maintenance = $this->maintenance;
+		'@phan-var TestingAccessWrapper $maintenance';
+		$maintenance->setBatchSize( 1 );
+		$this->assertSame( 1, $maintenance->getBatchSize() );
 
 		$this->expectOutputRegex( '/Marked 3 import\(s\) as failed\./' );
 		$this->maintenance->execute();
