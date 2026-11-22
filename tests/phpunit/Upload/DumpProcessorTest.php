@@ -14,7 +14,6 @@ use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\DumpResult;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
-use Miraheze\ImportDump\Upload\XmlMerger;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use function array_column;
 use function array_map;
@@ -59,8 +58,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 				ConfigNames::MaxExtractedSize => $maxSize,
 			] ),
 			new TempFSFileFactory( $this->getNewTempDirectory() ),
-			$this->getServiceContainer()->getUploadVerification(),
-			new XmlMerger()
+			$this->getServiceContainer()->getUploadVerification()
 		);
 	}
 
@@ -344,7 +342,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 	public function testZipWithSeveralXmlFilesIsMerged(): void {
 		$status = $this->process( $this->newZip( [
 			'part10.xml' => self::dump( self::page( 3, [ 30 => 0 ] ) ),
-			'part2.xml' => self::dump( self::page( 2, [ 20 => 0 ] ) ),
+			'part2.xml' => self::dump( self::page( 2, [ 20 => 0, 21 => 20, 22 => 21 ] ) ),
 			'part1.xml' => self::dump( self::page( 1, [ 10 => 0 ] ) ),
 		] ) );
 
@@ -357,6 +355,9 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( 1, substr_count( $merged, '<mediawiki' ) );
 		$this->assertSame( 1, substr_count( $merged, '<siteinfo' ) );
 		$this->assertSame( 3, PageCounter::count( $dump->path ) );
+		$this->assertSame( 5, substr_count( $merged, '<revision' ) );
+		$this->assertSame( 5, substr_count( $merged, '</revision>' ) );
+		$this->assertSame( 3, substr_count( $merged, '</page>' ) );
 		$this->assertLessThan( strpos( $merged, 'Page 2' ), strpos( $merged, 'Page 1' ) );
 		$this->assertLessThan( strpos( $merged, 'Page 3' ), strpos( $merged, 'Page 2' ) );
 	}

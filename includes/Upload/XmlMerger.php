@@ -4,10 +4,12 @@ declare( strict_types = 1 );
 
 namespace Miraheze\ImportDump\Upload;
 
+use MediaWiki\Message\Message;
 use MediaWiki\Status\Status;
 use XMLReader;
 use XMLWriter;
-use function in_array;
+use function clearstatcache;
+use function filesize;
 use function libxml_clear_errors;
 use function libxml_get_errors;
 use function libxml_use_internal_errors;
@@ -19,60 +21,77 @@ use const LIBXML_NONET;
 /**
  * Puts the pages and log items of several MediaWiki exports in one export. The site information
  * is the one of the first file, so all of the files must use the same version of the export format.
+ *
+ * The files are added one at a time, and a page is copied one revision at a time, so the most
+ * that is held in memory is a single revision. Create one for each merge.
  */
 class XmlMerger {
 
 	private const string EXPORT_NAMESPACE = 'http://www.mediawiki.org/xml/export-';
 
-	/** @var list<string> The elements below the root that are copied. */
-	private const array COPIED = [ 'page', 'logitem' ];
+	private ?XMLWriter $writer = null;
+	private ?string $namespace = null;
+	private ?string $version = null;
 
 	/**
-	 * @param list<string> $paths The exports, in the order that they are merged.
 	 * @param string $destination The file to write.
+	 * @param int $maxSize The most bytes that the merged file may have.
 	 */
-	public function merge( array $paths, string $destination ): Status {
-		$writer = new XMLWriter();
-		if ( !$writer->openUri( $destination ) ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
-		}
+	public function __construct(
+		private readonly string $destination,
+		private readonly int $maxSize,
+	) {
+	}
 
-		$writer->setIndent( false );
-		$writer->startDocument( '1.0', 'UTF-8' );
+	/** @param string $path The next export to merge. */
+	public function add( string $path ): Status {
+		$first = $this->writer === null;
+		if ( $first ) {
+			$writer = new XMLWriter();
+			if ( !$writer->openUri( $this->destination ) ) {
+				return Status::newFatal( 'importdump-archive-unreadable' );
+			}
+
+			$writer->setIndent( false );
+			$writer->startDocument( '1.0', 'UTF-8' );
+			$this->writer = $writer;
+		}
 
 		$previous = libxml_use_internal_errors( true );
 		try {
-			$namespace = null;
-			$version = null;
-			foreach ( $paths as $index => $path ) {
-				$status = $this->copyFile( $path, $writer, $index === 0, $namespace, $version );
-				if ( !$status->isOK() ) {
-					return $status;
-				}
-			}
-
-			if ( $namespace === null ) {
-				return Status::newFatal( 'importdump-xml-invalid' );
-			}
-
-			$writer->endElement();
-			$writer->endDocument();
-			$writer->flush();
+			$status = $this->copyFile( $path, $first );
 		} finally {
 			libxml_clear_errors();
 			libxml_use_internal_errors( $previous );
 		}
 
+		if ( !$status->isOK() ) {
+			return $status;
+		}
+
+		$this->writer?->flush();
+		clearstatcache( true, $this->destination );
+		if ( (int)filesize( $this->destination ) > $this->maxSize ) {
+			return Status::newFatal( 'importdump-archive-too-large', Message::sizeParam( $this->maxSize ) );
+		}
+
 		return Status::newGood();
 	}
 
-	private function copyFile(
-		string $path,
-		XMLWriter $writer,
-		bool $first,
-		?string &$namespace,
-		?string &$version
-	): Status {
+	/** Finishes the merged file, which has to have at least one export in it. */
+	public function finish(): Status {
+		if ( $this->writer === null ) {
+			return Status::newFatal( 'importdump-xml-invalid' );
+		}
+
+		$this->writer->endElement();
+		$this->writer->endDocument();
+		$this->writer->flush();
+
+		return Status::newGood();
+	}
+
+	private function copyFile( string $path, bool $first ): Status {
 		$reader = new XMLReader();
 		if ( !$reader->open( $path, null, LIBXML_NONET | LIBXML_COMPACT ) ) {
 			return Status::newFatal( 'importdump-xml-invalid' );
@@ -88,7 +107,7 @@ class XmlMerger {
 				}
 
 				if ( $reader->nodeType === XMLReader::ELEMENT && $reader->depth === 0 ) {
-					$status = $this->checkRoot( $reader, $writer, $first, $namespace, $version );
+					$status = $this->startRoot( $reader, $first );
 					if ( !$status->isOK() ) {
 						return $status;
 					}
@@ -96,8 +115,12 @@ class XmlMerger {
 					$sawRoot = true;
 				} elseif ( $reader->nodeType === XMLReader::ELEMENT && $reader->depth === 1 ) {
 					$name = $reader->localName;
-					if ( ( $first && $name === 'siteinfo' ) || in_array( $name, self::COPIED, true ) ) {
-						$writer->writeRaw( $reader->readOuterXml() );
+					if ( $name === 'page' ) {
+						if ( !$this->copyPage( $reader ) ) {
+							return Status::newFatal( 'importdump-xml-invalid' );
+						}
+					} elseif ( ( $first && $name === 'siteinfo' ) || $name === 'logitem' ) {
+						$this->writer?->writeRaw( $reader->readOuterXml() );
 					}
 
 					$more = $reader->next();
@@ -116,37 +139,60 @@ class XmlMerger {
 			return $sawRoot ? Status::newGood() : Status::newFatal( 'importdump-xml-invalid' );
 		} finally {
 			$reader->close();
-			libxml_clear_errors();
 		}
 	}
 
-	private function checkRoot(
-		XMLReader $reader,
-		XMLWriter $writer,
-		bool $first,
-		?string &$namespace,
-		?string &$version
-	): Status {
-		$rootNamespace = $reader->namespaceURI;
-		if ( $reader->localName !== 'mediawiki' || !str_starts_with( $rootNamespace, self::EXPORT_NAMESPACE ) ) {
+	/**
+	 * Copies the page that the reader is on, one child at a time. The revisions are the children
+	 * that can be big, so they are never held together.
+	 *
+	 * @return bool Whether the page was complete. The reader is left on its end.
+	 */
+	private function copyPage( XMLReader $reader ): bool {
+		$depth = $reader->depth;
+		$this->writer?->startElementNs( null, 'page', $this->namespace );
+		if ( !$reader->isEmptyElement ) {
+			$more = $reader->read();
+			while ( $more && !( $reader->nodeType === XMLReader::END_ELEMENT && $reader->depth === $depth ) ) {
+				if ( $reader->nodeType === XMLReader::ELEMENT && $reader->depth === $depth + 1 ) {
+					$this->writer?->writeRaw( $reader->readOuterXml() );
+					$more = $reader->next();
+					continue;
+				}
+
+				$more = $reader->read();
+			}
+
+			if ( !$more ) {
+				return false;
+			}
+		}
+
+		$this->writer?->endElement();
+		return true;
+	}
+
+	private function startRoot( XMLReader $reader, bool $first ): Status {
+		$namespace = $reader->namespaceURI;
+		if ( $reader->localName !== 'mediawiki' || !str_starts_with( $namespace, self::EXPORT_NAMESPACE ) ) {
 			return Status::newFatal( 'importdump-xml-invalid' );
 		}
 
-		$rootVersion = (string)$reader->getAttribute( 'version' );
-		if ( !$first && ( $rootNamespace !== $namespace || $rootVersion !== $version ) ) {
-			return Status::newFatal( 'importdump-xml-version-mismatch' );
+		$version = (string)$reader->getAttribute( 'version' );
+		if ( !$first ) {
+			return $namespace === $this->namespace && $version === $this->version ?
+				Status::newGood() :
+				Status::newFatal( 'importdump-xml-version-mismatch' );
 		}
 
-		if ( $first ) {
-			$namespace = $rootNamespace;
-			$version = $rootVersion;
+		$this->namespace = $namespace;
+		$this->version = $version;
 
-			$writer->startElementNs( null, 'mediawiki', $rootNamespace );
-			$writer->writeAttribute( 'version', $rootVersion );
-			$language = $reader->getAttributeNs( 'lang', 'http://www.w3.org/XML/1998/namespace' );
-			if ( $language !== null ) {
-				$writer->writeAttributeNs( 'xml', 'lang', null, $language );
-			}
+		$this->writer?->startElementNs( null, 'mediawiki', $namespace );
+		$this->writer?->writeAttribute( 'version', $version );
+		$language = $reader->getAttributeNs( 'lang', 'http://www.w3.org/XML/1998/namespace' );
+		if ( $language !== null ) {
+			$this->writer?->writeAttributeNs( 'xml', 'lang', null, $language );
 		}
 
 		return Status::newGood();

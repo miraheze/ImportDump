@@ -16,7 +16,6 @@ use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use XMLReader;
 use function array_any;
 use function array_filter;
-use function array_map;
 use function count;
 use function filesize;
 use function intdiv;
@@ -89,7 +88,6 @@ class DumpProcessor {
 		private readonly ServiceOptions $options,
 		private readonly TempFSFileFactory $tempFSFileFactory,
 		private readonly UploadVerification $uploadVerification,
-		private readonly XmlMerger $xmlMerger,
 	) {
 		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
 	}
@@ -219,9 +217,15 @@ class DumpProcessor {
 
 		$maxSize = (int)$this->options->get( ConfigNames::MaxExtractedSize );
 		$total = count( $entries );
-		$files = [];
-		$extracted = 0;
 
+		$merged = $this->tempFSFileFactory->newTempFSFile( 'importdump', 'xml' );
+		if ( !$merged ) {
+			return Status::newFatal( 'importdump-archive-unreadable' );
+		}
+
+		// Each file is added and removed before the next is extracted, so only one is on disk
+		// at a time besides the merged file, which may not go over the limit either.
+		$merger = new XmlMerger( $merged->getPath(), $maxSize );
 		foreach ( $entries as $position => $entry ) {
 			if ( $onProgress ) {
 				$onProgress( self::STAGE_EXTRACTING, intdiv( $position * 100, $total ) );
@@ -232,13 +236,12 @@ class DumpProcessor {
 				return Status::newFatal( 'importdump-archive-unreadable' );
 			}
 
-			// What was already written counts against the limit, so the files together stay under it.
 			$status = $this->archiveReader->extractTo(
 				$path,
 				$format,
 				$entry,
 				$tempFile->getPath(),
-				$maxSize - $extracted,
+				$maxSize,
 				null
 			);
 
@@ -246,29 +249,22 @@ class DumpProcessor {
 				return $status;
 			}
 
-			$extracted += (int)filesize( $tempFile->getPath() );
 			$virus = $this->uploadVerification->detectVirus( $tempFile->getPath() );
 			if ( $virus ) {
 				return Status::newFatal( 'uploadvirus', $virus );
 			}
 
-			$files[] = $tempFile;
+			if ( $onProgress ) {
+				$onProgress( self::STAGE_MERGING, null );
+			}
+
+			$status = $merger->add( $tempFile->getPath() );
+			if ( !$status->isOK() ) {
+				return $status;
+			}
 		}
 
-		$merged = $this->tempFSFileFactory->newTempFSFile( 'importdump', 'xml' );
-		if ( !$merged ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
-		}
-
-		if ( $onProgress ) {
-			$onProgress( self::STAGE_MERGING, null );
-		}
-
-		$status = $this->xmlMerger->merge(
-			array_map( static fn ( TempFSFile $file ): string => $file->getPath(), $files ),
-			$merged->getPath()
-		);
-
+		$status = $merger->finish();
 		return $status->isOK() ? Status::newGood( $merged ) : $status;
 	}
 
