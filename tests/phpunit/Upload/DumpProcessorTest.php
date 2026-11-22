@@ -29,10 +29,10 @@ use function gzencode;
 use function htmlspecialchars;
 use function implode;
 use function range;
-use function strpos;
-use function substr_count;
 use function strlen;
+use function strpos;
 use function substr;
+use function substr_count;
 
 /**
  * @group ImportDump
