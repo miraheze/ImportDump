@@ -34,6 +34,8 @@ use function max;
 use function rename;
 use function rmdir;
 use function unlink;
+use function wfMkdirParents;
+use function wfTempDir;
 
 /**
  * Imports the files of an images request with the importImages maintenance script.
