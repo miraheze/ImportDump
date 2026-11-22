@@ -23,10 +23,15 @@ use Miraheze\ImportDump\Request\RequestStatus;
 use RuntimeException;
 use Throwable;
 use Wikimedia\Rdbms\IConnectionProvider;
+use function array_chunk;
+use function basename;
+use function count;
 use function get_class;
 use function glob;
+use function intdiv;
 use function is_dir;
 use function max;
+use function rename;
 use function rmdir;
 use function unlink;
 
@@ -37,6 +42,8 @@ use function unlink;
 class ImportImagesJob extends Job {
 
 	public const string JOB_NAME = 'ImportImagesJob';
+
+	private const int BATCH_SIZE = 25;
 
 	private readonly MessageLocalizer $messageLocalizer;
 
@@ -91,6 +98,7 @@ class ImportImagesJob extends Job {
 		} finally {
 			if ( isset( $directory ) ) {
 				$this->removeDirectory( $directory );
+				$this->removeDirectory( $directory . '-batch' );
 			}
 
 			$this->heartbeat->clear( $this->requestID );
@@ -119,6 +127,10 @@ class ImportImagesJob extends Job {
 	}
 
 	private function removeDirectory( string $directory ): void {
+		if ( !is_dir( $directory ) ) {
+			return;
+		}
+
 		foreach ( glob( $directory . '/*' ) ?: [] as $file ) {
 			unlink( $file );
 		}
@@ -126,7 +138,37 @@ class ImportImagesJob extends Job {
 		rmdir( $directory );
 	}
 
+	/** Imports the files in batches, so that the request can show how many are done. */
 	private function importImages( string $directory ): void {
+		$files = glob( $directory . '/*' ) ?: [];
+		$total = count( $files );
+		$done = 0;
+
+		$batchDirectory = $directory . '-batch';
+		$this->requestManager->setImportPercent( 0, done: 0, total: $total );
+
+		foreach ( array_chunk( $files, self::BATCH_SIZE ) as $batch ) {
+			if ( !is_dir( $batchDirectory ) && !wfMkdirParents( $batchDirectory, null, __METHOD__ ) ) {
+				throw new RuntimeException( "Could not create $batchDirectory" );
+			}
+
+			foreach ( $batch as $file ) {
+				rename( $file, $batchDirectory . '/' . basename( $file ) );
+			}
+
+			try {
+				$this->runImportImages( $batchDirectory );
+			} finally {
+				$this->removeDirectory( $batchDirectory );
+			}
+
+			$done += count( $batch );
+			$this->requestManager->setImportPercent( intdiv( $done * 100, $total ), done: $done, total: $total );
+			$this->beat();
+		}
+	}
+
+	private function runImportImages( string $directory ): void {
 		$user = User::newSystemUser( RequestManager::EXTENSION_USER, [ 'steal' => true ] );
 
 		$maintenance = new FakeMaintenance;
@@ -137,7 +179,6 @@ class ImportImagesJob extends Job {
 		$importImages->setOption( 'comment', $this->requestManager->getImportComment() );
 
 		$importImages->execute();
-		$this->beat();
 	}
 
 	private function enterStage(): void {

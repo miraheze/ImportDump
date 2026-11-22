@@ -46,7 +46,6 @@ use function array_keys;
 use function array_map;
 use function file_get_contents;
 use function file_put_contents;
-use function wfEscapeWikiText;
 use function wfMessage;
 use function wfTimestamp;
 
@@ -594,9 +593,10 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 		$comment = $this->getRequestManager( $dbw->insertId() )->getImportComment();
 
-		$this->assertStringStartsWith( 'Imported from ', $comment );
-		foreach ( [ '[[', ']]', '{{', '}}', '<', '>', '|', '__NOTOC__' ] as $markup ) {
-			$this->assertStringNotContainsString( $markup, $comment );
+		$this->assertStringStartsWith( 'Imported from https://example.com/', $comment );
+		$source = substr( $comment, 0, (int)strpos( $comment, ' in ' ) );
+		foreach ( [ '[', ']', '{', '}', '<', '>', '|', '__', ' ' ] as $markup ) {
+			$this->assertStringNotContainsString( $markup, substr( $source, strlen( 'Imported from ' ) ) );
 		}
 	}
 
@@ -606,11 +606,11 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	public function testImportCommentNamesTheSourceAndTheRequest(): void {
 		$comment = $this->getRequestManager( id: 1 )->getImportComment();
 
-		$this->assertStringStartsWith(
-			'Imported from ' . wfEscapeWikiText( 'https://requestimporttest.com' ) . ' in ',
+		$this->assertMatchesRegularExpression(
+			'~^Imported from https://requestimporttest\.com in ' .
+				'(\[\S+Special:RequestImportQueue/1 import request #1\]|import request #1)$~',
 			$comment
 		);
-		$this->assertMatchesRegularExpression( '~ in (\S+Special:RequestImportQueue/|#)1$~', $comment );
 	}
 
 	/**
@@ -624,7 +624,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$command = $images->getCommand();
 
 		$this->assertStringContainsString(
-			"--comment='Imported from " . wfEscapeWikiText( 'https://requestimporttest.com' ) . ' in ',
+			"--comment='Imported from https://requestimporttest.com in ",
 			$command
 		);
 		$this->assertStringNotContainsString( '{comment}', $command );

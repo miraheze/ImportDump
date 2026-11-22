@@ -17,6 +17,7 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Request\RequestType;
 use function array_filter;
 use function array_map;
 use function array_values;
@@ -116,7 +117,11 @@ class ImportDumpNotifyJob extends Job {
 			);
 		}
 
-		$comment = $this->messageLocalizer->msg( "importdump-import-{$status->value}-comment" )
+		$commentKey = $this->requestManager->getType() === RequestType::Images && $status === RequestStatus::Failed ?
+			'importdump-images-failed-comment' :
+			"importdump-import-{$status->value}-comment";
+
+		$comment = $this->messageLocalizer->msg( $commentKey )
 			->inContentLanguage()
 			->escaped();
 

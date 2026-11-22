@@ -67,6 +67,8 @@ use function json_encode;
 use function max;
 use function parse_url;
 use function preg_replace;
+use function preg_replace_callback;
+use function rawurlencode;
 use function str_contains;
 use function str_replace;
 use function trim;
@@ -75,6 +77,7 @@ use function wfTimestamp;
 use const JSON_INVALID_UTF8_SUBSTITUTE;
 use const MW_INSTALL_PATH;
 use const PHP_URL_HOST;
+use const PHP_URL_SCHEME;
 
 class RequestManager {
 
@@ -440,16 +443,37 @@ class RequestManager {
 
 	public function getImportComment(): string {
 		$wiki = WikiMap::getWiki( $this->dbw->getDomainID() );
-		$request = $wiki ?
-			$wiki->getCanonicalUrl( 'Special:RequestImportQueue/' . $this->ID ) :
-			'#' . $this->ID;
+		$source = $this->getCommentUrl( $this->getSource() );
+		if ( !$wiki ) {
+			return $this->messageLocalizer->msg( 'importdump-images-comment-plain', $source, $this->ID )
+				->inContentLanguage()
+				->text();
+		}
 
 		return $this->messageLocalizer->msg(
 			'importdump-images-comment',
-			// The source is used as wikitext on the pages of the files.
-			wfEscapeWikiText( $this->getSource() ),
-			$request
+			$source,
+			$wiki->getCanonicalUrl( 'Special:RequestImportQueue/' . $this->ID ),
+			$this->ID
 		)->inContentLanguage()->text();
+	}
+
+	/**
+	 * The comment is wikitext on the pages of the files. A web address stays a link,
+	 * with the characters that wikitext treats as markup encoded. Anything else is escaped.
+	 */
+	private function getCommentUrl( string $url ): string {
+		if ( !in_array( parse_url( $url, PHP_URL_SCHEME ), [ 'http', 'https' ], true ) ) {
+			return wfEscapeWikiText( $url );
+		}
+
+		$url = str_replace( [ '__', '~~~', '&#' ], [ '_%5F', '%7E%7E%7E', '%26#' ], $url );
+
+		return preg_replace_callback(
+			'/[\x00-\x20"\'<>\[\]{}|\\\\^`\x7f]/',
+			static fn ( array $match ): string => rawurlencode( $match[0] ),
+			$url
+		) ?? wfEscapeWikiText( $url );
 	}
 
 	/** Whether the requester has all of the rights that are needed to see the state of the target wiki. */
