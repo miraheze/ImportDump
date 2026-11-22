@@ -57,14 +57,7 @@ class XmlMerger {
 			$this->writer = $writer;
 		}
 
-		$previous = libxml_use_internal_errors( true );
-		try {
-			$status = $this->copyFile( $path, $first );
-		} finally {
-			libxml_clear_errors();
-			libxml_use_internal_errors( $previous );
-		}
-
+		$status = $this->copyQuietly( $path, $first );
 		if ( !$status->isOK() ) {
 			return $status;
 		}
@@ -91,6 +84,17 @@ class XmlMerger {
 		return Status::newGood();
 	}
 
+	/** Reads with libxml keeping its errors to itself, so that they can be checked afterwards. */
+	private function copyQuietly( string $path, bool $first ): Status {
+		$previous = libxml_use_internal_errors( true );
+		try {
+			return $this->copyFile( $path, $first );
+		} finally {
+			libxml_clear_errors();
+			libxml_use_internal_errors( $previous );
+		}
+	}
+
 	private function copyFile( string $path, bool $first ): Status {
 		$reader = new XMLReader();
 		if ( !$reader->open( $path, null, LIBXML_NONET | LIBXML_COMPACT ) ) {
@@ -106,14 +110,7 @@ class XmlMerger {
 					return Status::newFatal( 'importdump-xml-doctype' );
 				}
 
-				if ( $reader->nodeType === XMLReader::ELEMENT && $reader->depth === 0 ) {
-					$status = $this->startRoot( $reader, $first );
-					if ( !$status->isOK() ) {
-						return $status;
-					}
-
-					$sawRoot = true;
-				} elseif ( $reader->nodeType === XMLReader::ELEMENT && $reader->depth === 1 ) {
+				if ( $reader->nodeType === XMLReader::ELEMENT && $reader->depth === 1 ) {
 					$name = $reader->localName;
 					if ( $name === 'page' ) {
 						if ( !$this->copyPage( $reader ) ) {
@@ -124,10 +121,18 @@ class XmlMerger {
 					}
 
 					$more = $reader->next();
-					continue;
-				}
+				} else {
+					if ( $reader->nodeType === XMLReader::ELEMENT && $reader->depth === 0 ) {
+						$status = $this->startRoot( $reader, $first );
+						if ( !$status->isOK() ) {
+							return $status;
+						}
 
-				$more = $reader->read();
+						$sawRoot = true;
+					}
+
+					$more = $reader->read();
+				}
 			}
 
 			foreach ( libxml_get_errors() as $error ) {
@@ -150,7 +155,7 @@ class XmlMerger {
 	 */
 	private function copyPage( XMLReader $reader ): bool {
 		$depth = $reader->depth;
-		$this->writer?->startElementNs( null, 'page', $this->namespace );
+		$this->writer?->startElement( 'page' );
 		if ( !$reader->isEmptyElement ) {
 			$more = $reader->read();
 			while ( $more && !( $reader->nodeType === XMLReader::END_ELEMENT && $reader->depth === $depth ) ) {
@@ -188,7 +193,8 @@ class XmlMerger {
 		$this->namespace = $namespace;
 		$this->version = $version;
 
-		$this->writer?->startElementNs( null, 'mediawiki', $namespace );
+		$this->writer?->startElement( 'mediawiki' );
+		$this->writer?->writeAttribute( 'xmlns', $namespace );
 		$this->writer?->writeAttribute( 'version', $version );
 		$language = $reader->getAttributeNs( 'lang', 'http://www.w3.org/XML/1998/namespace' );
 		if ( $language !== null ) {

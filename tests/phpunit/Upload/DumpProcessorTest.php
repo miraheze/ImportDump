@@ -14,6 +14,7 @@ use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\DumpResult;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
+use Miraheze\ImportDump\Upload\PageCounter;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use function array_column;
 use function array_map;
