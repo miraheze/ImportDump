@@ -16,6 +16,7 @@ use MediaWiki\MainConfigNames;
 use MediaWiki\Notification\NotificationService;
 use MediaWiki\Notification\RecipientSet;
 use MediaWiki\Permissions\Authority;
+use MediaWiki\Shell\Shell;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
 use MediaWiki\User\User;
@@ -55,7 +56,6 @@ use function array_unique;
 use function array_values;
 use function basename;
 use function boolval;
-use function escapeshellarg;
 use function explode;
 use function in_array;
 use function intval;
@@ -427,7 +427,7 @@ class RequestManager {
 			$this->getInterwikiPrefix(),
 			$this->getFileName(),
 			$this->getSplitFilePath(),
-			str_contains( $command, '{comment}' ) ? escapeshellarg( $this->getImportComment() ) : '',
+			str_contains( $command, '{comment}' ) ? Shell::escape( $this->getImportComment() ) : '',
 		], $command );
 	}
 

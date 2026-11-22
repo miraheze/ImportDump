@@ -6,15 +6,21 @@ namespace Miraheze\ImportDump\Jobs;
 
 use InitEditCount;
 use MediaWiki\Config\Config;
+use MediaWiki\Context\RequestContext;
 use MediaWiki\Deferred\SiteStatsUpdate;
+use MediaWiki\Exception\MWExceptionHandler;
 use MediaWiki\Import\ImportStreamSource;
 use MediaWiki\Import\WikiImporterFactory;
+use MediaWiki\JobQueue\Job;
 use MediaWiki\JobQueue\JobQueueGroupFactory;
+use MediaWiki\JobQueue\JobSpecification;
+use MediaWiki\Language\MessageLocalizer;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Maintenance\FakeMaintenance;
 use MediaWiki\Permissions\UltimateAuthority;
 use MediaWiki\SiteStats\SiteStatsInit;
 use MediaWiki\User\User;
+use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\Progress\ImportHeartbeat;
 use Miraheze\ImportDump\Request\RequestManager;
@@ -24,14 +30,18 @@ use Miraheze\ImportDump\Upload\PageCounter;
 use RebuildRecentchanges;
 use RebuildTextIndex;
 use RefreshLinks;
+use Throwable;
 use UpdateArticleCount;
 use Wikimedia\Rdbms\IConnectionProvider;
 use function error_get_last;
 use function file_exists;
+use function get_class;
 use function intdiv;
+use function max;
 use function min;
 use function register_shutdown_function;
 use function str_repeat;
+use function time;
 use function unlink;
 use function wfTempDir;
 use const E_COMPILE_ERROR;
@@ -41,82 +51,105 @@ use const E_PARSE;
 use const E_RECOVERABLE_ERROR;
 use const E_USER_ERROR;
 
-class ImportDumpJob extends AbstractImportJob {
+class ImportDumpJob extends Job {
 
 	public const string JOB_NAME = 'ImportDumpJob';
 
+	private const int HEARTBEAT_INTERVAL = 60;
 	private const int MEMORY_RESERVE = 2097152;
 	private const int FATAL_ERRORS = E_ERROR | E_PARSE | E_CORE_ERROR |
 		E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
 
+	private readonly MessageLocalizer $messageLocalizer;
+
+	private readonly int $requestID;
+	private readonly string $username;
+
+	private string $jobError;
+
 	private bool $running = false;
-	private string $filePath = '';
+	private int $lastBeat = 0;
 	private RequestStage $startStage = RequestStage::Download;
 	private int $refreshLinksChunkSize = 1000;
 
 	public function __construct(
 		array $params,
-		IConnectionProvider $connectionProvider,
-		Config $config,
-		ImportHeartbeat $heartbeat,
+		private readonly IConnectionProvider $connectionProvider,
+		private readonly Config $config,
+		private readonly ImportHeartbeat $heartbeat,
 		private readonly HookRunner $hookRunner,
-		RequestManager $requestManager,
-		JobQueueGroupFactory $jobQueueGroupFactory,
+		private readonly RequestManager $requestManager,
+		private readonly JobQueueGroupFactory $jobQueueGroupFactory,
 		private readonly WikiImporterFactory $wikiImporterFactory,
 	) {
-		parent::__construct(
-			self::JOB_NAME,
-			$params,
-			$connectionProvider,
-			$config,
-			$heartbeat,
-			$requestManager,
-			$jobQueueGroupFactory
-		);
+		parent::__construct( self::JOB_NAME, $params );
+
+		$this->requestID = $params['requestid'];
+		$this->username = $params['username'];
+
+		$this->messageLocalizer = RequestContext::getMain();
+		$this->executionFlags |= self::JOB_NO_EXPLICIT_TRX_ROUND;
 	}
 
 	/** @inheritDoc */
-	protected function execute(): bool {
+	public function run(): true {
+		$this->requestManager->loadFromID( $this->requestID );
+		if ( $this->requestManager->getStatus() === RequestStatus::Complete ) {
+			// Don't rerun a job that is already completed.
+			return true;
+		}
+
 		$this->startStage = $this->requestManager->getStage() ?? RequestStage::Download;
 		$filePath = wfTempDir() . '/' . $this->requestManager->getFileName();
-		$this->filePath = $filePath;
 
 		$this->running = true;
 		$this->registerShutdownHandler();
+		$this->beat( force: true );
 
-		$importStreamSource = null;
-		if ( !$this->startStage->hasImported() ) {
-			$this->enterStage( RequestStage::Download );
-			$this->hookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
+		try {
+			$importStreamSource = null;
+			if ( !$this->startStage->hasImported() ) {
+				$this->enterStage( RequestStage::Download );
+				$this->hookRunner->onImportDumpJobGetFile( $filePath, $this->requestManager );
 
-			// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
-			$importStreamSource = $this->getImportSource( $filePath );
-			if ( !$importStreamSource ) {
-				return false;
+				// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
+				$importStreamSource = $this->getImportSource( $filePath );
+				if ( !$importStreamSource ) {
+					return true;
+				}
 			}
+
+			$this->queueNotification( RequestStatus::InProgress, '' );
+
+			if ( $importStreamSource ) {
+				$this->enterStage( RequestStage::Import );
+				// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
+				$this->importPages( $importStreamSource, $filePath );
+			}
+
+			$this->updateSiteStats();
+			$this->runMaintenanceScripts();
+			$this->runAfterImport( $filePath );
+		} catch ( Throwable $t ) {
+			// We want to handle any potential errors gracefully.
+			MWExceptionHandler::rollbackPrimaryChangesAndLog( $t );
+			$this->jobError = $this->getLogMessage( $t );
+			$this->notifyFailed();
+			return true;
+		} finally {
+			$this->cleanup( $filePath );
 		}
 
-		$this->queueNotification( RequestStatus::InProgress, '' );
-
-		if ( $importStreamSource ) {
-			$this->enterStage( RequestStage::Import );
-			// @phan-suppress-next-line SecurityCheck-PathTraversal False positive
-			$this->importPages( $importStreamSource, $filePath );
-		}
-
-		$this->updateSiteStats();
-		$this->runMaintenanceScripts();
-		$this->runAfterImport( $filePath );
-
+		$this->queueNotification( RequestStatus::Complete, '' );
 		return true;
 	}
 
 	private function getImportSource( string $filePath ): ?ImportStreamSource {
 		$status = ImportStreamSource::newFromFile( $filePath );
 		if ( !$status->isGood() ) {
-			$error = "Import source for $filePath failed";
-			$this->setLastError( $error );
-			$this->notifyFailed( $error );
+			$this->jobError = "Import source for $filePath failed";
+			$this->setLastError( $this->jobError );
+			$this->notifyFailed();
 			return null;
 		}
 
@@ -283,17 +316,36 @@ class ImportDumpJob extends AbstractImportJob {
 			return false;
 		}
 
-		$this->saveStage( $stage );
+		// Save the stage now. Otherwise this job keeps the request locked until it ends,
+		// and the notify jobs cannot update the request while the import runs.
+		$ticket = $this->connectionProvider->getEmptyTransactionTicket( __METHOD__ );
+		$this->requestManager->setStage( $stage );
+		$this->connectionProvider->commitAndWaitForReplication( __METHOD__, $ticket );
+
 		return true;
 	}
 
-	/** @inheritDoc */
-	protected function cleanup(): void {
+	private function cleanup( string $filePath ): void {
 		$this->running = false;
+		$this->heartbeat->clear( $this->requestID );
 
-		if ( $this->filePath !== '' && file_exists( $this->filePath ) ) {
-			unlink( $this->filePath );
+		if ( file_exists( $filePath ) ) {
+			unlink( $filePath );
 		}
+	}
+
+	private function beat( bool $force ): void {
+		$now = time();
+		if ( !$force && $now - $this->lastBeat < self::HEARTBEAT_INTERVAL ) {
+			return;
+		}
+
+		$this->lastBeat = $now;
+
+		$hours = $this->config->get( ConfigNames::StalledImportHours );
+		$ttl = max( 1, (int)( $hours ?: 24 ) ) * 3600;
+
+		$this->heartbeat->beat( $this->requestID, $ttl );
 	}
 
 	private function registerShutdownHandler(): void {
@@ -308,21 +360,52 @@ class ImportDumpJob extends AbstractImportJob {
 			$reserve = null;
 
 			$error = error_get_last();
-			$message = $error !== null && ( $error['type'] & self::FATAL_ERRORS ) ?
+			$this->jobError = $error !== null && ( $error['type'] & self::FATAL_ERRORS ) ?
 				'Fatal error: ' . $error['message'] :
 				'The import job was stopped before it finished.';
 
 			try {
-				$this->notifyFailed( $message );
+				$this->notifyFailed();
 			} catch ( Throwable ) {
 				// Nothing else can be done during shutdown.
 			}
 		} );
 	}
 
-	/** @inheritDoc */
-	protected function notifyFailed( string $error ): void {
+	private function notifyFailed(): void {
 		$status = $this->requestManager->hasImported() ? RequestStatus::Partial : RequestStatus::Failed;
-		$this->queueNotification( $status, $error );
+		$this->queueNotification( $status, $this->jobError );
+	}
+
+	private function queueNotification( RequestStatus $status, string $error ): void {
+		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
+			new JobSpecification(
+				ImportDumpNotifyJob::JOB_NAME,
+				[
+					'joberror' => $error,
+					'requestid' => $this->requestID,
+					'status' => $status->value,
+					'username' => $this->username,
+				]
+			)
+		);
+	}
+
+	private function getLogMessage( Throwable $t ): string {
+		// This is the request ID from Telemetry.
+		$requestId = $this->getRequestId();
+		$type = get_class( $t );
+		$message = $t->getMessage();
+
+		return "[$requestId]   $type: $message";
+	}
+
+	private function getLoggingWiki(): string {
+		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
+		return $dbr->getDomainID();
+	}
+
+	public function allowRetries(): false {
+		return false;
 	}
 }
