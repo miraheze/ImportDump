@@ -71,6 +71,7 @@ use function str_contains;
 use function str_replace;
 use function strtr;
 use function trim;
+use function wfEscapeWikiText;
 use function wfTimestamp;
 use const JSON_INVALID_UTF8_SUBSTITUTE;
 use const MW_INSTALL_PATH;
@@ -446,21 +447,9 @@ class RequestManager {
 
 		return $this->messageLocalizer->msg(
 			'importdump-images-comment',
-			// The source is used as wikitext on the pages of the files, so it cannot be left to make markup.
-			strtr( $this->getSource(), [
-				'[' => '%5B',
-				']' => '%5D',
-				'{' => '%7B',
-				'}' => '%7D',
-				'<' => '%3C',
-				'>' => '%3E',
-				'|' => '%7C',
-				'~' => '%7E',
-				'__' => '%5F%5F',
-				' ' => '%20',
-				"\n" => '%0A',
-				"\r" => '%0D',
-			] ),
+			// The source is used as wikitext on the pages of the files. Signatures are expanded when
+			// a page is saved, which wfEscapeWikiText does not stop.
+			strtr( wfEscapeWikiText( $this->getSource() ), [ '~~~' => '~~&#126;' ] ),
 			$request
 		)->inContentLanguage()->text();
 	}
