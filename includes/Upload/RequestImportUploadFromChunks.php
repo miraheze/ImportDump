@@ -18,6 +18,12 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 	private const array TYPES = [
 		'xml' => [
 			'extension' => 'xml',
+			'archivesOnly' => false,
+		],
+		// Archives of images can be of any of the types that archives can be, so only the content is checked.
+		'images' => [
+			'extension' => 'archive',
+			'archivesOnly' => true,
 		],
 	];
 
@@ -87,7 +93,11 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		$processor = $services->getService( 'ImportDumpDumpProcessor' );
 		'@phan-var DumpProcessor $processor';
 
-		if ( !in_array( $mime, $processor->getAcceptedMimeTypes(), true ) ) {
+		$accepted = $definition['archivesOnly'] ?
+			$processor->getArchiveMimeTypes() :
+			$processor->getAcceptedMimeTypes();
+
+		if ( !in_array( $mime, $accepted, true ) ) {
 			return [
 				'status' => self::VERIFICATION_ERROR,
 				'details' => [ 'filetype-mime-mismatch', $definition['extension'], $mime ],

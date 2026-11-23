@@ -219,6 +219,13 @@ class SpecialRequestImport extends FormSpecialPage {
 				'type' => 'hidden',
 				'default' => '',
 			];
+
+			if ( $this->getConfig()->get( ConfigNames::EnableImageImports ) ) {
+				$formDescriptor['UploadImagesFileKey'] = [
+					'type' => 'hidden',
+					'default' => '',
+				];
+			}
 		}
 
 		$formDescriptor += [
@@ -270,14 +277,15 @@ class SpecialRequestImport extends FormSpecialPage {
 
 		$timestamp = $dbw->timestamp();
 
-		$images = $this->getImagesUpload();
+		$imagesKey = $this->getImagesStashKey( $data );
+		$images = $this->getImagesUpload( $imagesKey );
 		if ( $images instanceof Status ) {
 			return $images;
 		}
 
 		if ( $this->getConfig()->get( ConfigNames::EnableImageImports ) && !$this->hasXmlUpload( $data ) ) {
 			return $images ?
-				$this->submitImagesOnly( $data, $timestamp, $images ) :
+				$this->submitImagesOnly( $data, $timestamp, $images, $imagesKey ) :
 				Status::newFatal( 'importdump-upload-nothing' );
 		}
 		$fileName = $data['target'] . '-' . $timestamp . '.xml';
@@ -378,7 +386,7 @@ class SpecialRequestImport extends FormSpecialPage {
 
 		$imagesName = $data['target'] . '-' . $timestamp . '-images';
 		if ( $images ) {
-			$stashed = $this->publishImages( $images, $imagesName );
+			$stashed = $this->publishImages( $images, $imagesName, $imagesKey );
 			if ( !$stashed->isOK() ) {
 				$backend = $repo->getBackend();
 				foreach ( [ "/ImportDump/unverified/$fileName", "/ImportDump/$fileName" ] as $path ) {
@@ -465,8 +473,13 @@ class SpecialRequestImport extends FormSpecialPage {
 	}
 
 	/** A request for images that has no XML request to be linked to. */
-	private function submitImagesOnly( array $data, string $timestamp, UploadFromFile $images ): Status {
-		$stashed = $this->publishImages( $images, $data['target'] . '-' . $timestamp . '-images' );
+	private function submitImagesOnly(
+		array $data,
+		string $timestamp,
+		UploadBase $images,
+		string $stashKey
+	): Status {
+		$stashed = $this->publishImages( $images, $data['target'] . '-' . $timestamp . '-images', $stashKey );
 		if ( !$stashed->isOK() ) {
 			return $stashed;
 		}
@@ -485,23 +498,46 @@ class SpecialRequestImport extends FormSpecialPage {
 		return Status::newGood();
 	}
 
+	/** The key of an archive of images that was uploaded in parts, or an empty string if there is none. */
+	private function getImagesStashKey( array $data ): string {
+		if ( !$this->useChunkedUploads() || !$this->getConfig()->get( ConfigNames::EnableImageImports ) ) {
+			return '';
+		}
+
+		return (string)( $data['UploadImagesFileKey'] ?? '' );
+	}
+
 	/**
-	 * @return UploadFromFile|Status|null The upload of the images archive, a status with the problem if it
+	 * @param string $stashKey The key of the archive if it was uploaded in parts.
+	 * @return UploadBase|Status|null The upload of the images archive, a status with the problem if it
 	 *  cannot be used, or null if there is none.
 	 * @throws PermissionsError
 	 */
-	private function getImagesUpload(): UploadFromFile|Status|null {
+	private function getImagesUpload( string $stashKey ): UploadBase|Status|null {
 		if ( !$this->getConfig()->get( ConfigNames::EnableImageImports ) ) {
 			return null;
 		}
 
-		$upload = $this->getRequest()->getUpload( 'wpUploadImages' );
-		if ( !$upload->exists() || $upload->getError() === UPLOAD_ERR_NO_FILE ) {
-			return null;
-		}
+		if ( $stashKey !== '' ) {
+			if ( !UploadFromStash::isValidKey( $stashKey ) ) {
+				return Status::newFatal( 'apierror-invalid-file-key' );
+			}
 
-		$uploadBase = new UploadFromFile();
-		$uploadBase->initialize( $upload->getName() ?? '', $upload );
+			$uploadBase = new UploadFromStash( $this->getUser() );
+			try {
+				$uploadBase->initialize( $stashKey, 'requestimport.archive' );
+			} catch ( UploadStashException $e ) {
+				return Status::newFatal( 'uploadstash-exception', get_class( $e ), $e->getMessage() );
+			}
+		} else {
+			$upload = $this->getRequest()->getUpload( 'wpUploadImages' );
+			if ( !$upload->exists() || $upload->getError() === UPLOAD_ERR_NO_FILE ) {
+				return null;
+			}
+
+			$uploadBase = new UploadFromFile();
+			$uploadBase->initialize( $upload->getName() ?? '', $upload );
+		}
 
 		if ( !$uploadBase->isEnabled() ) {
 			return Status::newFatal( 'uploaddisabled' );
@@ -530,18 +566,23 @@ class SpecialRequestImport extends FormSpecialPage {
 	}
 
 	/** The archive always waits for the job that checks it, then goes where the images import reads it from. */
-	private function publishImages( UploadFromFile $uploadBase, string $imagesName ): Status {
-		$status = $uploadBase->tryStashFile( $this->getUser() );
-		if ( !$status->isGood() ) {
-			return $status;
-		}
+	private function publishImages( UploadBase $uploadBase, string $imagesName, string $stashKey ): Status {
+		if ( $stashKey !== '' ) {
+			$fileKey = $stashKey;
+		} else {
+			$status = $uploadBase->tryStashFile( $this->getUser() );
+			if ( !$status->isGood() ) {
+				return $status;
+			}
 
-		$stashFile = $status->getStatusValue()->getValue();
-		'@phan-var UploadStashFile $stashFile';
+			$stashFile = $status->getStatusValue()->getValue();
+			'@phan-var UploadStashFile $stashFile';
+			$fileKey = $stashFile->getFileKey();
+		}
 
 		$repo = $this->repoGroup->getLocalRepo();
 		try {
-			$file = ( new UploadStash( $repo, $this->getUser() ) )->getFile( $stashFile->getFileKey() );
+			$file = ( new UploadStash( $repo, $this->getUser() ) )->getFile( $fileKey );
 		} catch ( UploadStashException $e ) {
 			return Status::newFatal( 'uploadstash-exception', get_class( $e ), $e->getMessage() );
 		}
@@ -674,6 +715,7 @@ class SpecialRequestImport extends FormSpecialPage {
 			'maxDirectUploadSize' => $this->getMaxDirectUploadSize( $maxPhpSize ),
 			'minChunkSize' => ApiUpload::getMinUploadChunkSize( $this->getConfig() ),
 			'type' => 'xml',
+			'images' => (bool)$this->getConfig()->get( ConfigNames::EnableImageImports ),
 		] );
 	}
 
