@@ -735,8 +735,9 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$comment = $this->getRequestManager( id: 1 )->getImportComment();
 
 		$this->assertMatchesRegularExpression(
-			'~^\(importdump-images-comment: https://requestimporttest\.com, \S+Special:RequestImportQueue/1, 1\)$|' .
-				'^\(importdump-images-comment-plain: https://requestimporttest\.com, 1\)$~',
+			'~^\(importdump-images-comment(?: = \S+)?: https://requestimporttest\.com, ' .
+				'\S+Special:RequestImportQueue/1, 1\)$|' .
+				'^\(importdump-images-comment-plain(?: = \S+)?: https://requestimporttest\.com, 1\)$~',
 			$comment
 		);
 	}
