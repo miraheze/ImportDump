@@ -12,6 +12,8 @@
 	"action-handle-import-requests": "{{doc-action|handle-import-requests}}",
 	"action-request-import": "{{doc-action|request-import}}",
 	"action-view-private-import-requests": "{{doc-action|view-private-import-requests}}",
+	"apihelp-requestimportoutput-param-requestid": "{{doc-apihelp-param|requestimportoutput|requestid}}",
+	"apihelp-requestimportoutput-summary": "{{doc-apihelp-summary|requestimportoutput}}",
 	"apihelp-requestimportprogress-param-requestid": "{{doc-apihelp-param|requestimportprogress|requestid}}",
 	"apihelp-requestimportprogress-summary": "{{doc-apihelp-summary|requestimportprogress}}",
 	"apihelp-requestimportupload-param-async": "{{doc-apihelp-param|requestimportupload|async}}",
