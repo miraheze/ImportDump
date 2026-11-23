@@ -470,8 +470,7 @@ class RequestManager {
 			'importdump-images-comment',
 			$source,
 			$wiki->getCanonicalUrl( 'Special:RequestImportQueue/' . $this->ID ),
-			$this->ID,
-			SpecialPage::getTitleFor( 'RequestImportQueue', (string)$this->ID )->getPrefixedText()
+			$this->ID
 		)->inContentLanguage()->text();
 	}
 
