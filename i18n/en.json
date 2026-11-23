@@ -8,6 +8,7 @@
 	"action-handle-import-requests": "handle user import requests",
 	"action-request-import": "request imports",
 	"action-view-private-import-requests": "view private import requests",
+	"apihelp-requestimportoutput-param-part": "The part of the output to get. Leave out to list the parts instead.",
 	"apihelp-requestimportoutput-param-requestid": "The ID of the request.",
 	"apihelp-requestimportoutput-summary": "Get what the script that imports the files of a request has printed so far. Only for users who can handle requests.",
 	"apihelp-requestimportprogress-param-requestid": "The ID of the request.",

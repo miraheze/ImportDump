@@ -1091,8 +1091,10 @@ class RequestManager {
 		$this->importOutput->append( $this->ID, $part, $text );
 	}
 
+	/** Clears the output of an earlier run, both the live part and the stored parts. */
 	public function clearImportOutput(): void {
 		$this->importOutput->clear( $this->ID );
+		$this->deleteOutputFiles( $this->repoGroup->getLocalRepo()->getBackend() );
 	}
 
 	/** @return ?array{part: int, text: string} The part of the output that is being printed. */
