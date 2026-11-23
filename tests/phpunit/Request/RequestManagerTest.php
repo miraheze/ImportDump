@@ -1540,6 +1540,10 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 	/**
 	 * @covers ::setLocked
+	 * @covers ::setOverwrite
+	 * @covers ::setSkipDupes
+	 * @covers ::shouldSkipDupes
+	 * @covers ::shouldOverwrite
 	 * @covers ::setPrivate
 	 * @covers ::setReason
 	 * @covers ::setSource
@@ -1554,6 +1558,14 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$manager->setPrivate( true );
 		$this->assertTrue( $manager->isPrivate() );
 
+		$this->assertFalse( $manager->shouldOverwrite() );
+		$manager->setOverwrite( true );
+		$this->assertTrue( $manager->shouldOverwrite() );
+
+		$this->assertTrue( $manager->shouldSkipDupes() );
+		$manager->setSkipDupes( false );
+		$this->assertFalse( $manager->shouldSkipDupes() );
+
 		$manager->setReason( 'A new reason' );
 		$this->assertSame( 'A new reason', $manager->getReason() );
 
@@ -1565,6 +1577,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 		$stored = $this->getRequestManager( id: 1 );
 		$this->assertTrue( $stored->isLocked() );
+		$this->assertTrue( $stored->shouldOverwrite() );
+		$this->assertFalse( $stored->shouldSkipDupes() );
 		$this->assertSame( 'A new reason', $stored->getReason() );
 		$this->assertSame( 'https://example.com', $stored->getSource() );
 		$this->assertSame( 'otherwiki', $stored->getTarget() );

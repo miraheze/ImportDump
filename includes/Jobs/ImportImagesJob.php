@@ -247,8 +247,15 @@ class ImportImagesJob extends Job {
 		$importImages = $maintenance->createChild( ImportImages::class );
 		$importImages->setArg( 0, $directory );
 		$importImages->setOption( 'user', $user->getName() );
-		$importImages->setOption( 'skip-dupes', true );
+		if ( $this->requestManager->shouldSkipDupes() ) {
+			$importImages->setOption( 'skip-dupes', true );
+		}
+
 		$importImages->setOption( 'search-recursively', true );
+		if ( $this->requestManager->shouldOverwrite() ) {
+			$importImages->setOption( 'overwrite', true );
+		}
+
 		$importImages->setOption( 'comment', $this->requestManager->getImportComment() );
 
 		$success = false;

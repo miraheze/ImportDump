@@ -24,6 +24,8 @@ CREATE TABLE /*_*/import_requests (
   request_linked_id BIGINT UNSIGNED DEFAULT NULL,
   request_locked TINYINT UNSIGNED DEFAULT 0 NOT NULL,
   request_private TINYINT UNSIGNED DEFAULT 0 NOT NULL,
+  request_overwrite TINYINT UNSIGNED DEFAULT 0 NOT NULL,
+  request_skip_dupes TINYINT UNSIGNED DEFAULT 1 NOT NULL,
   INDEX request_actor_timestamp (
     request_actor, request_timestamp
   ),

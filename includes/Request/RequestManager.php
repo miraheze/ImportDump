@@ -1064,6 +1064,38 @@ class RequestManager {
 		$this->row->request_private = (int)$private;
 	}
 
+	/** Whether the images that are already on the wiki are replaced, instead of being skipped. */
+	public function shouldOverwrite(): bool {
+		return (bool)( $this->row->request_overwrite ?? false );
+	}
+
+	public function setOverwrite( bool $overwrite ): void {
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_overwrite' => (int)$overwrite ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->row->request_overwrite = (int)$overwrite;
+	}
+
+	/** Whether a file is skipped when the wiki already has the same file under another name. */
+	public function shouldSkipDupes(): bool {
+		return (bool)( $this->row->request_skip_dupes ?? true );
+	}
+
+	public function setSkipDupes( bool $skipDupes ): void {
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_skip_dupes' => (int)$skipDupes ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->row->request_skip_dupes = (int)$skipDupes;
+	}
+
 	public function setReason( string $reason ): void {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )

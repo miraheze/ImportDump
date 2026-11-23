@@ -161,6 +161,24 @@ class RequestFormBuilder {
 					'disabled' => $this->requestManager->isLocked(),
 					'raw' => true,
 				],
+			];
+
+			if ( $this->requestManager->getType() === RequestType::Images ) {
+				$running = $this->requestManager->getStatus();
+				$formDescriptor += [
+					'edit-skip-dupes' => [
+						'type' => 'check',
+						'label-message' => 'importdump-label-skip-dupes',
+						'help-message' => 'importdump-help-skip-dupes',
+						'section' => 'editing',
+						'default' => $this->requestManager->shouldSkipDupes(),
+						'disabled' => $this->requestManager->isLocked() ||
+							$running === RequestStatus::Complete || $running->isRunning(),
+					],
+				];
+			}
+
+			$formDescriptor += [
 				'submit-edit' => [
 					'type' => 'submit',
 					'buttonlabel-message' => 'importdump-label-edit-request',
@@ -169,6 +187,8 @@ class RequestFormBuilder {
 				],
 			];
 		}
+
+		$isImages = $this->requestManager->getType() === RequestType::Images;
 
 		if ( $authority->isAllowed( 'handle-import-requests' ) ) {
 			$validRequest = $noticeResult->valid;
@@ -198,6 +218,19 @@ class RequestFormBuilder {
 						'label-message' => 'importdump-label-private',
 						'default' => $this->requestManager->isPrivate(),
 						'disabled' => $this->requestManager->isTargetPrivate(),
+						'section' => 'handling',
+					],
+				];
+			}
+
+			if ( $isImages ) {
+				$formDescriptor += [
+					'handle-overwrite' => [
+						'type' => 'check',
+						'label-message' => 'importdump-label-overwrite',
+						'help-message' => 'importdump-help-overwrite',
+						'default' => $this->requestManager->shouldOverwrite(),
+						'disabled' => $status === RequestStatus::Complete || $status->isRunning(),
 						'section' => 'handling',
 					],
 				];
@@ -340,7 +373,6 @@ class RequestFormBuilder {
 			}
 		}
 
-		$isImages = $this->requestManager->getType() === RequestType::Images;
 		if ( $isImages && $authority->isAllowed( 'handle-import-requests' ) ) {
 			$formDescriptor += $this->getOutputDescriptor();
 		}

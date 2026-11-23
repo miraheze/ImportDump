@@ -20,6 +20,8 @@ CREATE TABLE import_requests (
   request_linked_id BIGINT DEFAULT NULL,
   request_locked SMALLINT DEFAULT 0 NOT NULL,
   request_private SMALLINT DEFAULT 0 NOT NULL,
+  request_overwrite SMALLINT DEFAULT 0 NOT NULL,
+  request_skip_dupes SMALLINT DEFAULT 1 NOT NULL,
   PRIMARY KEY(request_id)
 );
 

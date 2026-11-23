@@ -205,6 +205,13 @@ class SpecialRequestImport extends FormSpecialPage {
 				'help-message' => 'importdump-help-upload-images',
 				'accept' => $this->dumpProcessor->getArchiveMimeTypes(),
 			];
+
+			$formDescriptor['SkipDupes'] = [
+				'type' => 'check',
+				'label-message' => 'importdump-label-skip-dupes',
+				'help-message' => 'importdump-help-skip-dupes',
+				'default' => true,
+			];
 		}
 
 		if ( $this->useChunkedUploads() ) {
@@ -566,6 +573,7 @@ class SpecialRequestImport extends FormSpecialPage {
 				'request_timestamp' => $timestamp,
 				'request_type' => RequestType::Images->value,
 				'request_linked_id' => $linkedID,
+				'request_skip_dupes' => (int)( $data['SkipDupes'] ?? true ),
 			] )
 			->caller( __METHOD__ )
 			->execute();

@@ -116,6 +116,18 @@
 				"comment": "",
 				"type": "mwtinyint",
 				"options": { "notnull": true, "unsigned": true, "default": 0 }
+			},
+			{
+				"name": "request_overwrite",
+				"comment": "",
+				"type": "mwtinyint",
+				"options": { "notnull": true, "unsigned": true, "default": 0 }
+			},
+			{
+				"name": "request_skip_dupes",
+				"comment": "",
+				"type": "mwtinyint",
+				"options": { "notnull": true, "unsigned": true, "default": 1 }
 			}
 		],
 		"indexes": [
