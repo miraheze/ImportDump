@@ -582,7 +582,7 @@ class SpecialRequestImport extends FormSpecialPage {
 
 		$repo = $this->repoGroup->getLocalRepo();
 		try {
-			$file = ( new UploadStash( $repo, $this->getUser() ) )->getFile( $fileKey );
+			$file = new UploadStash( $repo, $this->getUser() )->getFile( $fileKey );
 		} catch ( UploadStashException $e ) {
 			return Status::newFatal( 'uploadstash-exception', get_class( $e ), $e->getMessage() );
 		}

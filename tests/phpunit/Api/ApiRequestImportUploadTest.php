@@ -244,7 +244,7 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 
 		$user = $this->getTestUser()->getUser();
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
-		$file = ( new UploadStash( $repo, $user ) )->getFile( $filekey );
+		$file = new UploadStash( $repo, $user )->getFile( $filekey );
 		$this->assertSame( strlen( $zip ), $file->getSize() );
 	}
 

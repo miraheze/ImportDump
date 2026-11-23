@@ -578,10 +578,9 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		file_put_contents( $path, $content );
 
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
-		return ( new UploadStash( $repo, $user ) )->stashFile( $path, 'file' )->getFileKey();
+		return new UploadStash( $repo, $user )->stashFile( $path, 'file' )->getFileKey();
 	}
 
-	/** @param array<string, string> $keys The hidden fields with the keys of what was uploaded in parts. */
 	private function submitStashKeys( User $user, array $keys ): Status {
 		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
 		$context->setUser( $user );
