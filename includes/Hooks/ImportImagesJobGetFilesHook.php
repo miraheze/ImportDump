@@ -13,13 +13,14 @@ interface ImportImagesJobGetFilesHook {
 	 *
 	 * @param string $directory An empty local directory, which the handler fills with the stored files.
 	 * @param RequestManager $requestManager
-	 * @param list<string> $names The object names of the files that are wanted, as the backend lists them.
-	 * The handler fills the directory with only these. An empty list means all of the files of the request.
+	 * @param int $offset How many of the stored files to leave out first, in the order the storage lists them.
+	 * @param int $limit How many files to fetch from there. 0 means all of the files of the request.
 	 * @return void This hook must not abort, it must return no value.
 	 */
 	public function onImportImagesJobGetFiles(
 		string $directory,
 		RequestManager $requestManager,
-		array $names
+		int $offset,
+		int $limit
 	): void;
 }

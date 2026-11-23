@@ -27,8 +27,6 @@ use RuntimeException;
 use SplFileInfo;
 use Throwable;
 use Wikimedia\Rdbms\IConnectionProvider;
-use function array_slice;
-use function count;
 use function get_class;
 use function intdiv;
 use function is_dir;
@@ -93,19 +91,19 @@ class ImportImagesJob extends Job {
 		$size = 0;
 
 		try {
-			$names = $this->requestManager->getImageObjectNames();
+			// The files are on the wiki that stores the requests, not on this one, so only the stored count is used.
+			$total = $this->requestManager->getFileCount();
 			$size = max( 1, (int)$this->config->get( ConfigNames::ImagesChunkSize ) );
-			$chunk = array_slice( $names, $this->offset, $size );
-			$remaining = $this->offset + $size < count( $names );
+			$chunked = $total !== null && $total > $size;
+			$remaining = $chunked && $this->offset + $size < $total;
 
 			if ( $this->offset === 0 ) {
 				$this->queueNotification( RequestStatus::InProgress, '' );
 				$this->enterStage();
 			}
 
-			// A request that fits in one job is downloaded whole, only larger ones ask for files by name.
-			$wanted = $remaining || $this->offset > 0 ? $chunk : [];
-			$directory = $chunk ? $this->downloadImages( $wanted ) : null;
+			// A request that fits in one job is downloaded whole, only larger ones ask for a part of the files.
+			$directory = $chunked ? $this->downloadImages( $this->offset, $size ) : $this->downloadImages( 0, 0 );
 			if ( !$directory ) {
 				$this->queueNotification(
 					RequestStatus::Failed,
@@ -115,7 +113,7 @@ class ImportImagesJob extends Job {
 				return true;
 			}
 
-			$this->importImages( $directory, count( $names ) );
+			$this->importImages( $directory, $total ?? $this->countFiles( $directory ) );
 		} catch ( Throwable $t ) {
 			MWExceptionHandler::rollbackPrimaryChangesAndLog( $t );
 			$this->queueNotification( RequestStatus::Failed, $this->getLogMessage( $t ) );
@@ -140,17 +138,16 @@ class ImportImagesJob extends Job {
 	}
 
 	/**
-	 * Asks the handlers to fill a local directory with the given stored files. Returns null if nothing came back.
-	 *
-	 * @param list<string> $names
+	 * Asks the handlers to fill a local directory with the stored files, which are the given part of
+	 * them in order, or all of them if the limit is 0. Returns null if nothing came back.
 	 */
-	private function downloadImages( array $names ): ?string {
+	private function downloadImages( int $offset, int $limit ): ?string {
 		$directory = wfTempDir() . '/' . $this->requestManager->getFileName();
 		if ( !is_dir( $directory ) && !wfMkdirParents( $directory, null, __METHOD__ ) ) {
 			throw new RuntimeException( "Could not create $directory" );
 		}
 
-		$this->hookRunner->onImportImagesJobGetFiles( $directory, $this->requestManager, $names );
+		$this->hookRunner->onImportImagesJobGetFiles( $directory, $this->requestManager, $offset, $limit );
 		$this->beat();
 
 		if ( !$this->countFiles( $directory ) ) {

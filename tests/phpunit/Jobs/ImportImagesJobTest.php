@@ -24,9 +24,9 @@ use Wikimedia\ObjectCache\WANObjectCache;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use function array_column;
 use function array_map;
+use function count;
 use function file_put_contents;
 use function is_dir;
-use function str_ends_with;
 
 /**
  * @group ImportDump
@@ -115,6 +115,8 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusGood( $status );
 		$this->assertNotSame( [], $percents );
+
+		$this->getRequestManager( $id )->setFileStats( count( $files ), 7 );
 		return $id;
 	}
 
@@ -159,18 +161,25 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * Makes the files hook record what it was asked for, and stop the import there.
 	 *
-	 * @return stdClass With the directory that was empty and existing, the names and the request ID.
+	 * @return stdClass With whether the directory existed, the offset, the limit and the request ID.
 	 */
 	private function recordHook(): stdClass {
 		$asked = new stdClass();
 		$asked->directory = false;
-		$asked->names = [];
+		$asked->offset = -1;
+		$asked->limit = -1;
 		$asked->request = 0;
 
 		$this->setTemporaryHook( 'ImportImagesJobGetFiles',
-			static function ( string $directory, RequestManager $manager, array $names ) use ( $asked ): never {
+			static function (
+				string $directory,
+				RequestManager $manager,
+				int $offset,
+				int $limit
+			) use ( $asked ): never {
 				$asked->directory = is_dir( $directory );
-				$asked->names = $names;
+				$asked->offset = $offset;
+				$asked->limit = $limit;
 				$asked->request = $manager->getID();
 				throw new RuntimeException( 'Stopped' );
 			}
@@ -219,7 +228,8 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 		$this->assertTrue( $this->newJob( $id, offset: 0 )->run() );
 
 		$this->assertTrue( $asked->directory );
-		$this->assertSame( [], $asked->names );
+		$this->assertSame( 0, $asked->offset );
+		$this->assertSame( 0, $asked->limit );
 		$this->assertSame( $id, $asked->request );
 	}
 
@@ -232,15 +242,15 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 		$this->assertTrue( $this->newJob( $id, offset: 0 )->run() );
 
 		$this->assertTrue( $asked->directory );
-		$this->assertCount( 1, $asked->names );
-		$this->assertTrue( str_ends_with( $asked->names[0], '/a.png' ) );
+		$this->assertSame( 0, $asked->offset );
+		$this->assertSame( 1, $asked->limit );
 		$notifications = $this->popNotifications();
 		$this->assertSame( [ RequestStatus::InProgress, RequestStatus::Failed ], $this->getStatuses( $notifications ) );
 
 		$this->assertTrue( $this->newJob( $id, offset: 1 )->run() );
 
-		$this->assertCount( 1, $asked->names );
-		$this->assertTrue( str_ends_with( $asked->names[0], '/b.png' ) );
+		$this->assertSame( 1, $asked->offset );
+		$this->assertSame( 1, $asked->limit );
 		$this->assertSame( [ RequestStatus::Failed ], $this->getStatuses( $this->popNotifications() ) );
 	}
 }

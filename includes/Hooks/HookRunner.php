@@ -77,11 +77,12 @@ class HookRunner implements
 	public function onImportImagesJobGetFiles(
 		string $directory,
 		RequestManager $requestManager,
-		array $names
+		int $offset,
+		int $limit
 	): void {
 		$this->container->run(
 			'ImportImagesJobGetFiles',
-			[ $directory, $requestManager, $names ],
+			[ $directory, $requestManager, $offset, $limit ],
 			[ 'abortable' => false ]
 		);
 	}
