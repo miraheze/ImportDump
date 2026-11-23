@@ -330,7 +330,7 @@ class ImageProcessor {
 	 *
 	 * @param string $name The name of the file.
 	 * @param string $path Where the file was extracted to.
-	 * @param array<string, true> $taken The title keys of the names that are in use, which this adds to.
+	 * @param array<string, true> &$taken The title keys of the names that are in use, which this adds to.
 	 * @return ?string
 	 */
 	private function findName( string $name, string $path, array &$taken ): ?string {
