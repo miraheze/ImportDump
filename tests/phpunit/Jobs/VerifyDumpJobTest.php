@@ -8,8 +8,6 @@ use Generator;
 use MediaWiki\FileRepo\LocalRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\MainConfigNames;
-use MediaWiki\User\ActorStoreFactory;
-use MediaWiki\User\UserIdentityLookup;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
@@ -94,10 +92,15 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 
 	/** Makes a request that waits for verification, with the given upload stored for it. */
 	private function newRequest( RequestStatus $status, string $upload ): RequestManager {
-		return $this->newTypedRequest( $status, $upload, RequestType::Xml );
+		return $this->newTypedRequest( $status, $upload, RequestType::Xml, 'requestimporttest' );
 	}
 
-	private function newTypedRequest( RequestStatus $status, string $upload, RequestType $type ): RequestManager {
+	private function newTypedRequest(
+		RequestStatus $status,
+		string $upload,
+		RequestType $type,
+		string $target
+	): RequestManager {
 		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
 
 		$dbw = $this->getDb();
@@ -105,7 +108,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 			->insertInto( 'import_requests' )
 			->row( [
 				'request_source' => 'https://requestimporttest.com',
-				'request_target' => 'requestimporttest',
+				'request_target' => $target,
 				'request_reason' => 'test',
 				'request_status' => $status->value,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
@@ -259,7 +262,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 		$manager = $this->newTypedRequest( RequestStatus::Verifying, ZipFixture::build( [
 			'a.png' => self::png(),
 			'folder/b.png' => self::png(),
-		] ), RequestType::Images );
+		] ), RequestType::Images, 'requestimporttest' );
 
 		$this->runJob( $manager );
 
@@ -273,14 +276,8 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testImagesAreCheckedAgainstTheExtensionsOfTheTarget(): void {
-		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [ 'requestimporttest' ] );
-
-		// The requester has no account on the target wiki, which does not exist in the tests.
-		$lookup = $this->createMock( UserIdentityLookup::class );
-		$lookup->method( 'getUserIdentityByName' )->willReturn( null );
-		$actorStoreFactory = $this->createMock( ActorStoreFactory::class );
-		$actorStoreFactory->method( 'getUserIdentityLookup' )->willReturn( $lookup );
-		$this->setService( 'ActorStoreFactory', $actorStoreFactory );
+		$target = WikiMap::getCurrentWikiId();
+		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [ $target ] );
 
 		$received = null;
 		$this->setTemporaryHook( 'ImportDumpGetTargetState',
@@ -299,16 +296,21 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 
 		$manager = $this->newTypedRequest( RequestStatus::Verifying, ZipFixture::build( [
 			'a.png' => self::png(),
-		] ), RequestType::Images );
+		] ), RequestType::Images, $target );
 
 		$this->runJob( $manager );
 
-		$this->assertSame( 'requestimporttest', $received );
+		$this->assertSame( $target, $received );
 		$this->assertSame( RequestStatus::Declined, $this->getManager( $manager->getID() )->getStatus() );
 	}
 
 	public function testRejectedImages(): void {
-		$manager = $this->newTypedRequest( RequestStatus::Verifying, 'not an archive', RequestType::Images );
+		$manager = $this->newTypedRequest(
+			RequestStatus::Verifying,
+			'not an archive',
+			RequestType::Images,
+			'requestimporttest'
+		);
 		$this->runJob( $manager );
 
 		$manager = $this->getManager( $manager->getID() );
@@ -318,7 +320,12 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testMissingImagesFile(): void {
-		$manager = $this->newTypedRequest( RequestStatus::Verifying, 'content', RequestType::Images );
+		$manager = $this->newTypedRequest(
+			RequestStatus::Verifying,
+			'content',
+			RequestType::Images,
+			'requestimporttest'
+		);
 		$manager->deleteUnverifiedFile();
 
 		$this->runJob( $manager );
