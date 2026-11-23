@@ -37,6 +37,8 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 
 	private const int DEFAULT_SKIPPED = 50;
 
+	private const string GIF = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
 	private const string PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4' .
 		'2mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
@@ -49,7 +51,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 				ConfigNames::MaxArchiveEntries => 100,
 				ConfigNames::MaxExtractedSize => $maxSize,
 				ConfigNames::MaxSkippedImages => $maxSkipped,
-				MainConfigNames::FileExtensions => [ 'png', 'jpg' ],
+				MainConfigNames::FileExtensions => [ 'png', 'jpg', 'gif' ],
 				MainConfigNames::ProhibitedFileExtensions => [ 'jpg' ],
 			] ),
 			new TempFSFileFactory( $this->getNewTempDirectory() ),
@@ -64,6 +66,10 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 
 	private function processWithLimit( string $path, int $maxSkipped ): Status {
 		return $this->newProcessor( self::DEFAULT_SIZE, $maxSkipped )->process( $path, null );
+	}
+
+	private static function gif(): string {
+		return (string)base64_decode( self::GIF );
 	}
 
 	private static function png(): string {
@@ -230,6 +236,43 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 				'noextension' => 'importdump-images-skip-extension',
 				'File:colon.png' => 'importdump-images-skip-name',
 			],
+			array_column( array_map(
+				static fn ( SkippedFile $file ): array => [ $file->name, $file->reason ],
+				$result->skipped
+			), 1, 0 )
+		);
+	}
+
+	public function testNamesFilesWithoutAnExtensionAndKeepsOtherNames(): void {
+		$status = $this->process( $this->newZip( [
+			'Site-background' => self::png(),
+			'Disguised.png' => self::gif(),
+			'plain.png' => self::png(),
+		] ), maxSize: self::DEFAULT_SIZE );
+
+		$this->assertStatusGood( $status );
+		$result = $status->getValue();
+		'@phan-var ImageResult $result';
+
+		$this->assertSame( [ 'Site-background.png', 'Disguised.png', 'plain.png' ], array_keys( $result->files ) );
+		$this->assertSame( [], $result->skipped );
+		$this->assertSame( [ 'Site-background' => 'Site-background.png' ], $result->renamed );
+	}
+
+	public function testSkipsAnUnnamedFileWhoseNewNameIsTaken(): void {
+		$status = $this->process( $this->newZip( [
+			'logo' => self::png(),
+			'logo.png' => self::png(),
+		] ), maxSize: self::DEFAULT_SIZE );
+
+		$this->assertStatusGood( $status );
+		$result = $status->getValue();
+		'@phan-var ImageResult $result';
+
+		$this->assertSame( [ 'logo.png' ], array_keys( $result->files ) );
+		$this->assertSame( [], $result->renamed );
+		$this->assertSame(
+			[ 'logo' => 'importdump-images-skip-extension' ],
 			array_column( array_map(
 				static fn ( SkippedFile $file ): array => [ $file->name, $file->reason ],
 				$result->skipped
