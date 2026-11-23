@@ -12,10 +12,9 @@
 
 	// The stored parts, by number, with an empty block of the right height until they are loaded.
 	const parts = {};
-	const $live = $( '<pre>' ).addClass( 'ext-importdump-output-live' );
+	const $live = $( '<span>' ).addClass( 'ext-importdump-output-live' );
 	$output.append( $live );
 
-	let lineHeight = 0;
 	let started = false;
 	let liveText = null;
 
@@ -26,14 +25,6 @@
 			}
 		} );
 	}, { root: container, rootMargin: '2000px 0px' } );
-
-	function getLineHeight() {
-		if ( !lineHeight ) {
-			lineHeight = parseFloat( getComputedStyle( $live[ 0 ] ).lineHeight ) || 18;
-		}
-
-		return lineHeight;
-	}
 
 	function load( $block ) {
 		if ( $block.data( 'loaded' ) || $block.data( 'loading' ) ) {
@@ -59,10 +50,11 @@
 			return;
 		}
 
-		const $block = $( '<pre>' )
+		// The height is in lines of the text, so it is right whatever the font is.
+		const $block = $( '<span>' )
 			.addClass( 'ext-importdump-output-part' )
 			.data( 'part', info.part )
-			.css( 'height', info.lines * getLineHeight() + 'px' );
+			.css( 'height', info.lines + 'lh' );
 
 		const later = Object.keys( parts ).map( Number )
 			.filter( ( number ) => number > info.part )

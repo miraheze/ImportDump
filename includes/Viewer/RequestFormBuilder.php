@@ -355,12 +355,11 @@ class RequestFormBuilder {
 		return [
 			'output' => [
 				'type' => 'info',
-				'default' => Html::element( 'div', [
+				'default' => Html::element( 'pre', [
 					'class' => 'ext-importdump-output',
 					'data-request-id' => $this->requestManager->getID(),
 				] ),
 				'raw' => true,
-				'cssclass' => 'ext-importdump-output-field',
 				'section' => 'output',
 			],
 		];
