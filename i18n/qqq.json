@@ -67,7 +67,7 @@
 	"importdump-help-upload-file-types": "Help for the 'Upload File' field, shown after {{msg-mw|importdump-help-upload-file}}. The archive types depend on what the wiki has set up.\n\nParameters:\n* $1 - A list of the archive types that can be uploaded, such as \"ZIP, TAR, GZIP and BZIP2\".\n* $2 - A list of file extensions that a compressed TAR file can have, such as \".tar.gz, .tgz and .tar.bz2\".",
 	"importdump-help-upload-file-url": "Help for the 'Source URL' field.",
 	"importdump-help-upload-images": "Help for the 'Upload images' field on the form of Special:RequestImport.",
-	"importdump-images-comment": "Upload comment given to each file that is imported from an archive of images. It is used as wikitext.\n\nParameters:\n* $1 - The URL of the source wiki.\n* $2 - The URL of the request on the wiki that has the requests.\n* $3 - The number of the request.\n* $4 - The name of the page of the request, in the language of the wiki, for use in a link such as an interwiki link.",
+	"importdump-images-comment": "Upload comment given to each file that is imported from an archive of images. It is used as wikitext.\n\nParameters:\n* $1 - The URL of the source wiki.\n* $2 - The URL of the request on the wiki that has the requests.\n* $3 - The number of the request.",
 	"importdump-images-comment-plain": "Upload comment given to each file that is imported from an archive of images, when the URL of the request is not known.\n\nParameters:\n* $1 - The URL of the source wiki.\n* $2 - The number of the request.",
 	"importdump-images-empty": "Error shown when an uploaded archive of images has no files in it.",
 	"importdump-images-failed-comment": "Comment given on request when an import of images receives an error.",
