@@ -21,6 +21,7 @@ use function array_map;
 use function base64_decode;
 use function file_get_contents;
 use function str_repeat;
+use function strlen;
 
 /**
  * @group ImportDump
@@ -82,6 +83,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertSame( [ 'a.png', 'B.PNG' ], array_keys( $result->files ) );
 		$this->assertSame( 2, $result->count() );
+		$this->assertSame( 2 * strlen( self::png() ), $result->size );
 		$this->assertSame( self::png(), file_get_contents( $result->files['a.png'] ) );
 	}
 

@@ -115,6 +115,7 @@ class ImageProcessor {
 		$total = count( $entries );
 		$position = 0;
 		$extracted = 0;
+		$size = 0;
 
 		foreach ( $entries as $name => $entry ) {
 			if ( $onProgress ) {
@@ -158,6 +159,7 @@ class ImageProcessor {
 
 			$files[$name] = $tempFile->getPath();
 			$tempFiles[] = $tempFile;
+			$size += (int)filesize( $tempFile->getPath() );
 		}
 
 		$maxSkipped = (int)$this->options->get( ConfigNames::MaxSkippedImages );
@@ -165,7 +167,7 @@ class ImageProcessor {
 			return $this->tooManySkipped( $skipped, $considered );
 		}
 
-		return Status::newGood( new ImageResult( $files, $tempFiles, $skipped ) );
+		return Status::newGood( new ImageResult( $files, $tempFiles, $skipped, $size ) );
 	}
 
 	/**

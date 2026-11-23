@@ -4,6 +4,8 @@ declare( strict_types = 1 );
 
 namespace Miraheze\ImportDump\Request;
 
+use Closure;
+use Generator;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\FileRepo\FileRepo;
 use MediaWiki\FileRepo\RepoGroup;
@@ -48,6 +50,7 @@ use Wikimedia\Rdbms\Platform\ISQLPlatform;
 use Wikimedia\Rdbms\SelectQueryBuilder;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use Wikimedia\Timestamp\TimestampFormat;
+use function array_chunk;
 use function array_column;
 use function array_diff;
 use function array_filter;
@@ -61,6 +64,7 @@ use function boolval;
 use function count;
 use function explode;
 use function in_array;
+use function intdiv;
 use function intval;
 use function is_array;
 use function json_decode;
@@ -70,6 +74,7 @@ use function parse_url;
 use function preg_replace;
 use function preg_replace_callback;
 use function rawurlencode;
+use function sort;
 use function str_contains;
 use function str_replace;
 use function trim;
@@ -90,6 +95,9 @@ class RequestManager {
 
 	/** The most skipped files that are kept for a request. */
 	private const int MAX_STORED_SKIPPED = 500;
+
+	/** How many files are sent to the file backend together. */
+	private const int FILE_BATCH_SIZE = 100;
 
 	private const array SYSTEM_USERS = [
 		self::EXTENSION_USER,
@@ -564,25 +572,35 @@ class RequestManager {
 
 	/**
 	 * Stores the files that were extracted from the unverified archive in the images directory of
-	 * this request, and removes the archive.
+	 * this request, and removes the archive. They are stored in batches, which the backend sends together.
 	 *
 	 * @param array<string, string> $files The name that each file gets, and the path that it is read from.
+	 * @param Closure( int ): void $onProgress Called with the percentage that is stored.
 	 */
-	public function publishExtractedImages( array $files ): Status {
+	public function publishExtractedImages( array $files, Closure $onProgress ): Status {
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
 		$directory = $this->getFilePath();
 
 		$status = Status::wrap( $backend->prepare( [ 'dir' => $directory ] ) );
-		foreach ( $files as $name => $source ) {
+		if ( !$status->isOK() ) {
+			return $status;
+		}
+
+		$total = count( $files );
+		$done = 0;
+		foreach ( array_chunk( $files, self::FILE_BATCH_SIZE, true ) as $batch ) {
+			$operations = [];
+			foreach ( $batch as $name => $source ) {
+				$operations[] = [ 'op' => 'store', 'src' => $source, 'dst' => "$directory/$name" ];
+			}
+
+			$status->merge( Status::wrap( $backend->doQuickOperations( $operations ) ) );
 			if ( !$status->isOK() ) {
 				return $status;
 			}
 
-			$status->merge( Status::wrap( $backend->quickStore( [ 'src' => $source, 'dst' => "$directory/$name" ] ) ) );
-		}
-
-		if ( !$status->isOK() ) {
-			return $status;
+			$done += count( $batch );
+			$onProgress( intdiv( $done * 100, $total ) );
 		}
 
 		$this->deleteUnverifiedFile();
@@ -636,42 +654,53 @@ class RequestManager {
 
 	public function fileExists(): bool {
 		if ( $this->getType() === RequestType::Images ) {
-			return $this->listImageFiles() !== [];
+			// One entry of the listing is enough, so a large import is not listed in full.
+			return $this->getImageFiles()->valid();
 		}
 
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
 		return $backend->fileExists( [ 'src' => $this->getFilePath() ] ) === true;
 	}
 
-	/** @return list<string> The paths of the stored image files, or nothing for any other request. */
-	private function listImageFiles(): array {
+	/** @return Generator<string> The paths of the stored image files, or nothing for any other request. */
+	private function getImageFiles(): Generator {
 		if ( $this->getType() !== RequestType::Images ) {
-			return [];
+			return;
 		}
 
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
-		$files = $backend->getFileList( [ 'dir' => $this->getFilePath() ] );
+		$directory = $this->getFilePath();
+		$files = $backend->getFileList( [ 'dir' => $directory ] );
 		if ( $files === null ) {
-			return [];
+			return;
 		}
 
-		$paths = [];
 		foreach ( $files as $file ) {
-			$paths[] = $this->getFilePath() . '/' . $file;
+			yield "$directory/$file";
+		}
+	}
+
+	/** @return list<string> The names of the stored image files in the container, in order. */
+	public function getImageObjectNames(): array {
+		$names = [];
+		foreach ( $this->getImageFiles() as $path ) {
+			$names[] = FileBackend::splitStoragePath( $path )[2];
 		}
 
-		return $paths;
+		sort( $names );
+		return $names;
 	}
 
 	public function deleteFile(): bool {
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
 
 		$paths = [ $this->getFilePath(), $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
+		$success = true;
 		if ( $this->getType() === RequestType::Images ) {
-			$paths = [ ...$this->listImageFiles(), $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
+			$success = $this->deleteImageFiles( $backend );
+			$paths = [ $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
 		}
 
-		$success = true;
 		foreach ( $paths as $path ) {
 			$status = $backend->quickDelete( [
 				'src' => $path,
@@ -681,10 +710,26 @@ class RequestManager {
 			$success = $status->isOK() && $success;
 		}
 
-		if ( $this->getType() === RequestType::Images ) {
-			$backend->clean( [ 'dir' => $this->getFilePath() ] );
+		return $success;
+	}
+
+	/** Deletes the stored image files in batches, which the backend sends together. */
+	private function deleteImageFiles( FileBackend $backend ): bool {
+		$success = true;
+		$operations = [];
+		foreach ( $this->getImageFiles() as $path ) {
+			$operations[] = [ 'op' => 'delete', 'src' => $path, 'ignoreMissingSource' => true ];
+			if ( count( $operations ) >= self::FILE_BATCH_SIZE ) {
+				$success = $backend->doQuickOperations( $operations )->isOK() && $success;
+				$operations = [];
+			}
 		}
 
+		if ( $operations ) {
+			$success = $backend->doQuickOperations( $operations )->isOK() && $success;
+		}
+
+		$backend->clean( [ 'dir' => $this->getFilePath() ] );
 		return $success;
 	}
 
@@ -718,8 +763,14 @@ class RequestManager {
 
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
 		if ( $this->getType() === RequestType::Images ) {
+			$stored = $this->row->request_file_size ?? null;
+			if ( $stored !== null ) {
+				return (int)$stored;
+			}
+
+			// Requests from before the size was kept.
 			$size = 0;
-			foreach ( $this->listImageFiles() as $path ) {
+			foreach ( $this->getImageFiles() as $path ) {
 				$size += (int)$backend->getFileSize( [ 'src' => $path ] );
 			}
 
@@ -727,6 +778,25 @@ class RequestManager {
 		}
 
 		return (int)$backend->getFileSize( [ 'src' => $this->getFilePath() ] );
+	}
+
+	/** @return ?int How many image files were stored, or null if it was not recorded. */
+	public function getFileCount(): ?int {
+		$count = $this->row->request_file_count ?? null;
+		return $count === null ? null : (int)$count;
+	}
+
+	/** Keeps how many image files were stored and their total size, so the page does not have to ask the backend. */
+	public function setFileStats( int $count, int $size ): void {
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_file_count' => $count, 'request_file_size' => $size ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->row->request_file_count = $count;
+		$this->row->request_file_size = $size;
 	}
 
 	public function getReason(): string {

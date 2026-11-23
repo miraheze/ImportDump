@@ -211,6 +211,7 @@
 	"importdump-verification-rejected": "The file was rejected.",
 	"importdump-verification-reload": "Reload this page",
 	"importdump-verification-retried": "The check of the uploaded file was queued again.",
+	"importdump-verification-storing": "Storing the extracted files",
 	"importdump-verification-waiting": "Waiting for the check to start",
 	"importdump-verify-missing": "The uploaded file could not be found.",
 	"importdump-verifying-conflict": "The uploaded file is still being checked. Wait for the check to finish, or decline the request.",

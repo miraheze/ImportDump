@@ -27,6 +27,8 @@ use RuntimeException;
 use SplFileInfo;
 use Throwable;
 use Wikimedia\Rdbms\IConnectionProvider;
+use function array_slice;
+use function count;
 use function get_class;
 use function intdiv;
 use function is_dir;
@@ -44,8 +46,9 @@ use function wfMkdirParents;
 use function wfTempDir;
 
 /**
- * Imports the files of an images request with the importImages maintenance script.
- * Files that are already on the wiki are skipped, so it is safe to run this again after a failure.
+ * Imports the files of an images request with the importImages maintenance script, a chunk of them
+ * per job. When files are left, the job queues another one for them. Files that are already on the wiki
+ * are skipped, so it is safe to run this again after a failure.
  */
 class ImportImagesJob extends Job {
 
@@ -54,6 +57,7 @@ class ImportImagesJob extends Job {
 	private readonly MessageLocalizer $messageLocalizer;
 
 	private readonly int $requestID;
+	private readonly int $offset;
 	private readonly string $username;
 
 	public function __construct(
@@ -69,6 +73,7 @@ class ImportImagesJob extends Job {
 
 		$this->requestID = $params['requestid'];
 		$this->username = $params['username'];
+		$this->offset = (int)( $params['offset'] ?? 0 );
 
 		$this->messageLocalizer = RequestContext::getMain();
 		$this->executionFlags |= self::JOB_NO_EXPLICIT_TRX_ROUND;
@@ -83,10 +88,24 @@ class ImportImagesJob extends Job {
 
 		$this->beat();
 
+		$directory = null;
+		$remaining = false;
+		$size = 0;
+
 		try {
-			$this->queueNotification( RequestStatus::InProgress, '' );
-			$this->enterStage();
-			$directory = $this->downloadImages();
+			$names = $this->requestManager->getImageObjectNames();
+			$size = max( 1, (int)$this->config->get( ConfigNames::ImagesChunkSize ) );
+			$chunk = array_slice( $names, $this->offset, $size );
+			$remaining = $this->offset + $size < count( $names );
+
+			if ( $this->offset === 0 ) {
+				$this->queueNotification( RequestStatus::InProgress, '' );
+				$this->enterStage();
+			}
+
+			// A request that fits in one job is downloaded whole, only larger ones ask for files by name.
+			$wanted = $remaining || $this->offset > 0 ? $chunk : [];
+			$directory = $chunk ? $this->downloadImages( $wanted ) : null;
 			if ( !$directory ) {
 				$this->queueNotification(
 					RequestStatus::Failed,
@@ -96,31 +115,42 @@ class ImportImagesJob extends Job {
 				return true;
 			}
 
-			$this->importImages( $directory );
+			$this->importImages( $directory, count( $names ) );
 		} catch ( Throwable $t ) {
 			MWExceptionHandler::rollbackPrimaryChangesAndLog( $t );
 			$this->queueNotification( RequestStatus::Failed, $this->getLogMessage( $t ) );
 			return true;
 		} finally {
-			if ( isset( $directory ) ) {
+			if ( $directory !== null ) {
 				$this->removeDirectory( $directory );
 			}
 
-			$this->heartbeat->clear( $this->requestID );
+			if ( !$remaining ) {
+				$this->heartbeat->clear( $this->requestID );
+			}
+		}
+
+		if ( $remaining ) {
+			$this->queueNext( $this->offset + $size );
+			return true;
 		}
 
 		$this->queueNotification( RequestStatus::Complete, '' );
 		return true;
 	}
 
-	/** Asks the handlers to fill a local directory with the stored files. Returns null if nothing came back. */
-	private function downloadImages(): ?string {
+	/**
+	 * Asks the handlers to fill a local directory with the given stored files. Returns null if nothing came back.
+	 *
+	 * @param list<string> $names
+	 */
+	private function downloadImages( array $names ): ?string {
 		$directory = wfTempDir() . '/' . $this->requestManager->getFileName();
 		if ( !is_dir( $directory ) && !wfMkdirParents( $directory, null, __METHOD__ ) ) {
 			throw new RuntimeException( "Could not create $directory" );
 		}
 
-		$this->hookRunner->onImportDumpJobGetFile( $directory, $this->requestManager );
+		$this->hookRunner->onImportDumpJobGetImages( $directory, $this->requestManager, $names );
 		$this->beat();
 
 		if ( !$this->countFiles( $directory ) ) {
@@ -175,13 +205,12 @@ class ImportImagesJob extends Job {
 		rmdir( $directory );
 	}
 
-	private function importImages( string $directory ): void {
-		$total = $this->countFiles( $directory );
-		$done = 0;
+	private function importImages( string $directory, int $total ): void {
+		$done = $this->offset;
 		$lastUpdate = 0;
 		$log = '';
 
-		$this->requestManager->setImportPercent( 0, done: 0, total: $total );
+		$this->reportProgress( $done, $total );
 
 		// The script prints a line for each file it handles, which is how the progress is followed.
 		$follow = function ( string $output ) use ( $total, &$done, &$lastUpdate, &$log ): string {
@@ -191,8 +220,7 @@ class ImportImagesJob extends Job {
 			$now = time();
 			if ( $now !== $lastUpdate ) {
 				$lastUpdate = $now;
-				$percent = intdiv( $done * 100, max( 1, $total ) );
-				$this->requestManager->setImportPercent( $percent, done: $done, total: $total );
+				$this->reportProgress( $done, $total );
 				$this->beat();
 			}
 
@@ -217,13 +245,32 @@ class ImportImagesJob extends Job {
 			ob_end_clean();
 		}
 
-		$this->requestManager->setImportPercent( 100, done: $total, total: $total );
+		$done = min( $total, $this->offset + $this->countFiles( $directory ) );
+		$this->reportProgress( $done, $total );
 		$this->beat();
 
 		// The script returns false when a file failed or when it found nothing to import.
 		if ( $success === false ) {
 			throw new RuntimeException( 'importImages failed: ' . mb_substr( trim( $log ), -1000 ) );
 		}
+	}
+
+	private function reportProgress( int $done, int $total ): void {
+		$percent = intdiv( $done * 100, max( 1, $total ) );
+		$this->requestManager->setImportPercent( $percent, done: $done, total: $total );
+	}
+
+	private function queueNext( int $offset ): void {
+		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->requestManager->getTarget() )->push(
+			new JobSpecification(
+				self::JOB_NAME,
+				[
+					'offset' => $offset,
+					'requestid' => $this->requestID,
+					'username' => $this->username,
+				]
+			)
+		);
 	}
 
 	private function enterStage(): void {

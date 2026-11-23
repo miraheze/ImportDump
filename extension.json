@@ -331,6 +331,10 @@
 			"value": "",
 			"description": "Full URL. If set, adds a help URL to Special:RequestImport."
 		},
+		"RequestImportImagesChunkSize": {
+			"value": 500,
+			"description": "How many image files each job of an import of images imports. When there are more, the job queues another one for the rest, so that a large import is not one job that runs for hours. Files that are already on the wiki are skipped, so a failed import can be started again."
+		},
 		"RequestImportImagesCommand": {
 			"value": "php {IP}/maintenance/importImages.php --wiki={wiki} --skip-dupes --comment={comment} {file-path}",
 			"description": "Generated maintenance script command to use for a request of image files. If $wgRequestImportEnableAutomatedJob is enabled, this is not displayed unless the status is 'failed'."
@@ -344,7 +348,7 @@
 			"description": "Generated command to use for each of the maintenance scripts that still need to be run when an import stopped after its pages were already imported. {script} is the script file name, such as refreshLinks.php, {script-name} is the same without .php, and {arguments} is any arguments the script needs."
 		},
 		"RequestImportMaxArchiveEntries": {
-			"value": 1000,
+			"value": 50000,
 			"description": "Most entries, including directories, that an uploaded archive may have."
 		},
 		"RequestImportMaxExtractedSize": {

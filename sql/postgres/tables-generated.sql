@@ -14,6 +14,8 @@ CREATE TABLE import_requests (
   request_history TEXT DEFAULT NULL,
   request_requirements TEXT DEFAULT NULL,
   request_skipped TEXT DEFAULT NULL,
+  request_file_count INT DEFAULT NULL,
+  request_file_size BIGINT DEFAULT NULL,
   request_type TEXT DEFAULT 'xml' NOT NULL,
   request_linked_id BIGINT DEFAULT NULL,
   request_locked SMALLINT DEFAULT 0 NOT NULL,

@@ -18,6 +18,8 @@ CREATE TABLE /*_*/import_requests (
   request_history ENUM('full', 'partial', 'unknown') DEFAULT NULL,
   request_requirements BLOB DEFAULT NULL,
   request_skipped MEDIUMBLOB DEFAULT NULL,
+  request_file_count INT UNSIGNED DEFAULT NULL,
+  request_file_size BIGINT UNSIGNED DEFAULT NULL,
   request_type ENUM('images', 'xml') DEFAULT 'xml' NOT NULL,
   request_linked_id BIGINT UNSIGNED DEFAULT NULL,
   request_locked TINYINT UNSIGNED DEFAULT 0 NOT NULL,

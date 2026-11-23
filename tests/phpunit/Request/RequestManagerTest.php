@@ -522,23 +522,45 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::publishExtractedImages
 	 * @covers ::fileExists
 	 * @covers ::getFileSize
+	 * @covers ::getFileCount
+	 * @covers ::setFileStats
+	 * @covers ::getImageObjectNames
 	 * @covers ::deleteFile
 	 */
 	public function testImagesAreStoredAndDeleted(): void {
 		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
 		$this->assertFalse( $images->fileExists() );
+		$this->assertNull( $images->getFileCount() );
 
 		$first = $this->getNewTempFile();
 		$second = $this->getNewTempFile();
 		file_put_contents( $first, 'abc' );
 		file_put_contents( $second, 'de' );
 
-		$this->assertStatusGood( $images->publishExtractedImages( [ 'a.png' => $first, 'b.png' => $second ] ) );
+		$percents = [];
+		$this->assertStatusGood( $images->publishExtractedImages(
+			[ 'b.png' => $second, 'a.png' => $first ],
+			static function ( int $percent ) use ( &$percents ): void {
+				$percents[] = $percent;
+			}
+		) );
+
+		$this->assertSame( [ 100 ], $percents );
 		$this->assertTrue( $images->fileExists() );
 		$this->assertSame( 5, $images->getFileSize() );
 
+		$names = $images->getImageObjectNames();
+		$this->assertCount( 2, $names );
+		$this->assertStringEndsWith( '/a.png', $names[0] );
+		$this->assertStringEndsWith( '/b.png', $names[1] );
+
+		$images->setFileStats( 2, 7 );
+		$this->assertSame( 2, $images->getFileCount() );
+		$this->assertSame( 7, $images->getFileSize() );
+
 		$this->assertTrue( $images->deleteFile() );
 		$this->assertFalse( $images->fileExists() );
+		$this->assertSame( [], $images->getImageObjectNames() );
 	}
 
 	/**

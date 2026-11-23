@@ -12,6 +12,7 @@ class HookRunner implements
 	ImportDumpJobAfterImportHook,
 	ImportDumpGetTargetStateHook,
 	ImportDumpJobGetFileHook,
+	ImportDumpJobGetImagesHook,
 	ImportDumpRequestStatusUpdateHook
 {
 
@@ -55,6 +56,19 @@ class HookRunner implements
 		$this->container->run(
 			'ImportDumpJobGetFile',
 			[ &$filePath, $requestManager ],
+			[ 'abortable' => false ]
+		);
+	}
+
+	/** @inheritDoc */
+	public function onImportDumpJobGetImages(
+		string $directory,
+		RequestManager $requestManager,
+		array $names
+	): void {
+		$this->container->run(
+			'ImportDumpJobGetImages',
+			[ $directory, $requestManager, $names ],
 			[ 'abortable' => false ]
 		);
 	}

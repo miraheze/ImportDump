@@ -14,6 +14,8 @@ CREATE TABLE /*_*/import_requests (
   request_history TEXT DEFAULT NULL,
   request_requirements BLOB DEFAULT NULL,
   request_skipped BLOB DEFAULT NULL,
+  request_file_count INTEGER UNSIGNED DEFAULT NULL,
+  request_file_size BIGINT UNSIGNED DEFAULT NULL,
   request_type TEXT DEFAULT 'xml' NOT NULL,
   request_linked_id BIGINT UNSIGNED DEFAULT NULL,
   request_locked SMALLINT UNSIGNED DEFAULT 0 NOT NULL,

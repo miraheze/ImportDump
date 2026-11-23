@@ -19,6 +19,7 @@ use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\DumpResult;
 use Miraheze\ImportDump\Upload\ImageProcessor;
 use Miraheze\ImportDump\Upload\ImageResult;
+use function count;
 
 /**
  * Checks an upload that was too big, or too risky, to check while the request was submitted.
@@ -27,6 +28,8 @@ use Miraheze\ImportDump\Upload\ImageResult;
 class VerifyDumpJob extends Job {
 
 	public const string JOB_NAME = 'ImportDumpVerifyDump';
+
+	public const string STAGE_STORING = 'storing';
 
 	private readonly MessageLocalizer $messageLocalizer;
 
@@ -110,11 +113,16 @@ class VerifyDumpJob extends Job {
 
 		$result = $status->getValue();
 		'@phan-var ImageResult $result';
-		$published = $this->requestManager->publishExtractedImages( $result->files );
+		$published = $this->requestManager->publishExtractedImages(
+			$result->files,
+			fn ( int $percent ) => $this->progress->set( $requestID, self::STAGE_STORING, $percent )
+		);
 		if ( !$published->isOK() ) {
 			$this->reject( $published );
 			return;
 		}
+
+		$this->requestManager->setFileStats( count( $result->files ), $result->size );
 
 		// The files that are left out are shown on the request, which the notification points to.
 		$this->requestManager->setSkippedImages( $result->skipped );

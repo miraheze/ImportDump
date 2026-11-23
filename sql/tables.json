@@ -78,6 +78,18 @@
 				"options": { "notnull": false, "length": 16777215 }
 			},
 			{
+				"name": "request_file_count",
+				"comment": "How many image files were stored for an images request, or NULL if it was not recorded",
+				"type": "integer",
+				"options": { "notnull": false, "unsigned": true }
+			},
+			{
+				"name": "request_file_size",
+				"comment": "The total size in bytes of the image files that were stored, or NULL if it was not recorded",
+				"type": "bigint",
+				"options": { "notnull": false, "unsigned": true }
+			},
+			{
 				"name": "request_type",
 				"comment": "What is imported, pages from an XML dump or image files",
 				"type": "mwenum",

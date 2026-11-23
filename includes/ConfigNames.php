@@ -31,6 +31,8 @@ class ConfigNames {
 
 	public const string HelpUrl = 'RequestImportHelpUrl';
 
+	public const string ImagesChunkSize = 'RequestImportImagesChunkSize';
+
 	public const string ImagesCommand = 'RequestImportImagesCommand';
 
 	public const string InterwikiMap = 'RequestImportInterwikiMap';
