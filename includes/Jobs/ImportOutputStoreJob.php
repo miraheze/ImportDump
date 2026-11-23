@@ -8,8 +8,9 @@ use MediaWiki\JobQueue\Job;
 use Miraheze\ImportDump\Request\RequestManager;
 
 /**
- * Stores a part of what the script of an import printed, or with the reset param, removes all the parts. It runs on the wiki that stores the requests,
- * because the import itself runs on the wiki that is imported to, which has other storage.
+ * Stores a part of what the script of an import printed, or with the reset param, removes all the parts.
+ * It runs on the wiki that stores the requests, because the import itself runs on the wiki that is
+ * imported to, which has other storage.
  */
 class ImportOutputStoreJob extends Job {
 
