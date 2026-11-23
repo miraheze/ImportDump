@@ -359,6 +359,13 @@
 			"value": null,
 			"description": "Maximum total size in bytes of a file uploaded in chunks. Chunked uploads ignore $wgMaxUploadSize. Leave as null for no limit."
 		},
+		"RequestImportRequiredRights": {
+			"value": {
+				"xml": [ "import" ],
+				"images": [ "upload" ]
+			},
+			"description": "A mapping of 'request type => rights' for the rights that the requester needs on the target wiki. Requests of a type are shown a warning when the requester is missing any of its rights. Only the rights that the ImportDumpGetTargetState hook reports are checked. Types that are not listed, or have no rights, are not checked."
+		},
 		"RequestImportStalledImportHours": {
 			"value": null,
 			"description": "Number of hours without any sign of progress after which an import that is 'in progress' is treated as stalled by the FailStalledImports maintenance script, which marks it as failed. The import job reports progress about once a minute while pages are imported. Leave as null to disable."

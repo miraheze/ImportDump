@@ -45,6 +45,8 @@ class ConfigNames {
 
 	public const string MaxUploadSize = 'RequestImportMaxUploadSize';
 
+	public const string RequiredRights = 'RequestImportRequiredRights';
+
 	public const string StalledImportHours = 'RequestImportStalledImportHours';
 
 	public const string UsersNotifiedOnAllRequests = 'RequestImportUsersNotifiedOnAllRequests';

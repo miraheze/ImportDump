@@ -142,8 +142,7 @@ class ImportImagesJob extends Job {
 		);
 
 		foreach ( $iterator as $file ) {
-			/** @var SplFileInfo $file */
-			if ( $file->isFile() ) {
+			if ( $file instanceof SplFileInfo && $file->isFile() ) {
 				$count++;
 			}
 		}
@@ -162,7 +161,10 @@ class ImportImagesJob extends Job {
 		);
 
 		foreach ( $iterator as $file ) {
-			/** @var SplFileInfo $file */
+			if ( !$file instanceof SplFileInfo ) {
+				continue;
+			}
+
 			if ( $file->isDir() && !$file->isLink() ) {
 				rmdir( $file->getPathname() );
 			} else {

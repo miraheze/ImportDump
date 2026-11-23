@@ -1133,25 +1133,61 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * @param string[] $rights
 	 * @param ?string[] $groups
-	 * @covers ::requesterHasTargetRight
-	 * @dataProvider provideTargetRight
+	 * @param ?string[] $expected
+	 * @covers ::getMissingTargetRights
+	 * @covers ::getRequiredTargetRights
+	 * @dataProvider provideMissingTargetRights
 	 */
-	public function testRequesterHasTargetRight( array $rights, ?array $groups, ?bool $expected ): void {
+	public function testMissingTargetRights( array $rights, ?array $groups, ?array $expected ): void {
 		$this->setTargetState( [], [], $rights, $groups );
 
-		$this->assertSame(
-			$expected,
-			$this->getRequestManager( id: 1 )->requesterHasTargetRight( RequestManager::IMPORT_RIGHT )
-		);
+		$this->assertSame( $expected, $this->getRequestManager( id: 1 )->getMissingTargetRights() );
 	}
 
-	public static function provideTargetRight(): array {
+	public static function provideMissingTargetRights(): array {
 		return [
-			'has it' => [ [ 'read', 'import' ], [ 'sysop' ], true ],
-			'does not have it' => [ [ 'read', 'edit' ], [ 'sysop' ], false ],
+			'has it' => [ [ 'read', 'import' ], [ 'sysop' ], [] ],
+			'does not have it' => [ [ 'read', 'edit' ], [ 'sysop' ], [ 'import' ] ],
 			'no rights given' => [ [], [ 'sysop' ], null ],
 			'no account on the target' => [ [ 'read', 'import' ], null, null ],
 		];
+	}
+
+	/**
+	 * @covers ::getMissingTargetRights
+	 * @covers ::getRequiredTargetRights
+	 */
+	public function testRequiredRightsDependOnTheTypeOfRequest(): void {
+		$this->overrideConfigValue( ConfigNames::RequiredRights, [
+			'xml' => [ 'import' ],
+			'images' => [ 'upload', 'reupload' ],
+		] );
+
+		$this->setTargetState( [], [], [ 'read', 'upload' ], [ 'sysop' ] );
+
+		$xml = $this->getRequestManager( id: 1 );
+		$this->assertSame( [ 'import' ], $xml->getRequiredTargetRights() );
+		$this->assertSame( [ 'import' ], $xml->getMissingTargetRights() );
+
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+		$this->assertSame( [ 'upload', 'reupload' ], $images->getRequiredTargetRights() );
+		$this->assertSame( [ 'reupload' ], $images->getMissingTargetRights() );
+	}
+
+	/**
+	 * @covers ::getMissingTargetRights
+	 * @covers ::getRequiredTargetRights
+	 */
+	public function testNothingIsRequiredForAnUnlistedType(): void {
+		$this->overrideConfigValue( ConfigNames::RequiredRights, [ 'images' => 'upload' ] );
+		$this->setTargetState( [], [], [ 'read' ], [ 'sysop' ] );
+
+		$xml = $this->getRequestManager( id: 1 );
+		$this->assertSame( [], $xml->getRequiredTargetRights() );
+		$this->assertSame( [], $xml->getMissingTargetRights() );
+
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+		$this->assertSame( [ 'upload' ], $images->getRequiredTargetRights() );
 	}
 
 	private function notifyRequester( RequestManager $manager ): void {

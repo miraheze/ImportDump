@@ -13,7 +13,6 @@ use MediaWiki\User\User;
 use Miraheze\ImportDump\Notices\ActionOutcomeNotices;
 use Miraheze\ImportDump\Notices\FileNotices;
 use Miraheze\ImportDump\Notices\HistoryNotices;
-use Miraheze\ImportDump\Notices\ImportRightNotices;
 use Miraheze\ImportDump\Notices\LinkedNotices;
 use Miraheze\ImportDump\Notices\LockedNotices;
 use Miraheze\ImportDump\Notices\NoticeCollector;
@@ -22,6 +21,7 @@ use Miraheze\ImportDump\Notices\NoticeRole;
 use Miraheze\ImportDump\Notices\PartialHistoryNotices;
 use Miraheze\ImportDump\Notices\RequesterNotices;
 use Miraheze\ImportDump\Notices\RequestNotice;
+use Miraheze\ImportDump\Notices\RequiredRightsNotices;
 use Miraheze\ImportDump\Notices\RequirementNotices;
 use Miraheze\ImportDump\Notices\SkippedImageNotices;
 use Miraheze\ImportDump\Notices\TargetNotices;
@@ -218,7 +218,7 @@ class RequestViewer {
 			new HistoryNotices(),
 			new PartialHistoryNotices(),
 			new SkippedImageNotices(),
-			new ImportRightNotices(),
+			new RequiredRightsNotices(),
 			new LockedNotices(),
 			new LinkedNotices(),
 			$this->outcomes,

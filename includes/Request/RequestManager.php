@@ -49,6 +49,7 @@ use Wikimedia\Rdbms\SelectQueryBuilder;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use Wikimedia\Timestamp\TimestampFormat;
 use function array_column;
+use function array_diff;
 use function array_filter;
 use function array_map;
 use function array_merge;
@@ -108,13 +109,12 @@ class RequestManager {
 		ConfigNames::ImagesCommand,
 		ConfigNames::InterwikiMap,
 		ConfigNames::MaintenanceCommand,
+		ConfigNames::RequiredRights,
 		MainConfigNames::LocalDatabases,
 	];
 
 	/** The rights that the requester needs on the target wiki to be shown what it is missing. */
 	public const array REQUIRED_TARGET_RIGHTS = [ 'read' ];
-
-	public const string IMPORT_RIGHT = 'import';
 
 	private IDatabase $dbw;
 	private stdClass|false $row;
@@ -486,18 +486,30 @@ class RequestManager {
 		return $this->getTargetState()->hasRights( self::REQUIRED_TARGET_RIGHTS );
 	}
 
+	/** @return list<string> The rights that the requester needs on the target wiki for this type of request. */
+	public function getRequiredTargetRights(): array {
+		$rights = $this->options->get( ConfigNames::RequiredRights )[$this->getType()->value] ?? [];
+		return array_values( array_unique( (array)$rights ) );
+	}
+
 	/**
-	 * Whether the requester has a right on the target wiki, as the ImportDumpGetTargetState hook
-	 * reports it. This is null when that is not known, which is without an account on the target
-	 * wiki or when the hook gives no rights.
+	 * The required rights that the requester does not have on the target wiki, as the
+	 * ImportDumpGetTargetState hook reports them. This is null when that is not known, which is
+	 * without an account on the target wiki or when the hook gives no rights.
+	 *
+	 * @return ?list<string>
 	 */
-	public function requesterHasTargetRight( string $right ): ?bool {
+	public function getMissingTargetRights(): ?array {
 		if ( !$this->targetExists() || $this->getRequesterGroupsOnTarget() === null ) {
 			return null;
 		}
 
 		$rights = $this->getTargetState()->rights;
-		return $rights === [] ? null : in_array( $right, $rights, true );
+		if ( $rights === [] ) {
+			return null;
+		}
+
+		return array_values( array_diff( $this->getRequiredTargetRights(), $rights ) );
 	}
 
 	/** @return ?string[] The groups of the requester on the target wiki, or null without an account there. */
