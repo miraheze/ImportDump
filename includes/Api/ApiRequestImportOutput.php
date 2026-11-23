@@ -10,10 +10,6 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Wikimedia\ParamValidator\ParamValidator;
 use Wikimedia\ParamValidator\TypeDef\IntegerDef;
 
-/**
- * Gives handlers what the script of an import printed. Without a part it lists the stored parts and
- * what is being printed now, with a part it gives the text of that part.
- */
 class ApiRequestImportOutput extends ApiBase {
 
 	public function __construct(
