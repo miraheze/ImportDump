@@ -12,6 +12,7 @@ use MediaWiki\Language\MessageLocalizer;
 use MediaWiki\Request\WebRequestUpload;
 use MediaWiki\Status\Status;
 use MediaWiki\Upload\Exception\UploadStashException;
+use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use Miraheze\ImportDump\Notifications\AttentionNotifier;
 use Miraheze\ImportDump\Progress\VerificationProgress;
