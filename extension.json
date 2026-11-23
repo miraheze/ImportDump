@@ -28,6 +28,12 @@
 		"Miraheze\\ImportDump\\Tests\\": "tests/phpunit/"
 	},
 	"APIModules": {
+		"requestimportoutput": {
+			"class": "Miraheze\\ImportDump\\Api\\ApiRequestImportOutput",
+			"services": [
+				"ImportDumpRequestManager"
+			]
+		},
 		"requestimportprogress": {
 			"class": "Miraheze\\ImportDump\\Api\\ApiRequestImportProgress",
 			"services": [
@@ -255,6 +261,15 @@
 				"importdump-stage-sitestats",
 				"importdump-stage-textindex",
 				"importdump-verification-reload"
+			]
+		},
+		"ext.importdump.output": {
+			"scripts": "ext.importdump.output.js",
+			"dependencies": [
+				"mediawiki.api"
+			],
+			"messages": [
+				"importdump-output-empty"
 			]
 		},
 		"ext.importdump.oouiform": {

@@ -98,6 +98,7 @@ class ImportImagesJob extends Job {
 			$remaining = $chunked && $this->offset + $size < $total;
 
 			if ( $this->offset === 0 ) {
+				$this->requestManager->clearImportOutput();
 				$this->queueNotification( RequestStatus::InProgress, '' );
 				$this->enterStage();
 			}
@@ -116,6 +117,7 @@ class ImportImagesJob extends Job {
 			$this->importImages( $directory, $total ?? $this->countFiles( $directory ) );
 		} catch ( Throwable $t ) {
 			MWExceptionHandler::rollbackPrimaryChangesAndLog( $t );
+			$this->requestManager->appendImportOutput( "\n" . $t->getMessage() . "\n" );
 			$this->queueNotification( RequestStatus::Failed, $this->getLogMessage( $t ) );
 			return true;
 		} finally {
@@ -206,18 +208,22 @@ class ImportImagesJob extends Job {
 		$done = $this->offset;
 		$lastUpdate = 0;
 		$log = '';
+		$pending = '';
 
 		$this->reportProgress( $done, $total );
 
 		// The script prints a line for each file it handles, which is how the progress is followed.
-		$follow = function ( string $output ) use ( $total, &$done, &$lastUpdate, &$log ): string {
+		$follow = function ( string $output ) use ( $total, &$done, &$lastUpdate, &$log, &$pending ): string {
 			$log .= $output;
+			$pending .= $output;
 			$done = min( $total, $done + (int)preg_match_all( '/Importing (?!Files\n)|skipping\n/', $output ) );
 
 			$now = time();
 			if ( $now !== $lastUpdate ) {
 				$lastUpdate = $now;
 				$this->reportProgress( $done, $total );
+				$this->requestManager->appendImportOutput( $pending );
+				$pending = '';
 				$this->beat();
 			}
 
@@ -240,6 +246,7 @@ class ImportImagesJob extends Job {
 			$success = $importImages->execute();
 		} finally {
 			ob_end_clean();
+			$this->requestManager->appendImportOutput( $pending );
 		}
 
 		$done = min( $total, $this->offset + $this->countFiles( $directory ) );

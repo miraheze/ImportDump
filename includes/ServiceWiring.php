@@ -11,6 +11,7 @@ use MediaWiki\MediaWikiServices;
 use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\Notifications\AttentionNotifier;
 use Miraheze\ImportDump\Progress\ImportHeartbeat;
+use Miraheze\ImportDump\Progress\ImportOutput;
 use Miraheze\ImportDump\Progress\ImportProgress;
 use Miraheze\ImportDump\Progress\VerificationProgress;
 use Miraheze\ImportDump\Request\RequestManager;
@@ -85,6 +86,7 @@ return [
 				$services->get( 'ImportDumpConfig' )
 			),
 			$services->getUserFactory(),
+			$services->get( 'ImportDumpImportOutput' ),
 			$services->get( 'ImportDumpImportProgress' ),
 			$services->get( 'ImportDumpRequirementChecker' ),
 			$services->get( 'ImportDumpTargetStateProvider' ),
@@ -109,6 +111,9 @@ return [
 			$services->getTitleFactory(),
 			$services->getUploadVerification()
 		);
+	},
+	'ImportDumpImportOutput' => static function ( MediaWikiServices $services ): ImportOutput {
+		return new ImportOutput( $services->getMainObjectStash() );
 	},
 	'ImportDumpImportProgress' => static function ( MediaWikiServices $services ): ImportProgress {
 		return new ImportProgress( $services->getMainObjectStash() );

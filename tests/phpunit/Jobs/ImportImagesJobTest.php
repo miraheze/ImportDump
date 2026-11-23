@@ -218,6 +218,8 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 		$notifications = $this->popNotifications();
 		$this->assertSame( [ RequestStatus::InProgress, RequestStatus::Failed ], $this->getStatuses( $notifications ) );
 		$this->assertStringContainsString( 'Download failed', $notifications[1]['joberror'] );
+		$output = (string)$this->getRequestManager( $id )->getImportOutput();
+		$this->assertStringContainsString( 'Download failed', $output );
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
 	}
 

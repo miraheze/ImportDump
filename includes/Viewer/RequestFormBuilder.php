@@ -6,6 +6,7 @@ namespace Miraheze\ImportDump\Viewer;
 
 use MediaWiki\Config\Config;
 use MediaWiki\Context\IContextSource;
+use MediaWiki\Html\Html;
 use MediaWiki\Linker\Linker;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
@@ -339,7 +340,35 @@ class RequestFormBuilder {
 			}
 		}
 
+		$isImages = $this->requestManager->getType() === RequestType::Images;
+		if ( $isImages && $authority->isAllowed( 'handle-import-requests' ) ) {
+			$formDescriptor += $this->getOutputDescriptor();
+		}
+
 		return $formDescriptor;
+	}
+
+	/** The tab with what the script of the import printed, which only handlers see. */
+	private function getOutputDescriptor(): array {
+		$this->context->getOutput()->addModules( [ 'ext.importdump.output' ] );
+
+		$output = $this->requestManager->getImportOutput();
+		return [
+			'output' => [
+				'type' => 'info',
+				'default' => Html::element(
+					'pre',
+					[
+						'class' => 'ext-importdump-output',
+						'data-request-id' => $this->requestManager->getID(),
+						'data-running' => $this->requestManager->getStatus()->isRunning() ? '1' : '',
+					],
+					$output ?? $this->context->msg( 'importdump-output-empty' )->text()
+				),
+				'raw' => true,
+				'section' => 'output',
+			],
+		];
 	}
 
 	private function getStageDescriptor(): array {

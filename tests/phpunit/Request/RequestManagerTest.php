@@ -608,6 +608,23 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
+	 * @covers ::appendImportOutput
+	 * @covers ::getImportOutput
+	 * @covers ::clearImportOutput
+	 */
+	public function testImportOutput(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$this->assertNull( $manager->getImportOutput() );
+
+		$manager->appendImportOutput( 'a' );
+		$manager->appendImportOutput( 'b' );
+		$this->assertSame( 'ab', $manager->getImportOutput() );
+
+		$manager->clearImportOutput();
+		$this->assertNull( $manager->getImportOutput() );
+	}
+
+	/**
 	 * @covers ::getRemainingCommands
 	 */
 	public function testGetRemainingCommands(): void {

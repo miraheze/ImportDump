@@ -31,6 +31,7 @@ use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use Miraheze\ImportDump\Jobs\ImportImagesJob;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
+use Miraheze\ImportDump\Progress\ImportOutput;
 use Miraheze\ImportDump\Progress\ImportProgress;
 use Miraheze\ImportDump\Progress\VerificationProgress;
 use Miraheze\ImportDump\Requirements\RequirementChecker;
@@ -138,6 +139,7 @@ class RequestManager {
 		private readonly MessageLocalizer $messageLocalizer,
 		private readonly ServiceOptions $options,
 		private readonly UserFactory $userFactory,
+		private readonly ImportOutput $importOutput,
 		private readonly ImportProgress $importProgress,
 		private readonly RequirementChecker $requirementChecker,
 		private readonly TargetStateProvider $targetStateProvider,
@@ -1002,6 +1004,19 @@ class RequestManager {
 			->execute();
 
 		$this->row->request_source = $source;
+	}
+
+	/** Adds to what the script of the import printed, which handlers can read from the request. */
+	public function appendImportOutput( string $text ): void {
+		$this->importOutput->append( $this->ID, $text );
+	}
+
+	public function clearImportOutput(): void {
+		$this->importOutput->clear( $this->ID );
+	}
+
+	public function getImportOutput(): ?string {
+		return $this->importOutput->get( $this->ID );
 	}
 
 	public function setImportPercent( int $percent, ?int $done, ?int $total ): void {
