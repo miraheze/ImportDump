@@ -143,6 +143,13 @@ class SpecialRequestImport extends FormSpecialPage {
 			],
 		];
 
+		if ( $this->getConfig()->get( ConfigNames::EnableImageImports ) ) {
+			$formDescriptor['UploadEither'] = [
+				'type' => 'info',
+				'default' => $this->msg( 'importdump-help-upload-either' )->text(),
+			];
+		}
+
 		if (
 			UploadFromUrl::isEnabled() &&
 			UploadFromUrl::isAllowed( $this->getUser() ) === true
@@ -399,20 +406,6 @@ class SpecialRequestImport extends FormSpecialPage {
 
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', $requestID );
 
-		$requestLink = $this->getLinkRenderer()->makeLink( $requestQueueLink, "#$requestID" );
-
-		$this->getOutput()->addHTML(
-			Html::successBox(
-				$this->msg( 'importdump-success' )->rawParams( $requestLink )->escaped()
-			)
-		);
-
-		if ( $verifyLater ) {
-			$this->getOutput()->addHTML(
-				Html::noticeBox( $this->msg( 'importdump-success-verifying' )->escaped(), '' )
-			);
-		}
-
 		$logEntry = new ManualLogEntry( $this->getLogType( $data['target'] ), 'request' );
 
 		$logEntry->setPerformer( $this->getUser() );
@@ -429,9 +422,12 @@ class SpecialRequestImport extends FormSpecialPage {
 		$logID = $logEntry->insert( $dbw );
 		$logEntry->publish( $logID );
 
+		$imagesID = 0;
 		if ( $images && (int)$requestID > 0 ) {
-			$this->addImagesRequest( $data, $timestamp, (int)$requestID );
+			$imagesID = $this->addImagesRequest( $data, $timestamp, (int)$requestID );
 		}
+
+		$this->showSuccess( (int)$requestID, $imagesID, ( $verifyLater ? 1 : 0 ) + ( $imagesID > 0 ? 1 : 0 ) );
 
 		if ( $this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests ) ) {
 			$this->sendNotifications( $data['reason'], $requestID, $data['target'], $this->getUser() );
@@ -464,6 +460,8 @@ class SpecialRequestImport extends FormSpecialPage {
 		if ( $requestID <= 0 ) {
 			return Status::newFatal( 'importdump-duplicate-request' );
 		}
+
+		$this->showSuccess( $requestID, 0, 1 );
 
 		if ( $this->getConfig()->get( ConfigNames::UsersNotifiedOnAllRequests ) ) {
 			$this->sendNotifications( $data['reason'], (string)$requestID, $data['target'], $this->getUser() );
@@ -574,20 +572,6 @@ class SpecialRequestImport extends FormSpecialPage {
 		);
 
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$requestID );
-		$requestLink = $this->getLinkRenderer()->makeLink( $requestQueueLink, "#$requestID" );
-		$this->getOutput()->addHTML(
-			Html::successBox(
-				$this->msg( $linkedID === null ? 'importdump-success' : 'importdump-success-images' )
-					->rawParams( $requestLink )
-					->escaped()
-			)
-		);
-
-		if ( $linkedID === null ) {
-			$this->getOutput()->addHTML(
-				Html::noticeBox( $this->msg( 'importdump-success-verifying' )->escaped(), '' )
-			);
-		}
 
 		$logEntry = new ManualLogEntry( $this->getLogType( $data['target'] ), 'request' );
 		$logEntry->setPerformer( $this->getUser() );
@@ -602,6 +586,33 @@ class SpecialRequestImport extends FormSpecialPage {
 		$logEntry->publish( $logID );
 
 		return $requestID;
+	}
+
+	/**
+	 * @param int $requestID The request that was submitted.
+	 * @param int $imagesID The linked request for the images, or 0 if there is none.
+	 * @param int $verifying How many of the uploaded files are checked in the background.
+	 */
+	private function showSuccess( int $requestID, int $imagesID, int $verifying ): void {
+		$requestLink = $this->makeRequestLink( $requestID );
+		$message = $imagesID > 0 ?
+			$this->msg( 'importdump-success-both' )->rawParams( $requestLink, $this->makeRequestLink( $imagesID ) ) :
+			$this->msg( 'importdump-success' )->rawParams( $requestLink );
+
+		$this->getOutput()->addHTML( Html::successBox( $message->escaped() ) );
+
+		if ( $verifying > 0 ) {
+			$this->getOutput()->addHTML(
+				Html::noticeBox( $this->msg( 'importdump-success-verifying' )->numParams( $verifying )->escaped(), '' )
+			);
+		}
+	}
+
+	private function makeRequestLink( int $requestID ): string {
+		return $this->getLinkRenderer()->makeLink(
+			SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$requestID ),
+			"#$requestID"
+		);
 	}
 
 	/** @return list<Message> */
