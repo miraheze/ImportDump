@@ -185,26 +185,28 @@ class ImageProcessor {
 				return Status::newFatal( 'uploadvirus', $virus );
 			}
 
-			$problem = $extension === '' ?
-				new SkippedFile( $name, 'importdump-images-skip-extension', [] ) :
-				$this->verifyFile( $name, $extension, $tempFile->getPath() );
+			$problem = $extension === '' ? null : $this->verifyFile( $name, $extension, $tempFile->getPath() );
 
-			if ( $problem && $problem->reason === 'filetype-mime-mismatch' ) {
-				// The name stays as it is, because pages link to it.
-				$mime = $this->detectMime( $tempFile->getPath() );
-				$real = in_array( $mime, self::RASTER_TYPES, true ) ?
-					$this->findExtension( $mime, $allowed, $prohibited ) :
-					null;
-				if ( $real !== null && !$this->verifyFile( $name, $real, $tempFile->getPath() ) ) {
-					$problem = null;
-				}
-			} elseif ( $problem && $extension === '' ) {
+			if ( $extension === '' ) {
 				$fixed = $this->findName( $name, $tempFile->getPath(), $taken, $allowed, $prohibited );
-				if ( $fixed !== null ) {
+				if ( $fixed instanceof SkippedFile ) {
+					$problem = $fixed;
+				} else {
 					$fixedExtension = strtolower( pathinfo( $fixed, PATHINFO_EXTENSION ) );
-					if ( !$this->verifyFile( $fixed, $fixedExtension, $tempFile->getPath() ) ) {
+					$problem = $this->verifyFile( $fixed, $fixedExtension, $tempFile->getPath() );
+					if ( !$problem ) {
 						$renamed[$name] = $fixed;
 						$name = $fixed;
+					}
+				}
+			} elseif ( $problem && $problem->reason === 'filetype-mime-mismatch' ) {
+				// The name stays as it is, because pages link to it.
+				$mime = $this->detectMime( $tempFile->getPath() );
+				if ( in_array( $mime, self::RASTER_TYPES, true ) ) {
+					$real = $this->findExtension( $mime, $allowed, $prohibited );
+					if ( $real === null ) {
+						$problem = new SkippedFile( $name, 'importdump-images-skip-type', [ $mime ] );
+					} elseif ( !$this->verifyFile( $name, $real, $tempFile->getPath() ) ) {
 						$problem = null;
 					}
 				}
@@ -281,7 +283,7 @@ class ImageProcessor {
 				$extension !== '' &&
 				( in_array( $extension, $prohibited, true ) || !in_array( $extension, $allowed, true ) )
 			) {
-				$skipped[] = new SkippedFile( $name, 'importdump-images-skip-extension', [] );
+				$skipped[] = new SkippedFile( $name, 'importdump-images-skip-extension', [ $extension ] );
 				continue;
 			}
 
@@ -345,15 +347,15 @@ class ImageProcessor {
 	}
 
 	/**
-	 * Adds the extension of the detected type to a file that has none. Null when there is no
-	 * allowed one or the new name is already used.
+	 * Adds the extension of the detected type to a file that has none.
 	 *
 	 * @param string $name The name of the file.
 	 * @param string $path Where the file was extracted to.
 	 * @param array<string, true> &$taken The title keys of the names that are in use, which this adds to.
 	 * @param list<string> $allowed The extensions that are accepted, in lowercase.
 	 * @param list<string> $prohibited The extensions that are never accepted, in lowercase.
-	 * @return ?string
+	 * @return string|SkippedFile The new name, or why the file has none, which is that no allowed
+	 *  extension fits its content or that the name with the extension is already used.
 	 */
 	private function findName(
 		string $name,
@@ -361,16 +363,20 @@ class ImageProcessor {
 		array &$taken,
 		array $allowed,
 		array $prohibited
-	): ?string {
+	): string|SkippedFile {
 		$extension = $this->findExtension( $this->detectMime( $path ), $allowed, $prohibited );
 		if ( $extension === null ) {
-			return null;
+			return new SkippedFile( $name, 'importdump-images-skip-no-extension', [] );
 		}
 
 		$fixed = "$name.$extension";
 		$key = $this->titleFactory->makeTitleSafe( NS_FILE, $fixed )?->getDBkey();
-		if ( $key === null || isset( $taken[$key] ) || !$this->isValidName( $fixed ) ) {
-			return null;
+		if ( $key === null || !$this->isValidName( $fixed ) ) {
+			return new SkippedFile( $name, 'importdump-images-skip-name', [] );
+		}
+
+		if ( isset( $taken[$key] ) ) {
+			return new SkippedFile( $name, 'importdump-images-skip-duplicate', [] );
 		}
 
 		$taken[$key] = true;

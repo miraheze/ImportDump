@@ -242,7 +242,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame(
 			[
 				'File:colon.png' => 'importdump-images-skip-name',
-				'noextension' => 'importdump-images-skip-extension',
+				'noextension' => 'importdump-images-skip-no-extension',
 				'run.exe' => 'importdump-images-skip-extension',
 			],
 			$reasons
@@ -282,7 +282,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 
 		ksort( $reasons );
 		$this->assertSame(
-			[ 'b.png' => 'filetype-mime-mismatch', 'c.gif' => 'importdump-images-skip-extension' ],
+			[ 'b.png' => 'importdump-images-skip-type', 'c.gif' => 'importdump-images-skip-extension' ],
 			$reasons
 		);
 	}
@@ -316,7 +316,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( [ 'logo.png' ], array_keys( $result->files ) );
 		$this->assertSame( [], $result->renamed );
 		$this->assertSame(
-			[ 'logo' => 'importdump-images-skip-extension' ],
+			[ 'logo' => 'importdump-images-skip-duplicate' ],
 			array_column( array_map(
 				static fn ( SkippedFile $file ): array => [ $file->name, $file->reason ],
 				$result->skipped

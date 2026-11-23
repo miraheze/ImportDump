@@ -280,10 +280,8 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 				string $target,
 				// @phan-suppress-next-line PhanUnusedClosureParameter
 				array $requesterGroups,
-				// @phan-suppress-next-line PhanUnusedClosureParameter
 				?array &$extensions,
 				array &$settings,
-				// @phan-suppress-next-line PhanUnusedClosureParameter
 				array &$rights
 			) use ( &$received ): void {
 				$received = $target;
