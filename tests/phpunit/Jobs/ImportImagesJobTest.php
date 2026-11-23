@@ -238,10 +238,12 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 		$this->assertStringContainsString( 'Download failed', $output['text'] );
 
 		$stored = $this->popStoredOutput();
-		$this->assertCount( 1, $stored );
+		$this->assertCount( 2, $stored );
 		$this->assertSame( $id, $stored[0]['requestid'] );
-		$this->assertSame( 0, $stored[0]['part'] );
-		$this->assertStringContainsString( 'Download failed', $stored[0]['text'] );
+		$this->assertTrue( $stored[0]['reset'] );
+		$this->assertSame( $id, $stored[1]['requestid'] );
+		$this->assertSame( 0, $stored[1]['part'] );
+		$this->assertStringContainsString( 'Download failed', $stored[1]['text'] );
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
 	}
 

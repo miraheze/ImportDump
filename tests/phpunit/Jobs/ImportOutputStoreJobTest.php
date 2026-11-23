@@ -105,6 +105,32 @@ class ImportOutputStoreJobTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( 'b', $this->getRequestManager( $id )->getOutputPart( 0 ) );
 	}
 
+	public function testStoringAgainWithAnotherLengthLeavesOneFile(): void {
+		$id = $this->addRequest();
+
+		$this->assertTrue( $this->newJob( $id, 0, "a\nb\nc\n" )->run() );
+		$this->assertTrue( $this->newJob( $id, 0, 'b' )->run() );
+
+		$manager = $this->getRequestManager( $id );
+		$this->assertSame( [ [ 'part' => 0, 'lines' => 1 ] ], $manager->getOutputParts() );
+		$this->assertSame( 'b', $manager->getOutputPart( 0 ) );
+	}
+
+	public function testResetRemovesTheStoredParts(): void {
+		$id = $this->addRequest();
+
+		$this->assertTrue( $this->newJob( $id, 0, 'a' )->run() );
+		$this->assertTrue( $this->newJob( $id, 1, 'b' )->run() );
+
+		$job = $this->getServiceContainer()->getJobFactory()->newJob( ImportOutputStoreJob::JOB_NAME, [
+			'requestid' => $id,
+			'reset' => true,
+		] );
+		$this->assertTrue( $job->run() );
+
+		$this->assertSame( [], $this->getRequestManager( $id )->getOutputParts() );
+	}
+
 	public function testUnknownRequestIsIgnored(): void {
 		$this->assertTrue( $this->newJob( 12345, 0, 'a' )->run() );
 	}

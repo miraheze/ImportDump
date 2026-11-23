@@ -109,6 +109,7 @@ class ImportImagesJob extends Job {
 
 			if ( $this->offset === 0 ) {
 				$this->requestManager->clearImportOutput();
+				$this->queueOutputJob( [ 'reset' => true ] );
 				$this->queueNotification( RequestStatus::InProgress, '' );
 				$this->enterStage();
 			}
@@ -289,15 +290,19 @@ class ImportImagesJob extends Job {
 			return;
 		}
 
+		$this->queueOutputJob( [
+			'part' => $this->part,
+			'text' => mb_strcut( $this->output, max( 0, strlen( $this->output ) - self::MAX_OUTPUT ) ),
+		] );
+	}
+
+	/** @param array<string, mixed> $params */
+	private function queueOutputJob( array $params ): void {
 		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $dbr->getDomainID() )->push(
 			new JobSpecification(
 				ImportOutputStoreJob::JOB_NAME,
-				[
-					'part' => $this->part,
-					'requestid' => $this->requestID,
-					'text' => mb_strcut( $this->output, max( 0, strlen( $this->output ) - self::MAX_OUTPUT ) ),
-				]
+				[ 'requestid' => $this->requestID ] + $params
 			)
 		);
 	}

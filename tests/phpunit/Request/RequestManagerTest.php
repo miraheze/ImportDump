@@ -653,17 +653,16 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * @covers ::clearImportOutput
+	 * @covers ::clearStoredOutput
 	 */
-	public function testClearingTheOutputRemovesTheStoredParts(): void {
+	public function testClearingTheStoredOutputRemovesTheParts(): void {
 		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
 		$this->assertStatusGood( $images->storeOutputPart( 0, 'a' ) );
-		$images->appendImportOutput( 1, 'b' );
+		$this->assertStatusGood( $images->storeOutputPart( 1, 'b' ) );
 
-		$images->clearImportOutput();
+		$this->assertTrue( $images->clearStoredOutput() );
 
 		$this->assertSame( [], $images->getOutputParts() );
-		$this->assertNull( $images->getImportOutput() );
 	}
 
 	/**

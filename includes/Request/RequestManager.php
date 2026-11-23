@@ -670,11 +670,24 @@ class RequestManager {
 		}
 
 		$name = sprintf( '%04d-l%d.txt', $part, $lines );
-		return Status::wrap( $backend->quickCreate( [
+		$status = Status::wrap( $backend->quickCreate( [
 			'dst' => "$directory/$name",
 			'content' => $text,
 			'overwrite' => true,
 		] ) );
+
+		if ( !$status->isOK() ) {
+			return $status;
+		}
+
+		// A part that was stored before has another name if its number of lines was not the same.
+		foreach ( $backend->getFileList( [ 'dir' => $directory ] ) ?? [] as $file ) {
+			if ( $file !== $name && str_starts_with( $file, sprintf( '%04d-l', $part ) ) ) {
+				$backend->quickDelete( [ 'src' => "$directory/$file", 'ignoreMissingSource' => true ] );
+			}
+		}
+
+		return $status;
 	}
 
 	/** @return array<int, array{part: int, lines: int, name: string}> The stored parts of the output, by number. */
@@ -1123,10 +1136,14 @@ class RequestManager {
 		$this->importOutput->append( $this->ID, $part, $text );
 	}
 
-	/** Clears the output of an earlier run, both the live part and the stored parts. */
+	/** Clears the live part of the output. The stored parts are on another wiki, see clearStoredOutput(). */
 	public function clearImportOutput(): void {
 		$this->importOutput->clear( $this->ID );
-		$this->deleteOutputFiles( $this->repoGroup->getLocalRepo()->getBackend() );
+	}
+
+	/** Removes the stored parts of the output. This has to run on the wiki that stores the requests. */
+	public function clearStoredOutput(): bool {
+		return $this->deleteOutputFiles( $this->repoGroup->getLocalRepo()->getBackend() );
 	}
 
 	/** @return ?array{part: int, text: string} The part of the output that is being printed. */
