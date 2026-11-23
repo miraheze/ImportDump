@@ -12,6 +12,7 @@ use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
 use Miraheze\ImportDump\Jobs\ImportImagesJob;
+use Miraheze\ImportDump\Jobs\ImportOutputStoreJob;
 use Miraheze\ImportDump\Progress\ImportHeartbeat;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
@@ -150,6 +151,19 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 		return $notifications;
 	}
 
+	/** @return array[] The params of every queued job that stores output, in queue order. */
+	private function popStoredOutput(): array {
+		$queue = $this->getServiceContainer()->getJobQueueGroup()
+			->get( ImportOutputStoreJob::JOB_NAME );
+
+		$stored = [];
+		for ( $job = $queue->pop(); $job; $job = $queue->pop() ) {
+			$stored[] = $job->getParams();
+		}
+
+		return $stored;
+	}
+
 	/**
 	 * @param array[] $notifications
 	 * @return RequestStatus[]
@@ -203,6 +217,7 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 		$notifications = $this->popNotifications();
 		$this->assertSame( [ RequestStatus::InProgress, RequestStatus::Failed ], $this->getStatuses( $notifications ) );
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
+		$this->assertCount( 1, $this->popStoredOutput() );
 	}
 
 	public function testFailureOfTheHookIsReported(): void {
@@ -218,8 +233,15 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 		$notifications = $this->popNotifications();
 		$this->assertSame( [ RequestStatus::InProgress, RequestStatus::Failed ], $this->getStatuses( $notifications ) );
 		$this->assertStringContainsString( 'Download failed', $notifications[1]['joberror'] );
-		$output = (string)$this->getRequestManager( $id )->getImportOutput();
-		$this->assertStringContainsString( 'Download failed', $output );
+		$output = $this->getRequestManager( $id )->getImportOutput();
+		$this->assertNotNull( $output );
+		$this->assertStringContainsString( 'Download failed', $output['text'] );
+
+		$stored = $this->popStoredOutput();
+		$this->assertCount( 1, $stored );
+		$this->assertSame( $id, $stored[0]['requestid'] );
+		$this->assertSame( 0, $stored[0]['part'] );
+		$this->assertStringContainsString( 'Download failed', $stored[0]['text'] );
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
 	}
 

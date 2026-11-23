@@ -31,12 +31,14 @@ use function get_class;
 use function intdiv;
 use function is_dir;
 use function max;
+use function mb_strcut;
 use function mb_substr;
 use function min;
 use function ob_end_clean;
 use function ob_start;
 use function preg_match_all;
 use function rmdir;
+use function strlen;
 use function time;
 use function trim;
 use function unlink;
@@ -52,10 +54,17 @@ class ImportImagesJob extends Job {
 
 	public const string JOB_NAME = 'ImportImagesJob';
 
+	/** The most of the output of one job that is stored, in bytes. */
+	private const int MAX_OUTPUT = 200000;
+
 	private readonly MessageLocalizer $messageLocalizer;
 
 	private readonly int $requestID;
 	private readonly int $offset;
+
+	/** What the script printed in this job, and which part of the output of the request that is. */
+	private string $output = '';
+	private int $part = 0;
 	private readonly string $username;
 
 	public function __construct(
@@ -96,6 +105,7 @@ class ImportImagesJob extends Job {
 			$size = max( 1, (int)$this->config->get( ConfigNames::ImagesChunkSize ) );
 			$chunked = $total !== null && $total > $size;
 			$remaining = $chunked && $this->offset + $size < $total;
+			$this->part = intdiv( $this->offset, $size );
 
 			if ( $this->offset === 0 ) {
 				$this->requestManager->clearImportOutput();
@@ -106,10 +116,9 @@ class ImportImagesJob extends Job {
 			// A request that fits in one job is downloaded whole, only larger ones ask for a part of the files.
 			$directory = $chunked ? $this->downloadImages( $this->offset, $size ) : $this->downloadImages( 0, 0 );
 			if ( !$directory ) {
-				$this->queueNotification(
-					RequestStatus::Failed,
-					$this->messageLocalizer->msg( 'importdump-images-job-missing' )->inContentLanguage()->text()
-				);
+				$missing = $this->messageLocalizer->msg( 'importdump-images-job-missing' )->inContentLanguage()->text();
+				$this->addOutput( "$missing\n" );
+				$this->queueNotification( RequestStatus::Failed, $missing );
 
 				return true;
 			}
@@ -117,7 +126,7 @@ class ImportImagesJob extends Job {
 			$this->importImages( $directory, $total ?? $this->countFiles( $directory ) );
 		} catch ( Throwable $t ) {
 			MWExceptionHandler::rollbackPrimaryChangesAndLog( $t );
-			$this->requestManager->appendImportOutput( "\n" . $t->getMessage() . "\n" );
+			$this->addOutput( "\n" . $t->getMessage() . "\n" );
 			$this->queueNotification( RequestStatus::Failed, $this->getLogMessage( $t ) );
 			return true;
 		} finally {
@@ -125,6 +134,7 @@ class ImportImagesJob extends Job {
 				$this->removeDirectory( $directory );
 			}
 
+			$this->queueOutput();
 			if ( !$remaining ) {
 				$this->heartbeat->clear( $this->requestID );
 			}
@@ -216,13 +226,14 @@ class ImportImagesJob extends Job {
 		$follow = function ( string $output ) use ( $total, &$done, &$lastUpdate, &$log, &$pending ): string {
 			$log .= $output;
 			$pending .= $output;
+			$this->output .= $output;
 			$done = min( $total, $done + (int)preg_match_all( '/Importing (?!Files\n)|skipping\n/', $output ) );
 
 			$now = time();
 			if ( $now !== $lastUpdate ) {
 				$lastUpdate = $now;
 				$this->reportProgress( $done, $total );
-				$this->requestManager->appendImportOutput( $pending );
+				$this->requestManager->appendImportOutput( $this->part, $pending );
 				$pending = '';
 				$this->beat();
 			}
@@ -246,7 +257,7 @@ class ImportImagesJob extends Job {
 			$success = $importImages->execute();
 		} finally {
 			ob_end_clean();
-			$this->requestManager->appendImportOutput( $pending );
+			$this->requestManager->appendImportOutput( $this->part, $pending );
 		}
 
 		$done = min( $total, $this->offset + $this->countFiles( $directory ) );
@@ -257,6 +268,31 @@ class ImportImagesJob extends Job {
 		if ( $success === false ) {
 			throw new RuntimeException( 'importImages failed: ' . mb_substr( trim( $log ), -1000 ) );
 		}
+	}
+
+	/** Shows text with the output of the script. */
+	private function addOutput( string $text ): void {
+		$this->output .= $text;
+		$this->requestManager->appendImportOutput( $this->part, $text );
+	}
+
+	/** Has the wiki that stores the requests keep the output of this job, which it can read. */
+	private function queueOutput(): void {
+		if ( $this->output === '' ) {
+			return;
+		}
+
+		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
+		$this->jobQueueGroupFactory->makeJobQueueGroup( $dbr->getDomainID() )->push(
+			new JobSpecification(
+				ImportOutputStoreJob::JOB_NAME,
+				[
+					'part' => $this->part,
+					'requestid' => $this->requestID,
+					'text' => mb_strcut( $this->output, max( 0, strlen( $this->output ) - self::MAX_OUTPUT ) ),
+				]
+			)
+		);
 	}
 
 	private function reportProgress( int $done, int $total ): void {

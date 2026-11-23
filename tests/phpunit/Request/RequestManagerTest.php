@@ -616,12 +616,40 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$manager = $this->getRequestManager( id: 1 );
 		$this->assertNull( $manager->getImportOutput() );
 
-		$manager->appendImportOutput( 'a' );
-		$manager->appendImportOutput( 'b' );
-		$this->assertSame( 'ab', $manager->getImportOutput() );
+		$manager->appendImportOutput( 2, 'a' );
+		$manager->appendImportOutput( 2, 'b' );
+		$this->assertSame( [ 'part' => 2, 'text' => 'ab' ], $manager->getImportOutput() );
 
 		$manager->clearImportOutput();
 		$this->assertNull( $manager->getImportOutput() );
+	}
+
+	/**
+	 * @covers ::storeOutputPart
+	 * @covers ::getOutputDirectory
+	 * @covers ::getOutputParts
+	 * @covers ::getOutputPart
+	 * @covers ::deleteFile
+	 */
+	public function testOutputPartsAreStoredAndDeleted(): void {
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+		$this->assertSame( [], $images->getOutputParts() );
+		$this->assertNull( $images->getOutputPart( 0 ) );
+
+		$this->assertStatusGood( $images->storeOutputPart( 1, "b\nc\n" ) );
+		$this->assertStatusGood( $images->storeOutputPart( 0, 'a' ) );
+
+		$this->assertSame(
+			[ [ 'part' => 0, 'lines' => 1 ], [ 'part' => 1, 'lines' => 2 ] ],
+			$images->getOutputParts()
+		);
+
+		$this->assertSame( 'a', $images->getOutputPart( 0 ) );
+		$this->assertSame( "b\nc\n", $images->getOutputPart( 1 ) );
+		$this->assertNull( $images->getOutputPart( 2 ) );
+
+		$this->assertTrue( $images->deleteFile() );
+		$this->assertSame( [], $images->getOutputParts() );
 	}
 
 	/**

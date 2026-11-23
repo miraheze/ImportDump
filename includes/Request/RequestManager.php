@@ -70,14 +70,19 @@ use function intval;
 use function is_array;
 use function json_decode;
 use function json_encode;
+use function ksort;
 use function max;
 use function parse_url;
+use function preg_match;
 use function preg_replace;
 use function preg_replace_callback;
 use function rawurlencode;
 use function sort;
+use function sprintf;
 use function str_contains;
+use function str_ends_with;
 use function str_replace;
+use function substr_count;
 use function trim;
 use function wfEscapeWikiText;
 use function wfTimestamp;
@@ -648,6 +653,65 @@ class RequestManager {
 		return FileBackend::splitStoragePath( $this->getFilePath() )[2];
 	}
 
+	/** Where the output of the import is stored. It is deleted together with the images. */
+	public function getOutputDirectory(): string {
+		return $this->getFilePath() . '-output';
+	}
+
+	/** Stores a part of the output of the import. The name has the number of lines, so that nothing else is read. */
+	public function storeOutputPart( int $part, string $text ): Status {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$directory = $this->getOutputDirectory();
+
+		$lines = substr_count( $text, "\n" ) + ( str_ends_with( $text, "\n" ) ? 0 : 1 );
+		$status = Status::wrap( $backend->prepare( [ 'dir' => $directory ] ) );
+		if ( !$status->isOK() ) {
+			return $status;
+		}
+
+		$name = sprintf( '%04d-l%d.txt', $part, $lines );
+		return Status::wrap( $backend->quickCreate( [
+			'dst' => "$directory/$name",
+			'content' => $text,
+			'overwrite' => true,
+		] ) );
+	}
+
+	/** @return array<int, array{part: int, lines: int, name: string}> The stored parts of the output, by number. */
+	private function getStoredOutput(): array {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$files = $backend->getFileList( [ 'dir' => $this->getOutputDirectory() ] );
+
+		$parts = [];
+		foreach ( $files ?? [] as $file ) {
+			if ( preg_match( '/^(\d{4})-l(\d+)\.txt$/', $file, $matches ) ) {
+				$parts[(int)$matches[1]] = [ 'part' => (int)$matches[1], 'lines' => (int)$matches[2], 'name' => $file ];
+			}
+		}
+
+		ksort( $parts );
+		return $parts;
+	}
+
+	/** @return list<array{part: int, lines: int}> The stored parts of the output, in order. */
+	public function getOutputParts(): array {
+		return array_values( array_map(
+			static fn ( array $part ): array => [ 'part' => $part['part'], 'lines' => $part['lines'] ],
+			$this->getStoredOutput()
+		) );
+	}
+
+	public function getOutputPart( int $part ): ?string {
+		$stored = $this->getStoredOutput()[$part] ?? null;
+		if ( $stored === null ) {
+			return null;
+		}
+
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$text = $backend->getFileContents( [ 'src' => $this->getOutputDirectory() . '/' . $stored['name'] ] );
+		return $text === false ? null : $text;
+	}
+
 	/** The images of a request are kept in a directory, which has no extension. */
 	public function getFileName(): string {
 		$name = $this->getTarget() . '-' . $this->getTimestamp();
@@ -700,6 +764,7 @@ class RequestManager {
 		$success = true;
 		if ( $this->getType() === RequestType::Images ) {
 			$success = $this->deleteImageFiles( $backend );
+			$success = $this->deleteOutputFiles( $backend ) && $success;
 			$paths = [ $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
 		}
 
@@ -712,6 +777,21 @@ class RequestManager {
 			$success = $status->isOK() && $success;
 		}
 
+		return $success;
+	}
+
+	private function deleteOutputFiles( FileBackend $backend ): bool {
+		$success = true;
+		foreach ( $this->getStoredOutput() as $part ) {
+			$status = $backend->quickDelete( [
+				'src' => $this->getOutputDirectory() . '/' . $part['name'],
+				'ignoreMissingSource' => true,
+			] );
+
+			$success = $status->isOK() && $success;
+		}
+
+		$backend->clean( [ 'dir' => $this->getOutputDirectory() ] );
 		return $success;
 	}
 
@@ -1006,16 +1086,17 @@ class RequestManager {
 		$this->row->request_source = $source;
 	}
 
-	/** Adds to what the script of the import printed, which handlers can read from the request. */
-	public function appendImportOutput( string $text ): void {
-		$this->importOutput->append( $this->ID, $text );
+	/** Adds to what the script of the import is printing, in the given part of the output. */
+	public function appendImportOutput( int $part, string $text ): void {
+		$this->importOutput->append( $this->ID, $part, $text );
 	}
 
 	public function clearImportOutput(): void {
 		$this->importOutput->clear( $this->ID );
 	}
 
-	public function getImportOutput(): ?string {
+	/** @return ?array{part: int, text: string} The part of the output that is being printed. */
+	public function getImportOutput(): ?array {
 		return $this->importOutput->get( $this->ID );
 	}
 

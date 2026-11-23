@@ -352,19 +352,13 @@ class RequestFormBuilder {
 	private function getOutputDescriptor(): array {
 		$this->context->getOutput()->addModules( [ 'ext.importdump.output' ] );
 
-		$output = $this->requestManager->getImportOutput();
 		return [
 			'output' => [
 				'type' => 'info',
-				'default' => Html::element(
-					'pre',
-					[
-						'class' => 'ext-importdump-output',
-						'data-request-id' => $this->requestManager->getID(),
-						'data-running' => $this->requestManager->getStatus()->isRunning() ? '1' : '',
-					],
-					$output ?? $this->context->msg( 'importdump-output-empty' )->text()
-				),
+				'default' => Html::element( 'div', [
+					'class' => 'ext-importdump-output',
+					'data-request-id' => $this->requestManager->getID(),
+				] ),
 				'raw' => true,
 				'section' => 'output',
 			],

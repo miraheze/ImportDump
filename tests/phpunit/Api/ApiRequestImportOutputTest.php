@@ -73,7 +73,7 @@ class ApiRequestImportOutputTest extends ApiTestCase {
 
 	public function testOutputOfARunningImport(): void {
 		$id = $this->newRequest( RequestStatus::InProgress, 0 );
-		$this->getManager( $id )->appendImportOutput( "Importing a.png...done.\n" );
+		$this->getManager( $id )->appendImportOutput( 1, "Importing a.png...done.\n" );
 
 		[ $result ] = $this->doApiRequest(
 			[ 'action' => 'requestimportoutput', 'requestid' => $id ],
@@ -83,14 +83,20 @@ class ApiRequestImportOutputTest extends ApiTestCase {
 		);
 
 		$this->assertSame(
-			[ 'running' => true, 'output' => "Importing a.png...done.\n" ],
+			[
+				'running' => true,
+				'parts' => [],
+				'live' => [ 'part' => 1, 'text' => "Importing a.png...done.\n" ],
+			],
 			$result['requestimportoutput']
 		);
 	}
 
-	public function testOutputIsKeptAfterTheImportEnded(): void {
+	public function testStoredParts(): void {
 		$id = $this->newRequest( RequestStatus::Complete, 0 );
-		$this->getManager( $id )->appendImportOutput( 'text' );
+		$manager = $this->getManager( $id );
+		$this->assertStatusGood( $manager->storeOutputPart( 0, "a\nb\n" ) );
+		$this->assertStatusGood( $manager->storeOutputPart( 1, 'c' ) );
 
 		[ $result ] = $this->doApiRequest(
 			[ 'action' => 'requestimportoutput', 'requestid' => $id ],
@@ -99,20 +105,32 @@ class ApiRequestImportOutputTest extends ApiTestCase {
 			$this->getHandler()
 		);
 
-		$this->assertSame( [ 'running' => false, 'output' => 'text' ], $result['requestimportoutput'] );
+		$this->assertSame(
+			[ 'running' => false, 'parts' => [ [ 'part' => 0, 'lines' => 2 ], [ 'part' => 1, 'lines' => 1 ] ] ],
+			$result['requestimportoutput']
+		);
+
+		[ $result ] = $this->doApiRequest(
+			[ 'action' => 'requestimportoutput', 'requestid' => $id, 'part' => 1 ],
+			null,
+			false,
+			$this->getHandler()
+		);
+
+		$this->assertSame( [ 'part' => 1, 'text' => 'c' ], $result['requestimportoutput'] );
 	}
 
-	public function testNoOutputYet(): void {
-		$id = $this->newRequest( RequestStatus::Starting, 0 );
+	public function testPartThatWasNotStored(): void {
+		$id = $this->newRequest( RequestStatus::Complete, 0 );
 
 		[ $result ] = $this->doApiRequest(
-			[ 'action' => 'requestimportoutput', 'requestid' => $id ],
+			[ 'action' => 'requestimportoutput', 'requestid' => $id, 'part' => 3 ],
 			null,
 			false,
 			$this->getHandler()
 		);
 
-		$this->assertSame( [ 'running' => true, 'output' => '' ], $result['requestimportoutput'] );
+		$this->assertSame( [ 'part' => 3, 'text' => '' ], $result['requestimportoutput'] );
 	}
 
 	public function testUnknownRequest(): void {
@@ -127,7 +145,7 @@ class ApiRequestImportOutputTest extends ApiTestCase {
 
 	public function testRequesterCannotSeeIt(): void {
 		$id = $this->newRequest( RequestStatus::InProgress, 0 );
-		$this->getManager( $id )->appendImportOutput( 'text' );
+		$this->getManager( $id )->appendImportOutput( 0, 'text' );
 
 		$this->expectApiErrorCode( 'permissiondenied' );
 		$this->doApiRequest(

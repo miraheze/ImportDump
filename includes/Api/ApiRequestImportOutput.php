@@ -10,7 +10,10 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Wikimedia\ParamValidator\ParamValidator;
 use Wikimedia\ParamValidator\TypeDef\IntegerDef;
 
-/** Gives handlers what the script of an import has printed so far. */
+/**
+ * Gives handlers what the script of an import printed. Without a part it lists the stored parts and
+ * what is being printed now, with a part it gives the text of that part.
+ */
 class ApiRequestImportOutput extends ApiBase {
 
 	public function __construct(
@@ -35,15 +38,36 @@ class ApiRequestImportOutput extends ApiBase {
 			$this->dieWithError( 'importdump-private', 'permissiondenied' );
 		}
 
-		$this->getResult()->addValue( null, $this->getModuleName(), [
+		$part = $this->extractRequestParams()['part'];
+		if ( $part !== null ) {
+			$this->getResult()->addValue( null, $this->getModuleName(), [
+				'part' => $part,
+				'text' => $this->requestManager->getOutputPart( $part ) ?? '',
+			] );
+
+			return;
+		}
+
+		$result = [
 			'running' => $this->requestManager->getStatus()->isRunning(),
-			'output' => $this->requestManager->getImportOutput() ?? '',
-		] );
+			'parts' => $this->requestManager->getOutputParts(),
+		];
+
+		$live = $this->requestManager->getImportOutput();
+		if ( $live !== null ) {
+			$result['live'] = $live;
+		}
+
+		$this->getResult()->addValue( null, $this->getModuleName(), $result );
 	}
 
 	/** @inheritDoc */
 	public function getAllowedParams(): array {
 		return [
+			'part' => [
+				ParamValidator::PARAM_TYPE => 'integer',
+				IntegerDef::PARAM_MIN => 0,
+			],
 			'requestid' => [
 				ParamValidator::PARAM_TYPE => 'integer',
 				ParamValidator::PARAM_REQUIRED => true,

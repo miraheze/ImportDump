@@ -7,18 +7,90 @@
 	const pollInterval = 2000;
 	const maxFailures = 5;
 	const requestId = $output.data( 'request-id' );
+	const container = $output[ 0 ];
 	const api = new mw.Api();
 
-	function show( text ) {
-		const element = $output[ 0 ];
-		const atBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 20;
-		$output.text( text || mw.msg( 'importdump-output-empty' ) );
-		if ( atBottom ) {
-			element.scrollTop = element.scrollHeight;
+	// The stored parts, by number, with an empty block of the right height until they are loaded.
+	const parts = {};
+	const $live = $( '<pre>' ).addClass( 'ext-importdump-output-live' );
+	$output.append( $live );
+
+	let lineHeight = 0;
+	let started = false;
+
+	const observer = new IntersectionObserver( ( entries ) => {
+		entries.forEach( ( entry ) => {
+			if ( entry.isIntersecting ) {
+				load( $( entry.target ) );
+			}
+		} );
+	}, { root: container, rootMargin: '2000px 0px' } );
+
+	function getLineHeight() {
+		if ( !lineHeight ) {
+			lineHeight = parseFloat( getComputedStyle( $live[ 0 ] ).lineHeight );
 		}
+
+		return lineHeight;
 	}
 
-	// The output is already on the page, so it only needs to be followed while the import runs.
+	function load( $block ) {
+		if ( $block.data( 'loaded' ) || $block.data( 'loading' ) ) {
+			return;
+		}
+
+		$block.data( 'loading', true );
+		api.get( {
+			action: 'requestimportoutput',
+			requestid: requestId,
+			part: $block.data( 'part' ),
+			formatversion: 2
+		} ).then( ( data ) => {
+			$block.text( data.requestimportoutput.text ).data( 'loaded', true );
+			observer.unobserve( $block[ 0 ] );
+		} ).always( () => {
+			$block.data( 'loading', false );
+		} );
+	}
+
+	function addPart( info ) {
+		if ( parts[ info.part ] ) {
+			return;
+		}
+
+		const $block = $( '<pre>' )
+			.addClass( 'ext-importdump-output-part' )
+			.data( 'part', info.part )
+			.css( 'height', info.lines * getLineHeight() + 'px' );
+
+		const later = Object.keys( parts ).map( Number )
+			.filter( ( number ) => number > info.part )
+			.sort( ( first, second ) => first - second );
+
+		const $next = later.length ? parts[ later[ 0 ] ] : $live;
+		$block.insertBefore( $next );
+		parts[ info.part ] = $block;
+		observer.observe( $block[ 0 ] );
+	}
+
+	function update( result ) {
+		const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 20;
+
+		result.parts.forEach( addPart );
+
+		// What is being printed is also stored once its part is done, so it is shown until then.
+		const live = result.live && !parts[ result.live.part ] ? result.live.text : '';
+		const empty = !result.parts.length && !live;
+		$live.text( empty && !result.running ? mw.msg( 'importdump-output-empty' ) : live );
+
+		// A running import is followed from the end, and a finished one is read from the start.
+		if ( result.running && ( atBottom || !started ) ) {
+			container.scrollTop = container.scrollHeight;
+		}
+
+		started = true;
+	}
+
 	function poll( failures ) {
 		api.get( {
 			action: 'requestimportoutput',
@@ -26,7 +98,7 @@
 			formatversion: 2
 		} ).then( ( data ) => {
 			const result = data.requestimportoutput;
-			show( result.output );
+			update( result );
 			if ( result.running ) {
 				setTimeout( () => poll( 0 ), pollInterval );
 			}
@@ -37,8 +109,5 @@
 		} );
 	}
 
-	$output[ 0 ].scrollTop = $output[ 0 ].scrollHeight;
-	if ( $output.data( 'running' ) ) {
-		setTimeout( () => poll( 0 ), pollInterval );
-	}
+	poll( 0 );
 }() );

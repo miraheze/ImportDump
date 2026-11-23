@@ -99,6 +99,13 @@
 				"JobQueueGroupFactory"
 			],
 			"needsPage": false
+		},
+		"ImportOutputStoreJob": {
+			"class": "Miraheze\\ImportDump\\Jobs\\ImportOutputStoreJob",
+			"services": [
+				"ImportDumpRequestManager"
+			],
+			"needsPage": false
 		}
 	},
 	"GroupPermissions": {
