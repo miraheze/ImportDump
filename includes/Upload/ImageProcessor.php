@@ -98,9 +98,25 @@ class ImageProcessor {
 	 * @param string $path The uploaded archive.
 	 * @param ?Closure( string, ?int ): void $onProgress Called with a STAGE_* constant and
 	 *  the percentage done, which is null when it is not known.
+	 * @param ?list<string> $allowedExtensions The extensions that the target wiki accepts,
+	 *  or null to use the ones of this wiki. The extensions that are never accepted are the ones of this wiki.
 	 * @return Status A good status with an ImageResult as its value.
 	 */
-	public function process( string $path, ?Closure $onProgress ): Status {
+	public function process(
+		string $path,
+		?Closure $onProgress,
+		?array $allowedExtensions
+	): Status {
+		$allowed = array_map(
+			strtolower( ... ),
+			$allowedExtensions ?? $this->options->get( MainConfigNames::FileExtensions )
+		);
+
+		$prohibited = array_map(
+			strtolower( ... ),
+			$this->options->get( MainConfigNames::ProhibitedFileExtensions )
+		);
+
 		$format = $this->archiveReader->detectFormat( $path );
 		if ( $format === null ) {
 			return Status::newFatal( 'importdump-images-not-archive' );
@@ -118,7 +134,7 @@ class ImageProcessor {
 			return $listed;
 		}
 
-		$checked = $this->checkEntries( $listed->getValue(), $maxSize );
+		$checked = $this->checkEntries( $listed->getValue(), $maxSize, $allowed, $prohibited );
 		if ( !$checked->isOK() ) {
 			return $checked;
 		}
@@ -169,24 +185,28 @@ class ImageProcessor {
 				return Status::newFatal( 'uploadvirus', $virus );
 			}
 
-			$problem = $extension === '' ?
-				new SkippedFile( $name, 'importdump-images-skip-extension', [] ) :
-				$this->verifyFile( $name, $extension, $tempFile->getPath() );
+			$problem = $extension === '' ? null : $this->verifyFile( $name, $extension, $tempFile->getPath() );
 
-			if ( $problem && $problem->reason === 'filetype-mime-mismatch' ) {
-				// The name stays as it is, because pages link to it.
-				$mime = $this->detectMime( $tempFile->getPath() );
-				$real = in_array( $mime, self::RASTER_TYPES, true ) ? $this->findExtension( $mime ) : null;
-				if ( $real !== null && !$this->verifyFile( $name, $real, $tempFile->getPath() ) ) {
-					$problem = null;
-				}
-			} elseif ( $problem && $extension === '' ) {
-				$fixed = $this->findName( $name, $tempFile->getPath(), $taken );
-				if ( $fixed !== null ) {
+			if ( $extension === '' ) {
+				$fixed = $this->findName( $name, $tempFile->getPath(), $taken, $allowed, $prohibited );
+				if ( $fixed instanceof SkippedFile ) {
+					$problem = $fixed;
+				} else {
 					$fixedExtension = strtolower( pathinfo( $fixed, PATHINFO_EXTENSION ) );
-					if ( !$this->verifyFile( $fixed, $fixedExtension, $tempFile->getPath() ) ) {
+					$problem = $this->verifyFile( $fixed, $fixedExtension, $tempFile->getPath() );
+					if ( !$problem ) {
 						$renamed[$name] = $fixed;
 						$name = $fixed;
+					}
+				}
+			} elseif ( $problem && $problem->reason === 'filetype-mime-mismatch' ) {
+				// The name stays as it is, because pages link to it.
+				$mime = $this->detectMime( $tempFile->getPath() );
+				if ( in_array( $mime, self::RASTER_TYPES, true ) ) {
+					$real = $this->findExtension( $mime, $allowed, $prohibited );
+					if ( $real === null ) {
+						$problem = new SkippedFile( $name, 'importdump-images-skip-type', [ $mime ] );
+					} elseif ( !$this->verifyFile( $name, $real, $tempFile->getPath() ) ) {
 						$problem = null;
 					}
 				}
@@ -234,13 +254,12 @@ class ImageProcessor {
 	 *
 	 * @param list<ArchiveEntry> $entries
 	 * @param int $maxSize
+	 * @param list<string> $allowed The extensions that are accepted, in lowercase.
+	 * @param list<string> $prohibited The extensions that are never accepted, in lowercase.
 	 * @return Status A good status with an array as its value. It has the entries to extract by the name that
 	 *  each file gets, the files that are skipped already, and how many files there are besides the hidden ones.
 	 */
-	private function checkEntries( array $entries, int $maxSize ): Status {
-		$allowed = array_map( strtolower( ... ), $this->options->get( MainConfigNames::FileExtensions ) );
-		$prohibited = array_map( strtolower( ... ), $this->options->get( MainConfigNames::ProhibitedFileExtensions ) );
-
+	private function checkEntries( array $entries, int $maxSize, array $allowed, array $prohibited ): Status {
 		$keep = [];
 		$skipped = [];
 		$keys = [];
@@ -264,7 +283,7 @@ class ImageProcessor {
 				$extension !== '' &&
 				( in_array( $extension, $prohibited, true ) || !in_array( $extension, $allowed, true ) )
 			) {
-				$skipped[] = new SkippedFile( $name, 'importdump-images-skip-extension', [] );
+				$skipped[] = new SkippedFile( $name, 'importdump-images-skip-extension', [ $extension ] );
 				continue;
 			}
 
@@ -300,14 +319,17 @@ class ImageProcessor {
 		return is_string( $mime ) ? $mime : '';
 	}
 
-	/** The first allowed extension that fits a detected type, or null when the wiki has none. */
-	private function findExtension( string $mime ): ?string {
+	/**
+	 * The first allowed extension that fits a detected type, or null when the wiki has none.
+	 *
+	 * @param string $mime
+	 * @param list<string> $allowed The extensions that are accepted, in lowercase.
+	 * @param list<string> $prohibited The extensions that are never accepted, in lowercase.
+	 */
+	private function findExtension( string $mime, array $allowed, array $prohibited ): ?string {
 		if ( $mime === '' ) {
 			return null;
 		}
-
-		$allowed = array_map( strtolower( ... ), $this->options->get( MainConfigNames::FileExtensions ) );
-		$prohibited = array_map( strtolower( ... ), $this->options->get( MainConfigNames::ProhibitedFileExtensions ) );
 
 		$preferred = $this->mimeAnalyzer->getExtensionFromMimeTypeOrNull( $mime );
 		$candidates = $preferred === null ? $allowed : [ strtolower( $preferred ), ...$allowed ];
@@ -325,23 +347,36 @@ class ImageProcessor {
 	}
 
 	/**
-	 * Adds the extension of the detected type to a file that has none. Null when there is no
-	 * allowed one or the new name is already used.
+	 * Adds the extension of the detected type to a file that has none.
 	 *
 	 * @param string $name The name of the file.
 	 * @param string $path Where the file was extracted to.
 	 * @param array<string, true> &$taken The title keys of the names that are in use, which this adds to.
+	 * @param list<string> $allowed The extensions that are accepted, in lowercase.
+	 * @param list<string> $prohibited The extensions that are never accepted, in lowercase.
+	 * @return string|SkippedFile The new name, or why the file has none, which is that no allowed
+	 *  extension fits its content or that the name with the extension is already used.
 	 */
-	private function findName( string $name, string $path, array &$taken ): ?string {
-		$extension = $this->findExtension( $this->detectMime( $path ) );
+	private function findName(
+		string $name,
+		string $path,
+		array &$taken,
+		array $allowed,
+		array $prohibited
+	): string|SkippedFile {
+		$extension = $this->findExtension( $this->detectMime( $path ), $allowed, $prohibited );
 		if ( $extension === null ) {
-			return null;
+			return new SkippedFile( $name, 'importdump-images-skip-no-extension', [] );
 		}
 
 		$fixed = "$name.$extension";
 		$key = $this->titleFactory->makeTitleSafe( NS_FILE, $fixed )?->getDBkey();
-		if ( $key === null || isset( $taken[$key] ) || !$this->isValidName( $fixed ) ) {
-			return null;
+		if ( $key === null || !$this->isValidName( $fixed ) ) {
+			return new SkippedFile( $name, 'importdump-images-skip-name', [] );
+		}
+
+		if ( isset( $taken[$key] ) ) {
+			return new SkippedFile( $name, 'importdump-images-skip-duplicate', [] );
 		}
 
 		$taken[$key] = true;

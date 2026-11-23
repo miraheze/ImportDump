@@ -20,8 +20,11 @@ interface ImportDumpGetTargetStateHook {
 	 *  without implicit ones such as '*' and 'user'. Empty if they have no account there.
 	 * @param ?string[] &$extensions The names of the enabled extensions, as ExtensionRegistry knows
 	 *  them, matching the names in $wgRequestImportExtensionRequirements.
-	 * @param array<string, bool> &$settings Whether each setting that a requirement names is
+	 * @param array<string, bool|list<string>> &$settings Whether each setting that a requirement names is
 	 *  enabled, by the name of the setting. Settings that are left out are treated as unknown.
+	 *  The 'fileExtensions' setting is the exception, it lists the extensions of $wgFileExtensions on the
+	 *  target wiki. The images of a request are checked against it when they are verified, instead of
+	 *  the extensions of the wiki that stores the requests, which is used if it is left out.
 	 * @param string[] &$rights The rights that the requester has on the target wiki, including
 	 *  the ones from implicit groups. Leave it empty if they are not known.
 	 * @return void This hook must not abort, it must return no value.
