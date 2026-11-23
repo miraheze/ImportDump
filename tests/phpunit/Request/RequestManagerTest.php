@@ -30,9 +30,11 @@ use Miraheze\ImportDump\Request\RequestHistory;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStage;
 use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Request\RequestType;
 use Miraheze\ImportDump\Requirements\RequirementProblem;
 use Miraheze\ImportDump\Requirements\RequirementProblemKind;
 use Miraheze\ImportDump\Tests\IsolatesManageWikiTrait;
+use Miraheze\ImportDump\Upload\SkippedFile;
 use stdClass;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
@@ -44,6 +46,9 @@ use function array_keys;
 use function array_map;
 use function file_get_contents;
 use function file_put_contents;
+use function strlen;
+use function strpos;
+use function substr;
 use function wfMessage;
 use function wfTimestamp;
 
@@ -121,6 +126,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 				'request_stage' => null,
 				'request_history' => null,
 				'request_requirements' => null,
+				'request_skipped' => null,
 				'request_locked' => 0,
 				'request_private' => 0,
 			] )
@@ -443,6 +449,98 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		];
 	}
 
+	private function addImagesRequest( int $linkedID ): int {
+		$dbw = $this->getDb();
+		$dbw->newInsertQueryBuilder()
+			->insertInto( 'import_requests' )
+			->row( [
+				'request_source' => 'https://requestimporttest.com',
+				'request_target' => 'requestimporttest',
+				'request_reason' => 'test',
+				'request_status' => RequestStatus::Pending->value,
+				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
+				'request_timestamp' => $dbw->timestamp(),
+				'request_type' => RequestType::Images->value,
+				'request_linked_id' => $linkedID,
+			] )
+			->caller( __METHOD__ )
+			->execute();
+
+		return $dbw->insertId();
+	}
+
+	/**
+	 * @covers ::getType
+	 * @covers ::getLinkedID
+	 * @covers ::getLinkedIDs
+	 */
+	public function testRequestsWithoutImagesAreNotLinked(): void {
+		$manager = $this->getRequestManager( id: 1 );
+
+		$this->assertSame( RequestType::Xml, $manager->getType() );
+		$this->assertNull( $manager->getLinkedID() );
+		$this->assertSame( [], $manager->getLinkedIDs() );
+		$this->assertStringEndsWith( '.xml', $manager->getFileName() );
+	}
+
+	/**
+	 * @covers ::getType
+	 * @covers ::getLinkedID
+	 * @covers ::getLinkedIDs
+	 * @covers ::getLinkedStatus
+	 */
+	public function testLinkedRequestsPointAtEachOther(): void {
+		$imagesID = $this->addImagesRequest( linkedID: 1 );
+
+		$images = $this->getRequestManager( $imagesID );
+		$this->assertSame( RequestType::Images, $images->getType() );
+		$this->assertSame( 1, $images->getLinkedID() );
+		$this->assertSame( [ 1 ], $images->getLinkedIDs() );
+		$this->assertSame( RequestStatus::Pending, $images->getLinkedStatus( 1 ) );
+		$this->assertNull( $images->getLinkedStatus( 9999 ) );
+
+		$xml = $this->getRequestManager( id: 1 );
+		$this->assertSame( [ $imagesID ], $xml->getLinkedIDs() );
+	}
+
+	/**
+	 * @covers ::getFileName
+	 * @covers ::getRemainingCommands
+	 * @covers ::hasImported
+	 */
+	public function testImagesRequestHasItsOwnFiles(): void {
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+
+		$this->assertStringEndsWith( '-images', $images->getFileName() );
+
+		$images->setStage( RequestStage::Images );
+		$this->assertFalse( $images->hasImported() );
+		$this->assertSame( [], $images->getRemainingCommands() );
+	}
+
+	/**
+	 * @covers ::publishExtractedImages
+	 * @covers ::fileExists
+	 * @covers ::getFileSize
+	 * @covers ::deleteFile
+	 */
+	public function testImagesAreStoredAndDeleted(): void {
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+		$this->assertFalse( $images->fileExists() );
+
+		$first = $this->getNewTempFile();
+		$second = $this->getNewTempFile();
+		file_put_contents( $first, 'abc' );
+		file_put_contents( $second, 'de' );
+
+		$this->assertStatusGood( $images->publishExtractedImages( [ 'a.png' => $first, 'b.png' => $second ] ) );
+		$this->assertTrue( $images->fileExists() );
+		$this->assertSame( 5, $images->getFileSize() );
+
+		$this->assertTrue( $images->deleteFile() );
+		$this->assertFalse( $images->fileExists() );
+	}
+
 	/**
 	 * @covers ::getRemainingCommands
 	 */
@@ -476,6 +574,77 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 			],
 			$manager->getRemainingCommands()
 		);
+	}
+
+	/**
+	 * @covers ::getImportComment
+	 */
+	public function testImportCommentCannotMakeMarkupFromTheSource(): void {
+		$dbw = $this->getDb();
+		$dbw->newInsertQueryBuilder()
+			->insertInto( 'import_requests' )
+			->row( [
+				'request_source' => 'https://example.com/[[Category:A]]{{b}}<c>|__NOTOC__ d',
+				'request_target' => 'requestimporttest',
+				'request_reason' => 'test',
+				'request_status' => RequestStatus::Pending->value,
+				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
+				'request_timestamp' => $dbw->timestamp(),
+			] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$comment = $this->getRequestManager( $dbw->insertId() )->getImportComment();
+
+		$this->assertStringStartsWith( 'Imported from https://example.com/', $comment );
+		$source = substr( $comment, 0, (int)strpos( $comment, ' in ' ) );
+		foreach ( [ '[', ']', '{', '}', '<', '>', '|', '__', ' ' ] as $markup ) {
+			$this->assertStringNotContainsString( $markup, substr( $source, strlen( 'Imported from ' ) ) );
+		}
+	}
+
+	/**
+	 * @covers ::getImportComment
+	 */
+	public function testImportCommentNamesTheSourceAndTheRequest(): void {
+		$comment = $this->getRequestManager( id: 1 )->getImportComment();
+
+		$this->assertMatchesRegularExpression(
+			'~^Imported from https://requestimporttest\.com in ' .
+				'(\[\S+Special:RequestImportQueue/1 import request #1\]|import request #1)$~',
+			$comment
+		);
+	}
+
+	/**
+	 * @covers ::getCommand
+	 * @covers ::getImportComment
+	 */
+	public function testImagesCommandHasAnEscapedComment(): void {
+		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [] );
+
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+		$command = $images->getCommand();
+
+		$this->assertStringContainsString(
+			"--comment='Imported from https://requestimporttest.com in ",
+			$command
+		);
+		$this->assertStringNotContainsString( '{comment}', $command );
+	}
+
+	/**
+	 * @covers ::getCommand
+	 */
+	public function testCommandWithoutACommentPlaceholder(): void {
+		$this->overrideConfigValues( [
+			ConfigNames::ImagesCommand => 'import {file-path}',
+			MainConfigNames::LocalDatabases => [],
+		] );
+
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+
+		$this->assertStringNotContainsString( 'Imported from', $images->getCommand() );
 	}
 
 	/**
@@ -702,6 +871,49 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
+	 * @covers ::getSkippedImages
+	 * @covers ::setSkippedImages
+	 */
+	public function testSkippedImages(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$this->assertSame( [ 'total' => 0, 'files' => [] ], $manager->getSkippedImages() );
+
+		$files = [
+			new SkippedFile( 'a.png', 'importdump-images-skip-extension', [] ),
+			new SkippedFile( 'b.png', 'filetype-mime-mismatch', [ 'png', 'image/jpeg' ] ),
+		];
+
+		$manager->setSkippedImages( $files );
+		$this->assertEquals( [ 'total' => 2, 'files' => $files ], $manager->getSkippedImages() );
+		$this->assertEquals(
+			[ 'total' => 2, 'files' => $files ],
+			$this->getRequestManager( id: 1 )->getSkippedImages()
+		);
+
+		$manager->setSkippedImages( [] );
+		$this->assertSame( [ 'total' => 0, 'files' => [] ], $this->getRequestManager( id: 1 )->getSkippedImages() );
+	}
+
+	/**
+	 * @covers ::getSkippedImages
+	 * @covers ::setSkippedImages
+	 */
+	public function testOnlyTheFirstSkippedImagesAreKept(): void {
+		$files = [];
+		for ( $i = 0; $i < 600; $i++ ) {
+			$files[] = new SkippedFile( "$i.png", 'importdump-images-skip-extension', [] );
+		}
+
+		$manager = $this->getRequestManager( id: 1 );
+		$manager->setSkippedImages( $files );
+
+		$stored = $this->getRequestManager( id: 1 )->getSkippedImages();
+		$this->assertSame( 600, $stored['total'] );
+		$this->assertCount( 500, $stored['files'] );
+		$this->assertSame( '0.png', $stored['files'][0]->name );
+	}
+
+	/**
 	 * @covers ::getRequirements
 	 * @covers ::setRequirements
 	 */
@@ -921,25 +1133,66 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * @param string[] $rights
 	 * @param ?string[] $groups
-	 * @covers ::requesterHasTargetRight
-	 * @dataProvider provideTargetRight
+	 * @param ?string[] $expected
+	 * @covers ::getMissingTargetRights
+	 * @covers ::getRequiredTargetRights
+	 * @dataProvider provideMissingTargetRights
 	 */
-	public function testRequesterHasTargetRight( array $rights, ?array $groups, ?bool $expected ): void {
+	public function testMissingTargetRights( array $rights, ?array $groups, ?array $expected ): void {
 		$this->setTargetState( [], [], $rights, $groups );
 
-		$this->assertSame(
-			$expected,
-			$this->getRequestManager( id: 1 )->requesterHasTargetRight( RequestManager::IMPORT_RIGHT )
-		);
+		$this->assertSame( $expected, $this->getRequestManager( id: 1 )->getMissingTargetRights() );
 	}
 
-	public static function provideTargetRight(): array {
+	public static function provideMissingTargetRights(): array {
 		return [
-			'has it' => [ [ 'read', 'import' ], [ 'sysop' ], true ],
-			'does not have it' => [ [ 'read', 'edit' ], [ 'sysop' ], false ],
+			'has it' => [ [ 'read', 'import' ], [ 'sysop' ], [] ],
+			'does not have it' => [ [ 'read', 'edit' ], [ 'sysop' ], [ 'import' ] ],
 			'no rights given' => [ [], [ 'sysop' ], null ],
 			'no account on the target' => [ [ 'read', 'import' ], null, null ],
 		];
+	}
+
+	/**
+	 * @covers ::getMissingTargetRights
+	 * @covers ::getRequiredTargetRights
+	 */
+	public function testRequiredRightsDependOnTheTypeOfRequest(): void {
+		// Add this first. setTargetState() mocks services that creating the test user needs.
+		$imagesID = $this->addImagesRequest( linkedID: 1 );
+
+		$this->overrideConfigValue( ConfigNames::RequiredRights, [
+			'images' => [ 'upload', 'reupload' ],
+			'xml' => [ 'import' ],
+		] );
+
+		$this->setTargetState( [], [], [ 'read', 'upload' ], [ 'sysop' ] );
+
+		$images = $this->getRequestManager( $imagesID );
+		$this->assertSame( [ 'upload', 'reupload' ], $images->getRequiredTargetRights() );
+		$this->assertSame( [ 'reupload' ], $images->getMissingTargetRights() );
+
+		$xml = $this->getRequestManager( id: 1 );
+		$this->assertSame( [ 'import' ], $xml->getRequiredTargetRights() );
+		$this->assertSame( [ 'import' ], $xml->getMissingTargetRights() );
+	}
+
+	/**
+	 * @covers ::getMissingTargetRights
+	 * @covers ::getRequiredTargetRights
+	 */
+	public function testNothingIsRequiredForAnUnlistedType(): void {
+		$imagesID = $this->addImagesRequest( linkedID: 1 );
+
+		$this->overrideConfigValue( ConfigNames::RequiredRights, [ 'images' => 'upload' ] );
+		$this->setTargetState( [], [], [ 'read' ], [ 'sysop' ] );
+
+		$xml = $this->getRequestManager( id: 1 );
+		$this->assertSame( [], $xml->getRequiredTargetRights() );
+		$this->assertSame( [], $xml->getMissingTargetRights() );
+
+		$images = $this->getRequestManager( $imagesID );
+		$this->assertSame( [ 'upload' ], $images->getRequiredTargetRights() );
 	}
 
 	private function notifyRequester( RequestManager $manager ): void {

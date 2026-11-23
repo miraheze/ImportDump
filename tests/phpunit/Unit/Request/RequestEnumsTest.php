@@ -9,12 +9,14 @@ use MediaWikiUnitTestCase;
 use Miraheze\ImportDump\Request\RequestHistory;
 use Miraheze\ImportDump\Request\RequestStage;
 use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Request\RequestType;
 use function array_column;
 
 /**
  * @covers \Miraheze\ImportDump\Request\RequestHistory
  * @covers \Miraheze\ImportDump\Request\RequestStage
  * @covers \Miraheze\ImportDump\Request\RequestStatus
+ * @covers \Miraheze\ImportDump\Request\RequestType
  */
 class RequestEnumsTest extends MediaWikiUnitTestCase {
 
@@ -46,7 +48,7 @@ class RequestEnumsTest extends MediaWikiUnitTestCase {
 		$this->assertSame(
 			[
 				'download', 'import', 'sitestats', 'textindex',
-				'recentchanges', 'refreshlinks', 'counts', 'afterimport',
+				'recentchanges', 'refreshlinks', 'counts', 'afterimport', 'images',
 			],
 			array_column( RequestStage::cases(), 'value' )
 		);
@@ -65,6 +67,20 @@ class RequestEnumsTest extends MediaWikiUnitTestCase {
 		yield 'import' => [ RequestStage::Import, false ];
 		yield 'sitestats' => [ RequestStage::SiteStats, true ];
 		yield 'afterimport' => [ RequestStage::AfterImport, true ];
+		yield 'images' => [ RequestStage::Images, false ];
+	}
+
+	public function testStagesOfEachType(): void {
+		$this->assertSame( [ RequestStage::Images ], RequestStage::forType( RequestType::Images ) );
+
+		$xml = RequestStage::forType( RequestType::Xml );
+		$this->assertCount( 8, $xml );
+		$this->assertSame( RequestStage::Download, $xml[0] );
+		$this->assertNotContains( RequestStage::Images, $xml );
+	}
+
+	public function testTypesKeepTheirStoredValues(): void {
+		$this->assertSame( [ 'images', 'xml' ], array_column( RequestType::cases(), 'value' ) );
 	}
 
 	public function testStageLabelKey(): void {

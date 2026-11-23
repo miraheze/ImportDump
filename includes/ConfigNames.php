@@ -21,6 +21,8 @@ class ConfigNames {
 
 	public const string EnableHistoryDetection = 'RequestImportEnableHistoryDetection';
 
+	public const string EnableImageImports = 'RequestImportEnableImageImports';
+
 	public const string ExtensionRequirements = 'RequestImportExtensionRequirements';
 
 	public const string ExternalBinaries = 'RequestImportExternalBinaries';
@@ -28,6 +30,8 @@ class ConfigNames {
 	public const string FileExpiryDays = 'RequestImportFileExpiryDays';
 
 	public const string HelpUrl = 'RequestImportHelpUrl';
+
+	public const string ImagesCommand = 'RequestImportImagesCommand';
 
 	public const string InterwikiMap = 'RequestImportInterwikiMap';
 
@@ -37,7 +41,11 @@ class ConfigNames {
 
 	public const string MaxExtractedSize = 'RequestImportMaxExtractedSize';
 
+	public const string MaxSkippedImages = 'RequestImportMaxSkippedImages';
+
 	public const string MaxUploadSize = 'RequestImportMaxUploadSize';
+
+	public const string RequiredRights = 'RequestImportRequiredRights';
 
 	public const string StalledImportHours = 'RequestImportStalledImportHours';
 

@@ -13,6 +13,9 @@ CREATE TABLE /*_*/import_requests (
   request_stage VARCHAR(32) DEFAULT NULL,
   request_history TEXT DEFAULT NULL,
   request_requirements BLOB DEFAULT NULL,
+  request_skipped BLOB DEFAULT NULL,
+  request_type TEXT DEFAULT 'xml' NOT NULL,
+  request_linked_id BIGINT UNSIGNED DEFAULT NULL,
   request_locked SMALLINT UNSIGNED DEFAULT 0 NOT NULL,
   request_private SMALLINT UNSIGNED DEFAULT 0 NOT NULL
 );
@@ -26,6 +29,8 @@ CREATE INDEX request_timestamp ON /*_*/import_requests (request_timestamp);
 CREATE INDEX request_target ON /*_*/import_requests (request_target);
 
 CREATE INDEX request_status ON /*_*/import_requests (request_status);
+
+CREATE INDEX request_linked_id ON /*_*/import_requests (request_linked_id);
 
 
 CREATE TABLE /*_*/import_request_comments (

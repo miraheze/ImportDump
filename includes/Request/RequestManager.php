@@ -16,14 +16,17 @@ use MediaWiki\MainConfigNames;
 use MediaWiki\Notification\NotificationService;
 use MediaWiki\Notification\RecipientSet;
 use MediaWiki\Permissions\Authority;
+use MediaWiki\Shell\Shell;
 use MediaWiki\SpecialPage\SpecialPage;
 use MediaWiki\Status\Status;
 use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserIdentity;
+use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\Jobs\ImportDumpJob;
+use Miraheze\ImportDump\Jobs\ImportImagesJob;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\Progress\ImportProgress;
@@ -32,6 +35,7 @@ use Miraheze\ImportDump\Requirements\RequirementChecker;
 use Miraheze\ImportDump\Requirements\RequirementProblem;
 use Miraheze\ImportDump\Requirements\TargetState;
 use Miraheze\ImportDump\Requirements\TargetStateProvider;
+use Miraheze\ImportDump\Upload\SkippedFile;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use stdClass;
 use Wikimedia\FileBackend\FileBackend;
@@ -45,6 +49,7 @@ use Wikimedia\Rdbms\SelectQueryBuilder;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use Wikimedia\Timestamp\TimestampFormat;
 use function array_column;
+use function array_diff;
 use function array_filter;
 use function array_map;
 use function array_merge;
@@ -53,18 +58,27 @@ use function array_unique;
 use function array_values;
 use function basename;
 use function boolval;
+use function count;
 use function explode;
 use function in_array;
+use function intval;
 use function is_array;
 use function json_decode;
 use function json_encode;
+use function max;
 use function parse_url;
 use function preg_replace;
+use function preg_replace_callback;
+use function rawurlencode;
+use function str_contains;
 use function str_replace;
 use function trim;
+use function wfEscapeWikiText;
 use function wfTimestamp;
+use const JSON_INVALID_UTF8_SUBSTITUTE;
 use const MW_INSTALL_PATH;
 use const PHP_URL_HOST;
+use const PHP_URL_SCHEME;
 
 class RequestManager {
 
@@ -73,6 +87,9 @@ class RequestManager {
 
 	/** The virtual domain of the database that has the requests. */
 	public const string VIRTUAL_DOMAIN = 'virtual-requestimport';
+
+	/** The most skipped files that are kept for a request. */
+	private const int MAX_STORED_SKIPPED = 500;
 
 	private const array SYSTEM_USERS = [
 		self::EXTENSION_USER,
@@ -89,15 +106,15 @@ class RequestManager {
 	public const array CONSTRUCTOR_OPTIONS = [
 		ConfigNames::DumpCommand,
 		ConfigNames::FileExpiryDays,
+		ConfigNames::ImagesCommand,
 		ConfigNames::InterwikiMap,
 		ConfigNames::MaintenanceCommand,
+		ConfigNames::RequiredRights,
 		MainConfigNames::LocalDatabases,
 	];
 
 	/** The rights that the requester needs on the target wiki to be shown what it is missing. */
 	public const array REQUIRED_TARGET_RIGHTS = [ 'read' ];
-
-	public const string IMPORT_RIGHT = 'import';
 
 	private IDatabase $dbw;
 	private stdClass|false $row;
@@ -399,7 +416,10 @@ class RequestManager {
 	}
 
 	public function getCommand(): string {
-		$command = $this->options->get( ConfigNames::DumpCommand );
+		$command = $this->options->get(
+			$this->getType() === RequestType::Images ? ConfigNames::ImagesCommand : ConfigNames::DumpCommand
+		);
+
 		if ( !$this->getInterwikiPrefix() ) {
 			$command = preg_replace( '/--username-prefix=?/', '', $command );
 		}
@@ -410,13 +430,51 @@ class RequestManager {
 			'{username-prefix}',
 			'{file-name}',
 			'{file-path}',
+			'{comment}',
 		], [
 			MW_INSTALL_PATH,
 			$this->getTarget(),
 			$this->getInterwikiPrefix(),
 			$this->getFileName(),
 			$this->getSplitFilePath(),
+			str_contains( $command, '{comment}' ) ? Shell::escape( $this->getImportComment() ) : '',
 		], $command );
+	}
+
+	public function getImportComment(): string {
+		$wiki = WikiMap::getWiki( $this->dbw->getDomainID() );
+		$source = $this->getCommentUrl( $this->getSource() );
+		if ( !$wiki ) {
+			return $this->messageLocalizer->msg( 'importdump-images-comment-plain', $source, $this->ID )
+				->inContentLanguage()
+				->text();
+		}
+
+		return $this->messageLocalizer->msg(
+			'importdump-images-comment',
+			$source,
+			$wiki->getCanonicalUrl( 'Special:RequestImportQueue/' . $this->ID ),
+			$this->ID,
+			SpecialPage::getTitleFor( 'RequestImportQueue', (string)$this->ID )->getPrefixedText()
+		)->inContentLanguage()->text();
+	}
+
+	/**
+	 * The comment is wikitext on the pages of the files. A web address stays a link,
+	 * with the characters that wikitext treats as markup encoded. Anything else is escaped.
+	 */
+	private function getCommentUrl( string $url ): string {
+		if ( !in_array( parse_url( $url, PHP_URL_SCHEME ), [ 'http', 'https' ], true ) ) {
+			return wfEscapeWikiText( $url );
+		}
+
+		$url = str_replace( [ '__', '~~~', '&#' ], [ '_%5F', '%7E%7E%7E', '%26#' ], $url );
+
+		return preg_replace_callback(
+			'/[\x00-\x20"\'<>\[\]{}|\\\\^`\x7f]/',
+			static fn ( array $match ): string => rawurlencode( $match[0] ),
+			$url
+		) ?? wfEscapeWikiText( $url );
 	}
 
 	/** Whether the requester has all of the rights that are needed to see the state of the target wiki. */
@@ -428,18 +486,30 @@ class RequestManager {
 		return $this->getTargetState()->hasRights( self::REQUIRED_TARGET_RIGHTS );
 	}
 
+	/** @return list<string> The rights that the requester needs on the target wiki for this type of request. */
+	public function getRequiredTargetRights(): array {
+		$rights = $this->options->get( ConfigNames::RequiredRights )[$this->getType()->value] ?? [];
+		return array_values( array_unique( (array)$rights ) );
+	}
+
 	/**
-	 * Whether the requester has a right on the target wiki, as the ImportDumpGetTargetState hook
-	 * reports it. This is null when that is not known, which is without an account on the target
-	 * wiki or when the hook gives no rights.
+	 * The required rights that the requester does not have on the target wiki, as the
+	 * ImportDumpGetTargetState hook reports them. This is null when that is not known, which is
+	 * without an account on the target wiki or when the hook gives no rights.
+	 *
+	 * @return ?list<string>
 	 */
-	public function requesterHasTargetRight( string $right ): ?bool {
+	public function getMissingTargetRights(): ?array {
 		if ( !$this->targetExists() || $this->getRequesterGroupsOnTarget() === null ) {
 			return null;
 		}
 
 		$rights = $this->getTargetState()->rights;
-		return $rights === [] ? null : in_array( $right, $rights, true );
+		if ( $rights === [] ) {
+			return null;
+		}
+
+		return array_values( array_diff( $this->getRequiredTargetRights(), $rights ) );
 	}
 
 	/** @return ?string[] The groups of the requester on the target wiki, or null without an account there. */
@@ -492,6 +562,33 @@ class RequestManager {
 		return $this->publishVerified( $this->getUnverifiedFilePath(), FileRepo::DELETE_SOURCE );
 	}
 
+	/**
+	 * Stores the files that were extracted from the unverified archive in the images directory of
+	 * this request, and removes the archive.
+	 *
+	 * @param array<string, string> $files The name that each file gets, and the path that it is read from.
+	 */
+	public function publishExtractedImages( array $files ): Status {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$directory = $this->getFilePath();
+
+		$status = Status::wrap( $backend->prepare( [ 'dir' => $directory ] ) );
+		foreach ( $files as $name => $source ) {
+			if ( !$status->isOK() ) {
+				return $status;
+			}
+
+			$status->merge( Status::wrap( $backend->quickStore( [ 'src' => $source, 'dst' => "$directory/$name" ] ) ) );
+		}
+
+		if ( !$status->isOK() ) {
+			return $status;
+		}
+
+		$this->deleteUnverifiedFile();
+		return $status;
+	}
+
 	/** Publishes a file that was extracted from the unverified file, which is then removed. */
 	public function publishExtractedFile( string $extractedPath ): Status {
 		return $this->publishVerified( $extractedPath, 0 );
@@ -531,25 +628,50 @@ class RequestManager {
 		return FileBackend::splitStoragePath( $this->getFilePath() )[2];
 	}
 
+	/** The images of a request are kept in a directory, which has no extension. */
 	public function getFileName(): string {
-		return $this->getTarget() . '-' . $this->getTimestamp() . '.xml';
+		$name = $this->getTarget() . '-' . $this->getTimestamp();
+		return $this->getType() === RequestType::Images ? "$name-images" : "$name.xml";
 	}
 
 	public function fileExists(): bool {
-		$localRepo = $this->repoGroup->getLocalRepo();
-		$backend = $localRepo->getBackend();
-		if ( $backend->fileExists( [ 'src' => $this->getFilePath() ] ) ) {
-			return true;
+		if ( $this->getType() === RequestType::Images ) {
+			return $this->listImageFiles() !== [];
 		}
 
-		return false;
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		return $backend->fileExists( [ 'src' => $this->getFilePath() ] ) === true;
+	}
+
+	/** @return list<string> The paths of the stored image files, or nothing for any other request. */
+	private function listImageFiles(): array {
+		if ( $this->getType() !== RequestType::Images ) {
+			return [];
+		}
+
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$files = $backend->getFileList( [ 'dir' => $this->getFilePath() ] );
+		if ( $files === null ) {
+			return [];
+		}
+
+		$paths = [];
+		foreach ( $files as $file ) {
+			$paths[] = $this->getFilePath() . '/' . $file;
+		}
+
+		return $paths;
 	}
 
 	public function deleteFile(): bool {
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
 
-		$success = true;
 		$paths = [ $this->getFilePath(), $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
+		if ( $this->getType() === RequestType::Images ) {
+			$paths = [ ...$this->listImageFiles(), $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
+		}
+
+		$success = true;
 		foreach ( $paths as $path ) {
 			$status = $backend->quickDelete( [
 				'src' => $path,
@@ -557,6 +679,10 @@ class RequestManager {
 			] );
 
 			$success = $status->isOK() && $success;
+		}
+
+		if ( $this->getType() === RequestType::Images ) {
+			$backend->clean( [ 'dir' => $this->getFilePath() ] );
 		}
 
 		return $success;
@@ -590,8 +716,15 @@ class RequestManager {
 			return 0;
 		}
 
-		$localRepo = $this->repoGroup->getLocalRepo();
-		$backend = $localRepo->getBackend();
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		if ( $this->getType() === RequestType::Images ) {
+			$size = 0;
+			foreach ( $this->listImageFiles() as $path ) {
+				$size += (int)$backend->getFileSize( [ 'src' => $path ] );
+			}
+
+			return $size;
+		}
 
 		return (int)$backend->getFileSize( [ 'src' => $this->getFilePath() ] );
 	}
@@ -626,11 +759,63 @@ class RequestManager {
 	}
 
 	public function hasImported(): bool {
-		return $this->getStage()?->hasImported() ?? false;
+		return $this->getType() === RequestType::Xml && ( $this->getStage()?->hasImported() ?? false );
+	}
+
+	/** @return list<RequestStage> The stages that this request goes through, in order. */
+	public function getStages(): array {
+		return RequestStage::forType( $this->getType() );
+	}
+
+	public function getType(): RequestType {
+		return RequestType::tryFrom( $this->row->request_type ?? '' ) ?? RequestType::Xml;
+	}
+
+	/** The request that this one was made together with, which is the XML request for an images request. */
+	public function getLinkedID(): ?int {
+		$linked = $this->row->request_linked_id ?? null;
+		return $linked === null ? null : (int)$linked;
+	}
+
+	/**
+	 * The IDs of the requests that were made together with this one, whichever of them was made first.
+	 *
+	 * @return list<int>
+	 */
+	public function getLinkedIDs(): array {
+		$linked = $this->getLinkedID();
+		if ( $linked !== null ) {
+			return [ $linked ];
+		}
+
+		$ids = $this->dbw->newSelectQueryBuilder()
+			->select( 'request_id' )
+			->from( 'import_requests' )
+			->where( [ 'request_linked_id' => $this->ID ] )
+			->orderBy( 'request_id' )
+			->caller( __METHOD__ )
+			->fetchFieldValues();
+
+		return array_values( array_map( intval( ... ), $ids ) );
+	}
+
+	public function getLinkedStatus( int $linkedID ): ?RequestStatus {
+		$status = $this->dbw->newSelectQueryBuilder()
+			->select( 'request_status' )
+			->from( 'import_requests' )
+			->where( [ 'request_id' => $linkedID ] )
+			->caller( __METHOD__ )
+			->fetchField();
+
+		return $status === false ? null : RequestStatus::tryFrom( $status );
 	}
 
 	/** @return list<string> */
 	public function getRemainingCommands(): array {
+		if ( $this->getType() === RequestType::Images ) {
+			return [];
+		}
+
 		$scripts = [
 			RequestStage::SiteStats->value => [ 'initSiteStats.php' => '--update' ],
 			RequestStage::TextIndex->value => [ 'rebuildtextindex.php' => '' ],
@@ -832,6 +1017,53 @@ class RequestManager {
 		return $value ? array_map( boolval( ... ), (array)json_decode( $value, true ) ) : [];
 	}
 
+	/**
+	 * @param list<SkippedFile> $skipped The image files that are left out of the import.
+	 *  Only the first ones are kept, but the total is.
+	 */
+	public function setSkippedImages( array $skipped ): void {
+		$value = $skipped ? json_encode( [
+			'total' => count( $skipped ),
+			'files' => array_map(
+				static fn ( SkippedFile $file ): array => [
+					'name' => $file->name,
+					'reason' => $file->reason,
+					'params' => $file->params,
+				],
+				array_slice( $skipped, 0, self::MAX_STORED_SKIPPED )
+			),
+		], JSON_INVALID_UTF8_SUBSTITUTE ) : null;
+
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_skipped' => $value ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->row->request_skipped = $value;
+	}
+
+	/** @return array{total:int,files:list<SkippedFile>} */
+	public function getSkippedImages(): array {
+		$value = $this->row->request_skipped ?? null;
+		$data = $value ? json_decode( $value, true ) : null;
+		if ( !is_array( $data ) ) {
+			return [ 'total' => 0, 'files' => [] ];
+		}
+
+		$files = [];
+		foreach ( (array)( $data['files'] ?? [] ) as $file ) {
+			$files[] = new SkippedFile(
+				(string)( $file['name'] ?? '' ),
+				(string)( $file['reason'] ?? '' ),
+				array_values( (array)( $file['params'] ?? [] ) )
+			);
+		}
+
+		return [ 'total' => max( (int)( $data['total'] ?? 0 ), count( $files ) ), 'files' => $files ];
+	}
+
 	/** @return list<RequirementProblem> */
 	public function getRequirementProblems(): array {
 		$requirements = $this->getRequirements();
@@ -877,9 +1109,10 @@ class RequestManager {
 	}
 
 	public function executeJob( string $username ): void {
+		$jobName = $this->getType() === RequestType::Images ? ImportImagesJob::JOB_NAME : ImportDumpJob::JOB_NAME;
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getTarget() )->push(
 			new JobSpecification(
-				ImportDumpJob::JOB_NAME,
+				$jobName,
 				[
 					'requestid' => $this->ID,
 					'username' => $username,

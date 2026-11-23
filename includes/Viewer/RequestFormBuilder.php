@@ -13,6 +13,7 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Notices\NoticeResult;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Request\RequestType;
 use function array_unique;
 use function ctype_space;
 use function htmlspecialchars;
@@ -227,6 +228,7 @@ class RequestFormBuilder {
 
 			if (
 				$targetExists &&
+				$this->requestManager->getType() !== RequestType::Images &&
 				!$this->requestManager->getInterwikiPrefix() &&
 				$authority->isAllowed( 'handle-import-request-interwiki' )
 			) {

@@ -7,8 +7,9 @@ namespace Miraheze\ImportDump\Notices;
 use MediaWiki\Context\IContextSource;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
+use function count;
 
-final class ImportRightNotices implements NoticeProvider {
+final class RequiredRightsNotices implements NoticeProvider {
 
 	/** @inheritDoc */
 	public function getAudience(): NoticeAudience {
@@ -34,15 +35,18 @@ final class ImportRightNotices implements NoticeProvider {
 		IContextSource $context,
 		RequestStatus $status
 	): array {
-		if ( $requestManager->requesterHasTargetRight( RequestManager::IMPORT_RIGHT ) !== false ) {
+		$missing = $requestManager->getMissingTargetRights();
+		if ( !$missing ) {
 			return [];
 		}
 
 		return [ new RequestNotice(
 			severity: NoticeSeverity::Warning,
-			html: $context->msg( 'importdump-info-no-import-right',
+			html: $context->msg( 'importdump-info-missing-rights',
 				$requestManager->getRequester()->getName(),
-				$requestManager->getTarget()
+				$requestManager->getTarget(),
+				$context->getLanguage()->commaList( $missing ),
+				count( $missing )
 			)->escaped(),
 			invalidates: false,
 			declines: false,

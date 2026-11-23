@@ -119,6 +119,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 			$services->getFormatterFactory(),
 			$services->getService( 'ImportDumpAttentionNotifier' ),
 			$services->getService( 'ImportDumpDumpProcessor' ),
+			$services->getService( 'ImportDumpImageProcessor' ),
 			$manager,
 			$services->getService( 'ImportDumpVerificationProgress' )
 		);

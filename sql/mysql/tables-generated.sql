@@ -17,6 +17,9 @@ CREATE TABLE /*_*/import_requests (
   request_stage VARCHAR(32) DEFAULT NULL,
   request_history ENUM('full', 'partial', 'unknown') DEFAULT NULL,
   request_requirements BLOB DEFAULT NULL,
+  request_skipped MEDIUMBLOB DEFAULT NULL,
+  request_type ENUM('images', 'xml') DEFAULT 'xml' NOT NULL,
+  request_linked_id BIGINT UNSIGNED DEFAULT NULL,
   request_locked TINYINT UNSIGNED DEFAULT 0 NOT NULL,
   request_private TINYINT UNSIGNED DEFAULT 0 NOT NULL,
   INDEX request_actor_timestamp (
@@ -25,6 +28,7 @@ CREATE TABLE /*_*/import_requests (
   INDEX request_timestamp (request_timestamp),
   INDEX request_target (request_target),
   INDEX request_status (request_status),
+  INDEX request_linked_id (request_linked_id),
   PRIMARY KEY(request_id)
 ) /*$wgDBTableOptions*/;
 
