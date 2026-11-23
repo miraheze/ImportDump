@@ -20,6 +20,7 @@ use function array_keys;
 use function array_map;
 use function base64_decode;
 use function file_get_contents;
+use function ksort;
 use function str_repeat;
 use function strlen;
 
@@ -230,16 +231,21 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		'@phan-var ImageResult $result';
 
 		$this->assertSame( [ 'a.png', 'b.png', 'c.png', 'd.png' ], array_keys( $result->files ) );
+
+		// Names are rejected before extraction and the content of the rest is checked afterwards.
+		$reasons = array_column( array_map(
+			static fn ( SkippedFile $file ): array => [ $file->name, $file->reason ],
+			$result->skipped
+		), 1, 0 );
+
+		ksort( $reasons );
 		$this->assertSame(
 			[
-				'run.exe' => 'importdump-images-skip-extension',
-				'noextension' => 'importdump-images-skip-extension',
 				'File:colon.png' => 'importdump-images-skip-name',
+				'noextension' => 'importdump-images-skip-extension',
+				'run.exe' => 'importdump-images-skip-extension',
 			],
-			array_column( array_map(
-				static fn ( SkippedFile $file ): array => [ $file->name, $file->reason ],
-				$result->skipped
-			), 1, 0 )
+			$reasons
 		);
 	}
 
