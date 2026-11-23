@@ -217,7 +217,11 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 		$notifications = $this->popNotifications();
 		$this->assertSame( [ RequestStatus::InProgress, RequestStatus::Failed ], $this->getStatuses( $notifications ) );
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
-		$this->assertCount( 1, $this->popStoredOutput() );
+
+		$stored = $this->popStoredOutput();
+		$this->assertCount( 2, $stored );
+		$this->assertTrue( $stored[0]['reset'] );
+		$this->assertSame( 0, $stored[1]['part'] );
 	}
 
 	public function testFailureOfTheHookIsReported(): void {
