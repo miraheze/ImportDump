@@ -21,7 +21,7 @@ final readonly class ImageResult {
 		private array $tempFiles,
 		public array $skipped,
 		public int $size,
-		public array $renamed = [],
+		public array $renamed,
 	) {
 	}
 
