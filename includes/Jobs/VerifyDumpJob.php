@@ -117,7 +117,7 @@ class VerifyDumpJob extends Job {
 		$joined = null;
 		if ( $upload ) {
 			$joining = $upload->joinChunks(
-				fn ( int $percent ) => $onProgress( self::STAGE_JOINING, $percent )
+				static fn ( int $percent ) => $onProgress( self::STAGE_JOINING, $percent )
 			);
 
 			if ( !$joining->isOK() ) {
