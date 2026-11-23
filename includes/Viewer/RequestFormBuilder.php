@@ -360,6 +360,7 @@ class RequestFormBuilder {
 					'data-request-id' => $this->requestManager->getID(),
 				] ),
 				'raw' => true,
+				'cssclass' => 'ext-importdump-output-field',
 				'section' => 'output',
 			],
 		];

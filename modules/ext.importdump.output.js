@@ -17,6 +17,7 @@
 
 	let lineHeight = 0;
 	let started = false;
+	let liveText = null;
 
 	const observer = new IntersectionObserver( ( entries ) => {
 		entries.forEach( ( entry ) => {
@@ -28,7 +29,7 @@
 
 	function getLineHeight() {
 		if ( !lineHeight ) {
-			lineHeight = parseFloat( getComputedStyle( $live[ 0 ] ).lineHeight );
+			lineHeight = parseFloat( getComputedStyle( $live[ 0 ] ).lineHeight ) || 18;
 		}
 
 		return lineHeight;
@@ -74,18 +75,27 @@
 	}
 
 	function update( result ) {
-		const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 20;
+		const top = container.scrollTop;
+		const atBottom = container.scrollHeight - top - container.clientHeight < 20;
 
 		result.parts.forEach( addPart );
 
 		// What is being printed is also stored once its part is done, so it is shown until then.
 		const live = result.live && !parts[ result.live.part ] ? result.live.text : '';
 		const empty = !result.parts.length && !live;
-		$live.text( empty && !result.running ? mw.msg( 'importdump-output-empty' ) : live );
+		const text = empty && !result.running ? mw.msg( 'importdump-output-empty' ) : live;
+
+		// Only touch the text when it changed, so that nothing moves for a reader who is scrolled.
+		if ( text !== liveText ) {
+			$live.text( text );
+			liveText = text;
+		}
 
 		// A running import is followed from the end, and a finished one is read from the start.
 		if ( result.running && ( atBottom || !started ) ) {
 			container.scrollTop = container.scrollHeight;
+		} else {
+			container.scrollTop = top;
 		}
 
 		started = true;
