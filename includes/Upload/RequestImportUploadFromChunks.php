@@ -12,6 +12,7 @@ use MediaWiki\Upload\Exception\UploadStashException;
 use MediaWiki\Upload\UploadFromChunks;
 use MediaWiki\User\User;
 use Miraheze\ImportDump\ConfigNames;
+use StatusValue;
 use function array_keys;
 use function clearstatcache;
 use function count;
@@ -93,7 +94,7 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		$repo = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo();
 
 		$paths = [];
-		for ( $index = 0; $index <= ( $this->mChunkIndex ?? 0 ); $index++ ) {
+		for ( $index = 0; $index <= (int)( $this->mChunkIndex ?? 0 ); $index++ ) {
 			$key = $this->mFileKey . '.' . $index;
 			$paths[] = $repo->getVirtualUrl( 'temp' ) . '/' . $repo->getHashPath( $key ) . $key;
 		}
@@ -144,7 +145,7 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 
 		fclose( $target );
 		clearstatcache( true, $file->getPath() );
-		if ( filesize( $file->getPath() ) !== $this->getOffset() ) {
+		if ( filesize( $file->getPath() ) !== (int)$this->getOffset() ) {
 			return Status::newFatal( 'importdump-verify-missing' );
 		}
 
@@ -163,6 +164,56 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		}
 	}
 
+	/**
+	 * Checks the first part of a file that is kept in parts, which is where the type of the file shows.
+	 * The whole file is never read here.
+	 *
+	 * @return StatusValue Good if the file can be taken, or what is wrong with it.
+	 */
+	public function verifyParts(): StatusValue {
+		$maxSize = static::getMaxUploadSize();
+		$size = (int)$this->getOffset();
+		if ( $size <= 0 ) {
+			return $this->convertVerifyErrorToStatus( [ 'status' => self::EMPTY_FILE ] );
+		}
+
+		if ( $size > $maxSize ) {
+			return $this->convertVerifyErrorToStatus( [ 'status' => self::FILE_TOO_LARGE, 'max' => $maxSize ] );
+		}
+
+		$repo = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo();
+		$first = $repo->getLocalReference( $this->getChunkPaths()[0] );
+		if ( !$first ) {
+			return StatusValue::newFatal( 'importdump-verify-missing' );
+		}
+
+		$error = $this->getTypeError( $first->getPath() );
+		return $error ? $this->convertVerifyErrorToStatus( $error ) : StatusValue::newGood();
+	}
+
+	/** @return ?array{status: int, details: list<string>} What is wrong with the type of the file, if anything. */
+	private function getTypeError( string $path ): ?array {
+		$services = MediaWikiServices::getInstance();
+		$mime = $services->getMimeAnalyzer()->guessMimeType( $path );
+
+		$definition = self::TYPES[$this->type];
+		$processor = $services->getService( 'ImportDumpDumpProcessor' );
+		'@phan-var DumpProcessor $processor';
+
+		$accepted = $definition['archivesOnly'] ?
+			$processor->getArchiveMimeTypes() :
+			$processor->getAcceptedMimeTypes();
+
+		if ( in_array( $mime, $accepted, true ) ) {
+			return null;
+		}
+
+		return [
+			'status' => self::VERIFICATION_ERROR,
+			'details' => [ 'filetype-mime-mismatch', $definition['extension'], $mime ],
+		];
+	}
+
 	/** @inheritDoc */
 	public function verifyUpload() {
 		if ( $this->isEmptyFile() ) {
@@ -177,23 +228,12 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 			];
 		}
 
-		$services = MediaWikiServices::getInstance();
-		$mime = $services->getMimeAnalyzer()->guessMimeType( $this->getTempPath() );
-
-		$definition = self::TYPES[$this->type];
-		$processor = $services->getService( 'ImportDumpDumpProcessor' );
-		'@phan-var DumpProcessor $processor';
-
-		$accepted = $definition['archivesOnly'] ?
-			$processor->getArchiveMimeTypes() :
-			$processor->getAcceptedMimeTypes();
-
-		if ( !in_array( $mime, $accepted, true ) ) {
-			return [
-				'status' => self::VERIFICATION_ERROR,
-				'details' => [ 'filetype-mime-mismatch', $definition['extension'], $mime ],
-			];
+		$error = $this->getTypeError( $this->getTempPath() );
+		if ( $error ) {
+			return $error;
 		}
+
+		$mime = MediaWikiServices::getInstance()->getMimeAnalyzer()->guessMimeType( $this->getTempPath() );
 
 		// Core hashes and inspects the whole file for these when they are missing, which takes
 		// minutes of CPU for a large archive, and nothing here uses them.

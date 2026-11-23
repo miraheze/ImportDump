@@ -148,7 +148,7 @@ class ApiRequestImportUpload extends ApiBase {
 
 			// Archives of images are joined when they are verified, where they are read from the parts.
 			if ( $params['type'] === 'images' ) {
-				$this->finishParts( $fileKey );
+				$this->finishParts( $upload, $fileKey );
 				return;
 			}
 
@@ -275,7 +275,13 @@ class ApiRequestImportUpload extends ApiBase {
 	}
 
 	/** The parts are kept as they are, and the key of the first one stands for all of them. */
-	private function finishParts( string $fileKey ): void {
+	private function finishParts( RequestImportUploadFromChunks $upload, string $fileKey ): void {
+		$status = $upload->verifyParts();
+		if ( !$status->isOK() ) {
+			$upload->purgeChunks();
+			$this->dieStatus( $status );
+		}
+
 		UploadBase::setSessionStatus( $this->getUser(), $fileKey, [
 			'result' => 'Success',
 			'stage' => self::STAGE_PARTS,
