@@ -17,6 +17,7 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Request\RequestType;
 use RuntimeException;
+use stdClass;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\ObjectCache\WANObjectCache;
@@ -158,17 +159,24 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * Makes the files hook record what it was asked for, and stop the import there.
 	 *
-	 * @param array &$asked
-	 * @phan-param-out array{directory: bool, names: list<string>, request: int} $asked
+	 * @return stdClass With the directory that was empty and existing, the names and the request ID.
 	 */
-	private function recordHook( array &$asked ): void {
-		$asked = [ 'directory' => false, 'names' => [], 'request' => 0 ];
+	private function recordHook(): stdClass {
+		$asked = new stdClass();
+		$asked->directory = false;
+		$asked->names = [];
+		$asked->request = 0;
+
 		$this->setTemporaryHook( 'ImportImagesJobGetFiles',
-			static function ( string $directory, RequestManager $manager, array $names ) use ( &$asked ): never {
-				$asked = [ 'directory' => is_dir( $directory ), 'names' => $names, 'request' => $manager->getID() ];
+			static function ( string $directory, RequestManager $manager, array $names ) use ( $asked ): never {
+				$asked->directory = is_dir( $directory );
+				$asked->names = $names;
+				$asked->request = $manager->getID();
 				throw new RuntimeException( 'Stopped' );
 			}
 		);
+
+		return $asked;
 	}
 
 	public function testCompleteRequestIsLeftAlone(): void {
@@ -205,34 +213,34 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testSmallRequestAsksForAllFiles(): void {
-		$asked = [];
-		$this->recordHook( $asked );
+		$asked = $this->recordHook();
 
 		$id = $this->addStoredRequest( [ 'a.png', 'b.png' ] );
 		$this->assertTrue( $this->newJob( $id, offset: 0 )->run() );
 
-		$this->assertSame( [ 'directory' => true, 'names' => [], 'request' => $id ], $asked );
+		$this->assertTrue( $asked->directory );
+		$this->assertSame( [], $asked->names );
+		$this->assertSame( $id, $asked->request );
 	}
 
 	public function testLargeRequestAsksForItsChunk(): void {
 		$this->overrideConfigValue( ConfigNames::ImagesChunkSize, 1 );
 
-		$asked = [];
-		$this->recordHook( $asked );
+		$asked = $this->recordHook();
 
 		$id = $this->addStoredRequest( [ 'a.png', 'b.png' ] );
 		$this->assertTrue( $this->newJob( $id, offset: 0 )->run() );
 
-		$this->assertTrue( $asked['directory'] );
-		$this->assertCount( 1, $asked['names'] );
-		$this->assertTrue( str_ends_with( $asked['names'][0], '/a.png' ) );
+		$this->assertTrue( $asked->directory );
+		$this->assertCount( 1, $asked->names );
+		$this->assertTrue( str_ends_with( $asked->names[0], '/a.png' ) );
 		$notifications = $this->popNotifications();
 		$this->assertSame( [ RequestStatus::InProgress, RequestStatus::Failed ], $this->getStatuses( $notifications ) );
 
 		$this->assertTrue( $this->newJob( $id, offset: 1 )->run() );
 
-		$this->assertCount( 1, $asked['names'] );
-		$this->assertTrue( str_ends_with( $asked['names'][0], '/b.png' ) );
+		$this->assertCount( 1, $asked->names );
+		$this->assertTrue( str_ends_with( $asked->names[0], '/b.png' ) );
 		$this->assertSame( [ RequestStatus::Failed ], $this->getStatuses( $this->popNotifications() ) );
 	}
 }
