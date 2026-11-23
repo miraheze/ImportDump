@@ -16,6 +16,7 @@
 		// Messages that can be used here:
 		// * importdump-verification-checking
 		// * importdump-verification-extracting
+		// * importdump-verification-joining
 		// * importdump-verification-merging
 		// * importdump-verification-storing
 		// * importdump-verification-waiting

@@ -33,6 +33,7 @@ use MediaWiki\User\User;
 use MediaWiki\User\UserFactory;
 use MediaWiki\User\UserIdentity;
 use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\Api\ApiRequestImportUpload;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\Notifications\AttentionNotifier;
@@ -44,6 +45,7 @@ use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\DumpResult;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
+use Miraheze\ImportDump\Upload\UploadedParts;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Rdbms\IConnectionProvider;
@@ -447,7 +449,12 @@ class SpecialRequestImport extends FormSpecialPage {
 
 		$imagesID = 0;
 		if ( $images && (int)$requestID > 0 ) {
-			$imagesID = $this->addImagesRequest( $data, $timestamp, (int)$requestID );
+			$imagesID = $this->addImagesRequest(
+				$data,
+				$timestamp,
+				(int)$requestID,
+				$images instanceof UploadedParts ? $images : null
+			);
 		}
 
 		$this->showSuccess( (int)$requestID, $imagesID, ( $verifyLater ? 1 : 0 ) + ( $imagesID > 0 ? 1 : 0 ) );
@@ -476,7 +483,7 @@ class SpecialRequestImport extends FormSpecialPage {
 	private function submitImagesOnly(
 		array $data,
 		string $timestamp,
-		UploadBase $images,
+		UploadBase|UploadedParts $images,
 		string $stashKey
 	): Status {
 		$stashed = $this->publishImages( $images, $data['target'] . '-' . $timestamp . '-images', $stashKey );
@@ -484,7 +491,12 @@ class SpecialRequestImport extends FormSpecialPage {
 			return $stashed;
 		}
 
-		$requestID = $this->addImagesRequest( $data, $timestamp, null );
+		$requestID = $this->addImagesRequest(
+			$data,
+			$timestamp,
+			null,
+			$images instanceof UploadedParts ? $images : null
+		);
 		if ( $requestID <= 0 ) {
 			return Status::newFatal( 'importdump-duplicate-request' );
 		}
@@ -509,11 +521,11 @@ class SpecialRequestImport extends FormSpecialPage {
 
 	/**
 	 * @param string $stashKey The key of the archive if it was uploaded in parts.
-	 * @return UploadBase|Status|null The upload of the images archive, a status with the problem if it
-	 *  cannot be used, or null if there is none.
+	 * @return UploadBase|UploadedParts|Status|null The upload of the images archive, the parts that it was
+	 *  uploaded in, a status with the problem if it cannot be used, or null if there is none.
 	 * @throws PermissionsError
 	 */
-	private function getImagesUpload( string $stashKey ): UploadBase|Status|null {
+	private function getImagesUpload( string $stashKey ): UploadBase|UploadedParts|Status|null {
 		if ( !$this->getConfig()->get( ConfigNames::EnableImageImports ) ) {
 			return null;
 		}
@@ -521,6 +533,16 @@ class SpecialRequestImport extends FormSpecialPage {
 		if ( $stashKey !== '' ) {
 			if ( !UploadFromStash::isValidKey( $stashKey ) ) {
 				return Status::newFatal( 'apierror-invalid-file-key' );
+			}
+
+			// Parts are not joined here, because that is a lot of work for a request that a person waits for.
+			$progress = UploadBase::getSessionStatus( $this->getUser(), $stashKey );
+			if ( ( $progress['stage'] ?? '' ) === ApiRequestImportUpload::STAGE_PARTS ) {
+				return new UploadedParts( $stashKey );
+			}
+
+			if ( ( $progress['stage'] ?? '' ) === 'uploading' ) {
+				return Status::newFatal( 'importdump-images-parts-incomplete' );
 			}
 
 			$uploadBase = new UploadFromStash( $this->getUser() );
@@ -566,7 +588,15 @@ class SpecialRequestImport extends FormSpecialPage {
 	}
 
 	/** The archive always waits for the job that checks it, then goes where the images import reads it from. */
-	private function publishImages( UploadBase $uploadBase, string $imagesName, string $stashKey ): Status {
+	private function publishImages(
+		UploadBase|UploadedParts $uploadBase,
+		string $imagesName,
+		string $stashKey
+	): Status {
+		if ( $uploadBase instanceof UploadedParts ) {
+			return Status::newGood();
+		}
+
 		if ( $stashKey !== '' ) {
 			$fileKey = $stashKey;
 		} else {
@@ -600,7 +630,7 @@ class SpecialRequestImport extends FormSpecialPage {
 	 *
 	 * @return int The ID of the new request, or 0 if it could not be added.
 	 */
-	private function addImagesRequest( array $data, string $timestamp, ?int $linkedID ): int {
+	private function addImagesRequest( array $data, string $timestamp, ?int $linkedID, ?UploadedParts $parts ): int {
 		$dbw = $this->connectionProvider->getPrimaryDatabase( RequestManager::VIRTUAL_DOMAIN );
 		$dbw->newInsertQueryBuilder()
 			->insertInto( 'import_requests' )
@@ -622,6 +652,20 @@ class SpecialRequestImport extends FormSpecialPage {
 		$requestID = $dbw->insertId();
 		if ( $requestID <= 0 ) {
 			return 0;
+		}
+
+		// The job reads this, so it has to be there before the job is queued.
+		if ( $parts ) {
+			$this->requestManager->loadFromID( $requestID );
+			if ( !$this->requestManager->setPartsReference( $parts->fileKey, $this->getUser()->getId() )->isOK() ) {
+				$dbw->newDeleteQueryBuilder()
+					->deleteFrom( 'import_requests' )
+					->where( [ 'request_id' => $requestID ] )
+					->caller( __METHOD__ )
+					->execute();
+
+				return 0;
+			}
 		}
 
 		$this->jobQueueGroup->push(

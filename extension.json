@@ -300,6 +300,7 @@
 				"importdump-verification-checking",
 				"importdump-verification-done",
 				"importdump-verification-extracting",
+				"importdump-verification-joining",
 				"importdump-verification-label",
 				"importdump-verification-merging",
 				"importdump-verification-rejected",

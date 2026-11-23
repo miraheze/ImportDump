@@ -4,13 +4,23 @@ declare( strict_types = 1 );
 
 namespace Miraheze\ImportDump\Upload;
 
+use Closure;
 use InvalidArgumentException;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Status\Status;
+use MediaWiki\Upload\Exception\UploadStashException;
 use MediaWiki\Upload\UploadFromChunks;
 use MediaWiki\User\User;
 use Miraheze\ImportDump\ConfigNames;
 use function array_keys;
+use function clearstatcache;
+use function count;
+use function fclose;
+use function filesize;
+use function fopen;
 use function in_array;
+use function intdiv;
+use function stream_copy_to_stream;
 use const MEDIATYPE_UNKNOWN;
 use const PHP_INT_MAX;
 
@@ -71,6 +81,86 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 	 */
 	protected function verifyPartialFile() {
 		return true;
+	}
+
+	/**
+	 * The locations of the stored parts of a file that was uploaded in parts, in order. This is only
+	 * known after continueChunks().
+	 *
+	 * @return list<string>
+	 */
+	public function getChunkPaths(): array {
+		$repo = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo();
+
+		$paths = [];
+		for ( $index = 0; $index <= ( $this->mChunkIndex ?? 0 ); $index++ ) {
+			$key = $this->mFileKey . '.' . $index;
+			$paths[] = $repo->getVirtualUrl( 'temp' ) . '/' . $repo->getHashPath( $key ) . $key;
+		}
+
+		return $paths;
+	}
+
+	/**
+	 * Joins the stored parts into one local file, taking one part at a time so that the disk only holds
+	 * the file and a single part. The parts are left where they are.
+	 *
+	 * @param ?Closure( int ): void $onProgress Called with the percentage of the parts that are joined.
+	 * @return Status A good status with the TempFSFile as its value, which is deleted when it is destroyed.
+	 */
+	public function joinChunks( ?Closure $onProgress ): Status {
+		$services = MediaWikiServices::getInstance();
+		$repo = $services->getRepoGroup()->getLocalRepo();
+
+		$file = $services->getTempFSFileFactory()->newTempFSFile( 'importdump-chunks', '' );
+		$target = $file ? fopen( $file->getPath(), 'wb' ) : false;
+		if ( !$file || $target === false ) {
+			return Status::newFatal( 'importdump-archive-unreadable' );
+		}
+
+		$paths = $this->getChunkPaths();
+		$total = count( $paths );
+		foreach ( $paths as $position => $path ) {
+			$part = $repo->getLocalReference( $path );
+			$source = $part ? fopen( $part->getPath(), 'rb' ) : false;
+			if ( $source === false ) {
+				fclose( $target );
+				return Status::newFatal( 'importdump-verify-missing' );
+			}
+
+			$copied = stream_copy_to_stream( $source, $target );
+			fclose( $source );
+			unset( $part );
+
+			if ( $copied === false ) {
+				fclose( $target );
+				return Status::newFatal( 'importdump-archive-unreadable' );
+			}
+
+			if ( $onProgress ) {
+				$onProgress( intdiv( ( $position + 1 ) * 100, $total ) );
+			}
+		}
+
+		fclose( $target );
+		clearstatcache( true, $file->getPath() );
+		if ( filesize( $file->getPath() ) !== $this->getOffset() ) {
+			return Status::newFatal( 'importdump-verify-missing' );
+		}
+
+		return Status::newGood( $file );
+	}
+
+	/** Deletes the stored parts and the stash entry of the file that was uploaded in parts. */
+	public function purgeChunks(): void {
+		$repo = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo();
+		$repo->quickPurgeBatch( $this->getChunkPaths() );
+
+		try {
+			$this->stash->removeFileNoAuth( $this->mFileKey );
+		} catch ( UploadStashException ) {
+			// It is already gone, which is what was wanted.
+		}
 	}
 
 	/** @inheritDoc */

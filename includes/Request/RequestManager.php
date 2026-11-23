@@ -68,6 +68,7 @@ use function in_array;
 use function intdiv;
 use function intval;
 use function is_array;
+use function is_string;
 use function json_decode;
 use function json_encode;
 use function ksort;
@@ -641,10 +642,46 @@ class RequestManager {
 	}
 
 	public function deleteUnverifiedFile(): void {
-		$this->repoGroup->getLocalRepo()->getBackend()->quickDelete( [
-			'src' => $this->getUnverifiedFilePath(),
-			'ignoreMissingSource' => true,
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		foreach ( [ $this->getUnverifiedFilePath(), $this->getPartsReferencePath() ] as $path ) {
+			$backend->quickDelete( [ 'src' => $path, 'ignoreMissingSource' => true ] );
+		}
+	}
+
+	/** Where it is noted which uploaded parts an archive of images is joined from, instead of a stored file. */
+	private function getPartsReferencePath(): string {
+		return $this->getUnverifiedFilePath() . '.parts';
+	}
+
+	/** Notes that the archive of this request was uploaded in parts, which the verification joins. */
+	public function setPartsReference( string $fileKey, int $userID ): Status {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$path = $this->getPartsReferencePath();
+
+		$status = Status::wrap( $backend->prepare( [ 'dir' => FileBackend::parentStoragePath( $path ) ] ) );
+		if ( !$status->isOK() ) {
+			return $status;
+		}
+
+		return Status::wrap( $backend->quickCreate( [
+			'dst' => $path,
+			'content' => json_encode( [ 'filekey' => $fileKey, 'user' => $userID ] ),
+			'overwrite' => true,
+		] ) );
+	}
+
+	/** @return ?array{filekey: string, user: int} The uploaded parts of the archive, if it has any. */
+	public function getPartsReference(): ?array {
+		$content = $this->repoGroup->getLocalRepo()->getBackend()->getFileContents( [
+			'src' => $this->getPartsReferencePath(),
 		] );
+
+		$reference = is_string( $content ) ? json_decode( $content, true ) : null;
+		if ( !is_array( $reference ) || !is_string( $reference['filekey'] ?? null ) ) {
+			return null;
+		}
+
+		return [ 'filekey' => $reference['filekey'], 'user' => (int)( $reference['user'] ?? 0 ) ];
 	}
 
 	public function getArchiveFilePath(): string {
