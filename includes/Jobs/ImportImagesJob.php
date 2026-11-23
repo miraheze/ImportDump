@@ -150,7 +150,7 @@ class ImportImagesJob extends Job {
 			throw new RuntimeException( "Could not create $directory" );
 		}
 
-		$this->hookRunner->onImportDumpJobGetImages( $directory, $this->requestManager, $names );
+		$this->hookRunner->onImportImagesJobGetFiles( $directory, $this->requestManager, $names );
 		$this->beat();
 
 		if ( !$this->countFiles( $directory ) ) {

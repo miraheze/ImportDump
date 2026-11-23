@@ -6,7 +6,7 @@ namespace Miraheze\ImportDump\Hooks;
 
 use Miraheze\ImportDump\Request\RequestManager;
 
-interface ImportDumpJobGetImagesHook {
+interface ImportImagesJobGetFilesHook {
 
 	/**
 	 * Called before the images of a request are imported, so that a handler can fetch the stored files.
@@ -17,7 +17,7 @@ interface ImportDumpJobGetImagesHook {
 	 * The handler fills the directory with only these. An empty list means all of the files of the request.
 	 * @return void This hook must not abort, it must return no value.
 	 */
-	public function onImportDumpJobGetImages(
+	public function onImportImagesJobGetFiles(
 		string $directory,
 		RequestManager $requestManager,
 		array $names
