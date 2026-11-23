@@ -14,11 +14,11 @@
 	"action-handle-import-requests": "обробляти запити користувача на імпорт",
 	"action-request-import": "запит імпортів",
 	"action-view-private-import-requests": "перегляд приватних запитів на імпорт",
-	"echo-category-title-importdump-new-request": "Новий запит на імпорт",
-	"echo-category-title-importdump-request-comment": "Додано коментар до запиту імпорту",
-	"echo-category-title-importdump-request-status-update": "Оновлено статус для запиту на імпорт",
-	"echo-pref-tooltip-importdump-request-comment": "Сповістити мене, коли є коментар до запиту на імпорт, у якому я брав участь.",
-	"echo-pref-tooltip-importdump-request-status-update": "Сповістити мене, коли статус запиту на імпорт, в якому я беру участь, буде оновлено.",
+	"echo-category-title-requestimport-new-request": "Новий запит на імпорт",
+	"echo-category-title-requestimport-request-comment": "Додано коментар до запиту імпорту",
+	"echo-category-title-requestimport-request-status-update": "Оновлено статус для запиту на імпорт",
+	"echo-pref-tooltip-requestimport-request-comment": "Сповістити мене, коли є коментар до запиту на імпорт, у якому я брав участь.",
+	"echo-pref-tooltip-requestimport-request-status-update": "Сповістити мене, коли статус запиту на імпорт, в якому я беру участь, буде оновлено.",
 	"importdump-button-copy": "(Копіювати до буферу обміну)",
 	"importdump-comment-success": "Коментар успішно додано до цього запиту.",
 	"importdump-desc": "Розширення, призначене для автоматизації запитів користувачів на імпорт.",
@@ -52,6 +52,6 @@
 	"importdump-table-target": "Ціль",
 	"importdump-unknown": "Невідомий запит.",
 	"importdump-usergroups-none": "немає",
-	"log-action-filter-importdump": "Тип дії:",
-	"log-action-filter-importdumpprivate": "Тип дії:"
+	"log-action-filter-requestimport": "Тип дії:",
+	"log-action-filter-requestimportprivate": "Тип дії:"
 }

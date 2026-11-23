@@ -31,8 +31,8 @@
 	"importdump-label-upload-source-file": "Ladda upp fil",
 	"importdump-label-upload-source-type": "Ladda upp källa:",
 	"importdump-label-upload-source-url": "Ladda upp från URL",
-	"importdump-log-header": "Detta är en logg över alla importförfrågningar och statusuppdateringar.",
-	"importdump-log-name": "Logg för importförfrågningar",
 	"importdump-no-changes": "Inga gjorda ändringar.",
-	"importdump-notcentral": "Inaktiverad"
+	"importdump-notcentral": "Inaktiverad",
+	"requestimport-log-header": "Detta är en logg över alla importförfrågningar och statusuppdateringar.",
+	"requestimport-log-name": "Logg för importförfrågningar"
 }
