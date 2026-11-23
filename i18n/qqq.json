@@ -144,6 +144,7 @@
 	"importdump-label-upload-source-file": "Label for 'Upload file'.",
 	"importdump-label-upload-source-type": "Label for 'Upload source'.",
 	"importdump-label-upload-source-url": "Label for 'Upload from URL'.",
+	"importdump-label-upload-xml": "Label for the XML file field of Special:RequestImport when images can also be uploaded.",
 	"importdump-label-verifying": "'Verifying' status label. Used while the uploaded file of a request is being checked.",
 	"importdump-no-changes": "Message displayed if attempting to edit request without making any changes.",
 	"importdump-notcentral": "Heading for the message displayed if there is a configured central wiki, and it is not the current wiki.\n{{Identical|Disabled}}",

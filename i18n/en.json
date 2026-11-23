@@ -140,6 +140,7 @@
 	"importdump-label-upload-source-file": "Upload file",
 	"importdump-label-upload-source-type": "Upload source:",
 	"importdump-label-upload-source-url": "Upload from URL",
+	"importdump-label-upload-xml": "Upload XML:",
 	"importdump-label-verifying": "Verifying",
 	"importdump-no-changes": "No changes made.",
 	"importdump-notcentral": "Disabled",

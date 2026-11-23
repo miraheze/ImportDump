@@ -143,6 +143,14 @@ class SpecialRequestImport extends FormSpecialPage {
 			],
 		];
 
+		// With images that can also be uploaded, say that this field is for the XML.
+		// Messages that can be used here:
+		// * importdump-label-upload-file
+		// * importdump-label-upload-xml
+		$fileLabel = $this->getConfig()->get( ConfigNames::EnableImageImports ) ?
+			'importdump-label-upload-xml' :
+			'importdump-label-upload-file';
+
 		if ( $this->getConfig()->get( ConfigNames::EnableImageImports ) ) {
 			$formDescriptor['UploadEither'] = [
 				'type' => 'info',
@@ -166,7 +174,7 @@ class SpecialRequestImport extends FormSpecialPage {
 				],
 				'UploadFile' => [
 					'type' => 'file',
-					'label-message' => 'importdump-label-upload-file',
+					'label-message' => $fileLabel,
 					'help-messages' => $this->getUploadHelp(),
 					'hide-if' => [ '!==', 'wpUploadSourceType', 'File' ],
 					'accept' => $this->dumpProcessor->getAcceptedMimeTypes(),
@@ -183,7 +191,7 @@ class SpecialRequestImport extends FormSpecialPage {
 			$formDescriptor += [
 				'UploadFile' => [
 					'type' => 'file',
-					'label-message' => 'importdump-label-upload-file',
+					'label-message' => $fileLabel,
 					'help-messages' => $this->getUploadHelp(),
 					'accept' => $this->dumpProcessor->getAcceptedMimeTypes(),
 				],
