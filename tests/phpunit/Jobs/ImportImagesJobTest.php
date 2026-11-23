@@ -88,8 +88,12 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 		return $manager;
 	}
 
-	/** Makes a request that has the given files stored. */
-	private function addStoredRequest( string ...$names ): int {
+	/**
+	 * Makes a request that has the given files stored.
+	 *
+	 * @param list<string> $names
+	 */
+	private function addStoredRequest( array $names ): int {
 		$id = $this->addRequest( RequestStatus::Starting );
 
 		$source = $this->getNewTempFile();
@@ -100,10 +104,16 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 			$files[$name] = $source;
 		}
 
-		$status = $this->getRequestManager( $id )->publishExtractedImages( $files, static function (): void {
-		} );
+		$percents = [];
+		$status = $this->getRequestManager( $id )->publishExtractedImages(
+			$files,
+			static function ( int $percent ) use ( &$percents ): void {
+				$percents[] = $percent;
+			}
+		);
 
 		$this->assertStatusGood( $status );
+		$this->assertNotSame( [], $percents );
 		return $id;
 	}
 
@@ -148,12 +158,14 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * Makes the files hook record what it was asked for, and stop the import there.
 	 *
-	 * @param array{directory?: bool, names?: list<string>} &$asked
+	 * @param array $asked
+	 * @phan-param-out array{directory: bool, names: list<string>, request: int} $asked
 	 */
 	private function recordHook( array &$asked ): void {
+		$asked = [ 'directory' => false, 'names' => [], 'request' => 0 ];
 		$this->setTemporaryHook( 'ImportImagesJobGetFiles',
-			static function ( string $directory, RequestManager $unusedManager, array $names ) use ( &$asked ): never {
-				$asked = [ 'directory' => is_dir( $directory ), 'names' => $names ];
+			static function ( string $directory, RequestManager $manager, array $names ) use ( &$asked ): never {
+				$asked = [ 'directory' => is_dir( $directory ), 'names' => $names, 'request' => $manager->getID() ];
 				throw new RuntimeException( 'Stopped' );
 			}
 		);
@@ -183,7 +195,7 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 			}
 		);
 
-		$id = $this->addStoredRequest( 'a.png' );
+		$id = $this->addStoredRequest( [ 'a.png' ] );
 		$this->assertTrue( $this->newJob( $id, offset: 0 )->run() );
 
 		$notifications = $this->popNotifications();
@@ -196,10 +208,10 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 		$asked = [];
 		$this->recordHook( $asked );
 
-		$id = $this->addStoredRequest( 'a.png', 'b.png' );
+		$id = $this->addStoredRequest( [ 'a.png', 'b.png' ] );
 		$this->assertTrue( $this->newJob( $id, offset: 0 )->run() );
 
-		$this->assertSame( [ 'directory' => true, 'names' => [] ], $asked );
+		$this->assertSame( [ 'directory' => true, 'names' => [], 'request' => $id ], $asked );
 	}
 
 	public function testLargeRequestAsksForItsChunk(): void {
@@ -208,7 +220,7 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 		$asked = [];
 		$this->recordHook( $asked );
 
-		$id = $this->addStoredRequest( 'a.png', 'b.png' );
+		$id = $this->addStoredRequest( [ 'a.png', 'b.png' ] );
 		$this->assertTrue( $this->newJob( $id, offset: 0 )->run() );
 
 		$this->assertTrue( $asked['directory'] );
