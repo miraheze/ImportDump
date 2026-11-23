@@ -32,6 +32,7 @@ use function gzencode;
 use function intdiv;
 use function str_replace;
 use function strlen;
+use function substr;
 use function substr_count;
 
 /**
@@ -141,6 +142,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 			$services->getService( 'ImportDumpDumpProcessor' ),
 			$services->getService( 'ImportDumpImageProcessor' ),
 			$manager,
+			$services->getUserFactory(),
 			$services->getService( 'ImportDumpVerificationProgress' )
 		);
 

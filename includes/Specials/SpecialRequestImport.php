@@ -449,12 +449,13 @@ class SpecialRequestImport extends FormSpecialPage {
 
 		$imagesID = 0;
 		if ( $images && (int)$requestID > 0 ) {
-			$imagesID = $this->addImagesRequest(
+			$added = $this->addImagesRequest(
 				$data,
 				$timestamp,
 				(int)$requestID,
 				$images instanceof UploadedParts ? $images : null
 			);
+			$imagesID = $added->isOK() ? $added->getValue() : 0;
 		}
 
 		$this->showSuccess( (int)$requestID, $imagesID, ( $verifyLater ? 1 : 0 ) + ( $imagesID > 0 ? 1 : 0 ) );
@@ -491,15 +492,17 @@ class SpecialRequestImport extends FormSpecialPage {
 			return $stashed;
 		}
 
-		$requestID = $this->addImagesRequest(
+		$added = $this->addImagesRequest(
 			$data,
 			$timestamp,
 			null,
 			$images instanceof UploadedParts ? $images : null
 		);
-		if ( $requestID <= 0 ) {
-			return Status::newFatal( 'importdump-duplicate-request' );
+		if ( !$added->isOK() ) {
+			return $added;
 		}
+
+		$requestID = $added->getValue();
 
 		$this->showSuccess( $requestID, 0, 1 );
 
@@ -628,9 +631,9 @@ class SpecialRequestImport extends FormSpecialPage {
 	/**
 	 * Adds the request for an archive of images, linked to the XML request that it was uploaded with, if any.
 	 *
-	 * @return int The ID of the new request, or 0 if it could not be added.
+	 * @return Status<int> The ID of the new request, or why it could not be added.
 	 */
-	private function addImagesRequest( array $data, string $timestamp, ?int $linkedID, ?UploadedParts $parts ): int {
+	private function addImagesRequest( array $data, string $timestamp, ?int $linkedID, ?UploadedParts $parts ): Status {
 		$dbw = $this->connectionProvider->getPrimaryDatabase( RequestManager::VIRTUAL_DOMAIN );
 		$dbw->newInsertQueryBuilder()
 			->insertInto( 'import_requests' )
@@ -651,20 +654,22 @@ class SpecialRequestImport extends FormSpecialPage {
 
 		$requestID = $dbw->insertId();
 		if ( $requestID <= 0 ) {
-			return 0;
+			return Status::newFatal( 'importdump-duplicate-request' );
 		}
 
 		// The job reads this, so it has to be there before the job is queued.
 		if ( $parts ) {
 			$this->requestManager->loadFromID( $requestID );
-			if ( !$this->requestManager->setPartsReference( $parts->fileKey, $this->getUser()->getId() )->isOK() ) {
+			$referenced = $this->requestManager->setPartsReference( $parts->fileKey, $this->getUser()->getId() );
+			if ( !$referenced->isOK() ) {
+				// Roll back the row added above so it is not left without an archive.
 				$dbw->newDeleteQueryBuilder()
 					->deleteFrom( 'import_requests' )
 					->where( [ 'request_id' => $requestID ] )
 					->caller( __METHOD__ )
 					->execute();
 
-				return 0;
+				return $referenced;
 			}
 		}
 
@@ -686,7 +691,7 @@ class SpecialRequestImport extends FormSpecialPage {
 		$logID = $logEntry->insert( $dbw );
 		$logEntry->publish( $logID );
 
-		return $requestID;
+		return Status::newGood( $requestID );
 	}
 
 	/**

@@ -20,6 +20,7 @@ use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\AssembleChunksJob;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
+use Wikimedia\FileBackend\FSFile\TempFSFile;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\ObjectCache\WANObjectCache;
@@ -277,6 +278,7 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 		$size = strlen( $archive );
 
 		$firstKey = '';
+		$result = [];
 		for ( $offset = 0; $offset < $size; $offset += self::CHUNK_SIZE ) {
 			$params = [ 'offset' => $offset, 'filesize' => $size, 'type' => 'images' ];
 			if ( $firstKey !== '' ) {
@@ -303,7 +305,9 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 
 		$joined = $upload->joinChunks( null );
 		$this->assertStatusGood( $joined );
-		$this->assertSame( $archive, file_get_contents( $joined->getValue()->getPath() ) );
+		$file = $joined->getValue();
+		'@phan-var TempFSFile $file';
+		$this->assertSame( $archive, file_get_contents( $file->getPath() ) );
 
 		$upload->purgeChunks();
 

@@ -4,6 +4,7 @@ declare( strict_types = 1 );
 
 namespace Miraheze\ImportDump\Jobs;
 
+use Closure;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\JobQueue\Job;
 use MediaWiki\Language\FormatterFactory;
@@ -11,7 +12,7 @@ use MediaWiki\Language\MessageLocalizer;
 use MediaWiki\Request\WebRequestUpload;
 use MediaWiki\Status\Status;
 use MediaWiki\Upload\Exception\UploadStashException;
-use MediaWiki\User\User;
+use MediaWiki\User\UserFactory;
 use Miraheze\ImportDump\Notifications\AttentionNotifier;
 use Miraheze\ImportDump\Progress\VerificationProgress;
 use Miraheze\ImportDump\Request\RequestManager;
@@ -46,6 +47,7 @@ class VerifyDumpJob extends Job {
 		private readonly DumpProcessor $dumpProcessor,
 		private readonly ImageProcessor $imageProcessor,
 		private readonly RequestManager $requestManager,
+		private readonly UserFactory $userFactory,
 		private readonly VerificationProgress $progress,
 	) {
 		parent::__construct( self::JOB_NAME, $params );
@@ -113,27 +115,40 @@ class VerifyDumpJob extends Job {
 			return;
 		}
 
-		// The joined file is deleted when this is destroyed, so it has to be kept until it has been read.
 		$joined = null;
-		if ( $upload ) {
-			$joining = $upload->joinChunks(
-				static fn ( int $percent ) => $onProgress( self::STAGE_JOINING, $percent )
-			);
+		try {
+			if ( $upload ) {
+				$joining = $upload->joinChunks(
+					static fn ( int $percent ) => $onProgress( self::STAGE_JOINING, $percent )
+				);
 
-			if ( !$joining->isOK() ) {
-				$this->reject( $joining );
-				$upload->purgeChunks();
-				return;
+				if ( !$joining->isOK() ) {
+					$this->reject( $joining );
+					$upload->purgeChunks();
+					return;
+				}
+
+				$joined = $joining->getValue();
+				'@phan-var TempFSFile $joined';
+				$path = $joined->getPath();
+			} else {
+				$reference = $this->requestManager->getLocalUnverifiedFile();
+				$path = $reference?->getPath();
 			}
 
-			$joined = $joining->getValue();
-			'@phan-var TempFSFile $joined';
-			$path = $joined->getPath();
-		} else {
-			$reference = $this->requestManager->getLocalUnverifiedFile();
-			$path = $reference?->getPath();
+			$this->processImages( $requestID, $path, $upload, $onProgress );
+		} finally {
+			// The joined file has to outlive the processing, and is not needed after it.
+			$joined?->purge();
 		}
+	}
 
+	private function processImages(
+		int $requestID,
+		?string $path,
+		?RequestImportUploadFromChunks $upload,
+		Closure $onProgress
+	): void {
 		$status = $path !== null ?
 			$this->imageProcessor->process(
 				$path,
@@ -177,7 +192,7 @@ class VerifyDumpJob extends Job {
 	 * @return ?RequestImportUploadFromChunks The parts of the upload, or null if they are gone.
 	 */
 	private function getPartsUpload( array $parts ): ?RequestImportUploadFromChunks {
-		$user = User::newFromId( $parts['user'] );
+		$user = $this->userFactory->newFromId( $parts['user'] );
 		if ( !$user->isRegistered() ) {
 			return null;
 		}

@@ -84,6 +84,7 @@
 				"ImportDumpDumpProcessor",
 				"ImportDumpImageProcessor",
 				"ImportDumpRequestManager",
+				"UserFactory",
 				"ImportDumpVerificationProgress"
 			],
 			"needsPage": false
