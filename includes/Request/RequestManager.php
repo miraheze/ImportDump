@@ -82,6 +82,7 @@ use function sprintf;
 use function str_contains;
 use function str_ends_with;
 use function str_replace;
+use function str_starts_with;
 use function substr_count;
 use function trim;
 use function wfEscapeWikiText;
