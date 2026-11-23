@@ -328,7 +328,10 @@ class ImageProcessor {
 	 * Adds the extension of the detected type to a file that has none. Null when there is no
 	 * allowed one or the new name is already used.
 	 *
+	 * @param string $name The name of the file.
+	 * @param string $path Where the file was extracted to.
 	 * @param array<string, true> $taken The title keys of the names that are in use, which this adds to.
+	 * @return ?string
 	 */
 	private function findName( string $name, string $path, array &$taken ): ?string {
 		$extension = $this->findExtension( $this->detectMime( $path ) );
