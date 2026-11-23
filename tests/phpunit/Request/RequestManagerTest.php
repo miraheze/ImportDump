@@ -731,7 +731,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::getImportComment
 	 */
 	public function testImportCommentNamesTheSourceAndTheRequest(): void {
-		$this->setContentLang( 'qqx' );
+		$this->overrideConfigValue( MainConfigNames::LanguageCode, 'qqx' );
 		$comment = $this->getRequestManager( id: 1 )->getImportComment();
 
 		$this->assertMatchesRegularExpression(
