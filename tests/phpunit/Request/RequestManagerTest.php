@@ -731,11 +731,12 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::getImportComment
 	 */
 	public function testImportCommentNamesTheSourceAndTheRequest(): void {
+		$this->setContentLang( 'qqx' );
 		$comment = $this->getRequestManager( id: 1 )->getImportComment();
 
 		$this->assertMatchesRegularExpression(
-			'~^Imported from https://requestimporttest\.com in ' .
-				'(\[\S+Special:RequestImportQueue/1 import request #1\]|import request #1)$~',
+			'~^\(importdump-images-comment: https://requestimporttest\.com, \S+Special:RequestImportQueue/1, 1\)$|' .
+				'^\(importdump-images-comment-plain: https://requestimporttest\.com, 1\)$~',
 			$comment
 		);
 	}
