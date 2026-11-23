@@ -7,6 +7,7 @@ namespace Miraheze\ImportDump\Tests\Maintenance;
 use MediaWiki\FileRepo\LocalRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\MainConfigNames;
+use MediaWiki\Maintenance\MaintenanceFatalError;
 use MediaWiki\Tests\Maintenance\MaintenanceBaseTestCase;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
@@ -204,6 +205,13 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 
 		$this->assertFalse( $this->requestFileExists( $images ) );
 		$this->assertTrue( $this->requestFileExists( $xml ) );
+	}
+
+	public function testUnknownTypeIsRejected(): void {
+		$this->maintenance->loadWithArgv( [ '--type', 'audio' ] );
+
+		$this->expectException( MaintenanceFatalError::class );
+		$this->maintenance->execute();
 	}
 
 	public function testMissingFilesAreIgnored(): void {

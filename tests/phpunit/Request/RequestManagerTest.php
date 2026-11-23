@@ -564,6 +564,50 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
+	 * @covers ::publishExtractedImages
+	 * @covers ::deleteFile
+	 * @covers ::getImageObjectNames
+	 */
+	public function testManyImagesAreStoredAndDeletedInBatches(): void {
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+
+		$source = $this->getNewTempFile();
+		file_put_contents( $source, 'a' );
+
+		$files = [];
+		for ( $i = 0; $i < 101; $i++ ) {
+			$files["image-$i.png"] = $source;
+		}
+
+		$percents = [];
+		$this->assertStatusGood( $images->publishExtractedImages(
+			$files,
+			static function ( int $percent ) use ( &$percents ): void {
+				$percents[] = $percent;
+			}
+		) );
+
+		$this->assertSame( [ 99, 100 ], $percents );
+		$this->assertCount( 101, $images->getImageObjectNames() );
+		$this->assertSame( 101, $images->getFileSize() );
+
+		$this->assertTrue( $images->deleteFile() );
+		$this->assertFalse( $images->fileExists() );
+		$this->assertSame( [], $images->getImageObjectNames() );
+	}
+
+	/**
+	 * @covers ::getImageObjectNames
+	 * @covers ::getFileCount
+	 */
+	public function testXmlRequestsHaveNoImageFiles(): void {
+		$manager = $this->getRequestManager( id: 1 );
+
+		$this->assertSame( [], $manager->getImageObjectNames() );
+		$this->assertNull( $manager->getFileCount() );
+	}
+
+	/**
 	 * @covers ::getRemainingCommands
 	 */
 	public function testGetRemainingCommands(): void {

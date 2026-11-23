@@ -15,6 +15,7 @@ use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\Request\RequestHistory;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Request\RequestType;
 use Miraheze\ImportDump\Tests\IsolatesManageWikiTrait;
 use Miraheze\ImportDump\Tests\Upload\TarFixture;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
@@ -23,8 +24,10 @@ use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\ObjectCache\WANObjectCache;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+use function base64_decode;
 use function gzencode;
 use function str_replace;
+use function strlen;
 use function substr_count;
 
 /**
@@ -42,6 +45,9 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 		'<revision><id>10</id><text>a</text></revision>' .
 		'<revision><id>11</id><parentid>10</parentid><text>b</text></revision>' .
 		'</page></mediawiki>';
+
+	private const string PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4' .
+		'2mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -86,6 +92,10 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 
 	/** Makes a request that waits for verification, with the given upload stored for it. */
 	private function newRequest( RequestStatus $status, string $upload ): RequestManager {
+		return $this->newTypedRequest( $status, $upload, RequestType::Xml );
+	}
+
+	private function newTypedRequest( RequestStatus $status, string $upload, RequestType $type ): RequestManager {
 		ConvertibleTimestamp::setFakeTime( ConvertibleTimestamp::now() );
 
 		$dbw = $this->getDb();
@@ -98,6 +108,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 				'request_status' => $status->value,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
 				'request_timestamp' => $dbw->timestamp(),
+				'request_type' => $type->value,
 			] )
 			->caller( __METHOD__ )
 			->execute();
@@ -240,6 +251,46 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 		$this->runJob( $manager );
 
 		$this->assertSame( RequestStatus::Declined, $this->getManager( $manager->getID() )->getStatus() );
+	}
+
+	public function testImagesAreStored(): void {
+		$manager = $this->newTypedRequest( RequestStatus::Verifying, ZipFixture::build( [
+			'a.png' => self::png(),
+			'folder/b.png' => self::png(),
+		] ), RequestType::Images );
+
+		$this->runJob( $manager );
+
+		$manager = $this->getManager( $manager->getID() );
+		$this->assertSame( RequestStatus::Pending, $manager->getStatus() );
+		$this->assertSame( 2, $manager->getFileCount() );
+		$this->assertSame( 2 * strlen( self::png() ), $manager->getFileSize() );
+		$this->assertCount( 2, $manager->getImageObjectNames() );
+		$this->assertFalse( $this->fileContents( $manager->getUnverifiedFilePath() ) );
+		$this->assertNull( $manager->getVerificationProgress() );
+	}
+
+	public function testRejectedImages(): void {
+		$manager = $this->newTypedRequest( RequestStatus::Verifying, 'not an archive', RequestType::Images );
+		$this->runJob( $manager );
+
+		$manager = $this->getManager( $manager->getID() );
+		$this->assertSame( RequestStatus::Declined, $manager->getStatus() );
+		$this->assertFalse( $manager->fileExists() );
+		$this->assertFalse( $this->fileContents( $manager->getUnverifiedFilePath() ) );
+	}
+
+	public function testMissingImagesFile(): void {
+		$manager = $this->newTypedRequest( RequestStatus::Verifying, 'content', RequestType::Images );
+		$manager->deleteUnverifiedFile();
+
+		$this->runJob( $manager );
+
+		$this->assertSame( RequestStatus::Declined, $this->getManager( $manager->getID() )->getStatus() );
+	}
+
+	private static function png(): string {
+		return (string)base64_decode( self::PNG );
 	}
 
 	/** @dataProvider provideOtherStatuses */
