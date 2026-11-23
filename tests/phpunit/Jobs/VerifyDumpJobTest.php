@@ -8,6 +8,8 @@ use Generator;
 use MediaWiki\FileRepo\LocalRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\MainConfigNames;
+use MediaWiki\User\ActorStoreFactory;
+use MediaWiki\User\UserIdentityLookup;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
@@ -271,8 +273,14 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public function testImagesAreCheckedAgainstTheExtensionsOfTheTarget(): void {
-		$wikiId = WikiMap::getCurrentWikiId();
-		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [ $wikiId ] );
+		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [ 'requestimporttest' ] );
+
+		// The requester has no account on the target wiki, which does not exist in the tests.
+		$lookup = $this->createMock( UserIdentityLookup::class );
+		$lookup->method( 'getUserIdentityByName' )->willReturn( null );
+		$actorStoreFactory = $this->createMock( ActorStoreFactory::class );
+		$actorStoreFactory->method( 'getUserIdentityLookup' )->willReturn( $lookup );
+		$this->setService( 'ActorStoreFactory', $actorStoreFactory );
 
 		$received = null;
 		$this->setTemporaryHook( 'ImportDumpGetTargetState',
@@ -293,16 +301,9 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 			'a.png' => self::png(),
 		] ), RequestType::Images );
 
-		$this->getDb()->newUpdateQueryBuilder()
-			->update( 'import_requests' )
-			->set( [ 'request_target' => $wikiId ] )
-			->where( [ 'request_id' => $manager->getID() ] )
-			->caller( __METHOD__ )
-			->execute();
+		$this->runJob( $manager );
 
-		$this->runJob( $this->getManager( $manager->getID() ) );
-
-		$this->assertSame( $wikiId, $received );
+		$this->assertSame( 'requestimporttest', $received );
 		$this->assertSame( RequestStatus::Declined, $this->getManager( $manager->getID() )->getStatus() );
 	}
 

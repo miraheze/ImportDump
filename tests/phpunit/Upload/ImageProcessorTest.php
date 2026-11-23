@@ -267,7 +267,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 
 	public function testUsesTheExtensionsOfTheTarget(): void {
 		$zip = $this->newZip( [ 'a.png' => self::png(), 'b.png' => self::gif(), 'c.gif' => self::gif() ] );
-		$processor = $this->newProcessor( self::DEFAULT_SIZE, self::DEFAULT_SKIPPED );
+		$processor = $this->newProcessor( self::DEFAULT_SIZE, maxSkipped: 100 );
 
 		$status = $processor->process( $zip, null, [ 'PNG' ] );
 		$this->assertStatusGood( $status );
