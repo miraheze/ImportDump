@@ -29,6 +29,9 @@ use const PHP_INT_MAX;
 
 class ApiRequestImportUpload extends ApiBase {
 
+	/** The stage of an upload that finished and was kept in parts. */
+	public const string STAGE_PARTS = 'parts';
+
 	public function __construct(
 		ApiMain $mainModule,
 		string $moduleName,
@@ -140,6 +143,12 @@ class ApiRequestImportUpload extends ApiBase {
 					'filekey' => $fileKey,
 				] );
 
+				return;
+			}
+
+			// Archives of images are joined when they are verified, where they are read from the parts.
+			if ( $params['type'] === 'images' ) {
+				$this->finishParts( $upload, $fileKey );
 				return;
 			}
 
@@ -262,6 +271,27 @@ class ApiRequestImportUpload extends ApiBase {
 		$this->getResult()->addValue( null, $this->getModuleName(), [
 			'result' => 'Success',
 			'filekey' => $finalKey,
+		] );
+	}
+
+	/** The parts are kept as they are, and the key of the first one stands for all of them. */
+	private function finishParts( RequestImportUploadFromChunks $upload, string $fileKey ): void {
+		$status = $upload->verifyParts();
+		if ( !$status->isOK() ) {
+			$upload->purgeChunks();
+			$this->dieStatus( $status );
+		}
+
+		UploadBase::setSessionStatus( $this->getUser(), $fileKey, [
+			'result' => 'Success',
+			'stage' => self::STAGE_PARTS,
+			'filekey' => $fileKey,
+			'status' => Status::newGood(),
+		] );
+
+		$this->getResult()->addValue( null, $this->getModuleName(), [
+			'result' => 'Success',
+			'filekey' => $fileKey,
 		] );
 	}
 

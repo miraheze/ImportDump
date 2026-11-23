@@ -8,6 +8,8 @@ use Generator;
 use MediaWiki\FileRepo\LocalRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\MainConfigNames;
+use MediaWiki\Upload\Exception\UploadStashFileNotFoundException;
+use MediaWiki\Upload\UploadStash;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
@@ -25,9 +27,12 @@ use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\ObjectCache\WANObjectCache;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use function base64_decode;
+use function file_put_contents;
 use function gzencode;
+use function intdiv;
 use function str_replace;
 use function strlen;
+use function substr;
 use function substr_count;
 
 /**
@@ -137,6 +142,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 			$services->getService( 'ImportDumpDumpProcessor' ),
 			$services->getService( 'ImportDumpImageProcessor' ),
 			$manager,
+			$services->getUserFactory(),
 			$services->getService( 'ImportDumpVerificationProgress' )
 		);
 
@@ -302,6 +308,83 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertSame( $target, $received );
 		$this->assertSame( RequestStatus::Declined, $this->getManager( $manager->getID() )->getStatus() );
+	}
+
+	/** Stores the parts of an upload the way chunked uploads do, and notes them on the request. */
+	private function addParts( RequestManager $manager, string $first, string $second ): string {
+		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
+		$user = $this->getTestUser()->getUser();
+
+		$path = $this->getNewTempFile();
+		file_put_contents( $path, $first );
+		$key = new UploadStash( $repo, $user )->stashFile( $path, 'file' )->getFileKey();
+
+		foreach ( [ $first, $second ] as $index => $content ) {
+			$partPath = $this->getNewTempFile();
+			file_put_contents( $partPath, $content );
+
+			$name = "$key.$index";
+			$this->assertStatusGood( $repo->quickImport(
+				$partPath,
+				$repo->getZonePath( 'temp' ) . '/' . $repo->getHashPath( $name ) . $name
+			) );
+		}
+
+		$this->getDb()->newUpdateQueryBuilder()
+			->update( 'uploadstash' )
+			->set( [ 'us_chunk_inx' => 1, 'us_size' => strlen( $first ) + strlen( $second ) ] )
+			->where( [ 'us_key' => $key ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$manager->deleteUnverifiedFile();
+		$this->assertStatusGood( $manager->setPartsReference( $key, $user->getId() ) );
+
+		return $key;
+	}
+
+	public function testImagesUploadedInPartsAreJoinedAndStored(): void {
+		$archive = ZipFixture::build( [ 'a.png' => self::png(), 'b.png' => self::png() ] );
+		$middle = intdiv( strlen( $archive ), 2 );
+
+		$manager = $this->newTypedRequest(
+			RequestStatus::Verifying,
+			'unused',
+			RequestType::Images,
+			'requestimporttest'
+		);
+
+		$key = $this->addParts( $manager, substr( $archive, 0, $middle ), substr( $archive, $middle ) );
+		$this->runJob( $manager );
+
+		$manager = $this->getManager( $manager->getID() );
+		$this->assertSame( RequestStatus::Pending, $manager->getStatus() );
+		$this->assertSame( 2, $manager->getFileCount() );
+		$this->assertCount( 2, $manager->getImageObjectNames() );
+		$this->assertNull( $manager->getPartsReference() );
+
+		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
+		$this->expectException( UploadStashFileNotFoundException::class );
+		new UploadStash( $repo, $this->getTestUser()->getUser() )->getFile( $key );
+	}
+
+	public function testImagesUploadedInPartsThatAreGone(): void {
+		$manager = $this->newTypedRequest(
+			RequestStatus::Verifying,
+			'unused',
+			RequestType::Images,
+			'requestimporttest'
+		);
+
+		$manager->deleteUnverifiedFile();
+		$this->assertStatusGood(
+			$manager->setPartsReference( 'gone.abc.1.archive', $this->getTestUser()->getUser()->getId() )
+		);
+
+		$this->runJob( $manager );
+
+		$this->assertSame( RequestStatus::Declined, $this->getManager( $manager->getID() )->getStatus() );
+		$this->assertNull( $this->getManager( $manager->getID() )->getPartsReference() );
 	}
 
 	public function testRejectedImages(): void {

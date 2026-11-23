@@ -7,18 +7,26 @@ namespace Miraheze\ImportDump\Tests\Api;
 use MediaWiki\FileRepo\LocalRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\MainConfigNames;
+use MediaWiki\Request\FauxRequest;
+use MediaWiki\Request\WebRequestUpload;
 use MediaWiki\Status\Status;
 use MediaWiki\Tests\Api\ApiUploadTestCase;
+use MediaWiki\Upload\Exception\UploadStashFileNotFoundException;
 use MediaWiki\Upload\UploadBase;
 use MediaWiki\Upload\UploadStash;
 use MediaWiki\WikiMap\WikiMap;
+use Miraheze\ImportDump\Api\ApiRequestImportUpload;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\AssembleChunksJob;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
+use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
+use Wikimedia\FileBackend\FSFile\TempFSFile;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\ObjectCache\WANObjectCache;
+use function file_get_contents;
 use function floor;
+use function random_bytes;
 use function strlen;
 use function substr;
 
@@ -259,6 +267,53 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 			'filesize' => strlen( $this->getXml( 100 ) ),
 			'type' => 'images',
 		] );
+	}
+
+	/**
+	 * @covers ::execute
+	 * @covers ::finishParts
+	 */
+	public function testImagesAreKeptInParts(): void {
+		$archive = ZipFixture::build( [ 'a.bin' => random_bytes( self::CHUNK_SIZE * 2 + 100 ) ] );
+		$size = strlen( $archive );
+
+		$firstKey = '';
+		$result = [];
+		for ( $offset = 0; $offset < $size; $offset += self::CHUNK_SIZE ) {
+			$params = [ 'offset' => $offset, 'filesize' => $size, 'type' => 'images' ];
+			if ( $firstKey !== '' ) {
+				$params['filekey'] = $firstKey;
+			}
+
+			[ $result, $key ] = $this->sendChunk( substr( $archive, $offset, self::CHUNK_SIZE ), $params );
+			$firstKey = $firstKey === '' ? $key : $firstKey;
+		}
+
+		$this->assertSame( 'Success', $result['result'] );
+		$this->assertSame( $firstKey, $result['filekey'] );
+
+		$progress = UploadBase::getSessionStatus( $this->getTestUser()->getUser(), $firstKey );
+		$this->assertSame( ApiRequestImportUpload::STAGE_PARTS, $progress['stage'] );
+
+		$user = $this->getTestUser()->getUser();
+		$upload = new RequestImportUploadFromChunks( $user, 'images' );
+		$upload->continueChunks(
+			$upload->getStashName(),
+			$firstKey,
+			new WebRequestUpload( new FauxRequest(), 'null' )
+		);
+
+		$joined = $upload->joinChunks( null );
+		$this->assertStatusGood( $joined );
+		$file = $joined->getValue();
+		'@phan-var TempFSFile $file';
+		$this->assertSame( $archive, file_get_contents( $file->getPath() ) );
+
+		$upload->purgeChunks();
+
+		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
+		$this->expectException( UploadStashFileNotFoundException::class );
+		new UploadStash( $repo, $user )->getFile( $firstKey );
 	}
 
 	/**
