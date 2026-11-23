@@ -23,14 +23,14 @@
 		} );
 	}
 
-	function sendChunk( file, start, end, filekey, onProgress, retries ) {
+	function sendChunk( file, type, start, end, filekey, onProgress, retries ) {
 		const data = {
 			action: 'requestimportupload',
 			async: 1,
 			chunk: file.slice( start, end ),
 			filesize: file.size,
 			offset: start,
-			type: config.type
+			type
 		};
 
 		if ( filekey ) {
@@ -56,7 +56,7 @@
 			( code, result ) => {
 				if ( code === 'http' && retries > 0 && result.textStatus !== 'abort' ) {
 					return wait( 1000 ).then(
-						() => sendChunk( file, start, end, filekey, onProgress, retries - 1 )
+						() => sendChunk( file, type, start, end, filekey, onProgress, retries - 1 )
 					);
 				}
 				return $.Deferred().reject( { code, result } );
@@ -64,10 +64,10 @@
 		);
 	}
 
-	function checkStatus( filekey ) {
+	function checkStatus( filekey, type ) {
 		return new mw.Api().postWithEditToken( {
 			action: 'requestimportupload',
-			type: config.type,
+			type,
 			checkstatus: 1,
 			filekey
 		} ).then(
@@ -78,11 +78,11 @@
 
 	// Assembling a large file can outlast the request, so a timeout on the last chunk
 	// does not mean it failed. Ask the server what happened before sending it again.
-	async function sendLastChunk( file, start, filekey, onProgress ) {
+	async function sendLastChunk( file, type, start, filekey, onProgress ) {
 		let lastError;
 		for ( let attempt = 0; attempt <= maxRetries; attempt++ ) {
 			try {
-				return await sendChunk( file, start, file.size, filekey, onProgress, 0 );
+				return await sendChunk( file, type, start, file.size, filekey, onProgress, 0 );
 			} catch ( error ) {
 				if ( !error || error.code !== 'http' ) {
 					throw error;
@@ -91,7 +91,7 @@
 				lastError = error;
 				let progress = null;
 				try {
-					progress = await checkStatus( filekey );
+					progress = await checkStatus( filekey, type );
 				} catch ( ignored ) {
 					// The status could not be read, so send the chunk again.
 				}
@@ -107,7 +107,7 @@
 		throw lastError;
 	}
 
-	async function waitForAssembly( filekey, progress, onAssembling ) {
+	async function waitForAssembly( filekey, type, progress, onAssembling ) {
 		let delay = 1000;
 		let failures = 0;
 
@@ -117,7 +117,7 @@
 			delay = Math.min( delay * 1.5, 10000 );
 
 			try {
-				progress = await checkStatus( filekey );
+				progress = await checkStatus( filekey, type );
 				failures = 0;
 			} catch ( error ) {
 				// Checking is safe to repeat, so allow a few network errors.
@@ -131,7 +131,7 @@
 		return progress;
 	}
 
-	async function uploadFile( file, onProgress, onAssembling ) {
+	async function uploadFile( file, type, onProgress, onAssembling ) {
 		const chunkSize = Math.min(
 			Math.max( preferredChunkSize, config.minChunkSize || 0 ),
 			getChunkLimit()
@@ -144,9 +144,11 @@
 		while ( offset < file.size ) {
 			const end = Math.min( offset + chunkSize, file.size );
 			if ( end < file.size ) {
-				result = await sendChunk( file, offset, end, filekey, onProgress, maxRetries );
+				result = await sendChunk(
+					file, type, offset, end, filekey, onProgress, maxRetries
+				);
 			} else {
-				result = await sendLastChunk( file, offset, filekey, onProgress );
+				result = await sendLastChunk( file, type, offset, filekey, onProgress );
 			}
 
 			filekey = result.filekey || filekey;
@@ -155,7 +157,7 @@
 		}
 
 		if ( result.result === 'Poll' ) {
-			result = await waitForAssembly( filekey, result, onAssembling );
+			result = await waitForAssembly( filekey, type, result, onAssembling );
 		}
 
 		if ( result.result !== 'Success' ) {
@@ -165,11 +167,37 @@
 		return result.filekey;
 	}
 
+	// The files that have a field for them. The archive of images is not always there.
+	function getFields() {
+		const names = [ { name: 'UploadFile', type: config.type } ];
+		if ( config.images ) {
+			names.push( { name: 'UploadImages', type: 'images' } );
+		}
+
+		return names.map( ( field ) => ( {
+			type: field.type,
+			$file: $( 'input[name="wp' + field.name + '"]' ),
+			$key: $( 'input[name="wp' + field.name + 'FileKey"]' )
+		} ) ).filter( ( field ) => field.$file.length && field.$key.length );
+	}
+
+	// The largest files are sent in parts until what is left fits in the form's own request.
+	function chooseUploads( selected ) {
+		const rest = selected.slice().sort( ( a, b ) => b.file.size - a.file.size );
+		const parts = [];
+		const total = () => rest.reduce( ( sum, item ) => sum + item.file.size, 0 );
+
+		while ( rest.length && total() > getDirectLimit() ) {
+			parts.push( rest.shift() );
+		}
+
+		return parts;
+	}
+
 	$( () => {
-		const $file = $( 'input[name="wpUploadFile"]' );
-		const $key = $( 'input[name="wpUploadFileKey"]' );
-		const $form = $file.closest( 'form' );
-		if ( !$file.length || !$key.length || !$form.length ) {
+		const fields = getFields();
+		const $form = fields.length ? fields[ 0 ].$file.closest( 'form' ) : $();
+		if ( !$form.length ) {
 			return;
 		}
 
@@ -198,18 +226,25 @@
 			mw.notify( message, { type: 'error', autoHide: false } );
 		}
 
+		function getSelected() {
+			const $source = $form.find( 'input[name="wpUploadSourceType"]:checked' );
+			const fromUrl = $source.length && $source.val() !== 'File';
+
+			return fields.map( ( field ) => ( {
+				field,
+				file: field.$file[ 0 ].files && field.$file[ 0 ].files[ 0 ]
+			} ) ).filter(
+				( item ) => item.file && !( fromUrl && item.field.type === config.type )
+			);
+		}
+
 		$form.on( 'submit', ( e ) => {
 			if ( done ) {
 				return;
 			}
 
-			const $source = $form.find( 'input[name="wpUploadSourceType"]:checked' );
-			if ( $source.length && $source.val() !== 'File' ) {
-				return;
-			}
-
-			const file = $file[ 0 ].files && $file[ 0 ].files[ 0 ];
-			if ( !file || file.size <= getDirectLimit() ) {
+			const uploads = chooseUploads( getSelected() );
+			if ( !uploads.length ) {
 				return;
 			}
 
@@ -218,23 +253,33 @@
 				return;
 			}
 
-			if ( config.maxUploadSize && file.size > config.maxUploadSize ) {
+			if ( config.maxUploadSize &&
+				uploads.some( ( item ) => item.file.size > config.maxUploadSize ) ) {
 				fail( mw.message( 'largefileserver' ).text() );
 				return;
 			}
 
 			busy = true;
 			const submitter = e.originalEvent && e.originalEvent.submitter;
+			const totalSize = uploads.reduce( ( sum, item ) => sum + item.file.size, 0 );
+			let finished = 0;
 			$wrapper.show();
 			$status.text( mw.message( 'importdump-chunkedupload-progress' ).text() );
 
-			uploadFile( file, ( sent ) => {
-				progress.setProgress( Math.min( 100, Math.round( ( sent / file.size ) * 100 ) ) );
-			}, () => {
-				$status.text( mw.message( 'importdump-chunkedupload-assembling' ).text() );
-			} ).then( ( filekey ) => {
-				$key.val( filekey );
-				$file.val( '' ).prop( 'disabled', true );
+			// One after the other, so that the parts of different files are never mixed.
+			uploads.reduce( ( previous, item ) => previous.then( async () => {
+				const filekey = await uploadFile( item.file, item.field.type, ( sent ) => {
+					progress.setProgress(
+						Math.min( 100, Math.round( ( ( finished + sent ) / totalSize ) * 100 ) )
+					);
+				}, () => {
+					$status.text( mw.message( 'importdump-chunkedupload-assembling' ).text() );
+				} );
+
+				finished += item.file.size;
+				item.field.$key.val( filekey );
+				item.field.$file.val( '' ).prop( 'disabled', true );
+			} ), Promise.resolve() ).then( () => {
 				done = true;
 				if ( form.requestSubmit && submitter ) {
 					form.requestSubmit( submitter );
@@ -249,8 +294,10 @@
 			} );
 		} );
 
-		$file.on( 'change', () => {
-			$key.val( '' );
+		fields.forEach( ( field ) => {
+			field.$file.on( 'change', () => {
+				field.$key.val( '' );
+			} );
 		} );
 	} );
 }() );

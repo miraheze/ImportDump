@@ -455,6 +455,13 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		$formFields = $specialRequestImport->getFormFields();
 		$this->assertArrayHasKey( 'UploadFileKey', $formFields );
 		$this->assertSame( 'hidden', $formFields['UploadFileKey']['type'] );
+		$this->assertArrayNotHasKey( 'UploadImagesFileKey', $formFields );
+
+		$this->overrideConfigValue( ConfigNames::EnableImageImports, true );
+
+		$formFields = $specialRequestImport->getFormFields();
+		$this->assertArrayHasKey( 'UploadImagesFileKey', $formFields );
+		$this->assertSame( 'hidden', $formFields['UploadImagesFileKey']['type'] );
 	}
 
 	/**
@@ -485,10 +492,26 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 
 		$vars = $out->getJsConfigVars()['wgRequestImportChunkedUpload'];
 		$this->assertSame( 'xml', $vars['type'] );
+		$this->assertFalse( $vars['images'] );
 		$this->assertNull( $vars['maxUploadSize'] );
 		$this->assertArrayHasKey( 'maxPhpUploadSize', $vars );
 		$this->assertArrayHasKey( 'maxDirectUploadSize', $vars );
 		$this->assertArrayHasKey( 'minChunkSize', $vars );
+	}
+
+	/**
+	 * @covers ::addChunkedUploadModule
+	 */
+	public function testAddChunkedUploadModuleWithImages(): void {
+		$this->overrideConfigValue( ConfigNames::EnableImageImports, true );
+
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$specialRequestImport->addChunkedUploadModule();
+
+		$vars = $this->specialRequestImport->getOutput()
+			->getJsConfigVars()['wgRequestImportChunkedUpload'];
+
+		$this->assertTrue( $vars['images'] );
 	}
 
 	/**
@@ -547,11 +570,156 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	}
 
 	private function stashXml( User $user ): string {
+		return $this->stashContent( $user, self::DUMP );
+	}
+
+	private function stashContent( User $user, string $content ): string {
 		$path = $this->getNewTempFile();
-		file_put_contents( $path, self::DUMP );
+		file_put_contents( $path, $content );
 
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
 		return new UploadStash( $repo, $user )->stashFile( $path, 'file' )->getFileKey();
+	}
+
+	private function submitStashKeys( User $user, array $keys ): Status {
+		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
+		$context->setUser( $user );
+		$context->setRequest( new FauxRequest( [
+			'wpEditToken' => $context->getCsrfTokenSet()->getToken()->toString(),
+		], true ) );
+
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$specialRequestImport->setContext( $context );
+
+		return $specialRequestImport->onSubmit( $keys + [
+			'source' => 'http://example.com',
+			'target' => 'wikidb',
+			'reason' => 'Stash reason ' . $this->dataName() . $this->getName(),
+			'UploadFile' => '',
+			'UploadFileKey' => '',
+			'UploadImagesFileKey' => '',
+		] );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testImagesOnlyFromStash(): void {
+		ConvertibleTimestamp::setFakeTime( 1700000300 );
+		$this->overrideConfigValues( [
+			ConfigNames::EnableChunkedUploads => true,
+			ConfigNames::EnableImageImports => true,
+		] );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$status = $this->submitStashKeys( $user, [
+			'UploadImagesFileKey' => $this->stashContent( $user, self::imagesZip() ),
+		] );
+		$this->assertStatusGood( $status );
+
+		$row = $this->getDb()->newSelectQueryBuilder()
+			->select( [ 'request_type', 'request_status', 'request_linked_id' ] )
+			->from( 'import_requests' )
+			->orderBy( 'request_id', SelectQueryBuilder::SORT_DESC )
+			->caller( __METHOD__ )
+			->fetchRow();
+
+		$this->assertSame( 'images', $row->request_type );
+		$this->assertSame( RequestStatus::Verifying->value, $row->request_status );
+		$this->assertNull( $row->request_linked_id );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testImagesAndXmlFromStash(): void {
+		ConvertibleTimestamp::setFakeTime( 1700000400 );
+		$this->overrideConfigValues( [
+			ConfigNames::EnableChunkedUploads => true,
+			ConfigNames::EnableImageImports => true,
+		] );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$status = $this->submitStashKeys( $user, [
+			'UploadFileKey' => $this->stashXml( $user ),
+			'UploadImagesFileKey' => $this->stashContent( $user, self::imagesZip() ),
+		] );
+		$this->assertStatusGood( $status );
+
+		$rows = $this->getDb()->newSelectQueryBuilder()
+			->select( [ 'request_id', 'request_type', 'request_linked_id' ] )
+			->from( 'import_requests' )
+			->orderBy( 'request_id', SelectQueryBuilder::SORT_DESC )
+			->limit( 2 )
+			->caller( __METHOD__ )
+			->fetchResultSet();
+
+		$images = $rows->fetchObject();
+		$xml = $rows->fetchObject();
+		$this->assertSame( 'images', $images->request_type );
+		$this->assertSame( 'xml', $xml->request_type );
+		$this->assertSame( (int)$xml->request_id, (int)$images->request_linked_id );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testImagesFromStashInvalidKey(): void {
+		$this->overrideConfigValues( [
+			ConfigNames::EnableChunkedUploads => true,
+			ConfigNames::EnableImageImports => true,
+		] );
+
+		$status = $this->submitStashKeys(
+			$this->getMutableTestUser()->getUser(),
+			[ 'UploadImagesFileKey' => 'invalid' ]
+		);
+		$this->assertStatusError( 'apierror-invalid-file-key', $status );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testImagesFromStashMissingKey(): void {
+		$this->overrideConfigValues( [
+			ConfigNames::EnableChunkedUploads => true,
+			ConfigNames::EnableImageImports => true,
+		] );
+
+		$status = $this->submitStashKeys(
+			$this->getMutableTestUser()->getUser(),
+			[ 'UploadImagesFileKey' => 'doesnotexist.archive' ]
+		);
+		$this->assertStatusError( 'uploadstash-exception', $status );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testImagesFromStashThatAreNotAnArchive(): void {
+		$this->overrideConfigValues( [
+			ConfigNames::EnableChunkedUploads => true,
+			ConfigNames::EnableImageImports => true,
+		] );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$status = $this->submitStashKeys( $user, [
+			'UploadImagesFileKey' => $this->stashContent( $user, 'plain text' ),
+		] );
+		$this->assertStatusError( 'importdump-images-not-archive', $status );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testImagesKeyIsIgnoredWithoutChunkedUploads(): void {
+		$this->overrideConfigValue( ConfigNames::EnableImageImports, true );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$status = $this->submitStashKeys( $user, [
+			'UploadImagesFileKey' => $this->stashContent( $user, self::imagesZip() ),
+		] );
+		$this->assertStatusError( 'importdump-upload-nothing', $status );
 	}
 
 	private function submitStashKey( User $user, string $fileKey ): Status {

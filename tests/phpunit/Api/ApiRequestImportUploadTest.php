@@ -14,6 +14,7 @@ use MediaWiki\Upload\UploadStash;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Jobs\AssembleChunksJob;
+use Miraheze\ImportDump\Tests\Upload\ZipFixture;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\ObjectCache\WANObjectCache;
@@ -72,10 +73,10 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 	private function sendChunk( string $chunk, array $params ): array {
 		$this->fakeUploadChunk( 'chunk', 'blob', 'application/xml', $chunk );
 
-		[ $result ] = $this->doApiRequestWithToken( [
+		[ $result ] = $this->doApiRequestWithToken( $params + [
 			'action' => 'requestimportupload',
 			'type' => 'xml',
-		] + $params, null, $this->getTestUser()->getAuthority() );
+		], null, $this->getTestUser()->getAuthority() );
 
 		$this->assertArrayHasKey( 'requestimportupload', $result );
 		return [ $result['requestimportupload'], $result['requestimportupload']['filekey'] ?? '' ];
@@ -225,6 +226,39 @@ class ApiRequestImportUploadTest extends ApiUploadTestCase {
 		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
 		$file = new UploadStash( $repo, $user )->getFile( $filekey );
 		$this->assertSame( strlen( $xml ), $file->getSize() );
+	}
+
+	/**
+	 * @covers ::execute
+	 * @covers ::finish
+	 */
+	public function testImagesArchiveUpload(): void {
+		$zip = ZipFixture::build( [ 'a.png' => 'image' ] );
+		[ $result, $filekey ] = $this->sendChunk( $zip, [
+			'offset' => 0,
+			'filesize' => strlen( $zip ),
+			'type' => 'images',
+		] );
+
+		$this->assertSame( 'Success', $result['result'] );
+
+		$user = $this->getTestUser()->getUser();
+		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
+		$file = new UploadStash( $repo, $user )->getFile( $filekey );
+		$this->assertSame( strlen( $zip ), $file->getSize() );
+	}
+
+	/**
+	 * @covers ::execute
+	 * @covers ::finish
+	 */
+	public function testImagesUploadThatIsNotAnArchive(): void {
+		$this->expectApiErrorCode( 'verification-error' );
+		$this->sendChunk( $this->getXml( 100 ), [
+			'offset' => 0,
+			'filesize' => strlen( $this->getXml( 100 ) ),
+			'type' => 'images',
+		] );
 	}
 
 	/**

@@ -66,6 +66,13 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * @covers ::__construct
 	 */
+	public function testConstructorImages(): void {
+		$this->assertSame( 'images', $this->newUpload( type: 'images' )->getType() );
+	}
+
+	/**
+	 * @covers ::__construct
+	 */
 	public function testConstructorUnknownType(): void {
 		$this->expectException( InvalidArgumentException::class );
 		$this->newUpload( type: 'unknown' );
@@ -76,6 +83,7 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 	 */
 	public function testGetTypeNames(): void {
 		$this->assertContains( 'xml', RequestImportUploadFromChunks::getTypeNames() );
+		$this->assertContains( 'images', RequestImportUploadFromChunks::getTypeNames() );
 	}
 
 	/**
@@ -116,6 +124,42 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 	 */
 	public function testGetStashName(): void {
 		$this->assertSame( 'requestimport.xml', $this->newUpload( type: 'xml' )->getStashName() );
+	}
+
+	/**
+	 * @covers ::getStashName
+	 */
+	public function testGetStashNameForImages(): void {
+		$this->assertSame( 'requestimport.archive', $this->newUpload( type: 'images' )->getStashName() );
+	}
+
+	/**
+	 * @covers ::verifyUpload
+	 * @dataProvider verifyImagesUploadDataProvider
+	 */
+	public function testVerifyUploadForImages( string $content, int $expectedStatus ): void {
+		$path = $this->newFile( $content );
+		$upload = $this->newUpload( type: 'images' );
+		$upload->initializePathInfo( $upload->getStashName(), $path, filesize( $path ) );
+
+		$result = $upload->verifyUpload();
+		$this->assertSame( $expectedStatus, $result['status'] );
+
+		if ( $expectedStatus === UploadBase::VERIFICATION_ERROR ) {
+			$this->assertSame( 'filetype-mime-mismatch', $result['details'][0] );
+			$this->assertSame( 'archive', $result['details'][1] );
+		}
+	}
+
+	public static function verifyImagesUploadDataProvider(): Generator {
+		yield 'zip archive' => [ ZipFixture::build( [ 'a.png' => 'image' ] ), UploadBase::OK ];
+		yield 'tar archive' => [ TarFixture::build( [ 'a.png' => 'image' ] ), UploadBase::OK ];
+		yield 'gzip archive' => [ gzencode( 'image' ), UploadBase::OK ];
+		yield 'a dump is not an archive' => [
+			"<?xml version=\"1.0\"?>\n<mediawiki></mediawiki>",
+			UploadBase::VERIFICATION_ERROR,
+		];
+		yield 'empty file' => [ '', UploadBase::EMPTY_FILE ];
 	}
 
 	/**
