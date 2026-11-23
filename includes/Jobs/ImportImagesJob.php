@@ -242,14 +242,24 @@ class ImportImagesJob extends Job {
 			ob_end_clean();
 		}
 
-		$done = min( $total, $this->offset + $this->countFiles( $directory ) );
-		$this->reportProgress( $done, $total );
 		$this->beat();
 
 		// The script returns false when a file failed or when it found nothing to import.
 		if ( $success === false ) {
 			throw new RuntimeException( 'importImages failed: ' . mb_substr( trim( $log ), -1000 ) );
 		}
+
+		// It stays quiet about files that it does not handle, such as ones with an extension this wiki does not allow.
+		$files = $this->countFiles( $directory );
+		$handled = (int)preg_match_all( '/done\.|skipping|skipped\./', $log );
+		if ( $handled < $files ) {
+			throw new RuntimeException(
+				"importImages handled $handled of $files files: " . ( trim( $log ) !== '' ?
+					mb_substr( trim( $log ), -1000 ) : 'it printed nothing' )
+			);
+		}
+
+		$this->reportProgress( min( $total, $this->offset + $files ), $total );
 	}
 
 	private function reportProgress( int $done, int $total ): void {
