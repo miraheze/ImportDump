@@ -1158,20 +1158,23 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::getRequiredTargetRights
 	 */
 	public function testRequiredRightsDependOnTheTypeOfRequest(): void {
+		// Add this first. setTargetState() mocks services that creating the test user needs.
+		$imagesID = $this->addImagesRequest( linkedID: 1 );
+
 		$this->overrideConfigValue( ConfigNames::RequiredRights, [
-			'xml' => [ 'import' ],
 			'images' => [ 'upload', 'reupload' ],
+			'xml' => [ 'import' ],
 		] );
 
 		$this->setTargetState( [], [], [ 'read', 'upload' ], [ 'sysop' ] );
 
+		$images = $this->getRequestManager( $imagesID );
+		$this->assertSame( [ 'upload', 'reupload' ], $images->getRequiredTargetRights() );
+		$this->assertSame( [ 'reupload' ], $images->getMissingTargetRights() );
+
 		$xml = $this->getRequestManager( id: 1 );
 		$this->assertSame( [ 'import' ], $xml->getRequiredTargetRights() );
 		$this->assertSame( [ 'import' ], $xml->getMissingTargetRights() );
-
-		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
-		$this->assertSame( [ 'upload', 'reupload' ], $images->getRequiredTargetRights() );
-		$this->assertSame( [ 'reupload' ], $images->getMissingTargetRights() );
 	}
 
 	/**
@@ -1179,6 +1182,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::getRequiredTargetRights
 	 */
 	public function testNothingIsRequiredForAnUnlistedType(): void {
+		$imagesID = $this->addImagesRequest( linkedID: 1 );
+
 		$this->overrideConfigValue( ConfigNames::RequiredRights, [ 'images' => 'upload' ] );
 		$this->setTargetState( [], [], [ 'read' ], [ 'sysop' ] );
 
@@ -1186,7 +1191,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( [], $xml->getRequiredTargetRights() );
 		$this->assertSame( [], $xml->getMissingTargetRights() );
 
-		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+		$images = $this->getRequestManager( $imagesID );
 		$this->assertSame( [ 'upload' ], $images->getRequiredTargetRights() );
 	}
 
