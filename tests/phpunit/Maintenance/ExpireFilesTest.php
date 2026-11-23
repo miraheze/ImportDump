@@ -72,7 +72,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 		return $manager;
 	}
 
-	private function addRequest( RequestStatus $status, int $ageInDays, RequestType $type = RequestType::Xml ): int {
+	private function addRequest( RequestStatus $status, int $ageInDays, RequestType $type ): int {
 		$dbw = $this->getServiceContainer()->getConnectionProvider()
 			->getPrimaryDatabase( 'virtual-requestimport' );
 
@@ -123,11 +123,11 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 	 */
 	private function addRequests(): array {
 		return [
-			'oldComplete' => $this->addRequest( RequestStatus::Complete, 40 ),
-			'recentComplete' => $this->addRequest( RequestStatus::Complete, 10 ),
-			'oldDeclined' => $this->addRequest( RequestStatus::Declined, 35 ),
-			'oldFailed' => $this->addRequest( RequestStatus::Failed, 41 ),
-			'oldPending' => $this->addRequest( RequestStatus::Pending, 400 ),
+			'oldComplete' => $this->addRequest( RequestStatus::Complete, 40, RequestType::Xml ),
+			'recentComplete' => $this->addRequest( RequestStatus::Complete, 10, RequestType::Xml ),
+			'oldDeclined' => $this->addRequest( RequestStatus::Declined, 35, RequestType::Xml ),
+			'oldFailed' => $this->addRequest( RequestStatus::Failed, 41, RequestType::Xml ),
+			'oldPending' => $this->addRequest( RequestStatus::Pending, 400, RequestType::Xml ),
 		];
 	}
 
@@ -194,7 +194,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 	}
 
 	public function testOnlyTheGivenTypeExpires(): void {
-		$xml = $this->addRequest( RequestStatus::Complete, 40 );
+		$xml = $this->addRequest( RequestStatus::Complete, 40, RequestType::Xml );
 		$images = $this->addRequest( RequestStatus::Complete, 40, RequestType::Images );
 
 		$this->maintenance->loadWithArgv( [ '--type', 'images' ] );
@@ -207,7 +207,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 	}
 
 	public function testMissingFilesAreIgnored(): void {
-		$id = $this->addRequest( RequestStatus::Complete, 40 );
+		$id = $this->addRequest( RequestStatus::Complete, 40, RequestType::Xml );
 		$this->assertTrue( $this->getRequestManager( $id )->deleteFile() );
 
 		$this->expectOutputRegex( '/Deleted 0 file\(s\)\. 0 failure\(s\)\./' );
