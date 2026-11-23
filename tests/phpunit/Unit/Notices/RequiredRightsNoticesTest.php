@@ -33,8 +33,8 @@ class RequiredRightsNoticesTest extends MediaWikiUnitTestCase {
 
 		$context = $this->createMock( IContextSource::class );
 		$context->method( 'getLanguage' )->willReturn( $language );
-		// @phan-suppress-next-line PhanTypeMismatchArgumentProbablyReal
 		$context->method( 'msg' )
+			// @phan-suppress-next-line PhanTypeMismatchArgumentProbablyReal
 			->with( 'importdump-info-missing-rights', 'Requester', 'targetwiki', 'import, upload', 2 )
 			->willReturn( $message );
 
