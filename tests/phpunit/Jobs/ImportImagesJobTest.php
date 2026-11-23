@@ -158,7 +158,7 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 	/**
 	 * Makes the files hook record what it was asked for, and stop the import there.
 	 *
-	 * @param array $asked
+	 * @param array &$asked
 	 * @phan-param-out array{directory: bool, names: list<string>, request: int} $asked
 	 */
 	private function recordHook( array &$asked ): void {
