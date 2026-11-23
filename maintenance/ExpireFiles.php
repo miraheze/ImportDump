@@ -9,6 +9,7 @@ use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Request\RequestType;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use Wikimedia\Timestamp\TimestampFormat;
@@ -26,7 +27,12 @@ class ExpireFiles extends Maintenance {
 		parent::__construct();
 
 		$this->addDescription(
-			'Deletes the stored XML files of old import requests using $wgRequestImportFileExpiryDays.'
+			'Deletes the stored files of old import requests using $wgRequestImportFileExpiryDays.'
+		);
+
+		$this->addOption( 'type',
+			'Only expire the files of requests of this type, which is images, xml or all. Defaults to all.',
+			false, true
 		);
 
 		$this->addOption( 'dry-run', 'List the files that would be deleted without deleting them.' );
@@ -53,6 +59,11 @@ class ExpireFiles extends Maintenance {
 		if ( !is_array( $expiry ) || $expiry === [] ) {
 			$this->output( "No expiry is configured in \$wgRequestImportFileExpiryDays. Nothing to do.\n" );
 			return;
+		}
+
+		$type = (string)$this->getOption( 'type', 'all' );
+		if ( $type !== 'all' && !RequestType::tryFrom( $type ) ) {
+			$this->fatalError( "Unknown type '$type'. Use images, xml or all." );
 		}
 
 		$dryRun = $this->hasOption( 'dry-run' );
@@ -82,6 +93,7 @@ class ExpireFiles extends Maintenance {
 					->where( [ 'request_status' => $status ] )
 					->andWhere( $dbr->expr( 'request_timestamp', '<', $cutoff ) )
 					->andWhere( $dbr->expr( 'request_id', '>', $lastId ) )
+					->andWhere( $type === 'all' ? [] : [ 'request_type' => $type ] )
 					->orderBy( 'request_id' )
 					->limit( $batchSize )
 					->caller( __METHOD__ )

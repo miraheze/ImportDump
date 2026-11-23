@@ -7,12 +7,14 @@ namespace Miraheze\ImportDump\Tests\Maintenance;
 use MediaWiki\FileRepo\LocalRepo;
 use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\MainConfigNames;
+use MediaWiki\Maintenance\MaintenanceFatalError;
 use MediaWiki\Tests\Maintenance\MaintenanceBaseTestCase;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Maintenance\ExpireFiles;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Request\RequestType;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
@@ -71,7 +73,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 		return $manager;
 	}
 
-	private function addRequest( RequestStatus $status, int $ageInDays ): int {
+	private function addRequest( RequestStatus $status, int $ageInDays, RequestType $type ): int {
 		$dbw = $this->getServiceContainer()->getConnectionProvider()
 			->getPrimaryDatabase( 'virtual-requestimport' );
 
@@ -82,6 +84,7 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 				'request_target' => 'requestimporttest',
 				'request_reason' => "test {$status->value} $ageInDays",
 				'request_status' => $status->value,
+				'request_type' => $type->value,
 				'request_actor' => $this->getTestUser()->getUser()->getActorId(),
 				'request_timestamp' => $dbw->timestamp(
 					(int)ConvertibleTimestamp::now( TimestampFormat::UNIX ) - $ageInDays * 86400
@@ -94,6 +97,10 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 
 		$backend = $this->getServiceContainer()->getRepoGroup()->getLocalRepo()->getBackend();
 		$path = $this->getRequestManager( $id )->getFilePath();
+
+		if ( $type === RequestType::Images ) {
+			$path .= '/a.png';
+		}
 
 		$this->assertStatusGood( $backend->prepare( [
 			'dir' => FileBackend::parentStoragePath( $path ),
@@ -117,11 +124,11 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 	 */
 	private function addRequests(): array {
 		return [
-			'oldComplete' => $this->addRequest( RequestStatus::Complete, 40 ),
-			'recentComplete' => $this->addRequest( RequestStatus::Complete, 10 ),
-			'oldDeclined' => $this->addRequest( RequestStatus::Declined, 35 ),
-			'oldFailed' => $this->addRequest( RequestStatus::Failed, 41 ),
-			'oldPending' => $this->addRequest( RequestStatus::Pending, 400 ),
+			'oldComplete' => $this->addRequest( RequestStatus::Complete, 40, RequestType::Xml ),
+			'recentComplete' => $this->addRequest( RequestStatus::Complete, 10, RequestType::Xml ),
+			'oldDeclined' => $this->addRequest( RequestStatus::Declined, 35, RequestType::Xml ),
+			'oldFailed' => $this->addRequest( RequestStatus::Failed, 41, RequestType::Xml ),
+			'oldPending' => $this->addRequest( RequestStatus::Pending, 400, RequestType::Xml ),
 		];
 	}
 
@@ -187,8 +194,28 @@ class ExpireFilesTest extends MaintenanceBaseTestCase {
 		}
 	}
 
+	public function testOnlyTheGivenTypeExpires(): void {
+		$xml = $this->addRequest( RequestStatus::Complete, 40, RequestType::Xml );
+		$images = $this->addRequest( RequestStatus::Complete, 40, RequestType::Images );
+
+		$this->maintenance->loadWithArgv( [ '--type', 'images' ] );
+
+		$this->expectOutputRegex( '/Deleted 1 file\(s\)\. 0 failure\(s\)\./' );
+		$this->maintenance->execute();
+
+		$this->assertFalse( $this->requestFileExists( $images ) );
+		$this->assertTrue( $this->requestFileExists( $xml ) );
+	}
+
+	public function testUnknownTypeIsRejected(): void {
+		$this->maintenance->loadWithArgv( [ '--type', 'audio' ] );
+
+		$this->expectException( MaintenanceFatalError::class );
+		$this->maintenance->execute();
+	}
+
 	public function testMissingFilesAreIgnored(): void {
-		$id = $this->addRequest( RequestStatus::Complete, 40 );
+		$id = $this->addRequest( RequestStatus::Complete, 40, RequestType::Xml );
 		$this->assertTrue( $this->getRequestManager( $id )->deleteFile() );
 
 		$this->expectOutputRegex( '/Deleted 0 file\(s\)\. 0 failure\(s\)\./' );

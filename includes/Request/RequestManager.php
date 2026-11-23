@@ -4,6 +4,8 @@ declare( strict_types = 1 );
 
 namespace Miraheze\ImportDump\Request;
 
+use Closure;
+use Generator;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\FileRepo\FileRepo;
 use MediaWiki\FileRepo\RepoGroup;
@@ -29,6 +31,7 @@ use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use Miraheze\ImportDump\Jobs\ImportImagesJob;
 use Miraheze\ImportDump\Jobs\VerifyDumpJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
+use Miraheze\ImportDump\Progress\ImportOutput;
 use Miraheze\ImportDump\Progress\ImportProgress;
 use Miraheze\ImportDump\Progress\VerificationProgress;
 use Miraheze\ImportDump\Requirements\RequirementChecker;
@@ -48,6 +51,7 @@ use Wikimedia\Rdbms\Platform\ISQLPlatform;
 use Wikimedia\Rdbms\SelectQueryBuilder;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use Wikimedia\Timestamp\TimestampFormat;
+use function array_chunk;
 use function array_column;
 use function array_diff;
 use function array_filter;
@@ -61,17 +65,25 @@ use function boolval;
 use function count;
 use function explode;
 use function in_array;
+use function intdiv;
 use function intval;
 use function is_array;
 use function json_decode;
 use function json_encode;
+use function ksort;
 use function max;
 use function parse_url;
+use function preg_match;
 use function preg_replace;
 use function preg_replace_callback;
 use function rawurlencode;
+use function sort;
+use function sprintf;
 use function str_contains;
+use function str_ends_with;
 use function str_replace;
+use function str_starts_with;
+use function substr_count;
 use function trim;
 use function wfEscapeWikiText;
 use function wfTimestamp;
@@ -90,6 +102,9 @@ class RequestManager {
 
 	/** The most skipped files that are kept for a request. */
 	private const int MAX_STORED_SKIPPED = 500;
+
+	/** How many files are sent to the file backend together. */
+	private const int FILE_BATCH_SIZE = 100;
 
 	private const array SYSTEM_USERS = [
 		self::EXTENSION_USER,
@@ -130,6 +145,7 @@ class RequestManager {
 		private readonly MessageLocalizer $messageLocalizer,
 		private readonly ServiceOptions $options,
 		private readonly UserFactory $userFactory,
+		private readonly ImportOutput $importOutput,
 		private readonly ImportProgress $importProgress,
 		private readonly RequirementChecker $requirementChecker,
 		private readonly TargetStateProvider $targetStateProvider,
@@ -564,25 +580,35 @@ class RequestManager {
 
 	/**
 	 * Stores the files that were extracted from the unverified archive in the images directory of
-	 * this request, and removes the archive.
+	 * this request, and removes the archive. They are stored in batches, which the backend sends together.
 	 *
 	 * @param array<string, string> $files The name that each file gets, and the path that it is read from.
+	 * @param Closure( int ): void $onProgress Called with the percentage that is stored.
 	 */
-	public function publishExtractedImages( array $files ): Status {
+	public function publishExtractedImages( array $files, Closure $onProgress ): Status {
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
 		$directory = $this->getFilePath();
 
 		$status = Status::wrap( $backend->prepare( [ 'dir' => $directory ] ) );
-		foreach ( $files as $name => $source ) {
+		if ( !$status->isOK() ) {
+			return $status;
+		}
+
+		$total = count( $files );
+		$done = 0;
+		foreach ( array_chunk( $files, self::FILE_BATCH_SIZE, true ) as $batch ) {
+			$operations = [];
+			foreach ( $batch as $name => $source ) {
+				$operations[] = [ 'op' => 'store', 'src' => $source, 'dst' => "$directory/$name" ];
+			}
+
+			$status->merge( Status::wrap( $backend->doQuickOperations( $operations ) ) );
 			if ( !$status->isOK() ) {
 				return $status;
 			}
 
-			$status->merge( Status::wrap( $backend->quickStore( [ 'src' => $source, 'dst' => "$directory/$name" ] ) ) );
-		}
-
-		if ( !$status->isOK() ) {
-			return $status;
+			$done += count( $batch );
+			$onProgress( intdiv( $done * 100, $total ) );
 		}
 
 		$this->deleteUnverifiedFile();
@@ -628,6 +654,78 @@ class RequestManager {
 		return FileBackend::splitStoragePath( $this->getFilePath() )[2];
 	}
 
+	/** Where the output of the import is stored. It is deleted together with the images. */
+	public function getOutputDirectory(): string {
+		return $this->getFilePath() . '-output';
+	}
+
+	/** Stores a part of the output of the import. The name has the number of lines, so that nothing else is read. */
+	public function storeOutputPart( int $part, string $text ): Status {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$directory = $this->getOutputDirectory();
+
+		$lines = substr_count( $text, "\n" ) + ( str_ends_with( $text, "\n" ) ? 0 : 1 );
+		$status = Status::wrap( $backend->prepare( [ 'dir' => $directory ] ) );
+		if ( !$status->isOK() ) {
+			return $status;
+		}
+
+		$name = sprintf( '%04d-l%d.txt', $part, $lines );
+		$status = Status::wrap( $backend->quickCreate( [
+			'dst' => "$directory/$name",
+			'content' => $text,
+			'overwrite' => true,
+		] ) );
+
+		if ( !$status->isOK() ) {
+			return $status;
+		}
+
+		// A part that was stored before has another name if its number of lines was not the same.
+		foreach ( $backend->getFileList( [ 'dir' => $directory ] ) ?? [] as $file ) {
+			if ( $file !== $name && str_starts_with( $file, sprintf( '%04d-l', $part ) ) ) {
+				$backend->quickDelete( [ 'src' => "$directory/$file", 'ignoreMissingSource' => true ] );
+			}
+		}
+
+		return $status;
+	}
+
+	/** @return array<int, array{part: int, lines: int, name: string}> The stored parts of the output, by number. */
+	private function getStoredOutput(): array {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$files = $backend->getFileList( [ 'dir' => $this->getOutputDirectory() ] );
+
+		$parts = [];
+		foreach ( $files ?? [] as $file ) {
+			if ( preg_match( '/^(\d{4})-l(\d+)\.txt$/', $file, $matches ) ) {
+				$parts[(int)$matches[1]] = [ 'part' => (int)$matches[1], 'lines' => (int)$matches[2], 'name' => $file ];
+			}
+		}
+
+		ksort( $parts );
+		return $parts;
+	}
+
+	/** @return list<array{part: int, lines: int}> The stored parts of the output, in order. */
+	public function getOutputParts(): array {
+		return array_values( array_map(
+			static fn ( array $part ): array => [ 'part' => $part['part'], 'lines' => $part['lines'] ],
+			$this->getStoredOutput()
+		) );
+	}
+
+	public function getOutputPart( int $part ): ?string {
+		$stored = $this->getStoredOutput()[$part] ?? null;
+		if ( $stored === null ) {
+			return null;
+		}
+
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$text = $backend->getFileContents( [ 'src' => $this->getOutputDirectory() . '/' . $stored['name'] ] );
+		return $text === false ? null : $text;
+	}
+
 	/** The images of a request are kept in a directory, which has no extension. */
 	public function getFileName(): string {
 		$name = $this->getTarget() . '-' . $this->getTimestamp();
@@ -636,42 +734,54 @@ class RequestManager {
 
 	public function fileExists(): bool {
 		if ( $this->getType() === RequestType::Images ) {
-			return $this->listImageFiles() !== [];
+			// One entry of the listing is enough, so a large import is not listed in full.
+			return $this->getImageFiles()->valid();
 		}
 
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
 		return $backend->fileExists( [ 'src' => $this->getFilePath() ] ) === true;
 	}
 
-	/** @return list<string> The paths of the stored image files, or nothing for any other request. */
-	private function listImageFiles(): array {
+	/** @return Generator<string> The paths of the stored image files, or nothing for any other request. */
+	private function getImageFiles(): Generator {
 		if ( $this->getType() !== RequestType::Images ) {
-			return [];
+			return;
 		}
 
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
-		$files = $backend->getFileList( [ 'dir' => $this->getFilePath() ] );
+		$directory = $this->getFilePath();
+		$files = $backend->getFileList( [ 'dir' => $directory ] );
 		if ( $files === null ) {
-			return [];
+			return;
 		}
 
-		$paths = [];
 		foreach ( $files as $file ) {
-			$paths[] = $this->getFilePath() . '/' . $file;
+			yield "$directory/$file";
+		}
+	}
+
+	/** @return list<string> The names of the stored image files in the container, in order. */
+	public function getImageObjectNames(): array {
+		$names = [];
+		foreach ( $this->getImageFiles() as $path ) {
+			$names[] = FileBackend::splitStoragePath( $path )[2];
 		}
 
-		return $paths;
+		sort( $names );
+		return $names;
 	}
 
 	public function deleteFile(): bool {
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
 
 		$paths = [ $this->getFilePath(), $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
+		$success = true;
 		if ( $this->getType() === RequestType::Images ) {
-			$paths = [ ...$this->listImageFiles(), $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
+			$success = $this->deleteImageFiles( $backend );
+			$success = $this->deleteOutputFiles( $backend ) && $success;
+			$paths = [ $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
 		}
 
-		$success = true;
 		foreach ( $paths as $path ) {
 			$status = $backend->quickDelete( [
 				'src' => $path,
@@ -681,10 +791,41 @@ class RequestManager {
 			$success = $status->isOK() && $success;
 		}
 
-		if ( $this->getType() === RequestType::Images ) {
-			$backend->clean( [ 'dir' => $this->getFilePath() ] );
+		return $success;
+	}
+
+	private function deleteOutputFiles( FileBackend $backend ): bool {
+		$success = true;
+		foreach ( $this->getStoredOutput() as $part ) {
+			$status = $backend->quickDelete( [
+				'src' => $this->getOutputDirectory() . '/' . $part['name'],
+				'ignoreMissingSource' => true,
+			] );
+
+			$success = $status->isOK() && $success;
 		}
 
+		$backend->clean( [ 'dir' => $this->getOutputDirectory() ] );
+		return $success;
+	}
+
+	/** Deletes the stored image files in batches, which the backend sends together. */
+	private function deleteImageFiles( FileBackend $backend ): bool {
+		$success = true;
+		$operations = [];
+		foreach ( $this->getImageFiles() as $path ) {
+			$operations[] = [ 'op' => 'delete', 'src' => $path, 'ignoreMissingSource' => true ];
+			if ( count( $operations ) >= self::FILE_BATCH_SIZE ) {
+				$success = $backend->doQuickOperations( $operations )->isOK() && $success;
+				$operations = [];
+			}
+		}
+
+		if ( $operations ) {
+			$success = $backend->doQuickOperations( $operations )->isOK() && $success;
+		}
+
+		$backend->clean( [ 'dir' => $this->getFilePath() ] );
 		return $success;
 	}
 
@@ -718,8 +859,14 @@ class RequestManager {
 
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
 		if ( $this->getType() === RequestType::Images ) {
+			$stored = $this->row->request_file_size ?? null;
+			if ( $stored !== null ) {
+				return (int)$stored;
+			}
+
+			// Requests from before the size was kept.
 			$size = 0;
-			foreach ( $this->listImageFiles() as $path ) {
+			foreach ( $this->getImageFiles() as $path ) {
 				$size += (int)$backend->getFileSize( [ 'src' => $path ] );
 			}
 
@@ -727,6 +874,25 @@ class RequestManager {
 		}
 
 		return (int)$backend->getFileSize( [ 'src' => $this->getFilePath() ] );
+	}
+
+	/** @return ?int How many image files were stored, or null if it was not recorded. */
+	public function getFileCount(): ?int {
+		$count = $this->row->request_file_count ?? null;
+		return $count === null ? null : (int)$count;
+	}
+
+	/** Keeps how many image files were stored and their total size, so the page does not have to ask the backend. */
+	public function setFileStats( int $count, int $size ): void {
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_file_count' => $count, 'request_file_size' => $size ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->row->request_file_count = $count;
+		$this->row->request_file_size = $size;
 	}
 
 	public function getReason(): string {
@@ -912,6 +1078,38 @@ class RequestManager {
 		$this->row->request_private = (int)$private;
 	}
 
+	/** Whether the images that are already on the wiki are replaced, instead of being skipped. */
+	public function shouldOverwrite(): bool {
+		return (bool)( $this->row->request_overwrite ?? false );
+	}
+
+	public function setOverwrite( bool $overwrite ): void {
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_overwrite' => (int)$overwrite ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->row->request_overwrite = (int)$overwrite;
+	}
+
+	/** Whether a file is skipped when the wiki already has the same file under another name. */
+	public function shouldSkipDupes(): bool {
+		return (bool)( $this->row->request_skip_dupes ?? true );
+	}
+
+	public function setSkipDupes( bool $skipDupes ): void {
+		$this->dbw->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_skip_dupes' => (int)$skipDupes ] )
+			->where( [ 'request_id' => $this->ID ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->row->request_skip_dupes = (int)$skipDupes;
+	}
+
 	public function setReason( string $reason ): void {
 		$this->dbw->newUpdateQueryBuilder()
 			->update( 'import_requests' )
@@ -932,6 +1130,26 @@ class RequestManager {
 			->execute();
 
 		$this->row->request_source = $source;
+	}
+
+	/** Adds to what the script of the import is printing, in the given part of the output. */
+	public function appendImportOutput( int $part, string $text ): void {
+		$this->importOutput->append( $this->ID, $part, $text );
+	}
+
+	/** Clears the live part of the output. The stored parts are on another wiki, see clearStoredOutput(). */
+	public function clearImportOutput(): void {
+		$this->importOutput->clear( $this->ID );
+	}
+
+	/** Removes the stored parts of the output. This has to run on the wiki that stores the requests. */
+	public function clearStoredOutput(): bool {
+		return $this->deleteOutputFiles( $this->repoGroup->getLocalRepo()->getBackend() );
+	}
+
+	/** @return ?array{part: int, text: string} The part of the output that is being printed. */
+	public function getImportOutput(): ?array {
+		return $this->importOutput->get( $this->ID );
 	}
 
 	public function setImportPercent( int $percent, ?int $done, ?int $total ): void {

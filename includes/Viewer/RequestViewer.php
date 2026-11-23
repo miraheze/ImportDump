@@ -95,6 +95,7 @@ class RequestViewer {
 		// Messages that can be used here:
 		// * importdump-verification-checking
 		// * importdump-verification-extracting
+		// * importdump-verification-storing
 		// * importdump-verification-waiting
 		$label = $this->context->msg(
 			'importdump-verification-' . ( $progress['stage'] ?? 'waiting' )

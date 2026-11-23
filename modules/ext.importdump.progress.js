@@ -17,6 +17,7 @@
 		// * importdump-verification-checking
 		// * importdump-verification-extracting
 		// * importdump-verification-merging
+		// * importdump-verification-storing
 		// * importdump-verification-waiting
 		const text = mw.msg( 'importdump-verification-' + stage );
 		if ( percent === null ) {

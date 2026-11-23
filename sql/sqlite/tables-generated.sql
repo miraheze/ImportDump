@@ -14,10 +14,14 @@ CREATE TABLE /*_*/import_requests (
   request_history TEXT DEFAULT NULL,
   request_requirements BLOB DEFAULT NULL,
   request_skipped BLOB DEFAULT NULL,
+  request_file_count INTEGER UNSIGNED DEFAULT NULL,
+  request_file_size BIGINT UNSIGNED DEFAULT NULL,
   request_type TEXT DEFAULT 'xml' NOT NULL,
   request_linked_id BIGINT UNSIGNED DEFAULT NULL,
   request_locked SMALLINT UNSIGNED DEFAULT 0 NOT NULL,
-  request_private SMALLINT UNSIGNED DEFAULT 0 NOT NULL
+  request_private SMALLINT UNSIGNED DEFAULT 0 NOT NULL,
+  request_overwrite SMALLINT UNSIGNED DEFAULT 0 NOT NULL,
+  request_skip_dupes SMALLINT UNSIGNED DEFAULT 1 NOT NULL
 );
 
 CREATE INDEX request_actor_timestamp ON /*_*/import_requests (

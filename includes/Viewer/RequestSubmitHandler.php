@@ -15,6 +15,7 @@ use Miraheze\ImportDump\Notices\ActionOutcomeNotices;
 use Miraheze\ImportDump\Notices\NoticeSeverity;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
+use Miraheze\ImportDump\Request\RequestType;
 use function array_column;
 use function array_unique;
 use function implode;
@@ -88,6 +89,24 @@ class RequestSubmitHandler {
 				)->escaped();
 
 				$this->requestManager->setTarget( $formData['edit-target'] );
+			}
+
+			$status = $this->requestManager->getStatus();
+			if (
+				isset( $formData['edit-skip-dupes'] ) &&
+				$this->requestManager->getType() === RequestType::Images &&
+				$status !== RequestStatus::Complete &&
+				!$status->isRunning() &&
+				$this->requestManager->shouldSkipDupes() !== (bool)$formData['edit-skip-dupes']
+			) {
+				$changes[] = $this->context->msg( 'importdump-request-edited-skip-dupes' )->params(
+					$this->context->msg( $this->requestManager->shouldSkipDupes() ? 'htmlform-yes' : 'htmlform-no' )
+						->inContentLanguage()->text(),
+					$this->context->msg( $formData['edit-skip-dupes'] ? 'htmlform-yes' : 'htmlform-no' )
+						->inContentLanguage()->text()
+				)->escaped();
+
+				$this->requestManager->setSkipDupes( (bool)$formData['edit-skip-dupes'] );
 			}
 
 			if ( !$changes ) {
@@ -194,6 +213,19 @@ class RequestSubmitHandler {
 				$this->requestManager->setPrivate( (bool)$formData['handle-private'] );
 			}
 
+			if (
+				isset( $formData['handle-overwrite'] ) &&
+				$this->requestManager->getType() === RequestType::Images &&
+				$this->requestManager->getStatus() !== RequestStatus::Complete &&
+				!$this->requestManager->getStatus()->isRunning() &&
+				$this->requestManager->shouldOverwrite() !== (bool)$formData['handle-overwrite']
+			) {
+				$changes[] = $this->requestManager->shouldOverwrite() ?
+					'skip' : 'overwrite';
+
+				$this->requestManager->setOverwrite( (bool)$formData['handle-overwrite'] );
+			}
+
 			if ( $newStatus === null || $this->requestManager->getStatus() === $newStatus ) {
 				$this->requestManager->endAtomic( __METHOD__ );
 
@@ -216,6 +248,14 @@ class RequestSubmitHandler {
 
 				if ( in_array( 'unlocked', $changes, true ) ) {
 					$this->addSuccess( $this->context->msg( 'importdump-success-unlocked' ) );
+				}
+
+				if ( in_array( 'overwrite', $changes, true ) ) {
+					$this->addSuccess( $this->context->msg( 'importdump-success-overwrite' ) );
+				}
+
+				if ( in_array( 'skip', $changes, true ) ) {
+					$this->addSuccess( $this->context->msg( 'importdump-success-skip' ) );
 				}
 
 				return;

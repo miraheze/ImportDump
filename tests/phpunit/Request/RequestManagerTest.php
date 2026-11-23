@@ -522,23 +522,147 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::publishExtractedImages
 	 * @covers ::fileExists
 	 * @covers ::getFileSize
+	 * @covers ::getFileCount
+	 * @covers ::setFileStats
+	 * @covers ::getImageObjectNames
 	 * @covers ::deleteFile
 	 */
 	public function testImagesAreStoredAndDeleted(): void {
 		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
 		$this->assertFalse( $images->fileExists() );
+		$this->assertNull( $images->getFileCount() );
 
 		$first = $this->getNewTempFile();
 		$second = $this->getNewTempFile();
 		file_put_contents( $first, 'abc' );
 		file_put_contents( $second, 'de' );
 
-		$this->assertStatusGood( $images->publishExtractedImages( [ 'a.png' => $first, 'b.png' => $second ] ) );
+		$percents = [];
+		$this->assertStatusGood( $images->publishExtractedImages(
+			[ 'b.png' => $second, 'a.png' => $first ],
+			static function ( int $percent ) use ( &$percents ): void {
+				$percents[] = $percent;
+			}
+		) );
+
+		$this->assertSame( [ 100 ], $percents );
 		$this->assertTrue( $images->fileExists() );
 		$this->assertSame( 5, $images->getFileSize() );
 
+		$names = $images->getImageObjectNames();
+		$this->assertCount( 2, $names );
+		$this->assertStringEndsWith( '/a.png', $names[0] );
+		$this->assertStringEndsWith( '/b.png', $names[1] );
+
+		$images->setFileStats( 2, 7 );
+		$this->assertSame( 2, $images->getFileCount() );
+		$this->assertSame( 7, $images->getFileSize() );
+
 		$this->assertTrue( $images->deleteFile() );
 		$this->assertFalse( $images->fileExists() );
+		$this->assertSame( [], $images->getImageObjectNames() );
+	}
+
+	/**
+	 * @covers ::publishExtractedImages
+	 * @covers ::deleteFile
+	 * @covers ::getImageObjectNames
+	 */
+	public function testManyImagesAreStoredAndDeletedInBatches(): void {
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+
+		$source = $this->getNewTempFile();
+		file_put_contents( $source, 'a' );
+
+		$files = [];
+		for ( $i = 0; $i < 101; $i++ ) {
+			$files["image-$i.png"] = $source;
+		}
+
+		$percents = [];
+		$this->assertStatusGood( $images->publishExtractedImages(
+			$files,
+			static function ( int $percent ) use ( &$percents ): void {
+				$percents[] = $percent;
+			}
+		) );
+
+		$this->assertSame( [ 99, 100 ], $percents );
+		$this->assertCount( 101, $images->getImageObjectNames() );
+		$this->assertSame( 101, $images->getFileSize() );
+
+		$this->assertTrue( $images->deleteFile() );
+		$this->assertFalse( $images->fileExists() );
+		$this->assertSame( [], $images->getImageObjectNames() );
+	}
+
+	/**
+	 * @covers ::getImageObjectNames
+	 * @covers ::getFileCount
+	 */
+	public function testXmlRequestsHaveNoImageFiles(): void {
+		$manager = $this->getRequestManager( id: 1 );
+
+		$this->assertSame( [], $manager->getImageObjectNames() );
+		$this->assertNull( $manager->getFileCount() );
+	}
+
+	/**
+	 * @covers ::appendImportOutput
+	 * @covers ::getImportOutput
+	 * @covers ::clearImportOutput
+	 */
+	public function testImportOutput(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$this->assertNull( $manager->getImportOutput() );
+
+		$manager->appendImportOutput( 2, 'a' );
+		$manager->appendImportOutput( 2, 'b' );
+		$this->assertSame( [ 'part' => 2, 'text' => 'ab' ], $manager->getImportOutput() );
+
+		$manager->clearImportOutput();
+		$this->assertNull( $manager->getImportOutput() );
+	}
+
+	/**
+	 * @covers ::storeOutputPart
+	 * @covers ::getOutputDirectory
+	 * @covers ::getOutputParts
+	 * @covers ::getOutputPart
+	 * @covers ::deleteFile
+	 */
+	public function testOutputPartsAreStoredAndDeleted(): void {
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+		$this->assertSame( [], $images->getOutputParts() );
+		$this->assertNull( $images->getOutputPart( 0 ) );
+
+		$this->assertStatusGood( $images->storeOutputPart( 1, "b\nc\n" ) );
+		$this->assertStatusGood( $images->storeOutputPart( 0, 'a' ) );
+
+		$this->assertSame(
+			[ [ 'part' => 0, 'lines' => 1 ], [ 'part' => 1, 'lines' => 2 ] ],
+			$images->getOutputParts()
+		);
+
+		$this->assertSame( 'a', $images->getOutputPart( 0 ) );
+		$this->assertSame( "b\nc\n", $images->getOutputPart( 1 ) );
+		$this->assertNull( $images->getOutputPart( 2 ) );
+
+		$this->assertTrue( $images->deleteFile() );
+		$this->assertSame( [], $images->getOutputParts() );
+	}
+
+	/**
+	 * @covers ::clearStoredOutput
+	 */
+	public function testClearingTheStoredOutputRemovesTheParts(): void {
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+		$this->assertStatusGood( $images->storeOutputPart( 0, 'a' ) );
+		$this->assertStatusGood( $images->storeOutputPart( 1, 'b' ) );
+
+		$this->assertTrue( $images->clearStoredOutput() );
+
+		$this->assertSame( [], $images->getOutputParts() );
 	}
 
 	/**
@@ -1415,6 +1539,10 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 	/**
 	 * @covers ::setLocked
+	 * @covers ::setOverwrite
+	 * @covers ::setSkipDupes
+	 * @covers ::shouldSkipDupes
+	 * @covers ::shouldOverwrite
 	 * @covers ::setPrivate
 	 * @covers ::setReason
 	 * @covers ::setSource
@@ -1429,6 +1557,14 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$manager->setPrivate( true );
 		$this->assertTrue( $manager->isPrivate() );
 
+		$this->assertFalse( $manager->shouldOverwrite() );
+		$manager->setOverwrite( true );
+		$this->assertTrue( $manager->shouldOverwrite() );
+
+		$this->assertTrue( $manager->shouldSkipDupes() );
+		$manager->setSkipDupes( false );
+		$this->assertFalse( $manager->shouldSkipDupes() );
+
 		$manager->setReason( 'A new reason' );
 		$this->assertSame( 'A new reason', $manager->getReason() );
 
@@ -1440,6 +1576,8 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 		$stored = $this->getRequestManager( id: 1 );
 		$this->assertTrue( $stored->isLocked() );
+		$this->assertTrue( $stored->shouldOverwrite() );
+		$this->assertFalse( $stored->shouldSkipDupes() );
 		$this->assertSame( 'A new reason', $stored->getReason() );
 		$this->assertSame( 'https://example.com', $stored->getSource() );
 		$this->assertSame( 'otherwiki', $stored->getTarget() );

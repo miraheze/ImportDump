@@ -18,10 +18,14 @@ CREATE TABLE /*_*/import_requests (
   request_history ENUM('full', 'partial', 'unknown') DEFAULT NULL,
   request_requirements BLOB DEFAULT NULL,
   request_skipped MEDIUMBLOB DEFAULT NULL,
+  request_file_count INT UNSIGNED DEFAULT NULL,
+  request_file_size BIGINT UNSIGNED DEFAULT NULL,
   request_type ENUM('images', 'xml') DEFAULT 'xml' NOT NULL,
   request_linked_id BIGINT UNSIGNED DEFAULT NULL,
   request_locked TINYINT UNSIGNED DEFAULT 0 NOT NULL,
   request_private TINYINT UNSIGNED DEFAULT 0 NOT NULL,
+  request_overwrite TINYINT UNSIGNED DEFAULT 0 NOT NULL,
+  request_skip_dupes TINYINT UNSIGNED DEFAULT 1 NOT NULL,
   INDEX request_actor_timestamp (
     request_actor, request_timestamp
   ),
