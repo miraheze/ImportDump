@@ -62,11 +62,11 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 	}
 
 	private function process( string $path, int $maxSize ): Status {
-		return $this->newProcessor( $maxSize, self::DEFAULT_SKIPPED )->process( $path, null );
+		return $this->newProcessor( $maxSize, self::DEFAULT_SKIPPED )->process( $path, null, null );
 	}
 
 	private function processWithLimit( string $path, int $maxSkipped ): Status {
-		return $this->newProcessor( self::DEFAULT_SIZE, $maxSkipped )->process( $path, null );
+		return $this->newProcessor( self::DEFAULT_SIZE, $maxSkipped )->process( $path, null, null );
 	}
 
 	private static function gif(): string {
@@ -263,6 +263,28 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( [ 'Site-background.png', 'Disguised.png', 'plain.png' ], array_keys( $result->files ) );
 		$this->assertSame( [], $result->skipped );
 		$this->assertSame( [ 'Site-background' => 'Site-background.png' ], $result->renamed );
+	}
+
+	public function testUsesTheExtensionsOfTheTarget(): void {
+		$zip = $this->newZip( [ 'a.png' => self::png(), 'b.png' => self::gif(), 'c.gif' => self::gif() ] );
+		$processor = $this->newProcessor( self::DEFAULT_SIZE, self::DEFAULT_SKIPPED );
+
+		$status = $processor->process( $zip, null, [ 'PNG' ] );
+		$this->assertStatusGood( $status );
+		$result = $status->getValue();
+		'@phan-var ImageResult $result';
+		$this->assertSame( [ 'a.png' ], array_keys( $result->files ) );
+
+		$reasons = array_column( array_map(
+			static fn ( SkippedFile $file ): array => [ $file->name, $file->reason ],
+			$result->skipped
+		), 1, 0 );
+
+		ksort( $reasons );
+		$this->assertSame(
+			[ 'b.png' => 'filetype-mime-mismatch', 'c.gif' => 'importdump-images-skip-extension' ],
+			$reasons
+		);
 	}
 
 	public function testSkipsMarkupThatIsNamedAsAnotherType(): void {

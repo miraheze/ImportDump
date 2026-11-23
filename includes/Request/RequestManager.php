@@ -532,6 +532,11 @@ class RequestManager {
 		return $this->targetStateProvider->getGroups( $this->getTarget(), $this->getRequester()->getName() );
 	}
 
+	/** @return ?list<string> The file extensions that the target wiki accepts, or null if they are not known. */
+	public function getTargetFileExtensions(): ?array {
+		return $this->getTargetState()->getFileExtensions();
+	}
+
 	private function getTargetState(): TargetState {
 		if ( !$this->targetExists() ) {
 			return TargetState::empty();

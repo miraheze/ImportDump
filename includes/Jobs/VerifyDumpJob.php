@@ -102,7 +102,9 @@ class VerifyDumpJob extends Job {
 		$status = $reference ?
 			$this->imageProcessor->process(
 				$reference->getPath(),
-				fn ( string $stage, ?int $percent ) => $this->progress->set( $requestID, $stage, $percent )
+				fn ( string $stage, ?int $percent ) => $this->progress->set( $requestID, $stage, $percent ),
+				// The target wiki decides which extensions are accepted, when it tells us.
+				$this->requestManager->getTargetFileExtensions()
 			) :
 			Status::newFatal( 'importdump-verify-missing' );
 

@@ -270,6 +270,44 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 		$this->assertNull( $manager->getVerificationProgress() );
 	}
 
+	public function testImagesAreCheckedAgainstTheExtensionsOfTheTarget(): void {
+		$wikiId = WikiMap::getCurrentWikiId();
+		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [ $wikiId ] );
+
+		$received = null;
+		$this->setTemporaryHook( 'ImportDumpGetTargetState',
+			static function (
+				string $target,
+				// @phan-suppress-next-line PhanUnusedClosureParameter
+				array $requesterGroups,
+				// @phan-suppress-next-line PhanUnusedClosureParameter
+				?array &$extensions,
+				array &$settings,
+				// @phan-suppress-next-line PhanUnusedClosureParameter
+				array &$rights
+			) use ( &$received ): void {
+				$received = $target;
+				$settings['fileExtensions'] = [ 'jpg' ];
+			}
+		);
+
+		$manager = $this->newTypedRequest( RequestStatus::Verifying, ZipFixture::build( [
+			'a.png' => self::png(),
+		] ), RequestType::Images );
+
+		$this->getDb()->newUpdateQueryBuilder()
+			->update( 'import_requests' )
+			->set( [ 'request_target' => $wikiId ] )
+			->where( [ 'request_id' => $manager->getID() ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->runJob( $this->getManager( $manager->getID() ) );
+
+		$this->assertSame( $wikiId, $received );
+		$this->assertSame( RequestStatus::Declined, $this->getManager( $manager->getID() )->getStatus() );
+	}
+
 	public function testRejectedImages(): void {
 		$manager = $this->newTypedRequest( RequestStatus::Verifying, 'not an archive', RequestType::Images );
 		$this->runJob( $manager );
