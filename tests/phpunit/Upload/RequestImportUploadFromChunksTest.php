@@ -135,6 +135,22 @@ class RequestImportUploadFromChunksTest extends MediaWikiIntegrationTestCase {
 
 	/**
 	 * @covers ::verifyUpload
+	 */
+	public function testVerifyUploadSetsPropsSoTheStashDoesNotReadTheFile(): void {
+		$path = $this->newFile( ZipFixture::build( [ 'a.png' => 'image' ] ) );
+		$upload = $this->newUpload( type: 'images' );
+		$upload->initializePathInfo( $upload->getStashName(), $path, filesize( $path ) );
+
+		$this->assertSame( UploadBase::OK, $upload->verifyUpload()['status'] );
+
+		$props = TestingAccessWrapper::newFromObject( $upload )->mFileProps;
+		$this->assertSame( filesize( $path ), $props['size'] );
+		$this->assertSame( 'application/zip', $props['mime'] );
+		$this->assertSame( '', $props['sha1'] );
+	}
+
+	/**
+	 * @covers ::verifyUpload
 	 * @dataProvider verifyImagesUploadDataProvider
 	 */
 	public function testVerifyUploadForImages( string $content, int $expectedStatus ): void {

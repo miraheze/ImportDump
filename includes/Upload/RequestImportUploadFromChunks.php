@@ -11,6 +11,7 @@ use MediaWiki\User\User;
 use Miraheze\ImportDump\ConfigNames;
 use function array_keys;
 use function in_array;
+use const MEDIATYPE_UNKNOWN;
 use const PHP_INT_MAX;
 
 class RequestImportUploadFromChunks extends UploadFromChunks {
@@ -103,6 +104,21 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 				'details' => [ 'filetype-mime-mismatch', $definition['extension'], $mime ],
 			];
 		}
+
+		// Core hashes and inspects the whole file for these when they are missing, which takes
+		// minutes of CPU for a large archive, and nothing here uses them.
+		$this->mFileProps = [
+			'fileExists' => true,
+			'size' => $this->getFileSize(),
+			'file-mime' => $mime,
+			'mime' => $mime,
+			'media_type' => MEDIATYPE_UNKNOWN,
+			'metadata' => [],
+			'sha1' => '',
+			'width' => 0,
+			'height' => 0,
+			'bits' => 0,
+		];
 
 		return [ 'status' => self::OK ];
 	}

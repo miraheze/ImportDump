@@ -15,6 +15,7 @@ use MediaWiki\Utils\MWFileProps;
 use Miraheze\ImportDump\ConfigNames;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use Wikimedia\Mime\MimeAnalyzer;
+use function array_keys;
 use function array_map;
 use function array_shift;
 use function array_slice;
@@ -27,6 +28,7 @@ use function intdiv;
 use function is_float;
 use function is_int;
 use function is_scalar;
+use function is_string;
 use function pathinfo;
 use function preg_match;
 use function str_starts_with;
@@ -56,6 +58,22 @@ class ImageProcessor {
 
 	public const string STAGE_EXTRACTING = 'extracting';
 
+	/**
+	 * The types that may keep a name with another extension. Formats that can hold script or markup,
+	 * such as SVG, are left out, because browsers treat those by content when they are named wrongly.
+	 */
+	private const array RASTER_TYPES = [
+		'image/png',
+		'image/apng',
+		'image/jpeg',
+		'image/gif',
+		'image/webp',
+		'image/avif',
+		'image/bmp',
+		'image/x-ms-bmp',
+		'image/tiff',
+	];
+
 	/** The most bytes that a file name may have, which is what the title of a file allows. */
 	private const int MAX_NAME_LENGTH = 240;
 
@@ -66,7 +84,7 @@ class ImageProcessor {
 
 	public function __construct(
 		private readonly ArchiveReader $archiveReader,
-		MimeAnalyzer $mimeAnalyzer,
+		private readonly MimeAnalyzer $mimeAnalyzer,
 		private readonly ServiceOptions $options,
 		private readonly TempFSFileFactory $tempFSFileFactory,
 		private readonly TitleFactory $titleFactory,
@@ -112,6 +130,8 @@ class ImageProcessor {
 
 		$files = [];
 		$tempFiles = [];
+		$renamed = [];
+		$taken = $this->getTitleKeys( array_keys( $entries ) );
 		$total = count( $entries );
 		$position = 0;
 		$extracted = 0;
@@ -149,7 +169,29 @@ class ImageProcessor {
 				return Status::newFatal( 'uploadvirus', $virus );
 			}
 
-			$problem = $this->verifyFile( $name, $extension, $tempFile->getPath() );
+			$problem = $extension === '' ?
+				new SkippedFile( $name, 'importdump-images-skip-extension', [] ) :
+				$this->verifyFile( $name, $extension, $tempFile->getPath() );
+
+			if ( $problem && $problem->reason === 'filetype-mime-mismatch' ) {
+				// The name stays as it is, because pages link to it.
+				$mime = $this->detectMime( $tempFile->getPath() );
+				$real = in_array( $mime, self::RASTER_TYPES, true ) ? $this->findExtension( $mime ) : null;
+				if ( $real !== null && !$this->verifyFile( $name, $real, $tempFile->getPath() ) ) {
+					$problem = null;
+				}
+			} elseif ( $problem && $extension === '' ) {
+				$fixed = $this->findName( $name, $tempFile->getPath(), $taken );
+				if ( $fixed !== null ) {
+					$fixedExtension = strtolower( pathinfo( $fixed, PATHINFO_EXTENSION ) );
+					if ( !$this->verifyFile( $fixed, $fixedExtension, $tempFile->getPath() ) ) {
+						$renamed[$name] = $fixed;
+						$name = $fixed;
+						$problem = null;
+					}
+				}
+			}
+
 			if ( $problem ) {
 				// Only this file is deleted, and the others go on.
 				$tempFile->purge();
@@ -167,7 +209,7 @@ class ImageProcessor {
 			return $this->tooManySkipped( $skipped, $considered );
 		}
 
-		return Status::newGood( new ImageResult( $files, $tempFiles, $skipped, $size ) );
+		return Status::newGood( new ImageResult( $files, $tempFiles, $skipped, $size, $renamed ) );
 	}
 
 	/**
@@ -216,11 +258,11 @@ class ImageProcessor {
 				continue;
 			}
 
+			// Without an extension, the type is found from the content when the file is extracted.
 			$extension = strtolower( pathinfo( $name, PATHINFO_EXTENSION ) );
 			if (
-				$extension === '' ||
-				in_array( $extension, $prohibited, true ) ||
-				!in_array( $extension, $allowed, true )
+				$extension !== '' &&
+				( in_array( $extension, $prohibited, true ) || !in_array( $extension, $allowed, true ) )
 			) {
 				$skipped[] = new SkippedFile( $name, 'importdump-images-skip-extension', [] );
 				continue;
@@ -251,6 +293,75 @@ class ImageProcessor {
 		}
 
 		return Status::newGood( [ 'entries' => $keep, 'skipped' => $skipped, 'considered' => $considered ] );
+	}
+
+	private function detectMime( string $path ): string {
+		$mime = $this->fileProps->getPropsFromPath( $path, true )['mime'] ?? '';
+		return is_string( $mime ) ? $mime : '';
+	}
+
+	/** The first allowed extension that fits a detected type, or null when the wiki has none. */
+	private function findExtension( string $mime ): ?string {
+		if ( $mime === '' ) {
+			return null;
+		}
+
+		$allowed = array_map( strtolower( ... ), $this->options->get( MainConfigNames::FileExtensions ) );
+		$prohibited = array_map( strtolower( ... ), $this->options->get( MainConfigNames::ProhibitedFileExtensions ) );
+
+		$preferred = $this->mimeAnalyzer->getExtensionFromMimeTypeOrNull( $mime );
+		$candidates = $preferred === null ? $allowed : [ strtolower( $preferred ), ...$allowed ];
+		foreach ( $candidates as $extension ) {
+			if (
+				!in_array( $extension, $prohibited, true ) &&
+				in_array( $extension, $allowed, true ) &&
+				$this->mimeAnalyzer->isMatchingExtension( $extension, $mime )
+			) {
+				return $extension;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Adds the extension of the detected type to a file that has none. Null when there is no
+	 * allowed one or the new name is already used.
+	 *
+	 * @param string $name The name of the file.
+	 * @param string $path Where the file was extracted to.
+	 * @param array<string, true> &$taken The title keys of the names that are in use, which this adds to.
+	 */
+	private function findName( string $name, string $path, array &$taken ): ?string {
+		$extension = $this->findExtension( $this->detectMime( $path ) );
+		if ( $extension === null ) {
+			return null;
+		}
+
+		$fixed = "$name.$extension";
+		$key = $this->titleFactory->makeTitleSafe( NS_FILE, $fixed )?->getDBkey();
+		if ( $key === null || isset( $taken[$key] ) || !$this->isValidName( $fixed ) ) {
+			return null;
+		}
+
+		$taken[$key] = true;
+		return $fixed;
+	}
+
+	/**
+	 * @param list<string> $names
+	 * @return array<string, true>
+	 */
+	private function getTitleKeys( array $names ): array {
+		$keys = [];
+		foreach ( $names as $name ) {
+			$key = $this->titleFactory->makeTitleSafe( NS_FILE, (string)$name )?->getDBkey();
+			if ( $key !== null ) {
+				$keys[$key] = true;
+			}
+		}
+
+		return $keys;
 	}
 
 	/** Names are used as the file name in storage and by the import script, so they must be plain. */

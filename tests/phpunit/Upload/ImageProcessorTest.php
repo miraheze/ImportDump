@@ -20,6 +20,7 @@ use function array_keys;
 use function array_map;
 use function base64_decode;
 use function file_get_contents;
+use function ksort;
 use function str_repeat;
 use function strlen;
 
@@ -37,6 +38,8 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 
 	private const int DEFAULT_SKIPPED = 50;
 
+	private const string GIF = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
 	private const string PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4' .
 		'2mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
@@ -49,7 +52,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 				ConfigNames::MaxArchiveEntries => 100,
 				ConfigNames::MaxExtractedSize => $maxSize,
 				ConfigNames::MaxSkippedImages => $maxSkipped,
-				MainConfigNames::FileExtensions => [ 'png', 'jpg' ],
+				MainConfigNames::FileExtensions => [ 'png', 'jpg', 'gif', 'svg' ],
 				MainConfigNames::ProhibitedFileExtensions => [ 'jpg' ],
 			] ),
 			new TempFSFileFactory( $this->getNewTempDirectory() ),
@@ -64,6 +67,10 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 
 	private function processWithLimit( string $path, int $maxSkipped ): Status {
 		return $this->newProcessor( self::DEFAULT_SIZE, $maxSkipped )->process( $path, null );
+	}
+
+	private static function gif(): string {
+		return (string)base64_decode( self::GIF );
 	}
 
 	private static function png(): string {
@@ -224,12 +231,70 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		'@phan-var ImageResult $result';
 
 		$this->assertSame( [ 'a.png', 'b.png', 'c.png', 'd.png' ], array_keys( $result->files ) );
+
+		// Names are rejected before extraction and the content of the rest is checked afterwards.
+		$reasons = array_column( array_map(
+			static fn ( SkippedFile $file ): array => [ $file->name, $file->reason ],
+			$result->skipped
+		), 1, 0 );
+
+		ksort( $reasons );
 		$this->assertSame(
 			[
-				'run.exe' => 'importdump-images-skip-extension',
-				'noextension' => 'importdump-images-skip-extension',
 				'File:colon.png' => 'importdump-images-skip-name',
+				'noextension' => 'importdump-images-skip-extension',
+				'run.exe' => 'importdump-images-skip-extension',
 			],
+			$reasons
+		);
+	}
+
+	public function testNamesFilesWithoutAnExtensionAndKeepsOtherNames(): void {
+		$status = $this->process( $this->newZip( [
+			'Site-background' => self::png(),
+			'Disguised.png' => self::gif(),
+			'plain.png' => self::png(),
+		] ), maxSize: self::DEFAULT_SIZE );
+
+		$this->assertStatusGood( $status );
+		$result = $status->getValue();
+		'@phan-var ImageResult $result';
+
+		$this->assertSame( [ 'Site-background.png', 'Disguised.png', 'plain.png' ], array_keys( $result->files ) );
+		$this->assertSame( [], $result->skipped );
+		$this->assertSame( [ 'Site-background' => 'Site-background.png' ], $result->renamed );
+	}
+
+	public function testSkipsMarkupThatIsNamedAsAnotherType(): void {
+		$status = $this->process( $this->newZip( [
+			'plain.png' => self::png(),
+			'vector.png' => '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>',
+		] ), maxSize: self::DEFAULT_SIZE );
+
+		$this->assertStatusGood( $status );
+		$result = $status->getValue();
+		'@phan-var ImageResult $result';
+
+		$this->assertSame( [ 'plain.png' ], array_keys( $result->files ) );
+		$this->assertCount( 1, $result->skipped );
+		$this->assertSame( 'vector.png', $result->skipped[0]->name );
+		$this->assertSame( 'filetype-mime-mismatch', $result->skipped[0]->reason );
+	}
+
+	public function testSkipsAnUnnamedFileWhoseNewNameIsTaken(): void {
+		$status = $this->process( $this->newZip( [
+			'logo' => self::png(),
+			'logo.png' => self::png(),
+		] ), maxSize: self::DEFAULT_SIZE );
+
+		$this->assertStatusGood( $status );
+		$result = $status->getValue();
+		'@phan-var ImageResult $result';
+
+		$this->assertSame( [ 'logo.png' ], array_keys( $result->files ) );
+		$this->assertSame( [], $result->renamed );
+		$this->assertSame(
+			[ 'logo' => 'importdump-images-skip-extension' ],
 			array_column( array_map(
 				static fn ( SkippedFile $file ): array => [ $file->name, $file->reason ],
 				$result->skipped

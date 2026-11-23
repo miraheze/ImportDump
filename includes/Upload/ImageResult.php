@@ -14,12 +14,14 @@ final readonly class ImageResult {
 	 * @param list<TempFSFile> $tempFiles The extracted files, which are deleted when this object is destroyed.
 	 * @param list<SkippedFile> $skipped The files that are left out of the import.
 	 * @param int $size The total size in bytes of the files that are kept.
+	 * @param array<string, string> $renamed The new name of each file that had no extension.
 	 */
 	public function __construct(
 		public array $files,
 		private array $tempFiles,
 		public array $skipped,
 		public int $size,
+		public array $renamed,
 	) {
 	}
 
