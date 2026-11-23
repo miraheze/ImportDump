@@ -51,7 +51,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 				ConfigNames::MaxArchiveEntries => 100,
 				ConfigNames::MaxExtractedSize => $maxSize,
 				ConfigNames::MaxSkippedImages => $maxSkipped,
-				MainConfigNames::FileExtensions => [ 'png', 'jpg', 'gif' ],
+				MainConfigNames::FileExtensions => [ 'png', 'jpg', 'gif', 'svg' ],
 				MainConfigNames::ProhibitedFileExtensions => [ 'jpg' ],
 			] ),
 			new TempFSFileFactory( $this->getNewTempDirectory() ),
@@ -257,6 +257,22 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( [ 'Site-background.png', 'Disguised.png', 'plain.png' ], array_keys( $result->files ) );
 		$this->assertSame( [], $result->skipped );
 		$this->assertSame( [ 'Site-background' => 'Site-background.png' ], $result->renamed );
+	}
+
+	public function testSkipsMarkupThatIsNamedAsAnotherType(): void {
+		$status = $this->process( $this->newZip( [
+			'plain.png' => self::png(),
+			'vector.png' => '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>',
+		] ), maxSize: self::DEFAULT_SIZE );
+
+		$this->assertStatusGood( $status );
+		$result = $status->getValue();
+		'@phan-var ImageResult $result';
+
+		$this->assertSame( [ 'plain.png' ], array_keys( $result->files ) );
+		$this->assertCount( 1, $result->skipped );
+		$this->assertSame( 'vector.png', $result->skipped[0]->name );
+		$this->assertSame( 'filetype-mime-mismatch', $result->skipped[0]->reason );
 	}
 
 	public function testSkipsAnUnnamedFileWhoseNewNameIsTaken(): void {

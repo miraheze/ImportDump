@@ -58,6 +58,22 @@ class ImageProcessor {
 
 	public const string STAGE_EXTRACTING = 'extracting';
 
+	/**
+	 * The types that may keep a name with another extension. Formats that can hold script or markup,
+	 * such as SVG, are left out, because browsers treat those by content when they are named wrongly.
+	 */
+	private const array RASTER_TYPES = [
+		'image/png',
+		'image/apng',
+		'image/jpeg',
+		'image/gif',
+		'image/webp',
+		'image/avif',
+		'image/bmp',
+		'image/x-ms-bmp',
+		'image/tiff',
+	];
+
 	/** The most bytes that a file name may have, which is what the title of a file allows. */
 	private const int MAX_NAME_LENGTH = 240;
 
@@ -158,8 +174,9 @@ class ImageProcessor {
 				$this->verifyFile( $name, $extension, $tempFile->getPath() );
 
 			if ( $problem && $problem->reason === 'filetype-mime-mismatch' ) {
-				// The name stays as it is, because pages link to it. Content of an allowed type is safe.
-				$real = $this->findExtension( $this->detectMime( $tempFile->getPath() ) );
+				// The name stays as it is, because pages link to it.
+				$mime = $this->detectMime( $tempFile->getPath() );
+				$real = in_array( $mime, self::RASTER_TYPES, true ) ? $this->findExtension( $mime ) : null;
 				if ( $real !== null && !$this->verifyFile( $name, $real, $tempFile->getPath() ) ) {
 					$problem = null;
 				}
