@@ -398,6 +398,10 @@
 			"value": null,
 			"description": "Number of hours without any sign of progress after which an import that is 'in progress' is treated as stalled by the FailStalledImports maintenance script, which marks it as failed. The import job reports progress about once a minute while pages are imported. Leave as null to disable."
 		},
+		"RequestImportTempDirectory": {
+			"value": null,
+			"description": "Directory where the files that are made while a request is verified are kept, which are the joined parts of an archive of images and what is extracted from archives. These can be as big as the upload, so it should not be in memory, as /tmp often is. It is created if it is missing. Leave as null to use the temporary directory of MediaWiki."
+		},
 		"RequestImportUsersNotifiedOnAllRequests": {
 			"value": [],
 			"description": "Array of usernames to send email notifications to for all requests. Users listed here must have a verified email address on their account. Notifications are sent through the notification system of MediaWiki, so they are only delivered if an extension that handles notifications, such as Echo, is installed."

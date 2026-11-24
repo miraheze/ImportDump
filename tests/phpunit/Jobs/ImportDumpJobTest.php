@@ -178,6 +178,27 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 		$this->assertFalse( $this->getHeartbeat()->isAlive( $id ) );
 	}
 
+	public function testRunUsesTheConfiguredTempDirectory(): void {
+		$this->overrideConfigValue( MainConfigNames::DisableSearchUpdate, true );
+		$this->expectOutputRegex( '/Done/' );
+
+		$directory = $this->getNewTempDirectory() . '/importdump';
+		$this->overrideConfigValue( ConfigNames::TempDirectory, $directory );
+
+		$given = null;
+		$this->setTemporaryHook( 'ImportDumpJobGetFile',
+			function ( string $filePath ) use ( &$given ): void {
+				$given = $filePath;
+				$this->writeEmptyDump( $filePath );
+			}
+		);
+
+		$id = $this->addRequest();
+		$this->assertTrue( $this->newJob( $id )->run() );
+
+		$this->assertSame( $directory . '/' . $this->getRequestManager( $id )->getFileName(), $given );
+	}
+
 	public function testRunBeatsBeforeAfterImportHook(): void {
 		$this->overrideConfigValue( MainConfigNames::DisableSearchUpdate, true );
 		// The maintenance scripts print their progress.

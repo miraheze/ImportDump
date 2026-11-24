@@ -155,7 +155,7 @@ class ImportImagesJob extends Job {
 	 * them in order, or all of them if the limit is 0. Returns null if nothing came back.
 	 */
 	private function downloadImages( int $offset, int $limit ): ?string {
-		$directory = wfTempDir() . '/' . $this->requestManager->getFileName();
+		$directory = $this->getTempDirectory() . '/' . $this->requestManager->getFileName();
 		if ( !is_dir( $directory ) && !wfMkdirParents( $directory, null, __METHOD__ ) ) {
 			throw new RuntimeException( "Could not create $directory" );
 		}
@@ -188,6 +188,11 @@ class ImportImagesJob extends Job {
 		}
 
 		return $count;
+	}
+
+	private function getTempDirectory(): string {
+		$directory = (string)$this->config->get( ConfigNames::TempDirectory );
+		return $directory !== '' ? $directory : wfTempDir();
 	}
 
 	private function removeDirectory( string $directory ): void {
