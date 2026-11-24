@@ -885,7 +885,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		] );
 
 		$this->assertStatusError(
-			'importdump-parts-incomplete',
+			'importdump-xml-parts-incomplete',
 			$this->submitStashKeys( $user, [ 'UploadFileKey' => $key ] )
 		);
 	}

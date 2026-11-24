@@ -308,7 +308,7 @@ class SpecialRequestImport extends FormSpecialPage {
 			if ( $stage === ApiRequestImportUpload::STAGE_PARTS ) {
 				$parts = new UploadedParts( $stashKey );
 			} elseif ( $stage === 'uploading' ) {
-				return Status::newFatal( 'importdump-parts-incomplete' );
+				return Status::newFatal( 'importdump-xml-parts-incomplete' );
 			}
 		}
 
