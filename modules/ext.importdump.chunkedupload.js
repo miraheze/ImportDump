@@ -107,31 +107,7 @@
 		throw lastError;
 	}
 
-	async function waitForAssembly( filekey, type, progress, onAssembling ) {
-		let delay = 1000;
-		let failures = 0;
-
-		while ( progress.result === 'Poll' ) {
-			onAssembling();
-			await wait( delay );
-			delay = Math.min( delay * 1.5, 10000 );
-
-			try {
-				progress = await checkStatus( filekey, type );
-				failures = 0;
-			} catch ( error ) {
-				// Checking is safe to repeat, so allow a few network errors.
-				failures++;
-				if ( !error || error.code !== 'http' || failures > 5 ) {
-					throw error;
-				}
-			}
-		}
-
-		return progress;
-	}
-
-	async function uploadFile( file, type, onProgress, onAssembling ) {
+	async function uploadFile( file, type, onProgress ) {
 		const chunkSize = Math.min(
 			Math.max( preferredChunkSize, config.minChunkSize || 0 ),
 			getChunkLimit()
@@ -154,10 +130,6 @@
 			filekey = result.filekey || filekey;
 			offset = end;
 			onProgress( offset );
-		}
-
-		if ( result.result === 'Poll' ) {
-			result = await waitForAssembly( filekey, type, result, onAssembling );
 		}
 
 		if ( result.result !== 'Success' ) {
@@ -272,8 +244,6 @@
 					progress.setProgress(
 						Math.min( 100, Math.round( ( ( finished + sent ) / totalSize ) * 100 ) )
 					);
-				}, () => {
-					$status.text( mw.message( 'importdump-chunkedupload-assembling' ).text() );
 				} );
 
 				finished += item.file.size;

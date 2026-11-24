@@ -368,6 +368,54 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 		new UploadStash( $repo, $this->getTestUser()->getUser() )->getFile( $key );
 	}
 
+	public function testXmlUploadedInPartsIsJoinedAndStored(): void {
+		$middle = intdiv( strlen( self::DUMP ), 2 );
+		$manager = $this->newRequest( RequestStatus::Verifying, 'unused' );
+
+		$key = $this->addParts( $manager, substr( self::DUMP, 0, $middle ), substr( self::DUMP, $middle ) );
+		$this->runJob( $manager );
+
+		$manager = $this->getManager( $manager->getID() );
+		$this->assertSame( RequestStatus::Pending, $manager->getStatus() );
+		$this->assertSame( RequestHistory::Full, $manager->getHistory() );
+		$this->assertSame( self::DUMP, $this->fileContents( $manager->getFilePath() ) );
+		$this->assertFalse( $this->fileContents( $manager->getUnverifiedFilePath() ) );
+		$this->assertNull( $manager->getPartsReference() );
+
+		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
+		$this->expectException( UploadStashFileNotFoundException::class );
+		new UploadStash( $repo, $this->getTestUser()->getUser() )->getFile( $key );
+	}
+
+	public function testArchiveOfXmlUploadedInPartsIsExtracted(): void {
+		$archive = ZipFixture::build( [ 'dump.xml' => self::DUMP ] );
+		$middle = intdiv( strlen( $archive ), 2 );
+		$manager = $this->newRequest( RequestStatus::Verifying, 'unused' );
+
+		$this->addParts( $manager, substr( $archive, 0, $middle ), substr( $archive, $middle ) );
+		$this->runJob( $manager );
+
+		$manager = $this->getManager( $manager->getID() );
+		$this->assertSame( RequestStatus::Pending, $manager->getStatus() );
+		$this->assertSame( self::DUMP, $this->fileContents( $manager->getFilePath() ) );
+	}
+
+	public function testXmlUploadedInPartsThatAreRejectedLeavesNothing(): void {
+		$manager = $this->newRequest( RequestStatus::Verifying, 'unused' );
+
+		$key = $this->addParts( $manager, 'not ', 'xml at all' );
+		$this->runJob( $manager );
+
+		$manager = $this->getManager( $manager->getID() );
+		$this->assertSame( RequestStatus::Declined, $manager->getStatus() );
+		$this->assertNull( $manager->getPartsReference() );
+		$this->assertFalse( $manager->fileExists() );
+
+		$repo = $this->getServiceContainer()->getRepoGroup()->getLocalRepo();
+		$this->expectException( UploadStashFileNotFoundException::class );
+		new UploadStash( $repo, $this->getTestUser()->getUser() )->getFile( $key );
+	}
+
 	public function testImagesUploadedInPartsThatAreGone(): void {
 		$manager = $this->newTypedRequest(
 			RequestStatus::Verifying,

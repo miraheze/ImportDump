@@ -731,6 +731,65 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 
 	/**
 	 * @covers ::onSubmit
+	 * @covers ::setPartsReference
+	 */
+	public function testXmlUploadedInPartsIsNotJoinedWhenSubmitted(): void {
+		ConvertibleTimestamp::setFakeTime( 1700000600 );
+		$this->overrideConfigValue( ConfigNames::EnableChunkedUploads, true );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$key = $this->stashContent( $user, 'part' );
+		UploadBase::setSessionStatus( $user, $key, [
+			'result' => 'Success',
+			'stage' => ApiRequestImportUpload::STAGE_PARTS,
+			'filekey' => $key,
+			'status' => Status::newGood(),
+		] );
+
+		$this->assertStatusGood( $this->submitStashKeys( $user, [ 'UploadFileKey' => $key ] ) );
+
+		$row = $this->getDb()->newSelectQueryBuilder()
+			->select( [ 'request_id', 'request_type', 'request_status' ] )
+			->from( 'import_requests' )
+			->orderBy( 'request_id', SelectQueryBuilder::SORT_DESC )
+			->caller( __METHOD__ )
+			->fetchRow();
+
+		$this->assertSame( 'xml', $row->request_type );
+		$this->assertSame( RequestStatus::Verifying->value, $row->request_status );
+
+		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		'@phan-var RequestManager $manager';
+		$manager->loadFromID( (int)$row->request_id );
+
+		$reference = $manager->getPartsReference();
+		$this->assertSame( $key, $reference['filekey'] ?? null );
+		$this->assertSame( $user->getId(), $reference['user'] ?? null );
+		$this->assertFalse( $manager->fileExists() );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testXmlThatIsStillBeingUploadedInPartsIsRefused(): void {
+		$this->overrideConfigValue( ConfigNames::EnableChunkedUploads, true );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$key = $this->stashContent( $user, 'part' );
+		UploadBase::setSessionStatus( $user, $key, [
+			'result' => 'Continue',
+			'stage' => 'uploading',
+			'status' => Status::newGood(),
+		] );
+
+		$this->assertStatusError(
+			'importdump-parts-incomplete',
+			$this->submitStashKeys( $user, [ 'UploadFileKey' => $key ] )
+		);
+	}
+
+	/**
+	 * @covers ::onSubmit
 	 */
 	public function testImagesFromStashInvalidKey(): void {
 		$this->overrideConfigValues( [
