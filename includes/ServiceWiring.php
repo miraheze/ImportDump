@@ -135,7 +135,9 @@ return [
 		);
 	},
 	'ImportDumpTempFSFileFactory' => static function ( MediaWikiServices $services ): TempFSFileFactory {
-		$directory = $services->get( 'ImportDumpConfig' )->get( ConfigNames::TempDirectory );
+		$config = $services->get( 'ImportDumpConfig' );
+		'@phan-var Config $config';
+		$directory = $config->get( ConfigNames::TempDirectory );
 		if ( $directory === null || $directory === '' ) {
 			return $services->getTempFSFileFactory();
 		}
