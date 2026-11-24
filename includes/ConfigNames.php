@@ -51,6 +51,8 @@ class ConfigNames {
 
 	public const string StalledImportHours = 'RequestImportStalledImportHours';
 
+	public const string TempDirectory = 'RequestImportTempDirectory';
+
 	public const string UsersNotifiedOnAllRequests = 'RequestImportUsersNotifiedOnAllRequests';
 
 	public const string UsersNotifiedOnFailedImports = 'RequestImportUsersNotifiedOnFailedImports';

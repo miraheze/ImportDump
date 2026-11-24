@@ -37,12 +37,14 @@ use function error_get_last;
 use function file_exists;
 use function get_class;
 use function intdiv;
+use function is_dir;
 use function max;
 use function min;
 use function register_shutdown_function;
 use function str_repeat;
 use function time;
 use function unlink;
+use function wfMkdirParents;
 use function wfTempDir;
 use const E_COMPILE_ERROR;
 use const E_CORE_ERROR;
@@ -100,7 +102,8 @@ class ImportDumpJob extends Job {
 		}
 
 		$this->startStage = $this->requestManager->getStage() ?? RequestStage::Download;
-		$filePath = wfTempDir() . '/' . $this->requestManager->getFileName();
+		$directory = $this->getTempDirectory();
+		$filePath = $directory . '/' . $this->requestManager->getFileName();
 
 		$this->running = true;
 		$this->registerShutdownHandler();
@@ -142,6 +145,19 @@ class ImportDumpJob extends Job {
 
 		$this->queueNotification( RequestStatus::Complete, '' );
 		return true;
+	}
+
+	private function getTempDirectory(): string {
+		$directory = (string)$this->config->get( ConfigNames::TempDirectory );
+		if ( $directory === '' ) {
+			return wfTempDir();
+		}
+
+		if ( !is_dir( $directory ) ) {
+			wfMkdirParents( $directory, null, __METHOD__ );
+		}
+
+		return $directory;
 	}
 
 	private function getImportSource( string $filePath ): ?ImportStreamSource {

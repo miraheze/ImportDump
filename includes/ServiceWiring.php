@@ -22,6 +22,9 @@ use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\DumpProcessor;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
 use Miraheze\ImportDump\Upload\ImageProcessor;
+use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
+use function is_dir;
+use function wfMkdirParents;
 
 // PHPUnit does not understand coverage for this file.
 // It is covered though, see ServiceWiringTest.
@@ -38,13 +41,13 @@ return [
 		return new DumpProcessor(
 			new ArchiveReader(
 				$services->get( 'ImportDumpExternalBinaries' ),
-				$services->getTempFSFileFactory()
+				$services->get( 'ImportDumpTempFSFileFactory' )
 			),
 			new ServiceOptions(
 				DumpProcessor::CONSTRUCTOR_OPTIONS,
 				$services->get( 'ImportDumpConfig' )
 			),
-			$services->getTempFSFileFactory(),
+			$services->get( 'ImportDumpTempFSFileFactory' ),
 			$services->getUploadVerification()
 		);
 	},
@@ -99,7 +102,7 @@ return [
 		return new ImageProcessor(
 			new ArchiveReader(
 				$services->get( 'ImportDumpExternalBinaries' ),
-				$services->getTempFSFileFactory()
+				$services->get( 'ImportDumpTempFSFileFactory' )
 			),
 			$services->getMimeAnalyzer(),
 			new ServiceOptions(
@@ -107,7 +110,7 @@ return [
 				$services->get( 'ImportDumpConfig' ),
 				$services->getMainConfig()
 			),
-			$services->getTempFSFileFactory(),
+			$services->get( 'ImportDumpTempFSFileFactory' ),
 			$services->getTitleFactory(),
 			$services->getUploadVerification()
 		);
@@ -130,6 +133,21 @@ return [
 			$services->get( 'ImportDumpHookRunner' ),
 			$services->getUserGroupManagerFactory()
 		);
+	},
+	'ImportDumpTempFSFileFactory' => static function ( MediaWikiServices $services ): TempFSFileFactory {
+		$config = $services->get( 'ImportDumpConfig' );
+		'@phan-var Config $config';
+		$directory = $config->get( ConfigNames::TempDirectory );
+		if ( $directory === null || $directory === '' ) {
+			return $services->getTempFSFileFactory();
+		}
+
+		// A directory that cannot be made is left for the first file that is written there to complain about.
+		if ( !is_dir( $directory ) ) {
+			wfMkdirParents( $directory, null, 'ImportDumpTempFSFileFactory' );
+		}
+
+		return new TempFSFileFactory( $directory );
 	},
 	'ImportDumpVerificationProgress' => static function ( MediaWikiServices $services ): VerificationProgress {
 		return new VerificationProgress( $services->getMainObjectStash() );

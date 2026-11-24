@@ -13,6 +13,7 @@ use MediaWiki\Upload\UploadFromChunks;
 use MediaWiki\User\User;
 use Miraheze\ImportDump\ConfigNames;
 use StatusValue;
+use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use function array_keys;
 use function clearstatcache;
 use function count;
@@ -113,7 +114,9 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		$services = MediaWikiServices::getInstance();
 		$repo = $services->getRepoGroup()->getLocalRepo();
 
-		$file = $services->getTempFSFileFactory()->newTempFSFile( 'importdump-chunks', '' );
+		$factory = $services->get( 'ImportDumpTempFSFileFactory' );
+		'@phan-var TempFSFileFactory $factory';
+		$file = $factory->newTempFSFile( 'importdump-chunks', '' );
 		$target = $file ? fopen( $file->getPath(), 'wb' ) : false;
 		if ( !$file || $target === false ) {
 			return Status::newFatal( 'importdump-archive-unreadable' );
