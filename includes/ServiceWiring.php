@@ -142,7 +142,7 @@ return [
 
 		// A directory that cannot be made is left for the first file that is written there to complain about.
 		if ( !is_dir( $directory ) ) {
-			wfMkdirParents( $directory, null, __METHOD__ );
+			wfMkdirParents( $directory, null, 'ImportDumpTempFSFileFactory' );
 		}
 
 		return new TempFSFileFactory( $directory );
