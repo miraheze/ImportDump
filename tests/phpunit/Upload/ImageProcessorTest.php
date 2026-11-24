@@ -20,6 +20,7 @@ use function array_keys;
 use function array_map;
 use function base64_decode;
 use function file_get_contents;
+use function file_put_contents;
 use function ksort;
 use function str_repeat;
 use function strlen;
