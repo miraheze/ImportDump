@@ -679,7 +679,6 @@ final class ArchiveReader {
 	 * @param ArchiveEntry $entry
 	 * @param mixed $output A stream resource that can be written to.
 	 * @param ?Closure( ?int ): void $onProgress
-	 * @return Status
 	 */
 	private function copyTarEntry(
 		TarReader $reader,
