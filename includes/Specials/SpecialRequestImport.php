@@ -296,94 +296,110 @@ class SpecialRequestImport extends FormSpecialPage {
 		$request->setVal( 'wpDestFile', $fileName );
 
 		$stashKey = $this->useChunkedUploads() ? (string)( $data['UploadFileKey'] ?? '' ) : '';
+
+		$parts = null;
 		if ( $stashKey !== '' ) {
 			if ( !UploadFromStash::isValidKey( $stashKey ) ) {
 				return Status::newFatal( 'apierror-invalid-file-key' );
 			}
 
-			$uploadBase = new UploadFromStash( $this->getUser() );
-			try {
-				$uploadBase->initialize( $stashKey, $fileName );
-			} catch ( UploadStashException $e ) {
-				return Status::newFatal( 'uploadstash-exception', get_class( $e ), $e->getMessage() );
+			// Parts are not joined here, because that is a lot of work for a request that a person waits for.
+			$stage = UploadBase::getSessionStatus( $this->getUser(), $stashKey )['stage'] ?? '';
+			if ( $stage === ApiRequestImportUpload::STAGE_PARTS ) {
+				$parts = new UploadedParts( $stashKey );
+			} elseif ( $stage === 'uploading' ) {
+				return Status::newFatal( 'importdump-xml-parts-incomplete' );
 			}
-		} else {
-			$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] ?? 'File' );
-		}
-
-		if ( !$uploadBase->isEnabled() ) {
-			return Status::newFatal( 'uploaddisabled' );
-		}
-
-		$permission = $uploadBase->isAllowed( $this->getUser() );
-		if ( $permission !== true ) {
-			throw new PermissionsError( $permission );
-		}
-
-		if ( $uploadBase->isEmptyFile() ) {
-			return Status::newFatal( 'empty-file' );
-		}
-
-		$virus = $this->uploadVerification->detectVirus( $uploadBase->getTempPath() );
-		if ( $virus ) {
-			return Status::newFatal( 'uploadvirus', $virus );
-		}
-
-		$mime = $this->mimeAnalyzer->guessMimeType( $uploadBase->getTempPath() );
-		if ( !in_array( $mime, $this->dumpProcessor->getAcceptedMimeTypes(), true ) ) {
-			return Status::newFatal( 'filetype-mime-mismatch', 'xml', $mime );
-		}
-
-		// Archives, and files too big to check here, are checked by a job. The request waits
-		// until then, and the file is kept apart from the ones that can be imported.
-		$verifyLater = in_array( $mime, $this->dumpProcessor->getArchiveMimeTypes(), true ) ||
-			$uploadBase->getFileSize() > DumpProcessor::INLINE_SIZE_LIMIT;
-
-		$history = null;
-		$requirements = [];
-		if ( !$verifyLater ) {
-			$processed = $this->dumpProcessor->process( $uploadBase->getTempPath(), null );
-			if ( !$processed->isOK() ) {
-				return $processed;
-			}
-
-			$result = $processed->getValue();
-			'@phan-var DumpResult $result';
-			$history = $result->history;
-			$requirements = $result->requirements;
 		}
 
 		$repo = $this->repoGroup->getLocalRepo();
-		$uploadStash = new UploadStash( $repo, $this->getUser() );
+		$verifyLater = true;
+		$history = null;
+		$requirements = [];
 
-		if ( $stashKey !== '' ) {
-			$fileKey = $stashKey;
-		} else {
-			$status = $uploadBase->tryStashFile( $this->getUser() );
-			if ( !$status->isGood() ) {
-				return $status;
+		if ( !$parts ) {
+			if ( $stashKey !== '' ) {
+				$uploadBase = new UploadFromStash( $this->getUser() );
+				try {
+					$uploadBase->initialize( $stashKey, $fileName );
+				} catch ( UploadStashException $e ) {
+					return Status::newFatal( 'uploadstash-exception', get_class( $e ), $e->getMessage() );
+				}
+			} else {
+				$uploadBase = UploadBase::createFromRequest( $request, $data['UploadSourceType'] ?? 'File' );
 			}
 
-			$stashFile = $status->getStatusValue()->getValue();
-			'@phan-var UploadStashFile $stashFile';
-			$fileKey = $stashFile->getFileKey();
-		}
+			if ( !$uploadBase->isEnabled() ) {
+				return Status::newFatal( 'uploaddisabled' );
+			}
 
-		try {
-			$file = $uploadStash->getFile( $fileKey );
-		} catch ( UploadStashException $e ) {
-			return Status::newFatal( 'uploadstash-exception', get_class( $e ), $e->getMessage() );
-		}
+			$permission = $uploadBase->isAllowed( $this->getUser() );
+			if ( $permission !== true ) {
+				throw new PermissionsError( $permission );
+			}
 
-		$status = $repo->publish(
-			$file->getPath(),
-			$verifyLater ? "/ImportDump/unverified/$fileName" : "/ImportDump/$fileName",
-			"/ImportDump/archive/$fileName",
-			FileRepo::DELETE_SOURCE
-		);
+			if ( $uploadBase->isEmptyFile() ) {
+				return Status::newFatal( 'empty-file' );
+			}
 
-		if ( !$status->isOK() ) {
-			return $status;
+			$virus = $this->uploadVerification->detectVirus( $uploadBase->getTempPath() );
+			if ( $virus ) {
+				return Status::newFatal( 'uploadvirus', $virus );
+			}
+
+			$mime = $this->mimeAnalyzer->guessMimeType( $uploadBase->getTempPath() );
+			if ( !in_array( $mime, $this->dumpProcessor->getAcceptedMimeTypes(), true ) ) {
+				return Status::newFatal( 'filetype-mime-mismatch', 'xml', $mime );
+			}
+
+			// Archives, and files too big to check here, are checked by a job. The request waits
+			// until then, and the file is kept apart from the ones that can be imported.
+			$verifyLater = in_array( $mime, $this->dumpProcessor->getArchiveMimeTypes(), true ) ||
+				$uploadBase->getFileSize() > DumpProcessor::INLINE_SIZE_LIMIT;
+
+			if ( !$verifyLater ) {
+				$processed = $this->dumpProcessor->process( $uploadBase->getTempPath(), null );
+				if ( !$processed->isOK() ) {
+					return $processed;
+				}
+
+				$result = $processed->getValue();
+				'@phan-var DumpResult $result';
+				$history = $result->history;
+				$requirements = $result->requirements;
+			}
+
+			$uploadStash = new UploadStash( $repo, $this->getUser() );
+
+			if ( $stashKey !== '' ) {
+				$fileKey = $stashKey;
+			} else {
+				$status = $uploadBase->tryStashFile( $this->getUser() );
+				if ( !$status->isGood() ) {
+					return $status;
+				}
+
+				$stashFile = $status->getStatusValue()->getValue();
+				'@phan-var UploadStashFile $stashFile';
+				$fileKey = $stashFile->getFileKey();
+			}
+
+			try {
+				$file = $uploadStash->getFile( $fileKey );
+			} catch ( UploadStashException $e ) {
+				return Status::newFatal( 'uploadstash-exception', get_class( $e ), $e->getMessage() );
+			}
+
+			$status = $repo->publish(
+				$file->getPath(),
+				$verifyLater ? "/ImportDump/unverified/$fileName" : "/ImportDump/$fileName",
+				"/ImportDump/archive/$fileName",
+				FileRepo::DELETE_SOURCE
+			);
+
+			if ( !$status->isOK() ) {
+				return $status;
+			}
 		}
 
 		$imagesName = $data['target'] . '-' . $timestamp . '-images';
@@ -419,6 +435,14 @@ class SpecialRequestImport extends FormSpecialPage {
 			->execute();
 
 		$requestID = (string)$dbw->insertId();
+		if ( $parts ) {
+			// The job reads this, so it has to be there before the job is queued.
+			$referenced = $this->setPartsReference( (int)$requestID, $parts );
+			if ( !$referenced->isOK() ) {
+				return $referenced;
+			}
+		}
+
 		if ( $verifyLater ) {
 			$this->jobQueueGroup->push(
 				new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => (int)$requestID ] )
@@ -629,6 +653,32 @@ class SpecialRequestImport extends FormSpecialPage {
 	}
 
 	/**
+	 * Notes the uploaded parts of a request, and removes the request again if that does not work,
+	 * so that it is not left without a file.
+	 */
+	private function setPartsReference( int $requestID, UploadedParts $parts ): Status {
+		if ( $requestID <= 0 ) {
+			return Status::newFatal( 'importdump-duplicate-request' );
+		}
+
+		$this->requestManager->loadFromID( $requestID );
+		$referenced = $this->requestManager->setPartsReference( $parts->fileKey, $this->getUser()->getId() );
+		if ( $referenced->isOK() ) {
+			return $referenced;
+		}
+
+		// Roll back the row so it is not left without a file.
+		$this->connectionProvider->getPrimaryDatabase( RequestManager::VIRTUAL_DOMAIN )
+			->newDeleteQueryBuilder()
+			->deleteFrom( 'import_requests' )
+			->where( [ 'request_id' => $requestID ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		return $referenced;
+	}
+
+	/**
 	 * Adds the request for an archive of images, linked to the XML request that it was uploaded with, if any.
 	 *
 	 * @return Status<int> The ID of the new request, or why it could not be added.
@@ -659,16 +709,8 @@ class SpecialRequestImport extends FormSpecialPage {
 
 		// The job reads this, so it has to be there before the job is queued.
 		if ( $parts ) {
-			$this->requestManager->loadFromID( $requestID );
-			$referenced = $this->requestManager->setPartsReference( $parts->fileKey, $this->getUser()->getId() );
+			$referenced = $this->setPartsReference( $requestID, $parts );
 			if ( !$referenced->isOK() ) {
-				// Roll back the row added above so it is not left without an archive.
-				$dbw->newDeleteQueryBuilder()
-					->deleteFrom( 'import_requests' )
-					->where( [ 'request_id' => $requestID ] )
-					->caller( __METHOD__ )
-					->execute();
-
 				return $referenced;
 			}
 		}

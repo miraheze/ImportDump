@@ -8,8 +8,6 @@ use MediaWiki\Api\ApiBase;
 use MediaWiki\Api\ApiMain;
 use MediaWiki\Api\ApiMessage;
 use MediaWiki\Api\ApiUpload;
-use MediaWiki\JobQueue\JobQueueGroup;
-use MediaWiki\MainConfigNames;
 use MediaWiki\Message\Message;
 use MediaWiki\Status\Status;
 use MediaWiki\Upload\Exception\UploadStashException;
@@ -18,7 +16,6 @@ use MediaWiki\Upload\UploadFromStash;
 use MediaWiki\Upload\UploadStashFile;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\Jobs\AssembleChunksJob;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
 use StatusValue;
@@ -36,7 +33,6 @@ class ApiRequestImportUpload extends ApiBase {
 		ApiMain $mainModule,
 		string $moduleName,
 		private readonly IConnectionProvider $connectionProvider,
-		private readonly JobQueueGroup $jobQueueGroup,
 	) {
 		parent::__construct( $mainModule, $moduleName );
 	}
@@ -146,53 +142,13 @@ class ApiRequestImportUpload extends ApiBase {
 				return;
 			}
 
-			// Archives of images are joined when they are verified, where they are read from the parts.
-			if ( $params['type'] === 'images' ) {
-				$this->finishParts( $upload, $fileKey );
-				return;
-			}
-
-			if (
-				$params['async'] &&
-				$this->getConfig()->get( MainConfigNames::EnableAsyncUploads )
-			) {
-				$this->queueAssembly( $fileKey, $params );
-				return;
-			}
-
-			$this->finish( $upload, $fileKey );
+			// The parts are joined when the upload is verified.
+			$this->finishParts( $upload, $fileKey );
 		} catch ( UploadStashException $e ) {
 			$this->dieWithException( $e, [
 				'wrap' => new ApiMessage( 'apierror-stashexception', 'stashfailed' ),
 			] );
 		}
-	}
-
-	/**
-	 * @param string $fileKey
-	 * @param array<string, mixed> $params
-	 */
-	private function queueAssembly( string $fileKey, array $params ): void {
-		UploadBase::setSessionStatus( $this->getUser(), $fileKey, [
-			'result' => 'Poll',
-			'stage' => 'queued',
-			'status' => Status::newGood(),
-		] );
-
-		// This has to be a lazy push. The job reads the uploadstash rows that were
-		// written in this request, so it must not be queued until after the commit.
-		$this->jobQueueGroup->lazyPush( new AssembleChunksJob( [
-			'filekey' => $fileKey,
-			'filesize' => $params['filesize'],
-			'type' => $params['type'],
-			'session' => $this->getContext()->exportSession(),
-		] ) );
-
-		$this->getResult()->addValue( null, $this->getModuleName(), [
-			'result' => 'Poll',
-			'stage' => 'queued',
-			'filekey' => $fileKey,
-		] );
 	}
 
 	/** @param array<string, mixed> $params */
@@ -236,42 +192,6 @@ class ApiRequestImportUpload extends ApiBase {
 		}
 
 		$this->dieStatus( $fatal );
-	}
-
-	private function finish( RequestImportUploadFromChunks $upload, string $fileKey ): void {
-		$user = $this->getUser();
-
-		UploadBase::setSessionStatus( $user, $fileKey, [
-			'result' => 'Poll',
-			'stage' => 'assembling',
-			'status' => Status::newGood(),
-		] );
-
-		$status = $upload->concatenateChunks();
-		if ( !$status->isGood() ) {
-			UploadBase::setSessionStatus( $user, $fileKey, [
-				'result' => 'Failure',
-				'stage' => 'assembling',
-				'status' => $status,
-			] );
-
-			$this->dieStatus( $status );
-		}
-
-		$upload->stash->removeFile( $fileKey );
-		$finalKey = $upload->getStashFile()->getFileKey();
-
-		UploadBase::setSessionStatus( $user, $fileKey, [
-			'result' => 'Success',
-			'stage' => 'assembling',
-			'filekey' => $finalKey,
-			'status' => $status,
-		] );
-
-		$this->getResult()->addValue( null, $this->getModuleName(), [
-			'result' => 'Success',
-			'filekey' => $finalKey,
-		] );
 	}
 
 	/** The parts are kept as they are, and the key of the first one stands for all of them. */
@@ -334,10 +254,6 @@ class ApiRequestImportUpload extends ApiBase {
 		}
 
 		return [
-			'async' => [
-				ParamValidator::PARAM_TYPE => 'boolean',
-				ParamValidator::PARAM_DEFAULT => false,
-			],
 			'checkstatus' => [
 				ParamValidator::PARAM_TYPE => 'boolean',
 				ParamValidator::PARAM_DEFAULT => false,

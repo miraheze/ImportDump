@@ -29,7 +29,8 @@ use function count;
 
 /**
  * Checks an upload that was too big, or too risky, to check while the request was submitted.
- * Until then the request is 'verifying' and the file waits in the unverified directory.
+ * Until then the request is 'verifying' and the file waits in the unverified directory, or
+ * it is kept in the parts that it was uploaded in, which are joined here.
  */
 class VerifyDumpJob extends Job {
 
@@ -68,45 +69,50 @@ class VerifyDumpJob extends Job {
 			return true;
 		}
 
-		if ( $this->requestManager->getType() === RequestType::Images ) {
-			$this->verifyImages( $requestID );
-			return true;
-		}
+		$this->verify( $requestID );
+		return true;
+	}
 
-		$reference = $this->requestManager->getLocalUnverifiedFile();
-		$status = $reference ?
-			$this->dumpProcessor->process(
-				$reference->getPath(),
-				fn ( string $stage, ?int $percent ) => $this->progress->set( $requestID, $stage, $percent )
-			) :
+	private function processDump(
+		int $requestID,
+		?string $path,
+		?RequestImportUploadFromChunks $upload,
+		Closure $onProgress
+	): void {
+		$status = $path !== null ?
+			$this->dumpProcessor->process( $path, $onProgress ) :
 			Status::newFatal( 'importdump-verify-missing' );
 
 		if ( !$status->isOK() ) {
 			$this->reject( $status );
-			return true;
+			$upload?->purgeChunks();
+			return;
 		}
 
 		$result = $status->getValue();
 		'@phan-var DumpResult $result';
-		$published = $result->wasExtracted() ?
+
+		// A file that was joined from parts is a local file, so it is stored like one that was extracted.
+		$published = $upload || $result->wasExtracted() ?
 			$this->requestManager->publishExtractedFile( $result->path ) :
 			$this->requestManager->publishUnverifiedFile();
 
 		if ( !$published->isOK() ) {
 			$this->reject( $published );
-			return true;
+			$upload?->purgeChunks();
+			return;
 		}
 
+		// The parts are kept until the file is stored, so that a job that died can be run again.
+		$upload?->purgeChunks();
 		$this->requestManager->setHistory( $result->history );
 		$this->requestManager->setRequirements( $result->requirements );
 		$this->requestManager->setStatus( RequestStatus::Pending );
 		$this->attentionNotifier->notify( $this->requestManager );
 		$this->progress->clear( $requestID );
-
-		return true;
 	}
 
-	private function verifyImages( int $requestID ): void {
+	private function verify( int $requestID ): void {
 		$onProgress = fn ( string $stage, ?int $percent ) => $this->progress->set( $requestID, $stage, $percent );
 
 		$parts = $this->requestManager->getPartsReference();
@@ -137,7 +143,11 @@ class VerifyDumpJob extends Job {
 				$path = $reference?->getPath();
 			}
 
-			$this->processImages( $requestID, $path, $upload, $onProgress );
+			if ( $this->requestManager->getType() === RequestType::Images ) {
+				$this->processImages( $requestID, $path, $upload, $onProgress );
+			} else {
+				$this->processDump( $requestID, $path, $upload, $onProgress );
+			}
 		} finally {
 			// The joined file has to outlive the processing, and is not needed after it.
 			$joined?->purge();
@@ -198,7 +208,8 @@ class VerifyDumpJob extends Job {
 			return null;
 		}
 
-		$upload = new RequestImportUploadFromChunks( $user, 'images' );
+		$type = $this->requestManager->getType() === RequestType::Images ? 'images' : 'xml';
+		$upload = new RequestImportUploadFromChunks( $user, $type );
 		try {
 			$upload->continueChunks(
 				$upload->getStashName(),

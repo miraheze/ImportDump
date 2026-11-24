@@ -29,6 +29,7 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
+use Miraheze\ImportDump\Upload\UploadedParts;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use Wikimedia\Rdbms\SelectQueryBuilder;
 use Wikimedia\TestingAccessWrapper;
@@ -585,13 +586,17 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	}
 
 	private function submitStashKeys( User $user, array $keys ): Status {
+		return $this->submitStashKeysTo( $this->specialRequestImport, $user, $keys );
+	}
+
+	private function submitStashKeysTo( SpecialRequestImport $page, User $user, array $keys ): Status {
 		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
 		$context->setUser( $user );
 		$context->setRequest( new FauxRequest( [
 			'wpEditToken' => $context->getCsrfTokenSet()->getToken()->toString(),
 		], true ) );
 
-		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $page );
 		$specialRequestImport->setContext( $context );
 
 		return $specialRequestImport->onSubmit( $keys + [
@@ -726,6 +731,162 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		$this->assertStatusError(
 			'importdump-images-parts-incomplete',
 			$this->submitStashKeys( $user, [ 'UploadImagesFileKey' => $key ] )
+		);
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 * @covers ::setPartsReference
+	 */
+	public function testXmlUploadedInPartsIsNotJoinedWhenSubmitted(): void {
+		ConvertibleTimestamp::setFakeTime( 1700000600 );
+		$this->overrideConfigValue( ConfigNames::EnableChunkedUploads, true );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$key = $this->stashContent( $user, 'part' );
+		UploadBase::setSessionStatus( $user, $key, [
+			'result' => 'Success',
+			'stage' => ApiRequestImportUpload::STAGE_PARTS,
+			'filekey' => $key,
+			'status' => Status::newGood(),
+		] );
+
+		$this->assertStatusGood( $this->submitStashKeys( $user, [ 'UploadFileKey' => $key ] ) );
+
+		$row = $this->getDb()->newSelectQueryBuilder()
+			->select( [ 'request_id', 'request_type', 'request_status' ] )
+			->from( 'import_requests' )
+			->orderBy( 'request_id', SelectQueryBuilder::SORT_DESC )
+			->caller( __METHOD__ )
+			->fetchRow();
+
+		$this->assertSame( 'xml', $row->request_type );
+		$this->assertSame( RequestStatus::Verifying->value, $row->request_status );
+
+		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		'@phan-var RequestManager $manager';
+		$manager->loadFromID( (int)$row->request_id );
+
+		$reference = $manager->getPartsReference();
+		$this->assertSame( $key, $reference['filekey'] ?? null );
+		$this->assertSame( $user->getId(), $reference['user'] ?? null );
+		$this->assertFalse( $manager->fileExists() );
+	}
+
+	private function newPageWhereThePartsCannotBeNoted(): SpecialRequestImport {
+		$manager = $this->createMock( RequestManager::class );
+		$manager->method( 'setPartsReference' )
+			->willReturn( Status::newFatal( 'importdump-verify-missing' ) );
+
+		$services = $this->getServiceContainer();
+		return new SpecialRequestImport(
+			$services->getConnectionProvider(),
+			$services->getService( 'ImportDumpAttentionNotifier' ),
+			$services->getService( 'ImportDumpDumpProcessor' ),
+			$manager,
+			$services->getJobQueueGroup(),
+			$services->getMimeAnalyzer(),
+			$services->getNotificationService(),
+			$services->getRepoGroup(),
+			$services->getUploadVerification(),
+			$services->getUserFactory(),
+			$this->createMock( ModuleFactory::class )
+		);
+	}
+
+	private function countRequests(): int {
+		return (int)$this->getDb()->newSelectQueryBuilder()
+			->select( 'COUNT(*)' )
+			->from( 'import_requests' )
+			->caller( __METHOD__ )
+			->fetchField();
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 * @covers ::setPartsReference
+	 */
+	public function testXmlRequestIsRemovedWhenItsPartsCannotBeNoted(): void {
+		$this->overrideConfigValue( ConfigNames::EnableChunkedUploads, true );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$key = $this->stashContent( $user, 'part' );
+		UploadBase::setSessionStatus( $user, $key, [
+			'result' => 'Success',
+			'stage' => ApiRequestImportUpload::STAGE_PARTS,
+			'filekey' => $key,
+			'status' => Status::newGood(),
+		] );
+
+		$before = $this->countRequests();
+		$status = $this->submitStashKeysTo(
+			$this->newPageWhereThePartsCannotBeNoted(),
+			$user,
+			[ 'UploadFileKey' => $key ]
+		);
+
+		$this->assertStatusError( 'importdump-verify-missing', $status );
+		$this->assertSame( $before, $this->countRequests() );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 * @covers ::setPartsReference
+	 */
+	public function testImagesRequestIsRemovedWhenItsPartsCannotBeNoted(): void {
+		$this->overrideConfigValues( [
+			ConfigNames::EnableChunkedUploads => true,
+			ConfigNames::EnableImageImports => true,
+		] );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$key = $this->stashContent( $user, 'part' );
+		UploadBase::setSessionStatus( $user, $key, [
+			'result' => 'Success',
+			'stage' => ApiRequestImportUpload::STAGE_PARTS,
+			'filekey' => $key,
+			'status' => Status::newGood(),
+		] );
+
+		$before = $this->countRequests();
+		$status = $this->submitStashKeysTo(
+			$this->newPageWhereThePartsCannotBeNoted(),
+			$user,
+			[ 'UploadImagesFileKey' => $key ]
+		);
+
+		$this->assertStatusError( 'importdump-verify-missing', $status );
+		$this->assertSame( $before, $this->countRequests() );
+	}
+
+	/**
+	 * @covers ::setPartsReference
+	 */
+	public function testPartsCannotBeNotedForARequestThatWasNotAdded(): void {
+		$page = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$this->assertStatusError(
+			'importdump-duplicate-request',
+			$page->setPartsReference( 0, new UploadedParts( 'abc.xml' ) )
+		);
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 */
+	public function testXmlThatIsStillBeingUploadedInPartsIsRefused(): void {
+		$this->overrideConfigValue( ConfigNames::EnableChunkedUploads, true );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$key = $this->stashContent( $user, 'part' );
+		UploadBase::setSessionStatus( $user, $key, [
+			'result' => 'Continue',
+			'stage' => 'uploading',
+			'status' => Status::newGood(),
+		] );
+
+		$this->assertStatusError(
+			'importdump-xml-parts-incomplete',
+			$this->submitStashKeys( $user, [ 'UploadFileKey' => $key ] )
 		);
 	}
 
