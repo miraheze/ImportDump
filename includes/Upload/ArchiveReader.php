@@ -11,7 +11,6 @@ use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use ZipArchive;
 use function basename;
 use function bzopen;
-use function count;
 use function ctype_digit;
 use function explode;
 use function fclose;
@@ -77,10 +76,30 @@ final class ArchiveReader {
 	private const int UNIX_TYPE_MASK = 0170000;
 	private const int UNIX_REGULAR_FILE = 0100000;
 
+	/**
+	 * The TAR that is being read, so that the entries of a large one are taken out in one pass
+	 * and not by reading from the start for every entry.
+	 *
+	 * @var ?array{path: string, format: string, input: mixed, reader: TarReader, next: int}
+	 */
+	private ?array $cursor = null;
+
 	public function __construct(
 		private readonly ExternalBinaries $externalBinaries,
 		private readonly TempFSFileFactory $tempFSFileFactory,
 	) {
+	}
+
+	public function __destruct() {
+		$this->close();
+	}
+
+	/** Lets go of the archive that was being read. Reading another entry opens it again. */
+	public function close(): void {
+		if ( $this->cursor ) {
+			fclose( $this->cursor['input'] );
+			$this->cursor = null;
+		}
 	}
 
 	/** @return list<string> The FORMAT_* constants of the archives that can be read on this wiki. */
@@ -597,11 +616,6 @@ final class ArchiveReader {
 				}
 
 				$entries[] = new ArchiveEntry( $tarEntry->index, $name, $tarEntry->size, (int)filesize( $path ) );
-
-				// An archive with more than one file is not accepted, so there is no need to read on.
-				if ( count( $entries ) > 1 ) {
-					return Status::newGood( $entries );
-				}
 			}
 		} finally {
 			fclose( $input );
@@ -616,45 +630,87 @@ final class ArchiveReader {
 		int $maxSize,
 		?Closure $onProgress
 	): Status {
-		$input = $this->openStream( $path, $format );
-		$output = $input ? fopen( $destination, 'wb' ) : false;
-		if ( !$input || !$output ) {
-			if ( $input ) {
-				fclose( $input );
-			}
-
-			return Status::newFatal( 'importdump-archive-unreadable' );
-		}
-
-		try {
-			$reader = new TarReader( $input, (int)filesize( $path ), PHP_INT_MAX, $maxSize );
-
-			do {
-				$next = $reader->next();
-				if ( !$next->isOK() ) {
-					return $next;
-				}
-
-				$tarEntry = $next->getValue();
-			} while ( $tarEntry !== null && $tarEntry->index !== $entry->index );
-
-			if (
-				$tarEntry === null ||
-				$tarEntry->isDirectory ||
-				$this->normalizeTarName( $tarEntry->name ) !== $entry->name
-			) {
+		$cursor = $this->cursor;
+		if (
+			!$cursor ||
+			$cursor['path'] !== $path ||
+			$cursor['format'] !== $format ||
+			$cursor['next'] > $entry->index
+		) {
+			$this->close();
+			$input = $this->openStream( $path, $format );
+			if ( !$input ) {
 				return Status::newFatal( 'importdump-archive-unreadable' );
 			}
 
-			if ( $onProgress ) {
-				$onProgress( $tarEntry->size ? 0 : null );
+			$cursor = [
+				'path' => $path,
+				'format' => $format,
+				'input' => $input,
+				'reader' => new TarReader( $input, (int)filesize( $path ), PHP_INT_MAX, $maxSize ),
+				'next' => 0,
+			];
+		}
+
+		$this->cursor = $cursor;
+		$output = fopen( $destination, 'wb' );
+		if ( !$output ) {
+			$this->close();
+			return Status::newFatal( 'importdump-archive-unreadable' );
+		}
+
+		$status = Status::newFatal( 'importdump-archive-unreadable' );
+		try {
+			$status = $this->copyTarEntry( $cursor['reader'], $entry, $output, $onProgress );
+		} finally {
+			fclose( $output );
+
+			// Where the reader is after a failure is not known, so the next entry starts over.
+			if ( !$status->isOK() ) {
+				$this->close();
+			}
+		}
+
+		return $status;
+	}
+
+	/**
+	 * @param TarReader $reader
+	 * @param ArchiveEntry $entry
+	 * @param mixed $output A stream resource that can be written to.
+	 * @param ?Closure( ?int ): void $onProgress
+	 */
+	private function copyTarEntry(
+		TarReader $reader,
+		ArchiveEntry $entry,
+		mixed $output,
+		?Closure $onProgress
+	): Status {
+		do {
+			$next = $reader->next();
+			if ( !$next->isOK() ) {
+				return $next;
 			}
 
-			return $reader->copyBody( $tarEntry, $output, $onProgress );
-		} finally {
-			fclose( $input );
-			fclose( $output );
+			$tarEntry = $next->getValue();
+			if ( $tarEntry !== null && $this->cursor ) {
+				$this->cursor['next'] = $tarEntry->index + 1;
+			}
+		} while ( $tarEntry !== null && $tarEntry->index !== $entry->index );
+
+		if (
+			$tarEntry === null ||
+			$tarEntry->isDirectory ||
+			$this->normalizeTarName( $tarEntry->name ) !== $entry->name
+		) {
+			return Status::newFatal( 'importdump-archive-unreadable' );
 		}
+
+		if ( $onProgress ) {
+			$onProgress( $tarEntry->size ? 0 : null );
+		}
+
+		return $reader->copyBody( $tarEntry, $output, $onProgress );
 	}
 
 	/** Tools often write names such as ./dump.xml. The dot is not part of the name. */
