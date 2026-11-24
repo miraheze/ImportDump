@@ -381,7 +381,8 @@ class ImageProcessor {
 	 * @param list<string> $allowed The extensions that are accepted, in lowercase.
 	 * @param list<string> $prohibited The extensions that are never accepted, in lowercase.
 	 * @return Status A good status with an array as its value. It has the entries to extract by the name that
-	 *  each file gets, the files that are only held for their extension, the files that are skipped already, and how many files there are besides the hidden ones.
+	 *  each file gets, the files that are only held for their extension, the files that are skipped already,
+	 *  and how many files there are besides the hidden ones.
 	 */
 	private function checkEntries( array $entries, int $maxSize, array $allowed, array $prohibited ): Status {
 		$keep = [];

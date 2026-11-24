@@ -1406,9 +1406,9 @@ class RequestManager {
 	/**
 	 * @param list<SkippedFile> $skipped The image files that are left out of the import.
 	 *  Only the first ones are kept, but the total is.
+	 * @param int $held How many of the skipped files are kept to be checked again.
+	 * @param ?int $total How many files were skipped, if more than the list has.
 	 */
-
-	/** @param ?int $total How many files were skipped, if more than the list has. */
 	public function setSkippedImages( array $skipped, int $held = 0, ?int $total = null ): void {
 		$value = $skipped ? json_encode( [
 			'total' => max( $total ?? 0, count( $skipped ) ),

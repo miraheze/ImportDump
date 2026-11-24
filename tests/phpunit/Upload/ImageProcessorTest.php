@@ -300,9 +300,9 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		$processor = $this->newProcessor( self::DEFAULT_SIZE, maxSkipped: 100 );
 		$directory = $this->getNewTempDirectory();
 		$paths = [];
-		foreach ( [ 'a.gif' => self::gif(), 'b.png' => self::gif(), 'c.jpg' => self::gif(), 'd.svg' => self::gif() ] as $name => $content ) {
+		foreach ( [ 'a.gif', 'b.png', 'c.jpg', 'd.svg' ] as $name ) {
 			$paths[$name] = "$directory/$name";
-			file_put_contents( $paths[$name], $content );
+			file_put_contents( $paths[$name], self::gif() );
 		}
 
 		$checked = $processor->checkHeld( $paths, [ 'gif', 'jpg', 'png' ] );
