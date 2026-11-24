@@ -29,6 +29,7 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Specials\SpecialRequestImport;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
+use Miraheze\ImportDump\Upload\UploadedParts;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use Wikimedia\Rdbms\SelectQueryBuilder;
 use Wikimedia\TestingAccessWrapper;
@@ -585,13 +586,17 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	}
 
 	private function submitStashKeys( User $user, array $keys ): Status {
+		return $this->submitStashKeysTo( $this->specialRequestImport, $user, $keys );
+	}
+
+	private function submitStashKeysTo( SpecialRequestImport $page, User $user, array $keys ): Status {
 		$context = new DerivativeContext( $this->specialRequestImport->getContext() );
 		$context->setUser( $user );
 		$context->setRequest( new FauxRequest( [
 			'wpEditToken' => $context->getCsrfTokenSet()->getToken()->toString(),
 		], true ) );
 
-		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $page );
 		$specialRequestImport->setContext( $context );
 
 		return $specialRequestImport->onSubmit( $keys + [
@@ -766,6 +771,103 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		$this->assertSame( $key, $reference['filekey'] ?? null );
 		$this->assertSame( $user->getId(), $reference['user'] ?? null );
 		$this->assertFalse( $manager->fileExists() );
+	}
+
+	private function newPageWhereThePartsCannotBeNoted(): SpecialRequestImport {
+		$manager = $this->createMock( RequestManager::class );
+		$manager->method( 'setPartsReference' )
+			->willReturn( Status::newFatal( 'importdump-verify-missing' ) );
+
+		$services = $this->getServiceContainer();
+		return new SpecialRequestImport(
+			$services->getConnectionProvider(),
+			$services->getService( 'ImportDumpAttentionNotifier' ),
+			$services->getService( 'ImportDumpDumpProcessor' ),
+			$manager,
+			$services->getJobQueueGroup(),
+			$services->getMimeAnalyzer(),
+			$services->getNotificationService(),
+			$services->getRepoGroup(),
+			$services->getUploadVerification(),
+			$services->getUserFactory(),
+			$this->createMock( ModuleFactory::class )
+		);
+	}
+
+	private function countRequests(): int {
+		return (int)$this->getDb()->newSelectQueryBuilder()
+			->select( 'COUNT(*)' )
+			->from( 'import_requests' )
+			->caller( __METHOD__ )
+			->fetchField();
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 * @covers ::setPartsReference
+	 */
+	public function testXmlRequestIsRemovedWhenItsPartsCannotBeNoted(): void {
+		$this->overrideConfigValue( ConfigNames::EnableChunkedUploads, true );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$key = $this->stashContent( $user, 'part' );
+		UploadBase::setSessionStatus( $user, $key, [
+			'result' => 'Success',
+			'stage' => ApiRequestImportUpload::STAGE_PARTS,
+			'filekey' => $key,
+			'status' => Status::newGood(),
+		] );
+
+		$before = $this->countRequests();
+		$status = $this->submitStashKeysTo(
+			$this->newPageWhereThePartsCannotBeNoted(),
+			$user,
+			[ 'UploadFileKey' => $key ]
+		);
+
+		$this->assertStatusError( 'importdump-verify-missing', $status );
+		$this->assertSame( $before, $this->countRequests() );
+	}
+
+	/**
+	 * @covers ::onSubmit
+	 * @covers ::setPartsReference
+	 */
+	public function testImagesRequestIsRemovedWhenItsPartsCannotBeNoted(): void {
+		$this->overrideConfigValues( [
+			ConfigNames::EnableChunkedUploads => true,
+			ConfigNames::EnableImageImports => true,
+		] );
+
+		$user = $this->getMutableTestUser()->getUser();
+		$key = $this->stashContent( $user, 'part' );
+		UploadBase::setSessionStatus( $user, $key, [
+			'result' => 'Success',
+			'stage' => ApiRequestImportUpload::STAGE_PARTS,
+			'filekey' => $key,
+			'status' => Status::newGood(),
+		] );
+
+		$before = $this->countRequests();
+		$status = $this->submitStashKeysTo(
+			$this->newPageWhereThePartsCannotBeNoted(),
+			$user,
+			[ 'UploadImagesFileKey' => $key ]
+		);
+
+		$this->assertStatusError( 'importdump-verify-missing', $status );
+		$this->assertSame( $before, $this->countRequests() );
+	}
+
+	/**
+	 * @covers ::setPartsReference
+	 */
+	public function testPartsCannotBeNotedForARequestThatWasNotAdded(): void {
+		$page = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$this->assertStatusError(
+			'importdump-duplicate-request',
+			$page->setPartsReference( 0, new UploadedParts( 'abc.xml' ) )
+		);
 	}
 
 	/**

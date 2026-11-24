@@ -435,6 +435,54 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 		$this->assertNull( $this->getManager( $manager->getID() )->getPartsReference() );
 	}
 
+	public function testXmlUploadedInPartsThatAreGone(): void {
+		$manager = $this->newRequest( RequestStatus::Verifying, 'unused' );
+
+		$manager->deleteUnverifiedFile();
+		$this->assertStatusGood(
+			$manager->setPartsReference( 'gone.abc.1.xml', $this->getTestUser()->getUser()->getId() )
+		);
+
+		$this->runJob( $manager );
+
+		$manager = $this->getManager( $manager->getID() );
+		$this->assertSame( RequestStatus::Declined, $manager->getStatus() );
+		$this->assertNull( $manager->getPartsReference() );
+		$this->assertFalse( $manager->fileExists() );
+	}
+
+	public function testPartsOfAnUnknownUserAreRejected(): void {
+		$manager = $this->newRequest( RequestStatus::Verifying, 'unused' );
+
+		$this->addParts( $manager, substr( self::DUMP, 0, 40 ), substr( self::DUMP, 40 ) );
+		$this->assertStatusGood( $manager->setPartsReference( 'any.abc.1.xml', 999999999 ) );
+
+		$this->runJob( $manager );
+
+		$manager = $this->getManager( $manager->getID() );
+		$this->assertSame( RequestStatus::Declined, $manager->getStatus() );
+		$this->assertFalse( $manager->fileExists() );
+	}
+
+	public function testPartsThatCannotBeJoinedAreRejectedAndRemoved(): void {
+		$manager = $this->newRequest( RequestStatus::Verifying, 'unused' );
+
+		$key = $this->addParts( $manager, substr( self::DUMP, 0, 40 ), substr( self::DUMP, 40 ) );
+		$this->getDb()->newUpdateQueryBuilder()
+			->update( 'uploadstash' )
+			->set( [ 'us_size' => strlen( self::DUMP ) + 1 ] )
+			->where( [ 'us_key' => $key ] )
+			->caller( __METHOD__ )
+			->execute();
+
+		$this->runJob( $manager );
+
+		$manager = $this->getManager( $manager->getID() );
+		$this->assertSame( RequestStatus::Declined, $manager->getStatus() );
+		$this->assertFalse( $manager->fileExists() );
+		$this->assertNull( $manager->getPartsReference() );
+	}
+
 	public function testRejectedImages(): void {
 		$manager = $this->newTypedRequest(
 			RequestStatus::Verifying,
