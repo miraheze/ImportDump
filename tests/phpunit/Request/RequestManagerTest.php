@@ -1076,7 +1076,10 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertStatusGood( $manager->releaseHeldImages( [ 'a.gif' ] ) );
 		$this->assertSame( [ 'b.gif' ], $manager->getHeldImageNames() );
-		$this->assertContains( 'a.gif', $manager->getImageObjectNames() );
+
+		$stored = $manager->getImageObjectNames();
+		$this->assertCount( 1, $stored );
+		$this->assertStringEndsWith( '/a.gif', $stored[0] );
 
 		$this->assertTrue( $manager->deleteAllHeldImages() );
 		$this->assertSame( [], $manager->getHeldImageNames() );
