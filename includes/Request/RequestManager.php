@@ -1511,8 +1511,16 @@ class RequestManager {
 	public function recheckHeldImages(): void {
 		$this->setStatus( RequestStatus::Verifying );
 		$this->verificationProgress->clear( $this->ID );
-		$this->jobQueueGroupFactory->makeJobQueueGroup()->push(
-			new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => $this->ID ] )
+
+		// The job only runs when it sees the new status, so it is queued once that is committed.
+		$requestID = $this->ID;
+		$this->dbw->onTransactionCommitOrIdle(
+			function () use ( $requestID ): void {
+				$this->jobQueueGroupFactory->makeJobQueueGroup()->push(
+					new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => $requestID ] )
+				);
+			},
+			__METHOD__
 		);
 	}
 
