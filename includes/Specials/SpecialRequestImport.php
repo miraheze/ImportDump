@@ -49,6 +49,7 @@ use Miraheze\ImportDump\Upload\UploadedParts;
 use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use Wikimedia\Mime\MimeAnalyzer;
 use Wikimedia\Rdbms\IConnectionProvider;
+use Wikimedia\Rdbms\IDatabase;
 use Wikimedia\Rdbms\Platform\ISQLPlatform;
 use function array_filter;
 use function array_map;
@@ -444,9 +445,7 @@ class SpecialRequestImport extends FormSpecialPage {
 		}
 
 		if ( $verifyLater ) {
-			$this->jobQueueGroup->push(
-				new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => (int)$requestID ] )
-			);
+			$this->queueVerification( $dbw, (int)$requestID );
 		} else {
 			$this->requestManager->loadFromID( (int)$requestID );
 			$this->requestManager->setRequirements( $requirements );
@@ -653,6 +652,21 @@ class SpecialRequestImport extends FormSpecialPage {
 	}
 
 	/**
+	 * Queues the check of a request once the request is committed. A job that runs before that cannot
+	 * see the request, and would be dropped without checking anything.
+	 */
+	private function queueVerification( IDatabase $dbw, int $requestID ): void {
+		$dbw->onTransactionCommitOrIdle(
+			function () use ( $requestID ): void {
+				$this->jobQueueGroup->push(
+					new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => $requestID ] )
+				);
+			},
+			__METHOD__
+		);
+	}
+
+	/**
 	 * Notes the uploaded parts of a request, and removes the request again if that does not work,
 	 * so that it is not left without a file.
 	 */
@@ -715,9 +729,7 @@ class SpecialRequestImport extends FormSpecialPage {
 			}
 		}
 
-		$this->jobQueueGroup->push(
-			new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => $requestID ] )
-		);
+		$this->queueVerification( $dbw, $requestID );
 
 		$requestQueueLink = SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$requestID );
 
