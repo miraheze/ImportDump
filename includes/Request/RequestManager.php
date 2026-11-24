@@ -918,12 +918,15 @@ class RequestManager {
 		return $status;
 	}
 
-	/** @param list<string> $names Held files to remove, or an empty list to remove all of them. */
-	public function deleteHeldImages( array $names = [] ): bool {
+	public function deleteAllHeldImages(): bool {
+		return $this->deleteHeldImages( $this->getHeldImageNames() );
+	}
+
+	/** @param list<string> $names */
+	public function deleteHeldImages( array $names ): bool {
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
 		$directory = $this->getHeldDirectory();
 
-		$names = $names ?: $this->getHeldImageNames();
 		$success = true;
 		foreach ( array_chunk( $names, self::FILE_BATCH_SIZE ) as $batch ) {
 			$operations = [];
@@ -946,7 +949,7 @@ class RequestManager {
 		if ( $this->getType() === RequestType::Images ) {
 			$success = $this->deleteImageFiles( $backend );
 			$success = $this->deleteOutputFiles( $backend ) && $success;
-			$success = $this->deleteHeldImages() && $success;
+			$success = $this->deleteAllHeldImages() && $success;
 			$paths = [ $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
 		}
 
@@ -1407,11 +1410,11 @@ class RequestManager {
 	 * @param list<SkippedFile> $skipped The image files that are left out of the import.
 	 *  Only the first ones are kept, but the total is.
 	 * @param int $held How many of the skipped files are kept to be checked again.
-	 * @param ?int $total How many files were skipped, if more than the list has.
+	 * @param int $total How many files were skipped, which is more than the list has when it was cut.
 	 */
-	public function setSkippedImages( array $skipped, int $held = 0, ?int $total = null ): void {
+	public function setSkippedImages( array $skipped, int $held, int $total ): void {
 		$value = $skipped ? json_encode( [
-			'total' => max( $total ?? 0, count( $skipped ) ),
+			'total' => max( $total, count( $skipped ) ),
 			'held' => $held,
 			'files' => array_map(
 				static fn ( SkippedFile $file ): array => [

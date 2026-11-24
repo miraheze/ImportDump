@@ -216,11 +216,11 @@ class VerifyDumpJob extends Job {
 		if ( $result->held && $this->requestManager->publishHeldImages( $result->held )->isOK() ) {
 			$held = count( $result->held );
 		} elseif ( $result->held ) {
-			$this->requestManager->deleteHeldImages();
+			$this->requestManager->deleteAllHeldImages();
 		}
 
 		// The files that are left out are shown on the request, which the notification points to.
-		$this->requestManager->setSkippedImages( $result->skipped, $held );
+		$this->requestManager->setSkippedImages( $result->skipped, $held, count( $result->skipped ) );
 		$this->requestManager->setStatus( RequestStatus::Pending );
 		$this->attentionNotifier->notify( $this->requestManager );
 		$this->progress->clear( $requestID );

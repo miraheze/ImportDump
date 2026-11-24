@@ -1009,14 +1009,14 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 			new SkippedFile( 'b.png', 'filetype-mime-mismatch', [ 'png', 'image/jpeg' ] ),
 		];
 
-		$manager->setSkippedImages( $files );
+		$manager->setSkippedImages( $files, 0, 2 );
 		$this->assertEquals( [ 'total' => 2, 'files' => $files ], $manager->getSkippedImages() );
 		$this->assertEquals(
 			[ 'total' => 2, 'files' => $files ],
 			$this->getRequestManager( id: 1 )->getSkippedImages()
 		);
 
-		$manager->setSkippedImages( [] );
+		$manager->setSkippedImages( [], 0, 0 );
 		$this->assertSame( [ 'total' => 0, 'files' => [] ], $this->getRequestManager( id: 1 )->getSkippedImages() );
 	}
 
@@ -1031,7 +1031,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		}
 
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->setSkippedImages( $files );
+		$manager->setSkippedImages( $files, 0, 600 );
 
 		$stored = $this->getRequestManager( id: 1 )->getSkippedImages();
 		$this->assertSame( 600, $stored['total'] );
@@ -1048,10 +1048,10 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( 0, $manager->getHeldImageCount() );
 
 		$files = [ new SkippedFile( 'a.gif', 'importdump-images-skip-extension', [ 'gif' ] ) ];
-		$manager->setSkippedImages( $files, held: 1 );
+		$manager->setSkippedImages( $files, 1, 1 );
 		$this->assertSame( 1, $this->getRequestManager( id: 1 )->getHeldImageCount() );
 
-		$manager->setSkippedImages( [] );
+		$manager->setSkippedImages( [], 0, 0 );
 		$this->assertSame( 0, $this->getRequestManager( id: 1 )->getHeldImageCount() );
 	}
 
@@ -1078,7 +1078,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( [ 'b.gif' ], $manager->getHeldImageNames() );
 		$this->assertContains( 'a.gif', $manager->getImageObjectNames() );
 
-		$this->assertTrue( $manager->deleteHeldImages() );
+		$this->assertTrue( $manager->deleteAllHeldImages() );
 		$this->assertSame( [], $manager->getHeldImageNames() );
 	}
 
