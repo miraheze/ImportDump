@@ -362,6 +362,20 @@ class RequestFormBuilder {
 				];
 			}
 
+			if (
+				$isImages &&
+				$status === RequestStatus::Pending &&
+				$this->requestManager->getHeldImageCount() > 0
+			) {
+				$formDescriptor += [
+					'submit-recheck' => [
+						'type' => 'submit',
+						'buttonlabel-message' => 'importdump-label-recheck-skipped',
+						'section' => 'handling',
+					],
+				];
+			}
+
 			if ( $status === RequestStatus::Verifying ) {
 				$formDescriptor += [
 					'submit-verify' => [

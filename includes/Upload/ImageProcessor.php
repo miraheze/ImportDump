@@ -13,6 +13,7 @@ use MediaWiki\Title\TitleFactory;
 use MediaWiki\Upload\UploadVerification;
 use MediaWiki\Utils\MWFileProps;
 use Miraheze\ImportDump\ConfigNames;
+use Wikimedia\FileBackend\FSFile\TempFSFile;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use Wikimedia\Mime\MimeAnalyzer;
 use function array_keys;
@@ -125,15 +126,8 @@ class ImageProcessor {
 		?Closure $onProgress,
 		?array $allowedExtensions
 	): Status {
-		$allowed = array_map(
-			strtolower( ... ),
-			$allowedExtensions ?? $this->options->get( MainConfigNames::FileExtensions )
-		);
-
-		$prohibited = array_map(
-			strtolower( ... ),
-			$this->options->get( MainConfigNames::ProhibitedFileExtensions )
-		);
+		$allowed = $this->getAllowedExtensions( $allowedExtensions );
+		$prohibited = $this->getProhibitedExtensions();
 
 		$format = $this->archiveReader->detectFormat( $path );
 		if ( $format === null ) {
@@ -157,8 +151,14 @@ class ImageProcessor {
 			return $checked;
 		}
 
-		[ 'entries' => $entries, 'skipped' => $skipped, 'considered' => $considered ] = $checked->getValue();
+		[
+			'entries' => $entries,
+			'held' => $heldEntries,
+			'skipped' => $skipped,
+			'considered' => $considered,
+		] = $checked->getValue();
 		'@phan-var array<string, ArchiveEntry> $entries';
+		'@phan-var array<string, ArchiveEntry> $heldEntries';
 		'@phan-var list<SkippedFile> $skipped';
 		'@phan-var int $considered';
 
@@ -247,7 +247,70 @@ class ImageProcessor {
 			return $this->tooManySkipped( $skipped, $considered );
 		}
 
-		return Status::newGood( new ImageResult( $files, $tempFiles, $skipped, $size, $renamed ) );
+		$held = $this->extractHeld( $path, $format, $heldEntries, $tempFiles, $maxSize - $extracted );
+		if ( !$held->isOK() ) {
+			return $held;
+		}
+
+		return Status::newGood( new ImageResult( $files, $tempFiles, $skipped, $size, $renamed, $held->getValue() ) );
+	}
+
+	/**
+	 * Extracts the files that are only left out because of their extension, as far as the extraction limit allows.
+	 * They are not checked for their type here, which is done again if they are ever imported.
+	 *
+	 * @param string $path
+	 * @param string $format
+	 * @param array<string, ArchiveEntry> $entries
+	 * @param list<TempFSFile> &$tempFiles
+	 * @param int $remaining
+	 * @return Status A good status with the name of each held file and the path that it was extracted to.
+	 */
+	private function extractHeld(
+		string $path,
+		string $format,
+		array $entries,
+		array &$tempFiles,
+		int $remaining
+	): Status {
+		$held = [];
+		foreach ( $entries as $name => $entry ) {
+			$size = $entry->size ?? 0;
+			if ( $size > $remaining ) {
+				continue;
+			}
+
+			$extension = strtolower( pathinfo( $name, PATHINFO_EXTENSION ) );
+			$tempFile = $this->tempFSFileFactory->newTempFSFile( 'importdump-held', $extension );
+			if ( !$tempFile ) {
+				return Status::newFatal( 'importdump-archive-unreadable' );
+			}
+
+			$status = $this->archiveReader->extractTo(
+				$path,
+				$format,
+				$entry,
+				$tempFile->getPath(),
+				$remaining,
+				null
+			);
+
+			if ( !$status->isOK() ) {
+				return $status;
+			}
+
+			$written = (int)filesize( $tempFile->getPath() );
+			$virus = $this->uploadVerification->detectVirus( $tempFile->getPath() );
+			if ( $virus ) {
+				return Status::newFatal( 'uploadvirus', $virus );
+			}
+
+			$remaining -= $written;
+			$tempFiles[] = $tempFile;
+			$held[$name] = $tempFile->getPath();
+		}
+
+		return Status::newGood( $held );
 	}
 
 	/**
@@ -267,6 +330,49 @@ class ImageProcessor {
 	}
 
 	/**
+	 * Checks files that were held back for their extension against the extensions that are accepted now.
+	 * They get the same checks as any other file, and are never accepted with a prohibited extension.
+	 *
+	 * @param array<string, string> $files The name of each file and the path of a local copy.
+	 * @param ?list<string> $allowedExtensions The extensions that the target wiki accepts now, or null for the
+	 *  ones of this wiki.
+	 * @return array{accepted:array<string, string>,rejected:array<string, SkippedFile>} The accepted files
+	 *  by name, and the reason for each of the others.
+	 */
+	public function checkHeld( array $files, ?array $allowedExtensions ): array {
+		$allowed = $this->getAllowedExtensions( $allowedExtensions );
+		$prohibited = $this->getProhibitedExtensions();
+
+		$accepted = [];
+		$rejected = [];
+		foreach ( $files as $name => $path ) {
+			$extension = strtolower( pathinfo( $name, PATHINFO_EXTENSION ) );
+			if (
+				$extension === '' ||
+				in_array( $extension, $prohibited, true ) ||
+				!in_array( $extension, $allowed, true )
+			) {
+				$rejected[$name] = new SkippedFile( $name, 'importdump-images-skip-extension', [ $extension ] );
+				continue;
+			}
+
+			$virus = $this->uploadVerification->detectVirus( $path );
+			$problem = $virus ?
+				new SkippedFile( $name, 'uploadvirus', [ $virus ] ) :
+				$this->verifyFile( $name, $extension, $path );
+
+			if ( $problem ) {
+				$rejected[$name] = $problem;
+				continue;
+			}
+
+			$accepted[$name] = $path;
+		}
+
+		return [ 'accepted' => $accepted, 'rejected' => $rejected ];
+	}
+
+	/**
 	 * Hidden files are ignored. The others are kept if the wiki would accept them as an upload,
 	 * under a name that cannot be mistaken for a path and that no earlier file has. The rest are skipped.
 	 *
@@ -275,10 +381,11 @@ class ImageProcessor {
 	 * @param list<string> $allowed The extensions that are accepted, in lowercase.
 	 * @param list<string> $prohibited The extensions that are never accepted, in lowercase.
 	 * @return Status A good status with an array as its value. It has the entries to extract by the name that
-	 *  each file gets, the files that are skipped already, and how many files there are besides the hidden ones.
+	 *  each file gets, the files that are only held for their extension, the files that are skipped already, and how many files there are besides the hidden ones.
 	 */
 	private function checkEntries( array $entries, int $maxSize, array $allowed, array $prohibited ): Status {
 		$keep = [];
+		$hold = [];
 		$skipped = [];
 		$keys = [];
 		$size = 0;
@@ -302,6 +409,13 @@ class ImageProcessor {
 				( in_array( $extension, $prohibited, true ) || !in_array( $extension, $allowed, true ) )
 			) {
 				$skipped[] = new SkippedFile( $name, 'importdump-images-skip-extension', [ $extension ] );
+				// Only an extension that is not prohibited can become accepted later.
+				$holdKey = $this->titleFactory->makeTitleSafe( NS_FILE, $name )?->getDBkey();
+				if ( !in_array( $extension, $prohibited, true ) && $holdKey !== null && !isset( $keys[$holdKey] ) ) {
+					$keys[$holdKey] = true;
+					$hold[$name] = $entry;
+				}
+
 				continue;
 			}
 
@@ -329,7 +443,31 @@ class ImageProcessor {
 			return Status::newFatal( 'importdump-images-empty' );
 		}
 
-		return Status::newGood( [ 'entries' => $keep, 'skipped' => $skipped, 'considered' => $considered ] );
+		return Status::newGood( [
+			'entries' => $keep,
+			'held' => $hold,
+			'skipped' => $skipped,
+			'considered' => $considered,
+		] );
+	}
+
+	/**
+	 * @param ?list<string> $allowedExtensions
+	 * @return list<string>
+	 */
+	private function getAllowedExtensions( ?array $allowedExtensions ): array {
+		return array_map(
+			strtolower( ... ),
+			$allowedExtensions ?? $this->options->get( MainConfigNames::FileExtensions )
+		);
+	}
+
+	/** @return list<string> */
+	private function getProhibitedExtensions(): array {
+		return array_map(
+			strtolower( ... ),
+			$this->options->get( MainConfigNames::ProhibitedFileExtensions )
+		);
 	}
 
 	private function detectMime( string $path ): string {

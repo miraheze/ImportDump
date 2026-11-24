@@ -180,6 +180,21 @@ class RequestSubmitHandler {
 			return;
 		}
 
+		if ( isset( $formData['submit-recheck'] ) ) {
+			if (
+				$this->requestManager->getType() !== RequestType::Images ||
+				$this->requestManager->getStatus() !== RequestStatus::Pending ||
+				$this->requestManager->getHeldImageCount() === 0
+			) {
+				$this->addError( $this->context->msg( 'importdump-recheck-not-needed' ) );
+				return;
+			}
+
+			$this->requestManager->recheckHeldImages();
+			$this->addSuccess( $this->context->msg( 'importdump-recheck-queued' ) );
+			return;
+		}
+
 		if ( isset( $formData['submit-handle'] ) ) {
 			$newStatus = RequestStatus::tryFrom( $formData['handle-status'] ?? '' );
 

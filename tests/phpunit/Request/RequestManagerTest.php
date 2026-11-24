@@ -1040,6 +1040,49 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
+	 * @covers ::getHeldImageCount
+	 * @covers ::setSkippedImages
+	 */
+	public function testHeldImageCount(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$this->assertSame( 0, $manager->getHeldImageCount() );
+
+		$files = [ new SkippedFile( 'a.gif', 'importdump-images-skip-extension', [ 'gif' ] ) ];
+		$manager->setSkippedImages( $files, held: 1 );
+		$this->assertSame( 1, $this->getRequestManager( id: 1 )->getHeldImageCount() );
+
+		$manager->setSkippedImages( [] );
+		$this->assertSame( 0, $this->getRequestManager( id: 1 )->getHeldImageCount() );
+	}
+
+	/**
+	 * @covers ::getHeldImageNames
+	 * @covers ::publishHeldImages
+	 * @covers ::releaseHeldImages
+	 * @covers ::deleteHeldImages
+	 */
+	public function testHeldImagesCanBeReleasedAndDeleted(): void {
+		$manager = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+		$directory = $this->getNewTempDirectory();
+		file_put_contents( "$directory/a.gif", 'a' );
+		file_put_contents( "$directory/b.gif", 'b' );
+
+		$this->assertStatusGood( $manager->publishHeldImages( [
+			'a.gif' => "$directory/a.gif",
+			'b.gif' => "$directory/b.gif",
+		] ) );
+
+		$this->assertSame( [ 'a.gif', 'b.gif' ], $manager->getHeldImageNames() );
+
+		$this->assertStatusGood( $manager->releaseHeldImages( [ 'a.gif' ] ) );
+		$this->assertSame( [ 'b.gif' ], $manager->getHeldImageNames() );
+		$this->assertContains( 'a.gif', $manager->getImageObjectNames() );
+
+		$this->assertTrue( $manager->deleteHeldImages() );
+		$this->assertSame( [], $manager->getHeldImageNames() );
+	}
+
+	/**
 	 * @covers ::getRequirements
 	 * @covers ::setRequirements
 	 */
