@@ -107,6 +107,23 @@ class ImageProcessor {
 		?Closure $onProgress,
 		?array $allowedExtensions
 	): Status {
+		try {
+			return $this->processArchive( $path, $onProgress, $allowedExtensions );
+		} finally {
+			// A TAR is read in one pass, so it is still open here and holds on to the file.
+			$this->archiveReader->close();
+		}
+	}
+
+	/**
+	 * @param ?Closure( string, ?int ): void $onProgress
+	 * @param ?list<string> $allowedExtensions
+	 */
+	private function processArchive(
+		string $path,
+		?Closure $onProgress,
+		?array $allowedExtensions
+	): Status {
 		$allowed = array_map(
 			strtolower( ... ),
 			$allowedExtensions ?? $this->options->get( MainConfigNames::FileExtensions )

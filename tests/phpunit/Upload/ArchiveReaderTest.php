@@ -10,6 +10,7 @@ use Miraheze\ImportDump\Upload\ArchiveEntry;
 use Miraheze\ImportDump\Upload\ArchiveReader;
 use Miraheze\ImportDump\Upload\ExternalBinaries;
 use ZipArchive;
+use function array_map;
 use function bzcompress;
 use function end;
 use function file_get_contents;
@@ -350,12 +351,38 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$this->assertCount( 1, $status->getValue() );
 	}
 
-	public function testListFilesTarStopsAtSecondFile(): void {
+	public function testListFilesTarListsEveryFile(): void {
 		$path = $this->newTar( [ 'one.xml' => 'one', 'two.xml' => 'two', 'three.xml' => 'three' ] );
 
 		$status = $this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE );
 		$this->assertStatusGood( $status );
-		$this->assertCount( 2, $status->getValue() );
+		$this->assertSame( [ 'one.xml', 'two.xml', 'three.xml' ], array_map(
+			static fn ( ArchiveEntry $entry ): string => $entry->name,
+			$status->getValue()
+		) );
+	}
+
+	public function testExtractTarEntriesInOrderAndOutOfOrder(): void {
+		$contents = [ 'a.png' => 'first', 'b.png' => 'second', 'c.png' => 'third' ];
+		$path = $this->newTar( $contents );
+		$entries = $this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE )->getValue();
+
+		// In order is one pass, and going back starts over. Both give the right file.
+		foreach ( [ 0, 1, 2, 1, 0, 2 ] as $position ) {
+			$destination = $this->getNewTempFile();
+			$this->assertStatusGood( $this->reader->extractTo(
+				$path,
+				ArchiveReader::FORMAT_TAR,
+				$entries[$position],
+				$destination,
+				self::MAX_SIZE,
+				null
+			) );
+
+			$this->assertSame( $contents[$entries[$position]->name], file_get_contents( $destination ) );
+		}
+
+		$this->reader->close();
 	}
 
 	public function testListFilesCompressedTar(): void {

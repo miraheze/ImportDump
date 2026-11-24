@@ -94,6 +94,22 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( self::png(), file_get_contents( $result->files['a.png'] ) );
 	}
 
+	public function testExtractsEveryImageOfATar(): void {
+		$entries = [];
+		for ( $number = 1; $number <= 5; $number++ ) {
+			$entries["image$number.png"] = self::png();
+		}
+
+		$status = $this->process( $this->newTar( $entries ), maxSize: self::DEFAULT_SIZE );
+
+		$this->assertStatusGood( $status );
+		$result = $status->getValue();
+		'@phan-var ImageResult $result';
+
+		$this->assertSame( array_keys( $entries ), array_keys( $result->files ) );
+		$this->assertSame( 5 * strlen( self::png() ), $result->size );
+	}
+
 	/** @dataProvider provideRejected */
 	public function testRejects( callable $build, string $messageKey ): void {
 		$status = $this->process( $build( $this ), maxSize: self::DEFAULT_SIZE );
