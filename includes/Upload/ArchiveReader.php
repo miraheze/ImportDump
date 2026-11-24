@@ -659,15 +659,16 @@ final class ArchiveReader {
 			return Status::newFatal( 'importdump-archive-unreadable' );
 		}
 
+		$status = Status::newFatal( 'importdump-archive-unreadable' );
 		try {
 			$status = $this->copyTarEntry( $cursor['reader'], $entry, $output, $onProgress );
 		} finally {
 			fclose( $output );
-		}
 
-		// Where the reader is after a failure is not known, so the next entry starts over.
-		if ( !$status->isOK() ) {
-			$this->close();
+			// Where the reader is after a failure is not known, so the next entry starts over.
+			if ( !$status->isOK() ) {
+				$this->close();
+			}
 		}
 
 		return $status;
