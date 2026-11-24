@@ -119,7 +119,6 @@ class ImageProcessor {
 	 * @param string $path
 	 * @param ?Closure( string, ?int ): void $onProgress
 	 * @param ?list<string> $allowedExtensions
-	 * @return Status
 	 */
 	private function processArchive(
 		string $path,
