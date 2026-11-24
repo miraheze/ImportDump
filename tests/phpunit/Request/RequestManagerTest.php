@@ -1009,14 +1009,14 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 			new SkippedFile( 'b.png', 'filetype-mime-mismatch', [ 'png', 'image/jpeg' ] ),
 		];
 
-		$manager->setSkippedImages( $files );
+		$manager->setSkippedImages( $files, 0, 2 );
 		$this->assertEquals( [ 'total' => 2, 'files' => $files ], $manager->getSkippedImages() );
 		$this->assertEquals(
 			[ 'total' => 2, 'files' => $files ],
 			$this->getRequestManager( id: 1 )->getSkippedImages()
 		);
 
-		$manager->setSkippedImages( [] );
+		$manager->setSkippedImages( [], 0, 0 );
 		$this->assertSame( [ 'total' => 0, 'files' => [] ], $this->getRequestManager( id: 1 )->getSkippedImages() );
 	}
 
@@ -1031,12 +1031,58 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		}
 
 		$manager = $this->getRequestManager( id: 1 );
-		$manager->setSkippedImages( $files );
+		$manager->setSkippedImages( $files, 0, 600 );
 
 		$stored = $this->getRequestManager( id: 1 )->getSkippedImages();
 		$this->assertSame( 600, $stored['total'] );
 		$this->assertCount( 500, $stored['files'] );
 		$this->assertSame( '0.png', $stored['files'][0]->name );
+	}
+
+	/**
+	 * @covers ::getHeldImageCount
+	 * @covers ::setSkippedImages
+	 */
+	public function testHeldImageCount(): void {
+		$manager = $this->getRequestManager( id: 1 );
+		$this->assertSame( 0, $manager->getHeldImageCount() );
+
+		$files = [ new SkippedFile( 'a.gif', 'importdump-images-skip-extension', [ 'gif' ] ) ];
+		$manager->setSkippedImages( $files, 1, 1 );
+		$this->assertSame( 1, $this->getRequestManager( id: 1 )->getHeldImageCount() );
+
+		$manager->setSkippedImages( [], 0, 0 );
+		$this->assertSame( 0, $this->getRequestManager( id: 1 )->getHeldImageCount() );
+	}
+
+	/**
+	 * @covers ::getHeldImageNames
+	 * @covers ::publishHeldImages
+	 * @covers ::releaseHeldImages
+	 * @covers ::deleteHeldImages
+	 */
+	public function testHeldImagesCanBeReleasedAndDeleted(): void {
+		$manager = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+		$directory = $this->getNewTempDirectory();
+		file_put_contents( "$directory/a.gif", 'a' );
+		file_put_contents( "$directory/b.gif", 'b' );
+
+		$this->assertStatusGood( $manager->publishHeldImages( [
+			'a.gif' => "$directory/a.gif",
+			'b.gif' => "$directory/b.gif",
+		] ) );
+
+		$this->assertSame( [ 'a.gif', 'b.gif' ], $manager->getHeldImageNames() );
+
+		$this->assertStatusGood( $manager->releaseHeldImages( [ 'a.gif' ] ) );
+		$this->assertSame( [ 'b.gif' ], $manager->getHeldImageNames() );
+
+		$stored = $manager->getImageObjectNames();
+		$this->assertCount( 1, $stored );
+		$this->assertStringEndsWith( '/a.gif', $stored[0] );
+
+		$this->assertTrue( $manager->deleteAllHeldImages() );
+		$this->assertSame( [], $manager->getHeldImageNames() );
 	}
 
 	/**

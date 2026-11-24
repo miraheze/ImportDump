@@ -43,6 +43,7 @@ use Miraheze\ManageWiki\Helpers\Factories\ModuleFactory;
 use stdClass;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFile\FSFile;
+use Wikimedia\FileBackend\FSFile\TempFSFile;
 use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\Rdbms\IDatabase;
 use Wikimedia\Rdbms\IExpression;
@@ -648,6 +649,18 @@ class RequestManager {
 		}
 	}
 
+	/** Whether an upload of this request still waits to be checked, as a stored file or as uploaded parts. */
+	public function hasUnverifiedUpload(): bool {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		foreach ( [ $this->getUnverifiedFilePath(), $this->getPartsReferencePath() ] as $path ) {
+			if ( $backend->fileExists( [ 'src' => $path ] ) === true ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	/** Where it is noted which uploaded parts an archive of images is joined from, instead of a stored file. */
 	private function getPartsReferencePath(): string {
 		return $this->getUnverifiedFilePath() . '.parts';
@@ -812,6 +825,122 @@ class RequestManager {
 		return $names;
 	}
 
+	/** Where the files are kept that were only left out because of their extension. */
+	private function getHeldDirectory(): string {
+		return $this->getFilePath() . '-held';
+	}
+
+	/**
+	 * Keeps files that were left out because their extension is not accepted yet, apart from the images
+	 * that are imported, so they can be checked again if the extension is accepted later.
+	 *
+	 * @param array<string, string> $files The name of each file and the path that it is read from.
+	 */
+	public function publishHeldImages( array $files ): Status {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$directory = $this->getHeldDirectory();
+
+		$status = Status::wrap( $backend->prepare( [ 'dir' => $directory ] ) );
+		foreach ( array_chunk( $files, self::FILE_BATCH_SIZE, true ) as $batch ) {
+			if ( !$status->isOK() ) {
+				break;
+			}
+
+			$operations = [];
+			foreach ( $batch as $name => $source ) {
+				$operations[] = [ 'op' => 'store', 'src' => $source, 'dst' => "$directory/$name" ];
+			}
+
+			$status->merge( Status::wrap( $backend->doQuickOperations( $operations ) ) );
+		}
+
+		return $status;
+	}
+
+	/** @return list<string> The names of the held files. */
+	public function getHeldImageNames(): array {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$files = $backend->getFileList( [ 'dir' => $this->getHeldDirectory() ] );
+		if ( $files === null ) {
+			return [];
+		}
+
+		$names = [];
+		foreach ( $files as $file ) {
+			$names[] = (string)$file;
+		}
+
+		sort( $names );
+		return $names;
+	}
+
+	/**
+	 * @param list<string> $names
+	 * @return array<string, TempFSFile> The local copy of each held file that could be read.
+	 */
+	public function getHeldImageCopies( array $names ): array {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$directory = $this->getHeldDirectory();
+
+		$sources = [];
+		foreach ( $names as $name ) {
+			$sources[$name] = "$directory/$name";
+		}
+
+		$copies = $backend->getLocalCopyMulti( [ 'srcs' => $sources ] );
+		return array_filter( $copies, static fn ( mixed $copy ): bool => $copy instanceof TempFSFile );
+	}
+
+	/**
+	 * Moves held files to the images that are imported.
+	 *
+	 * @param list<string> $names
+	 */
+	public function releaseHeldImages( array $names ): Status {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$held = $this->getHeldDirectory();
+		$directory = $this->getFilePath();
+
+		$status = Status::wrap( $backend->prepare( [ 'dir' => $directory ] ) );
+		foreach ( array_chunk( $names, self::FILE_BATCH_SIZE ) as $batch ) {
+			if ( !$status->isOK() ) {
+				break;
+			}
+
+			$operations = [];
+			foreach ( $batch as $name ) {
+				$operations[] = [ 'op' => 'move', 'src' => "$held/$name", 'dst' => "$directory/$name" ];
+			}
+
+			$status->merge( Status::wrap( $backend->doQuickOperations( $operations ) ) );
+		}
+
+		return $status;
+	}
+
+	public function deleteAllHeldImages(): bool {
+		return $this->deleteHeldImages( $this->getHeldImageNames() );
+	}
+
+	/** @param list<string> $names */
+	public function deleteHeldImages( array $names ): bool {
+		$backend = $this->repoGroup->getLocalRepo()->getBackend();
+		$directory = $this->getHeldDirectory();
+
+		$success = true;
+		foreach ( array_chunk( $names, self::FILE_BATCH_SIZE ) as $batch ) {
+			$operations = [];
+			foreach ( $batch as $name ) {
+				$operations[] = [ 'op' => 'delete', 'src' => "$directory/$name", 'ignoreMissingSource' => true ];
+			}
+
+			$success = $backend->doQuickOperations( $operations )->isOK() && $success;
+		}
+
+		$backend->clean( [ 'dir' => $directory ] );
+		return $success;
+	}
+
 	public function deleteFile(): bool {
 		$backend = $this->repoGroup->getLocalRepo()->getBackend();
 
@@ -820,6 +949,7 @@ class RequestManager {
 		if ( $this->getType() === RequestType::Images ) {
 			$success = $this->deleteImageFiles( $backend );
 			$success = $this->deleteOutputFiles( $backend ) && $success;
+			$success = $this->deleteAllHeldImages() && $success;
 			$paths = [ $this->getArchiveFilePath(), $this->getUnverifiedFilePath() ];
 		}
 
@@ -1279,10 +1409,13 @@ class RequestManager {
 	/**
 	 * @param list<SkippedFile> $skipped The image files that are left out of the import.
 	 *  Only the first ones are kept, but the total is.
+	 * @param int $held How many of the skipped files are kept to be checked again.
+	 * @param int $total How many files were skipped, which is more than the list has when it was cut.
 	 */
-	public function setSkippedImages( array $skipped ): void {
+	public function setSkippedImages( array $skipped, int $held, int $total ): void {
 		$value = $skipped ? json_encode( [
-			'total' => count( $skipped ),
+			'total' => max( $total, count( $skipped ) ),
+			'held' => $held,
 			'files' => array_map(
 				static fn ( SkippedFile $file ): array => [
 					'name' => $file->name,
@@ -1301,6 +1434,13 @@ class RequestManager {
 			->execute();
 
 		$this->row->request_skipped = $value;
+	}
+
+	/** @return int How many of the skipped files are kept to be checked again. */
+	public function getHeldImageCount(): int {
+		$value = $this->row->request_skipped ?? null;
+		$data = $value ? json_decode( $value, true ) : null;
+		return is_array( $data ) ? max( 0, (int)( $data['held'] ?? 0 ) ) : 0;
 	}
 
 	/** @return array{total:int,files:list<SkippedFile>} */
@@ -1361,6 +1501,15 @@ class RequestManager {
 	}
 
 	public function retryVerification(): void {
+		$this->verificationProgress->clear( $this->ID );
+		$this->jobQueueGroupFactory->makeJobQueueGroup()->push(
+			new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => $this->ID ] )
+		);
+	}
+
+	/** Checks the files that were held back for their extension again, now that the target may accept it. */
+	public function recheckHeldImages(): void {
+		$this->setStatus( RequestStatus::Verifying );
 		$this->verificationProgress->clear( $this->ID );
 		$this->jobQueueGroupFactory->makeJobQueueGroup()->push(
 			new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => $this->ID ] )

@@ -24,8 +24,17 @@ use Miraheze\ImportDump\Upload\DumpResult;
 use Miraheze\ImportDump\Upload\ImageProcessor;
 use Miraheze\ImportDump\Upload\ImageResult;
 use Miraheze\ImportDump\Upload\RequestImportUploadFromChunks;
+use Miraheze\ImportDump\Upload\SkippedFile;
 use Wikimedia\FileBackend\FSFile\TempFSFile;
+use function array_chunk;
+use function array_filter;
+use function array_flip;
+use function array_keys;
+use function array_map;
 use function count;
+use function filesize;
+use function intdiv;
+use function max;
 
 /**
  * Checks an upload that was too big, or too risky, to check while the request was submitted.
@@ -39,6 +48,8 @@ class VerifyDumpJob extends Job {
 	public const string STAGE_JOINING = 'joining';
 
 	public const string STAGE_STORING = 'storing';
+
+	private const int RECHECK_BATCH = 100;
 
 	private readonly MessageLocalizer $messageLocalizer;
 
@@ -113,6 +124,16 @@ class VerifyDumpJob extends Job {
 	}
 
 	private function verify( int $requestID ): void {
+		// Without an upload to check, this is the check of the files that were held back.
+		if (
+			$this->requestManager->getType() === RequestType::Images &&
+			!$this->requestManager->hasUnverifiedUpload() &&
+			$this->requestManager->getHeldImageCount() > 0
+		) {
+			$this->recheckHeldImages( $requestID );
+			return;
+		}
+
 		$onProgress = fn ( string $stage, ?int $percent ) => $this->progress->set( $requestID, $stage, $percent );
 
 		$parts = $this->requestManager->getPartsReference();
@@ -191,10 +212,96 @@ class VerifyDumpJob extends Job {
 		$upload?->purgeChunks();
 		$this->requestManager->setFileStats( count( $result->files ), $result->size );
 
+		$held = 0;
+		if ( $result->held && $this->requestManager->publishHeldImages( $result->held )->isOK() ) {
+			$held = count( $result->held );
+		} elseif ( $result->held ) {
+			$this->requestManager->deleteAllHeldImages();
+		}
+
 		// The files that are left out are shown on the request, which the notification points to.
-		$this->requestManager->setSkippedImages( $result->skipped );
+		$this->requestManager->setSkippedImages( $result->skipped, $held, count( $result->skipped ) );
 		$this->requestManager->setStatus( RequestStatus::Pending );
 		$this->attentionNotifier->notify( $this->requestManager );
+		$this->progress->clear( $requestID );
+	}
+
+	/**
+	 * Checks the files that were held back for their extension, with the extensions that the target
+	 * wiki accepts now. The files that pass are added to the images of the request, the rest stay held.
+	 */
+	private function recheckHeldImages( int $requestID ): void {
+		$allowed = $this->requestManager->getTargetFileExtensions();
+		$names = $this->requestManager->getHeldImageNames();
+
+		$released = [];
+		$rejected = [];
+		$size = 0;
+		$total = count( $names );
+		$done = 0;
+		foreach ( array_chunk( $names, self::RECHECK_BATCH ) as $batch ) {
+			$copies = $this->requestManager->getHeldImageCopies( $batch );
+			$paths = array_map( static fn ( TempFSFile $copy ): string => $copy->getPath(), $copies );
+			$checked = $this->imageProcessor->checkHeld( $paths, $allowed );
+
+			foreach ( $checked['accepted'] as $name => $path ) {
+				$size += (int)filesize( $path );
+				$released[] = (string)$name;
+			}
+
+			$rejected += $checked['rejected'];
+			foreach ( $copies as $copy ) {
+				$copy->purge();
+			}
+
+			$done += count( $batch );
+			$this->progress->set( $requestID, self::STAGE_STORING, intdiv( $done * 100, max( 1, $total ) ) );
+		}
+
+		if ( $released ) {
+			$status = $this->requestManager->releaseHeldImages( $released );
+			if ( !$status->isOK() ) {
+				$this->requestManager->setStatus( RequestStatus::Pending );
+				$this->progress->clear( $requestID );
+				return;
+			}
+		}
+
+		// Files that fail a check now are not worth keeping, as another extension would not change that.
+		$remove = array_keys( array_filter(
+			$rejected,
+			static fn ( SkippedFile $file ): bool => $file->reason !== 'importdump-images-skip-extension'
+		) );
+
+		if ( $remove ) {
+			$this->requestManager->deleteHeldImages( $remove );
+		}
+
+		$gone = array_flip( $released );
+		$stillSkipped = [];
+		foreach ( $this->requestManager->getSkippedImages()['files'] as $file ) {
+			if ( isset( $gone[$file->name] ) ) {
+				continue;
+			}
+
+			$stillSkipped[] = $rejected[$file->name] ?? $file;
+		}
+
+		$skipped = $this->requestManager->getSkippedImages();
+		$this->requestManager->setSkippedImages(
+			$stillSkipped,
+			max( 0, $this->requestManager->getHeldImageCount() - count( $released ) - count( $remove ) ),
+			$skipped['total'] - count( $released )
+		);
+
+		if ( $released ) {
+			$this->requestManager->setFileStats(
+				(int)$this->requestManager->getFileCount() + count( $released ),
+				$this->requestManager->getFileSize() + $size
+			);
+		}
+
+		$this->requestManager->setStatus( RequestStatus::Pending );
 		$this->progress->clear( $requestID );
 	}
 

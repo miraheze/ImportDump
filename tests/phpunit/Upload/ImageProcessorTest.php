@@ -20,6 +20,7 @@ use function array_keys;
 use function array_map;
 use function base64_decode;
 use function file_get_contents;
+use function file_put_contents;
 use function ksort;
 use function str_repeat;
 use function strlen;
@@ -279,6 +280,39 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( [ 'Site-background.png', 'Disguised.png', 'plain.png' ], array_keys( $result->files ) );
 		$this->assertSame( [], $result->skipped );
 		$this->assertSame( [ 'Site-background' => 'Site-background.png' ], $result->renamed );
+	}
+
+	public function testHoldsFilesThatOnlyLackAnAcceptedExtension(): void {
+		$zip = $this->newZip( [ 'a.png' => self::png(), 'b.gif' => self::gif(), 'c.jpg' => self::gif() ] );
+		$processor = $this->newProcessor( self::DEFAULT_SIZE, maxSkipped: 100 );
+
+		$status = $processor->process( $zip, null, [ 'png' ] );
+		$this->assertStatusGood( $status );
+		$result = $status->getValue();
+		'@phan-var ImageResult $result';
+
+		$this->assertSame( [ 'a.png' ], array_keys( $result->files ) );
+		$this->assertSame( [ 'b.gif' ], array_keys( $result->held ) );
+		$this->assertSame( self::gif(), file_get_contents( $result->held['b.gif'] ) );
+		$this->assertCount( 2, $result->skipped );
+	}
+
+	public function testCheckHeldAcceptsOnlyWhatIsAllowedNow(): void {
+		$processor = $this->newProcessor( self::DEFAULT_SIZE, maxSkipped: 100 );
+		$directory = $this->getNewTempDirectory();
+		$paths = [];
+		foreach ( [ 'a.gif', 'b.png', 'c.jpg', 'd.svg' ] as $name ) {
+			$paths[$name] = "$directory/$name";
+			file_put_contents( $paths[$name], self::gif() );
+		}
+
+		$checked = $processor->checkHeld( $paths, [ 'gif', 'jpg', 'png' ] );
+
+		$this->assertSame( [ 'a.gif' ], array_keys( $checked['accepted'] ) );
+		$this->assertSame( 'importdump-images-skip-extension', $checked['rejected']['c.jpg']->reason );
+		$this->assertSame( 'importdump-images-skip-extension', $checked['rejected']['d.svg']->reason );
+		$this->assertArrayHasKey( 'b.png', $checked['rejected'] );
+		$this->assertNotSame( 'importdump-images-skip-extension', $checked['rejected']['b.png']->reason );
 	}
 
 	public function testUsesTheExtensionsOfTheTarget(): void {
