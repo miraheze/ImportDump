@@ -469,6 +469,19 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	}
 
 	/**
+	 * @covers ::getFormFields
+	 */
+	public function testFileFieldsAcceptWhatWindowsCallsAZip(): void {
+		$this->overrideConfigValue( ConfigNames::EnableImageImports, true );
+
+		$specialRequestImport = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
+		$formFields = $specialRequestImport->getFormFields();
+
+		$this->assertContains( 'application/x-zip-compressed', $formFields['UploadFile']['accept'] );
+		$this->assertContains( 'application/x-zip-compressed', $formFields['UploadImages']['accept'] );
+	}
+
+	/**
 	 * @covers ::execute
 	 * @covers ::useChunkedUploads
 	 */
