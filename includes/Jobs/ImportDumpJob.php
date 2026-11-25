@@ -23,13 +23,13 @@ use MediaWiki\User\User;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Hooks\HookRunner;
 use Miraheze\ImportDump\Progress\ImportHeartbeat;
+use Miraheze\ImportDump\Progress\RefreshLinksWithProgress;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStage;
 use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Upload\PageCounter;
 use RebuildRecentchanges;
 use RebuildTextIndex;
-use RefreshLinks;
 use Throwable;
 use UpdateArticleCount;
 use Wikimedia\Rdbms\IConnectionProvider;
@@ -274,6 +274,11 @@ class ImportDumpJob extends Job {
 		$total = (int)$total;
 		$batches = 0;
 
+		// The first batch can take minutes, so the bar starts at zero instead of looking like nothing is known.
+		if ( $total > 0 ) {
+			$this->requestManager->setImportPercent( 0, 0, $total );
+		}
+
 		// Run in page ID ranges so we can beat between them. RefreshLinks can
 		// take a long time to run so we need to check if its still running.
 		$start = null;
@@ -287,7 +292,17 @@ class ImportDumpJob extends Job {
 				->caller( __METHOD__ )
 				->fetchField();
 
-			$refreshLinks = $maintenance->createChild( RefreshLinks::class );
+			$refreshLinks = $maintenance->createChild( RefreshLinksWithProgress::class );
+			'@phan-var RefreshLinksWithProgress $refreshLinks';
+			$offset = $batches * $this->refreshLinksChunkSize;
+			$refreshLinks->setPagesCallback( function ( int $pages ) use ( $offset, $total ): void {
+				$this->beat( force: false );
+
+				$done = min( $total, $offset + $pages );
+				$percent = min( 99, intdiv( $done * 100, max( 1, $total ) ) );
+				$this->requestManager->setImportPercent( $percent, $done, $total );
+			} );
+
 			if ( $start !== null ) {
 				$refreshLinks->setArg( 0, (string)$start );
 			}
