@@ -37,7 +37,5 @@ class RefreshLinksWithProgressTest extends MediaWikiIntegrationTestCase {
 
 		$wrapper = TestingAccessWrapper::newFromObject( new RefreshLinksWithProgress() );
 		$wrapper->output( "100\n" );
-
-		$this->assertTrue( true );
 	}
 }
