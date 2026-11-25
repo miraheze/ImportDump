@@ -20,6 +20,9 @@ use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use function array_column;
 use function array_map;
+use function array_unique;
+use function array_values;
+use function count;
 use function file_put_contents;
 use function wfTempDir;
 
@@ -219,6 +222,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 			}
 		);
 		$provider->method( 'commitAndWaitForReplication' )->willReturnCallback(
+			/** @param string $fname @phan-unused-param */
 			static function ( string $fname, mixed $ticket ) use ( &$committed ): bool {
 				$committed[] = $ticket;
 				return $ticket === 'ticket';
