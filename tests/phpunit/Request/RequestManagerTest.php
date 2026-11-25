@@ -1074,6 +1074,10 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertSame( [ 'a.gif', 'b.gif' ], $manager->getHeldImageNames() );
 
+		$copies = $manager->getHeldImageCopies( [ 'a.gif', 'b.gif', 'missing.gif' ] );
+		$this->assertSame( [ 'a.gif', 'b.gif' ], array_keys( $copies ) );
+		$this->assertSame( 'a', file_get_contents( $copies['a.gif']->getPath() ) );
+
 		$this->assertStatusGood( $manager->releaseHeldImages( [ 'a.gif' ] ) );
 		$this->assertSame( [ 'b.gif' ], $manager->getHeldImageNames() );
 
