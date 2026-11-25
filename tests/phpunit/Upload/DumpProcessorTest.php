@@ -625,6 +625,27 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		}
 	}
 
+	public function testClientMimeTypesIncludeWhatWindowsCallsAZip(): void {
+		$plain = $this->newProcessor( self::MAX_SIZE, true, [] );
+
+		$this->assertContains( 'application/x-zip-compressed', $plain->getArchiveClientMimeTypes() );
+		$this->assertContains( 'application/x-zip-compressed', $plain->getAcceptedClientMimeTypes() );
+		$this->assertContains( 'text/xml', $plain->getAcceptedClientMimeTypes() );
+		$this->assertNotContains( 'application/x-zip-compressed', $plain->getArchiveMimeTypes() );
+		$this->assertNotContains( 'application/xz', $plain->getArchiveClientMimeTypes() );
+
+		$both = $this->newProcessor( self::MAX_SIZE, true, [
+			ExternalBinaries::XZ => '/not/installed/xz',
+			ExternalBinaries::SEVEN_ZIP => '/not/installed/7z',
+		] );
+
+		$this->assertContains( 'application/xz', $both->getArchiveClientMimeTypes() );
+		$this->assertSame(
+			array_values( array_unique( $both->getArchiveClientMimeTypes() ) ),
+			$both->getArchiveClientMimeTypes()
+		);
+	}
+
 	public function testArchiveFormatsFollowTheConfiguredPrograms(): void {
 		$this->assertSame( [
 			ArchiveReader::FORMAT_ZIP,
