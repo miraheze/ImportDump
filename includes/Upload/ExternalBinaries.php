@@ -289,6 +289,35 @@ class ExternalBinaries {
 	}
 
 	/**
+	 * Unpacks every file of a 7z archive into one file, one after the other in the order of the listing.
+	 *
+	 * @return Status A good status with the number of bytes that were written as its value.
+	 */
+	public function extractAllSevenZip( string $path, string $destination, int $maxBytes ): Status {
+		$allowed = $this->getAllowedOutput( $path, $maxBytes );
+		$command = Shell::escape(
+			$this->getBinary( self::SEVEN_ZIP ),
+			'e',
+			'-so',
+			'-spd',
+			'-y',
+			'-bd',
+			self::SEVEN_ZIP_INPUT
+		);
+
+		$run = $this->run(
+			self::SEVEN_ZIP,
+			$path,
+			self::SEVEN_ZIP_INPUT,
+			$this->limitOutput( $command, $allowed + 1 ),
+			$destination,
+			$allowed + self::SIZE_LIMIT_SLACK
+		);
+
+		return $this->checkOutput( $run, $destination, $allowed, $maxBytes );
+	}
+
+	/**
 	 * Reads what the 7z program prints when it lists an archive in technical form. Anything that
 	 * does not look exactly as expected makes the whole listing unusable, because a name that
 	 * contains a line break could otherwise pass for another entry.

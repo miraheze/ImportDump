@@ -7,6 +7,7 @@ namespace Miraheze\ImportDump\Upload;
 use Closure;
 use MediaWiki\Message\Message;
 use MediaWiki\Status\Status;
+use Wikimedia\FileBackend\FSFile\TempFSFile;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use ZipArchive;
 use function basename;
@@ -18,6 +19,7 @@ use function feof;
 use function filesize;
 use function fopen;
 use function fread;
+use function fseek;
 use function function_exists;
 use function fwrite;
 use function gzopen;
@@ -30,6 +32,7 @@ use function preg_match;
 use function rtrim;
 use function str_ends_with;
 use function str_starts_with;
+use function stream_copy_to_stream;
 use function strlen;
 use function substr;
 use const PHP_INT_MAX;
@@ -84,6 +87,21 @@ final class ArchiveReader {
 	 */
 	private ?array $cursor = null;
 
+	/**
+	 * What an XZ file holds, unpacked once so that its TAR is read in one pass.
+	 *
+	 * @var ?array{path: string, file: TempFSFile}
+	 */
+	private ?array $xz = null;
+
+	/**
+	 * What all the files of a 7z archive hold one after the other, unpacked once. The offsets are where
+	 * the file with an index starts.
+	 *
+	 * @var ?array{path: string, offsets: array<int, int>, total: int, limit: int, file: ?TempFSFile}
+	 */
+	private ?array $sevenZip = null;
+
 	public function __construct(
 		private readonly ExternalBinaries $externalBinaries,
 		private readonly TempFSFileFactory $tempFSFileFactory,
@@ -96,6 +114,19 @@ final class ArchiveReader {
 
 	/** Lets go of the archive that was being read. Reading another entry opens it again. */
 	public function close(): void {
+		$this->closeCursor();
+		$this->purge( $this->xz['file'] ?? null );
+		$this->xz = null;
+
+		$this->purge( $this->sevenZip['file'] ?? null );
+		$this->sevenZip = null;
+	}
+
+	private function purge( ?TempFSFile $file ): void {
+		$file?->purge();
+	}
+
+	private function closeCursor(): void {
 		if ( $this->cursor ) {
 			fclose( $this->cursor['input'] );
 			$this->cursor = null;
@@ -185,7 +216,7 @@ final class ArchiveReader {
 		}
 
 		if ( $format === self::FORMAT_SEVEN_ZIP ) {
-			return $this->listSevenZip( $path, $maxEntries );
+			return $this->listSevenZip( $path, $maxEntries, $maxSize );
 		}
 
 		if ( $format === self::FORMAT_GZIP || $format === self::FORMAT_BZIP2 ) {
@@ -410,6 +441,10 @@ final class ArchiveReader {
 			return $unpacked;
 		}
 
+		// The files are taken out of this later, so the file is not unpacked again for each of them.
+		$this->close();
+		$this->xz = [ 'path' => $path, 'file' => $temp ];
+
 		return $this->listTar( $temp->getPath(), self::FORMAT_TAR, $maxEntries, $maxSize );
 	}
 
@@ -437,26 +472,38 @@ final class ArchiveReader {
 			return $unpacked->isOK() ? Status::newGood() : $unpacked;
 		}
 
-		$temp = $this->tempFSFileFactory->newTempFSFile( 'importdump-xz', 'tmp' );
-		if ( !$temp ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+		if ( !$this->xz || $this->xz['path'] !== $path ) {
+			$temp = $this->tempFSFileFactory->newTempFSFile( 'importdump-xz', 'tmp' );
+			if ( !$temp ) {
+				return Status::newFatal( 'importdump-archive-unreadable' );
+			}
+
+			$unpacked = $this->externalBinaries->decompressXz(
+				$path,
+				$temp->getPath(),
+				$maxSize + self::TAR_HEADER_ALLOWANCE
+			);
+
+			if ( !$unpacked->isOK() ) {
+				return $unpacked;
+			}
+
+			$this->close();
+			$this->xz = [ 'path' => $path, 'file' => $temp ];
 		}
 
-		$unpacked = $this->externalBinaries->decompressXz(
-			$path,
-			$temp->getPath(),
-			$maxSize + self::TAR_HEADER_ALLOWANCE
+		return $this->extractTar(
+			$this->xz['file']->getPath(),
+			self::FORMAT_TAR,
+			$entry,
+			$destination,
+			$maxSize,
+			$onProgress
 		);
-
-		if ( !$unpacked->isOK() ) {
-			return $unpacked;
-		}
-
-		return $this->extractTar( $temp->getPath(), self::FORMAT_TAR, $entry, $destination, $maxSize, $onProgress );
 	}
 
 	/** Lists the files of a 7z archive. */
-	private function listSevenZip( string $path, int $maxEntries ): Status {
+	private function listSevenZip( string $path, int $maxEntries, int $maxSize ): Status {
 		if ( !$this->externalBinaries->isEnabled( ExternalBinaries::SEVEN_ZIP ) ) {
 			return Status::newFatal( 'importdump-archive-binary-unavailable' );
 		}
@@ -472,6 +519,8 @@ final class ArchiveReader {
 		}
 
 		$entries = [];
+		$offsets = [];
+		$total = 0;
 		foreach ( $listed->getValue() as $index => $record ) {
 			if ( $record['kind'] === ExternalBinaries::KIND_DIRECTORY ) {
 				if ( !$this->isSafeName( $record['path'] ) ) {
@@ -489,12 +538,25 @@ final class ArchiveReader {
 				return Status::newFatal( 'importdump-archive-unsafe' );
 			}
 
+			// The program writes every file in the order of the listing, also the ones that are skipped here.
+			$offsets[$index] = $total;
+			$total += $record['size'];
+
 			if ( $this->isMetadata( $record['path'] ) ) {
 				continue;
 			}
 
 			$entries[] = new ArchiveEntry( $index, $record['path'], $record['size'], (int)filesize( $path ) );
 		}
+
+		$this->close();
+		$this->sevenZip = [
+			'path' => $path,
+			'offsets' => $offsets,
+			'total' => $total,
+			'limit' => $maxSize,
+			'file' => null,
+		];
 
 		return Status::newGood( $entries );
 	}
@@ -514,6 +576,22 @@ final class ArchiveReader {
 			$onProgress( null );
 		}
 
+		$unpackedAll = $this->unpackSevenZip( $path );
+		if ( $unpackedAll && isset( $this->sevenZip['offsets'][$entry->index] ) && $entry->size !== null ) {
+			$copied = $this->copySlice(
+				$unpackedAll,
+				$this->sevenZip['offsets'][$entry->index],
+				$entry->size,
+				$destination
+			);
+
+			if ( $copied && $onProgress ) {
+				$onProgress( 100 );
+			}
+
+			return $copied ? Status::newGood() : Status::newFatal( 'importdump-archive-unreadable' );
+		}
+
 		$unpacked = $this->externalBinaries->extractSevenZip( $path, $entry->name, $destination, $maxSize );
 		if ( !$unpacked->isOK() ) {
 			return $unpacked;
@@ -529,6 +607,60 @@ final class ArchiveReader {
 		}
 
 		return Status::newGood();
+	}
+
+	/**
+	 * Unpacks all the files of the 7z archive that was listed in one go, so that the program does not
+	 * have to read through a solid archive again for each file.
+	 *
+	 * @return ?string The file that they were written to, or null if the entries are to be unpacked one by one.
+	 */
+	private function unpackSevenZip( string $path ): ?string {
+		$state = $this->sevenZip;
+		if ( !$state || $state['path'] !== $path ) {
+			return null;
+		}
+
+		if ( $state['file'] ) {
+			return $state['file']->getPath();
+		}
+
+		if ( $state['total'] > $state['limit'] ) {
+			return null;
+		}
+
+		$temp = $this->tempFSFileFactory->newTempFSFile( 'importdump-7z', 'tmp' );
+		if ( !$temp ) {
+			return null;
+		}
+
+		$unpacked = $this->externalBinaries->extractAllSevenZip( $path, $temp->getPath(), $state['limit'] );
+		if ( !$unpacked->isOK() || $unpacked->getValue() !== $state['total'] ) {
+			$temp->purge();
+			$this->sevenZip['limit'] = -1;
+			return null;
+		}
+
+		$this->sevenZip['file'] = $temp;
+		return $temp->getPath();
+	}
+
+	private function copySlice( string $source, int $offset, int $length, string $destination ): bool {
+		$input = fopen( $source, 'rb' );
+		$output = $input ? fopen( $destination, 'wb' ) : false;
+		if ( !$input || !$output ) {
+			if ( $input ) {
+				fclose( $input );
+			}
+
+			return false;
+		}
+
+		$copied = fseek( $input, $offset ) === 0 &&
+			stream_copy_to_stream( $input, $output, $length ) === $length;
+
+		fclose( $input );
+		return fclose( $output ) && $copied;
 	}
 
 	private function isTarEntry( string $format, ArchiveEntry $entry ): bool {
@@ -637,7 +769,7 @@ final class ArchiveReader {
 			$cursor['format'] !== $format ||
 			$cursor['next'] > $entry->index
 		) {
-			$this->close();
+			$this->closeCursor();
 			$input = $this->openStream( $path, $format );
 			if ( !$input ) {
 				return Status::newFatal( 'importdump-archive-unreadable' );
@@ -655,7 +787,7 @@ final class ArchiveReader {
 		$this->cursor = $cursor;
 		$output = fopen( $destination, 'wb' );
 		if ( !$output ) {
-			$this->close();
+			$this->closeCursor();
 			return Status::newFatal( 'importdump-archive-unreadable' );
 		}
 
@@ -667,7 +799,7 @@ final class ArchiveReader {
 
 			// Where the reader is after a failure is not known, so the next entry starts over.
 			if ( !$status->isOK() ) {
-				$this->close();
+				$this->closeCursor();
 			}
 		}
 

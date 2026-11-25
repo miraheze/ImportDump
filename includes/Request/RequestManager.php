@@ -448,6 +448,7 @@ class RequestManager {
 			'{username-prefix}',
 			'{file-name}',
 			'{file-path}',
+			'{skip-dupes}',
 			'{comment}',
 		], [
 			MW_INSTALL_PATH,
@@ -455,6 +456,7 @@ class RequestManager {
 			$this->getInterwikiPrefix(),
 			$this->getFileName(),
 			$this->getSplitFilePath(),
+			$this->shouldSkipDupes() ? ' --skip-dupes' : '',
 			str_contains( $command, '{comment}' ) ? Shell::escape( $this->getImportComment() ) : '',
 		], $command );
 	}
@@ -1277,7 +1279,7 @@ class RequestManager {
 
 	/** Whether a file is skipped when the wiki already has the same file under another name. */
 	public function shouldSkipDupes(): bool {
-		return (bool)( $this->row->request_skip_dupes ?? true );
+		return (bool)( $this->row->request_skip_dupes ?? false );
 	}
 
 	public function setSkipDupes( bool $skipDupes ): void {
