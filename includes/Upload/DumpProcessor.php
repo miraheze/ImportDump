@@ -16,6 +16,8 @@ use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use XMLReader;
 use function array_any;
 use function array_filter;
+use function array_unique;
+use function array_values;
 use function count;
 use function intdiv;
 use function ksort;
@@ -57,6 +59,17 @@ class DumpProcessor {
 		'application/x-bzip2',
 		'application/x-gzip',
 		'application/x-tar',
+	];
+
+	/**
+	 * Other names that browsers give to the archives. The file field only keeps a file whose type is in its
+	 * list, and Windows names a ZIP something other than the other systems do.
+	 */
+	private const array CLIENT_MIME_ALIASES = [
+		'application/zip' => [ 'application/x-zip-compressed', 'application/x-zip' ],
+		'application/gzip' => [ 'application/x-compressed', 'application/x-compressed-tar', 'application/x-gtar' ],
+		'application/x-bzip2' => [ 'application/bzip2' ],
+		'application/x-xz' => [ 'application/xz' ],
 	];
 
 	/** Plain XML files up to this many bytes are checked while a request is submitted. */
@@ -104,6 +117,31 @@ class DumpProcessor {
 	/** @return list<string> The MIME types of everything that can be uploaded on this wiki. */
 	public function getAcceptedMimeTypes(): array {
 		return [ ...self::XML_MIME_TYPES, ...$this->getArchiveMimeTypes() ];
+	}
+
+	/** @return list<string> The types that a browser may give to an archive that can be read on this wiki. */
+	public function getArchiveClientMimeTypes(): array {
+		return $this->addClientAliases( $this->getArchiveMimeTypes() );
+	}
+
+	/** @return list<string> The types that a browser may give to anything that can be uploaded on this wiki. */
+	public function getAcceptedClientMimeTypes(): array {
+		return $this->addClientAliases( $this->getAcceptedMimeTypes() );
+	}
+
+	/**
+	 * @param list<string> $types
+	 * @return list<string>
+	 */
+	private function addClientAliases( array $types ): array {
+		$all = $types;
+		foreach ( $types as $type ) {
+			foreach ( self::CLIENT_MIME_ALIASES[$type] ?? [] as $alias ) {
+				$all[] = $alias;
+			}
+		}
+
+		return array_values( array_unique( $all ) );
 	}
 
 	/**
