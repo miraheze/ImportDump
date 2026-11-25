@@ -7,6 +7,7 @@ namespace Miraheze\ImportDump\Upload;
 use Closure;
 use MediaWiki\Message\Message;
 use MediaWiki\Status\Status;
+use Wikimedia\FileBackend\FSFile\TempFSFile;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use ZipArchive;
 use function basename;
@@ -114,13 +115,15 @@ final class ArchiveReader {
 	/** Lets go of the archive that was being read. Reading another entry opens it again. */
 	public function close(): void {
 		$this->closeCursor();
-		if ( $this->xz ) {
-			$this->xz['file']->purge();
-			$this->xz = null;
-		}
+		$this->purge( $this->xz['file'] ?? null );
+		$this->xz = null;
 
-		$this->sevenZip['file']?->purge();
+		$this->purge( $this->sevenZip['file'] ?? null );
 		$this->sevenZip = null;
+	}
+
+	private function purge( ?TempFSFile $file ): void {
+		$file?->purge();
 	}
 
 	private function closeCursor(): void {
