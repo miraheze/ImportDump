@@ -26,7 +26,6 @@
 	function sendChunk( file, type, start, end, filekey, onProgress, retries ) {
 		const data = {
 			action: 'requestimportupload',
-			async: 1,
 			chunk: file.slice( start, end ),
 			filesize: file.size,
 			offset: start,
