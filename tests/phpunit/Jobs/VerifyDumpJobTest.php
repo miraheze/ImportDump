@@ -346,7 +346,6 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 		$received = null;
 		$this->setTemporaryHook( 'ImportDumpGetTargetState',
 			static function (
-				// @phan-suppress-next-line PhanUnusedClosureParameter
 				string $target,
 				// @phan-suppress-next-line PhanUnusedClosureParameter
 				array $requesterGroups,
