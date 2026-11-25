@@ -287,6 +287,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [ $target ] );
 		$this->setTemporaryHook( 'ImportDumpGetTargetState',
 			static function (
+				// @phan-suppress-next-line PhanUnusedClosureParameter
 				string $target,
 				// @phan-suppress-next-line PhanUnusedClosureParameter
 				array $requesterGroups,
@@ -345,6 +346,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 		$received = null;
 		$this->setTemporaryHook( 'ImportDumpGetTargetState',
 			static function (
+				// @phan-suppress-next-line PhanUnusedClosureParameter
 				string $target,
 				// @phan-suppress-next-line PhanUnusedClosureParameter
 				array $requesterGroups,
