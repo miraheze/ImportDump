@@ -72,6 +72,9 @@ class ImportDumpJob extends Job {
 	private bool $running = false;
 	private int $lastBeat = 0;
 	private RequestStage $startStage = RequestStage::Download;
+
+	/** Taken before anything is written, as it cannot be taken once changes are pending. */
+	private mixed $ticket = null;
 	private int $refreshLinksChunkSize = 1000;
 
 	public function __construct(
@@ -101,6 +104,7 @@ class ImportDumpJob extends Job {
 			return true;
 		}
 
+		$this->ticket = $this->connectionProvider->getEmptyTransactionTicket( __METHOD__ );
 		$this->startStage = $this->requestManager->getStage() ?? RequestStage::Download;
 		$directory = $this->getTempDirectory();
 		$filePath = $directory . '/' . $this->requestManager->getFileName();
@@ -334,9 +338,8 @@ class ImportDumpJob extends Job {
 
 		// Save the stage now. Otherwise this job keeps the request locked until it ends,
 		// and the notify jobs cannot update the request while the import runs.
-		$ticket = $this->connectionProvider->getEmptyTransactionTicket( __METHOD__ );
 		$this->requestManager->setStage( $stage );
-		$this->connectionProvider->commitAndWaitForReplication( __METHOD__, $ticket );
+		$this->connectionProvider->commitAndWaitForReplication( __METHOD__, $this->ticket );
 
 		return true;
 	}
