@@ -774,6 +774,21 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
+	 * @covers ::getCommand
+	 */
+	public function testImagesCommandOnlySkipsDuplicatesWhenTheRequestDoes(): void {
+		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [] );
+
+		$images = $this->getRequestManager( $this->addImagesRequest( linkedID: 1 ) );
+		$images->setSkipDupes( false );
+		$this->assertStringNotContainsString( '--skip-dupes', $images->getCommand() );
+		$this->assertStringNotContainsString( '{skip-dupes}', $images->getCommand() );
+
+		$images->setSkipDupes( true );
+		$this->assertStringContainsString( ' --skip-dupes --comment=', $images->getCommand() );
+	}
+
+	/**
 	 * @covers ::targetExists
 	 */
 	public function testTargetExists(): void {

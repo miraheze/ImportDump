@@ -52,7 +52,7 @@
 	"importdump-header-comment-withtimestamp": "Comment given by $1 at $2",
 	"importdump-help-overwrite": "Files that are already on the wiki are skipped unless this is checked. Checking it replaces them with the imported files. It cannot be changed once the import has started.",
 	"importdump-help-reason": "Please describe in detail the reason you are making this import request.",
-	"importdump-help-skip-dupes": "Files that have the same content as a file the wiki already has, but a different name, are skipped when this is checked. Uncheck it to import them all.",
+	"importdump-help-skip-dupes": "Files that have the same content as a file the wiki already has, but a different name, are only imported when this is not checked. Check it to skip them.",
 	"importdump-help-source": "Enter the full URL of the source wiki (where you are importing from).",
 	"importdump-help-target": "This must be a valid database name.",
 	"importdump-help-upload-either": "Upload an XML file, an archive of images, or both. At least one is needed.",

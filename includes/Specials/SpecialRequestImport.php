@@ -213,7 +213,7 @@ class SpecialRequestImport extends FormSpecialPage {
 				'type' => 'check',
 				'label-message' => 'importdump-label-skip-dupes',
 				'help-message' => 'importdump-help-skip-dupes',
-				'default' => true,
+				'default' => false,
 			];
 		}
 
@@ -711,7 +711,7 @@ class SpecialRequestImport extends FormSpecialPage {
 				'request_timestamp' => $timestamp,
 				'request_type' => RequestType::Images->value,
 				'request_linked_id' => $linkedID,
-				'request_skip_dupes' => (int)( $data['SkipDupes'] ?? true ),
+				'request_skip_dupes' => (int)( $data['SkipDupes'] ?? false ),
 			] )
 			->caller( __METHOD__ )
 			->execute();

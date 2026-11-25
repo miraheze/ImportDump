@@ -879,6 +879,27 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$this->assertCount( 2, $status->getValue() );
 	}
 
+	public function testXzTarFilesAreTakenOutOfOneUnpackedFile(): void {
+		$reader = $this->newReader( [ ExternalBinaries::XZ => $this->requireBinary( ExternalBinaries::XZ ) ] );
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::XZ_TAR_TWO_FILES ) );
+
+		$status = $reader->listFiles( $path, ArchiveReader::FORMAT_XZ, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+
+		$contents = [];
+		foreach ( $status->getValue() as $entry ) {
+			$destination = $this->getNewTempFile();
+			$this->assertStatusGood(
+				$reader->extractTo( $path, ArchiveReader::FORMAT_XZ, $entry, $destination, self::MAX_SIZE, null )
+			);
+
+			$contents[$entry->name] = file_get_contents( $destination );
+		}
+
+		$this->assertCount( 2, $contents );
+		$this->assertContains( ExternalFixtures::XML, $contents );
+	}
+
 	public function testXzTarWithLink(): void {
 		$reader = $this->newReader( [ ExternalBinaries::XZ => $this->requireBinary( ExternalBinaries::XZ ) ] );
 		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::XZ_TAR_LINK ) );
@@ -1014,6 +1035,52 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 			'importdump-archive-too-many-entries',
 			$reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 2, self::MAX_SIZE )
 		);
+	}
+
+	public function testSevenZipFilesAreTakenOutOfOneUnpackedStream(): void {
+		$reader = $this->newReader( [
+			ExternalBinaries::SEVEN_ZIP => $this->requireBinary( ExternalBinaries::SEVEN_ZIP ),
+		] );
+
+		// The skipped metadata file comes first in the stream, so the offset of the next one is not zero.
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_MACOS ) );
+		$status = $reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 100, self::MAX_SIZE );
+		$this->assertStatusGood( $status );
+
+		$destination = $this->getNewTempFile();
+		$this->assertStatusGood( $reader->extractTo(
+			$path,
+			ArchiveReader::FORMAT_SEVEN_ZIP,
+			$status->getValue()[0],
+			$destination,
+			self::MAX_SIZE,
+			null
+		) );
+
+		$this->assertSame( ExternalFixtures::XML, file_get_contents( $destination ) );
+	}
+
+	public function testSevenZipFilesAreTakenOneByOneWhenAllOfThemAreTooBig(): void {
+		$reader = $this->newReader( [
+			ExternalBinaries::SEVEN_ZIP => $this->requireBinary( ExternalBinaries::SEVEN_ZIP ),
+		] );
+
+		// The limit allows the file but not everything that the archive holds.
+		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_MACOS ) );
+		$status = $reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 100, 30 );
+		$this->assertStatusGood( $status );
+
+		$destination = $this->getNewTempFile();
+		$this->assertStatusGood( $reader->extractTo(
+			$path,
+			ArchiveReader::FORMAT_SEVEN_ZIP,
+			$status->getValue()[0],
+			$destination,
+			30,
+			null
+		) );
+
+		$this->assertSame( ExternalFixtures::XML, file_get_contents( $destination ) );
 	}
 
 	/** @dataProvider provideUnacceptableSevenZipArchives */
