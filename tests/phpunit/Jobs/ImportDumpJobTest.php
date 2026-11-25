@@ -15,10 +15,14 @@ use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStage;
 use Miraheze\ImportDump\Request\RequestStatus;
 use RuntimeException;
+use Wikimedia\Rdbms\IConnectionProvider;
 use Wikimedia\TestingAccessWrapper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use function array_column;
 use function array_map;
+use function array_unique;
+use function array_values;
+use function count;
 use function file_put_contents;
 use function wfTempDir;
 
@@ -197,6 +201,55 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 		$this->assertTrue( $this->newJob( $id )->run() );
 
 		$this->assertSame( $directory . '/' . $this->getRequestManager( $id )->getFileName(), $given );
+	}
+
+	public function testStagesAreCommittedWithTheTicketTakenBeforeAnyWrites(): void {
+		$this->overrideConfigValue( MainConfigNames::DisableSearchUpdate, true );
+		$this->expectOutputRegex( '/Done/' );
+		$this->setTemporaryHook( 'ImportDumpJobGetFile', $this->writeEmptyDump( ... ) );
+
+		$id = $this->addRequest();
+		$services = $this->getServiceContainer();
+		$real = $services->getConnectionProvider();
+
+		// Once changes are pending, a ticket can no longer be taken, and nothing is committed without one.
+		$tickets = 0;
+		$committed = [];
+		$provider = $this->createMock( IConnectionProvider::class );
+		$provider->method( 'getEmptyTransactionTicket' )->willReturnCallback(
+			static function () use ( &$tickets ): ?string {
+				return ++$tickets === 1 ? 'ticket' : null;
+			}
+		);
+		$provider->method( 'commitAndWaitForReplication' )->willReturnCallback(
+			/** @param string $fname @phan-unused-param */
+			static function ( string $fname, mixed $ticket ) use ( &$committed ): bool {
+				$committed[] = $ticket;
+				return $ticket === 'ticket';
+			}
+		);
+
+		$provider->method( 'getPrimaryDatabase' )->willReturnCallback( $real->getPrimaryDatabase( ... ) );
+		$provider->method( 'getReplicaDatabase' )->willReturnCallback( $real->getReplicaDatabase( ... ) );
+
+		$config = $services->getService( 'ImportDumpConfig' );
+		$heartbeat = $services->getService( 'ImportDumpHeartbeat' );
+		$hookRunner = $services->getService( 'ImportDumpHookRunner' );
+		$job = new ImportDumpJob(
+			[ 'requestid' => $id, 'username' => $this->getTestUser()->getUser()->getName() ],
+			$provider,
+			$config,
+			$heartbeat,
+			$hookRunner,
+			$this->getRequestManager( $id ),
+			$services->getJobQueueGroupFactory(),
+			$services->getWikiImporterFactory()
+		);
+
+		$this->assertTrue( $job->run() );
+		$this->assertSame( 1, $tickets );
+		$this->assertGreaterThan( 2, count( $committed ) );
+		$this->assertSame( [ 'ticket' ], array_values( array_unique( $committed ) ) );
 	}
 
 	public function testRunBeatsBeforeAfterImportHook(): void {

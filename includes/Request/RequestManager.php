@@ -887,8 +887,18 @@ class RequestManager {
 			$sources[$name] = "$directory/$name";
 		}
 
+		// The copies are keyed by the path that they were read from, so they are keyed by name again.
 		$copies = $backend->getLocalCopyMulti( [ 'srcs' => $sources ] );
-		return array_filter( $copies, static fn ( mixed $copy ): bool => $copy instanceof TempFSFile );
+
+		$byName = [];
+		foreach ( $sources as $name => $source ) {
+			$copy = $copies[$source] ?? null;
+			if ( $copy instanceof TempFSFile ) {
+				$byName[$name] = $copy;
+			}
+		}
+
+		return $byName;
 	}
 
 	/**

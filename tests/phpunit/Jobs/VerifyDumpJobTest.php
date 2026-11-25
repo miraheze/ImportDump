@@ -21,6 +21,7 @@ use Miraheze\ImportDump\Request\RequestType;
 use Miraheze\ImportDump\Tests\IsolatesManageWikiTrait;
 use Miraheze\ImportDump\Tests\Upload\TarFixture;
 use Miraheze\ImportDump\Tests\Upload\ZipFixture;
+use Miraheze\ImportDump\Upload\SkippedFile;
 use Wikimedia\FileBackend\FileBackend;
 use Wikimedia\FileBackend\FSFileBackend;
 use Wikimedia\Mime\MimeAnalyzer;
@@ -281,6 +282,63 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 		$this->assertNull( $manager->getVerificationProgress() );
 	}
 
+	public function testHeldImagesAreAddedWhenTheTargetAcceptsThemNow(): void {
+		$target = WikiMap::getCurrentWikiId();
+		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [ $target ] );
+		$this->setTemporaryHook( 'ImportDumpGetTargetState',
+			static function (
+				// @phan-suppress-next-line PhanUnusedClosureParameter
+				string $target,
+				// @phan-suppress-next-line PhanUnusedClosureParameter
+				array $requesterGroups,
+				?array &$extensions,
+				array &$settings,
+				array &$rights
+			): void {
+				$settings['fileExtensions'] = [ 'png' ];
+			}
+		);
+
+		$manager = $this->newTypedRequest(
+			RequestStatus::Verifying, 'unused', RequestType::Images, $target
+		);
+
+		// Nothing is left to verify, so the job only checks the files that were held back.
+		$manager->deleteUnverifiedFile();
+
+		$directory = $this->getNewTempDirectory();
+		file_put_contents( "$directory/a.png", self::png() );
+		file_put_contents( "$directory/b.xyz", 'content' );
+		$this->assertStatusGood( $manager->publishHeldImages( [
+			'a.png' => "$directory/a.png",
+			'b.xyz' => "$directory/b.xyz",
+		] ) );
+
+		$manager->setSkippedImages( [
+			new SkippedFile( 'a.png', 'importdump-images-skip-extension', [ 'png' ] ),
+			new SkippedFile( 'b.xyz', 'importdump-images-skip-extension', [ 'xyz' ] ),
+		], 2, 2 );
+
+		$this->runJob( $manager );
+
+		$manager = $this->getManager( $manager->getID() );
+		$this->assertSame( RequestStatus::Pending, $manager->getStatus() );
+		$this->assertSame( [ 'b.xyz' ], $manager->getHeldImageNames() );
+		$this->assertSame( 1, $manager->getHeldImageCount() );
+
+		$stored = $manager->getImageObjectNames();
+		$this->assertCount( 1, $stored );
+		$this->assertStringEndsWith( '/a.png', $stored[0] );
+		$this->assertSame( 1, $manager->getFileCount() );
+		$this->assertSame( strlen( self::png() ), $manager->getFileSize() );
+
+		$skipped = $manager->getSkippedImages();
+		$this->assertSame( 1, $skipped['total'] );
+		$this->assertCount( 1, $skipped['files'] );
+		$this->assertSame( 'b.xyz', $skipped['files'][0]->name );
+		$this->assertNull( $manager->getVerificationProgress() );
+	}
+
 	public function testImagesAreCheckedAgainstTheExtensionsOfTheTarget(): void {
 		$target = WikiMap::getCurrentWikiId();
 		$this->overrideConfigValue( MainConfigNames::LocalDatabases, [ $target ] );
@@ -288,6 +346,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 		$received = null;
 		$this->setTemporaryHook( 'ImportDumpGetTargetState',
 			static function (
+				// @phan-suppress-next-line PhanUnusedClosureParameter
 				string $target,
 				// @phan-suppress-next-line PhanUnusedClosureParameter
 				array $requesterGroups,
