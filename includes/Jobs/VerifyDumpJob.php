@@ -234,6 +234,9 @@ class VerifyDumpJob extends Job {
 		$allowed = $this->requestManager->getTargetFileExtensions();
 		$names = $this->requestManager->getHeldImageNames();
 
+		$count = (int)$this->requestManager->getFileCount();
+		$stored = $this->requestManager->getFileSize();
+
 		$released = [];
 		$rejected = [];
 		$size = 0;
@@ -296,8 +299,8 @@ class VerifyDumpJob extends Job {
 
 		if ( $released ) {
 			$this->requestManager->setFileStats(
-				(int)$this->requestManager->getFileCount() + count( $released ),
-				$this->requestManager->getFileSize() + $size
+				$count + count( $released ),
+				$stored + $size
 			);
 		}
 
