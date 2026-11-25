@@ -41,8 +41,12 @@
 			'importdump-verification-done';
 
 		const $reload = $( '<a>' )
-			.attr( 'href', window.location.href )
-			.text( mw.msg( 'importdump-verification-reload' ) );
+			.attr( 'href', '#' )
+			.text( mw.msg( 'importdump-verification-reload' ) )
+			.on( 'click', ( e ) => {
+				e.preventDefault();
+				window.location.reload();
+			} );
 
 		bar.$element.remove();
 		$label.text( mw.msg( message ) ).append( ' ', $reload );
