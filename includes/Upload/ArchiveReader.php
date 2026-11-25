@@ -7,7 +7,6 @@ namespace Miraheze\ImportDump\Upload;
 use Closure;
 use MediaWiki\Message\Message;
 use MediaWiki\Status\Status;
-use Wikimedia\FileBackend\FSFile\TempFSFile;
 use Wikimedia\FileBackend\FSFile\TempFSFileFactory;
 use ZipArchive;
 use function basename;
@@ -32,8 +31,8 @@ use function preg_match;
 use function rtrim;
 use function str_ends_with;
 use function str_starts_with;
-use function strlen;
 use function stream_copy_to_stream;
+use function strlen;
 use function substr;
 use const PHP_INT_MAX;
 
