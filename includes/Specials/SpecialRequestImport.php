@@ -180,7 +180,7 @@ class SpecialRequestImport extends FormSpecialPage {
 					'label-message' => $fileLabel,
 					'help-messages' => $this->getUploadHelp(),
 					'hide-if' => [ '!==', 'wpUploadSourceType', 'File' ],
-					'accept' => $this->dumpProcessor->getAcceptedMimeTypes(),
+					'accept' => $this->dumpProcessor->getAcceptedClientMimeTypes(),
 				],
 				'UploadFileURL' => [
 					'type' => 'url',
@@ -196,7 +196,7 @@ class SpecialRequestImport extends FormSpecialPage {
 					'type' => 'file',
 					'label-message' => $fileLabel,
 					'help-messages' => $this->getUploadHelp(),
-					'accept' => $this->dumpProcessor->getAcceptedMimeTypes(),
+					'accept' => $this->dumpProcessor->getAcceptedClientMimeTypes(),
 				],
 			];
 		}
@@ -206,7 +206,7 @@ class SpecialRequestImport extends FormSpecialPage {
 				'type' => 'file',
 				'label-message' => 'importdump-label-upload-images',
 				'help-message' => 'importdump-help-upload-images',
-				'accept' => $this->dumpProcessor->getArchiveMimeTypes(),
+				'accept' => $this->dumpProcessor->getArchiveClientMimeTypes(),
 			];
 
 			$formDescriptor['SkipDupes'] = [
