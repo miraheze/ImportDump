@@ -75,7 +75,7 @@
 		// What is being printed is also stored once its part is done, so it is shown until then.
 		const live = result.live && !parts[ result.live.part ] ? result.live.text : '';
 		const empty = !result.parts.length && !live;
-		const text = empty && !result.running ? mw.msg( 'importdump-output-empty' ) : live;
+		const text = empty && !result.running ? mw.msg( 'requestimport-output-empty' ) : live;
 
 		// Only touch the text when it changed, so that nothing moves for a reader who is scrolled.
 		if ( text !== liveText ) {

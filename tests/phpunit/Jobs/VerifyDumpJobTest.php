@@ -315,8 +315,8 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 		] ) );
 
 		$manager->setSkippedImages( [
-			new SkippedFile( 'a.png', 'importdump-images-skip-extension', [ 'png' ] ),
-			new SkippedFile( 'b.xyz', 'importdump-images-skip-extension', [ 'xyz' ] ),
+			new SkippedFile( 'a.png', 'requestimport-images-skip-extension', [ 'png' ] ),
+			new SkippedFile( 'b.xyz', 'requestimport-images-skip-extension', [ 'xyz' ] ),
 		], 2, 2 );
 
 		$this->runJob( $manager );

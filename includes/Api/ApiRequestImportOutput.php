@@ -23,7 +23,7 @@ class ApiRequestImportOutput extends ApiBase {
 	public function execute(): void {
 		$this->requestManager->loadFromID( $this->extractRequestParams()['requestid'] );
 		if ( !$this->requestManager->exists() ) {
-			$this->dieWithError( 'importdump-unknown', 'notfound' );
+			$this->dieWithError( 'requestimport-unknown', 'notfound' );
 		}
 
 		$authority = $this->getAuthority();
@@ -31,7 +31,7 @@ class ApiRequestImportOutput extends ApiBase {
 			$this->requestManager->isViewableBy( $authority );
 
 		if ( !$allowed ) {
-			$this->dieWithError( 'importdump-private', 'permissiondenied' );
+			$this->dieWithError( 'requestimport-private', 'permissiondenied' );
 		}
 
 		$part = $this->extractRequestParams()['part'];

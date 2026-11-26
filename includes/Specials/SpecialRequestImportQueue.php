@@ -38,8 +38,8 @@ class SpecialRequestImportQueue extends SpecialPage {
 		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
 			throw new ErrorPageError(
-				'importdump-requestimportqueue-notcentral',
-				'importdump-requestimportqueue-notcentral-text'
+				'requestimport-requestimportqueue-notcentral',
+				'requestimport-requestimportqueue-notcentral-text'
 			);
 		}
 
@@ -65,13 +65,13 @@ class SpecialRequestImportQueue extends SpecialPage {
 			'target' => [
 				'type' => 'text',
 				'name' => 'target',
-				'label-message' => 'importdump-label-target',
+				'label-message' => 'requestimport-label-target',
 				'default' => $target,
 			],
 			'requester' => [
 				'type' => 'user',
 				'name' => 'requester',
-				'label-message' => 'importdump-label-requester',
+				'label-message' => 'requestimport-label-requester',
 				'exists' => true,
 				'excludetemp' => true,
 				'default' => $requester,
@@ -79,17 +79,17 @@ class SpecialRequestImportQueue extends SpecialPage {
 			'status' => [
 				'type' => 'select',
 				'name' => 'status',
-				'label-message' => 'importdump-label-status',
+				'label-message' => 'requestimport-label-status',
 				'options-messages' => [
-					'importdump-label-pending' => RequestStatus::Pending->value,
-					'importdump-label-verifying' => RequestStatus::Verifying->value,
-					'importdump-label-starting' => RequestStatus::Starting->value,
-					'importdump-label-inprogress' => RequestStatus::InProgress->value,
-					'importdump-label-partial' => RequestStatus::Partial->value,
-					'importdump-label-complete' => RequestStatus::Complete->value,
-					'importdump-label-declined' => RequestStatus::Declined->value,
-					'importdump-label-failed' => RequestStatus::Failed->value,
-					'importdump-label-all' => '*',
+					'requestimport-label-pending' => RequestStatus::Pending->value,
+					'requestimport-label-verifying' => RequestStatus::Verifying->value,
+					'requestimport-label-starting' => RequestStatus::Starting->value,
+					'requestimport-label-inprogress' => RequestStatus::InProgress->value,
+					'requestimport-label-partial' => RequestStatus::Partial->value,
+					'requestimport-label-complete' => RequestStatus::Complete->value,
+					'requestimport-label-declined' => RequestStatus::Declined->value,
+					'requestimport-label-failed' => RequestStatus::Failed->value,
+					'requestimport-label-all' => '*',
 				],
 				'default' => $status ?: RequestStatus::Pending->value,
 			],

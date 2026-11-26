@@ -177,7 +177,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		if ( $extraData['duplicate'] ) {
 			$status = $specialRequestImport->onSubmit( $formData );
 			$this->assertInstanceOf( Status::class, $status );
-			$this->assertStatusError( 'importdump-duplicate-request', $status );
+			$this->assertStatusError( 'requestimport-duplicate-request', $status );
 		}
 	}
 
@@ -284,7 +284,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	public function testNothingUploaded(): void {
 		$this->overrideConfigValue( ConfigNames::EnableImageImports, true );
 		$status = $this->submitWithUploads( [], [] );
-		$this->assertStatusError( 'importdump-upload-nothing', $status );
+		$this->assertStatusError( 'requestimport-upload-nothing', $status );
 	}
 
 	/**
@@ -293,7 +293,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	public function testImagesThatAreNotAnArchiveAreRejected(): void {
 		$this->overrideConfigValue( ConfigNames::EnableImageImports, true );
 		$status = $this->submitWithUploads( [], [ 'wpUploadImages' => 'plain text' ] );
-		$this->assertStatusError( 'importdump-images-not-archive', $status );
+		$this->assertStatusError( 'requestimport-images-not-archive', $status );
 	}
 
 	private function assertLatestRequest( RequestStatus $expectedStatus ): void {
@@ -427,7 +427,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 				'testfile' => '<?xml version="1.0"?><other/>',
 				'token' => true,
 			],
-			'importdump-xml-not-dump',
+			'requestimport-xml-not-dump',
 		];
 
 		yield 'session failure' => [
@@ -742,7 +742,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		] );
 
 		$this->assertStatusError(
-			'importdump-images-parts-incomplete',
+			'requestimport-images-parts-incomplete',
 			$this->submitStashKeys( $user, [ 'UploadImagesFileKey' => $key ] )
 		);
 	}
@@ -789,7 +789,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	private function newPageWhereThePartsCannotBeNoted(): SpecialRequestImport {
 		$manager = $this->createMock( RequestManager::class );
 		$manager->method( 'setPartsReference' )
-			->willReturn( Status::newFatal( 'importdump-verify-missing' ) );
+			->willReturn( Status::newFatal( 'requestimport-verify-missing' ) );
 
 		$services = $this->getServiceContainer();
 		return new SpecialRequestImport(
@@ -838,7 +838,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			[ 'UploadFileKey' => $key ]
 		);
 
-		$this->assertStatusError( 'importdump-verify-missing', $status );
+		$this->assertStatusError( 'requestimport-verify-missing', $status );
 		$this->assertSame( $before, $this->countRequests() );
 	}
 
@@ -868,7 +868,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 			[ 'UploadImagesFileKey' => $key ]
 		);
 
-		$this->assertStatusError( 'importdump-verify-missing', $status );
+		$this->assertStatusError( 'requestimport-verify-missing', $status );
 		$this->assertSame( $before, $this->countRequests() );
 	}
 
@@ -878,7 +878,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	public function testPartsCannotBeNotedForARequestThatWasNotAdded(): void {
 		$page = TestingAccessWrapper::newFromObject( $this->specialRequestImport );
 		$this->assertStatusError(
-			'importdump-duplicate-request',
+			'requestimport-duplicate-request',
 			$page->setPartsReference( 0, new UploadedParts( 'abc.xml' ) )
 		);
 	}
@@ -898,7 +898,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		] );
 
 		$this->assertStatusError(
-			'importdump-xml-parts-incomplete',
+			'requestimport-xml-parts-incomplete',
 			$this->submitStashKeys( $user, [ 'UploadFileKey' => $key ] )
 		);
 	}
@@ -948,7 +948,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		$status = $this->submitStashKeys( $user, [
 			'UploadImagesFileKey' => $this->stashContent( $user, 'plain text' ),
 		] );
-		$this->assertStatusError( 'importdump-images-not-archive', $status );
+		$this->assertStatusError( 'requestimport-images-not-archive', $status );
 	}
 
 	/**
@@ -961,7 +961,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		$status = $this->submitStashKeys( $user, [
 			'UploadImagesFileKey' => $this->stashContent( $user, self::imagesZip() ),
 		] );
-		$this->assertStatusError( 'importdump-upload-nothing', $status );
+		$this->assertStatusError( 'requestimport-upload-nothing', $status );
 	}
 
 	private function submitStashKey( User $user, string $fileKey ): Status {
@@ -1051,7 +1051,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 
 	public static function isValidDatabaseDataProvider(): Generator {
 		yield 'valid database' => [ 'validwiki', true ];
-		yield 'invalid database' => [ 'invalidwiki', 'importdump-invalid-target' ];
+		yield 'invalid database' => [ 'invalidwiki', 'requestimport-invalid-target' ];
 	}
 
 	/**
@@ -1131,8 +1131,8 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	public function testUploadHelpListsTheArchiveTypesThatAreSetUp(): void {
 		$help = $this->getUploadHelp();
 
-		$this->assertSame( 'importdump-help-upload-file', $help[0]->getKey() );
-		$this->assertSame( 'importdump-help-upload-file-types', $help[1]->getKey() );
+		$this->assertSame( 'requestimport-help-upload-xml', $help[0]->getKey() );
+		$this->assertSame( 'requestimport-help-upload-xml-types', $help[1]->getKey() );
 		$this->assertSame( [
 			'ZIP, TAR, GZIP and BZIP2',
 			'.tar.gz, .tgz and .tar.bz2',
@@ -1149,10 +1149,10 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		);
 
 		$this->overrideConfigValue( ConfigNames::EnableHistoryDetection, false );
-		$this->assertNotContains( 'importdump-help-upload-file-history', $keys( $this->getUploadHelp() ) );
+		$this->assertNotContains( 'requestimport-help-upload-xml-history', $keys( $this->getUploadHelp() ) );
 
 		$this->overrideConfigValue( ConfigNames::EnableHistoryDetection, true );
-		$this->assertContains( 'importdump-help-upload-file-history', $keys( $this->getUploadHelp() ) );
+		$this->assertContains( 'requestimport-help-upload-xml-history', $keys( $this->getUploadHelp() ) );
 	}
 
 	/**

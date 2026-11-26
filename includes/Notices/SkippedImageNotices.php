@@ -74,10 +74,10 @@ final class SkippedImageNotices implements NoticeProvider {
 
 		$more = $total - count( $names );
 		if ( $more > 0 ) {
-			$names[] = $context->msg( 'importdump-info-skipped-more' )->numParams( $more )->text();
+			$names[] = $context->msg( 'requestimport-info-skipped-more' )->numParams( $more )->text();
 		}
 
-		return $context->msg( 'importdump-info-skipped-files' )
+		return $context->msg( 'requestimport-info-skipped-files' )
 			->numParams( $total )
 			->params( $context->getLanguage()->listToText( $names ) )
 			->escaped();
@@ -98,7 +98,7 @@ final class SkippedImageNotices implements NoticeProvider {
 			);
 		}
 
-		$html = Html::element( 'summary', [], $context->msg( 'importdump-info-skipped-show' )->text() ) .
+		$html = Html::element( 'summary', [], $context->msg( 'requestimport-info-skipped-show' )->text() ) .
 			Html::rawElement( 'ul', [], $items );
 
 		$hidden = $total - count( $files );
@@ -106,7 +106,7 @@ final class SkippedImageNotices implements NoticeProvider {
 			$html .= Html::element(
 				'p',
 				[],
-				$context->msg( 'importdump-info-skipped-truncated' )->numParams( $hidden )->text()
+				$context->msg( 'requestimport-info-skipped-truncated' )->numParams( $hidden )->text()
 			);
 		}
 

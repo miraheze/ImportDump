@@ -114,7 +114,7 @@ class ApiRequestImportUpload extends ApiBase {
 				}
 
 				if ( ( $progress['type'] ?? null ) !== $params['type'] ) {
-					$this->dieWithError( 'importdump-apierror-type-mismatch', 'typemismatch' );
+					$this->dieWithError( 'requestimport-apierror-type-mismatch', 'typemismatch' );
 				}
 
 				$upload->continueChunks( $upload->getStashName(), $fileKey, $chunk );
@@ -217,12 +217,12 @@ class ApiRequestImportUpload extends ApiBase {
 
 	private function assertAvailable(): void {
 		if ( !$this->getConfig()->get( ConfigNames::EnableChunkedUploads ) ) {
-			$this->dieWithError( 'importdump-apierror-chunking-disabled', 'chunkingdisabled' );
+			$this->dieWithError( 'requestimport-apierror-chunking-disabled', 'chunkingdisabled' );
 		}
 
 		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
-			$this->dieWithError( 'importdump-notcentral-text', 'notcentral' );
+			$this->dieWithError( 'requestimport-notcentral-text', 'notcentral' );
 		}
 
 		$this->checkUserRightsAny( 'request-import' );

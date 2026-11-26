@@ -119,7 +119,7 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		$file = $factory->newTempFSFile( 'importdump-chunks', '' );
 		$target = $file ? fopen( $file->getPath(), 'wb' ) : false;
 		if ( !$file || $target === false ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		$paths = $this->getChunkPaths();
@@ -129,7 +129,7 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 			$source = $part ? fopen( $part->getPath(), 'rb' ) : false;
 			if ( $source === false ) {
 				fclose( $target );
-				return Status::newFatal( 'importdump-verify-missing' );
+				return Status::newFatal( 'requestimport-verify-missing' );
 			}
 
 			$copied = stream_copy_to_stream( $source, $target );
@@ -138,7 +138,7 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 
 			if ( $copied === false ) {
 				fclose( $target );
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			if ( $onProgress ) {
@@ -149,7 +149,7 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		fclose( $target );
 		clearstatcache( true, $file->getPath() );
 		if ( filesize( $file->getPath() ) !== (int)$this->getOffset() ) {
-			return Status::newFatal( 'importdump-verify-missing' );
+			return Status::newFatal( 'requestimport-verify-missing' );
 		}
 
 		return Status::newGood( $file );
@@ -187,7 +187,7 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		$repo = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo();
 		$first = $repo->getLocalReference( $this->getChunkPaths()[0] );
 		if ( !$first ) {
-			return StatusValue::newFatal( 'importdump-verify-missing' );
+			return StatusValue::newFatal( 'requestimport-verify-missing' );
 		}
 
 		$error = $this->getTypeError( $first->getPath() );

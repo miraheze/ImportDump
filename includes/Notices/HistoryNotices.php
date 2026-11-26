@@ -42,8 +42,8 @@ final class HistoryNotices implements NoticeProvider {
 		}
 
 		// Messages that can be used here:
-		// * importdump-info-history-full
-		// * importdump-info-history-unknown
+		// * requestimport-info-history-full
+		// * requestimport-info-history-unknown
 		return [ new RequestNotice(
 			severity: NoticeSeverity::Notice,
 			html: $context->msg( $history->getInfoKey() )->escaped(),

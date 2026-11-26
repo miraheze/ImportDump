@@ -465,13 +465,13 @@ class RequestManager {
 		$wiki = WikiMap::getWiki( $this->dbw->getDomainID() );
 		$source = $this->getCommentUrl( $this->getSource() );
 		if ( !$wiki ) {
-			return $this->messageLocalizer->msg( 'importdump-images-comment-plain', $source, $this->ID )
+			return $this->messageLocalizer->msg( 'requestimport-images-comment-plain', $source, $this->ID )
 				->inContentLanguage()
 				->text();
 		}
 
 		return $this->messageLocalizer->msg(
-			'importdump-images-comment',
+			'requestimport-images-comment',
 			$source,
 			$wiki->getCanonicalUrl( 'Special:RequestImportQueue/' . $this->ID ),
 			$this->ID
@@ -552,11 +552,11 @@ class RequestManager {
 	/** @return string[] */
 	public function getUserGroupsFromTarget(): array {
 		if ( !$this->targetExists() ) {
-			return [ $this->messageLocalizer->msg( 'importdump-usergroups-none' )->text() ];
+			return [ $this->messageLocalizer->msg( 'requestimport-usergroups-none' )->text() ];
 		}
 
 		return $this->getRequesterGroupsOnTarget() ?: [
-			$this->messageLocalizer->msg( 'importdump-usergroups-none' )->text(),
+			$this->messageLocalizer->msg( 'requestimport-usergroups-none' )->text(),
 		];
 	}
 

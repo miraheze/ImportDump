@@ -223,7 +223,7 @@ class MigrateLogParams extends LoggedUpdateMaintenance {
 		$map = [];
 		foreach ( RequestStatus::cases() as $case ) {
 			$status = $case->value;
-			$label = wfMessage( "importdump-label-$status" )->inContentLanguage()->text();
+			$label = wfMessage( "requestimport-label-$status" )->inContentLanguage()->text();
 			$map[mb_strtolower( $label )] = $status;
 			$map[$status] = $status;
 		}

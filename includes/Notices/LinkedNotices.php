@@ -56,7 +56,7 @@ final class LinkedNotices implements NoticeProvider {
 
 			$notices[] = new RequestNotice(
 				severity: NoticeSeverity::Notice,
-				html: $context->msg( $isImages ? 'importdump-info-linked-xml' : 'importdump-info-linked-images' )
+				html: $context->msg( $isImages ? 'requestimport-info-linked-xml' : 'requestimport-info-linked-images' )
 					->rawParams( $link )
 					->params( mb_strtolower( $context->msg( $linkedStatus->getLabelKey() )->text() ) )
 					->escaped(),

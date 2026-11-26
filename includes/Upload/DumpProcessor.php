@@ -211,7 +211,7 @@ class DumpProcessor {
 
 		$entries = $listed->getValue();
 		if ( !$entries ) {
-			return Status::newFatal( 'importdump-archive-empty' );
+			return Status::newFatal( 'requestimport-archive-empty' );
 		}
 
 		if ( count( $entries ) > 1 ) {
@@ -220,7 +220,7 @@ class DumpProcessor {
 
 		$tempFile = $this->tempFSFileFactory->newTempFSFile( 'importdump', 'xml' );
 		if ( !$tempFile ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		$status = $this->archiveReader->extractTo(
@@ -248,7 +248,7 @@ class DumpProcessor {
 	private function extractAndMerge( string $path, string $format, array $entries, ?Closure $onProgress ): Status {
 		foreach ( $entries as $entry ) {
 			if ( strtolower( pathinfo( $entry->name, PATHINFO_EXTENSION ) ) !== 'xml' ) {
-				return Status::newFatal( 'importdump-archive-mixed' );
+				return Status::newFatal( 'requestimport-archive-mixed' );
 			}
 		}
 
@@ -260,7 +260,7 @@ class DumpProcessor {
 
 		$merged = $this->tempFSFileFactory->newTempFSFile( 'importdump', 'xml' );
 		if ( !$merged ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		// Each file is added and removed before the next is extracted, so only one is on disk
@@ -273,7 +273,7 @@ class DumpProcessor {
 
 			$tempFile = $this->tempFSFileFactory->newTempFSFile( 'importdump', 'xml' );
 			if ( !$tempFile ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			$status = $this->archiveReader->extractTo(
@@ -325,7 +325,7 @@ class DumpProcessor {
 		$reader = new XMLReader();
 		try {
 			if ( !$reader->open( $source, null, LIBXML_NONET | LIBXML_COMPACT ) ) {
-				return Status::newFatal( 'importdump-xml-invalid' );
+				return Status::newFatal( 'requestimport-xml-invalid' );
 			}
 
 			return $this->readDump( $reader, $splitPages );
@@ -383,7 +383,7 @@ class DumpProcessor {
 		$more = $reader->read();
 		while ( $more ) {
 			if ( $reader->nodeType === XMLReader::DOC_TYPE ) {
-				return Status::newFatal( 'importdump-xml-doctype' );
+				return Status::newFatal( 'requestimport-xml-doctype' );
 			}
 
 			$skipChildren = false;
@@ -422,7 +422,7 @@ class DumpProcessor {
 
 				if ( $depth === 0 ) {
 					if ( $name !== 'mediawiki' || !str_starts_with( $reader->namespaceURI, self::EXPORT_NAMESPACE ) ) {
-						return Status::newFatal( 'importdump-xml-not-dump' );
+						return Status::newFatal( 'requestimport-xml-not-dump' );
 					}
 
 					$sawRoot = true;
@@ -503,16 +503,16 @@ class DumpProcessor {
 
 		foreach ( libxml_get_errors() as $error ) {
 			if ( $error->level >= LIBXML_ERR_ERROR ) {
-				return Status::newFatal( 'importdump-xml-invalid' );
+				return Status::newFatal( 'requestimport-xml-invalid' );
 			}
 		}
 
 		if ( !$sawRoot ) {
-			return Status::newFatal( 'importdump-xml-not-dump' );
+			return Status::newFatal( 'requestimport-xml-not-dump' );
 		}
 
 		if ( $pages === 0 ) {
-			return Status::newFatal( 'importdump-xml-no-pages' );
+			return Status::newFatal( 'requestimport-xml-no-pages' );
 		}
 
 		foreach ( $latestNeeds as $pageNeeds ) {

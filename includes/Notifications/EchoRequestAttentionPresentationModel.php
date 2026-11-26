@@ -17,14 +17,14 @@ class EchoRequestAttentionPresentationModel extends EchoEventPresentationModel {
 	/** @inheritDoc */
 	public function getHeaderMessage(): Message {
 		return $this->msg(
-			'importdump-notification-header-attention',
+			'requestimport-notification-header-attention',
 			$this->event->getExtraParam( 'request-id' )
 		);
 	}
 
 	/** @inheritDoc */
 	public function getBodyMessage(): Message {
-		return $this->msg( 'importdump-notification-body-attention' );
+		return $this->msg( 'requestimport-notification-body-attention' );
 	}
 
 	/** @inheritDoc */
@@ -36,7 +36,7 @@ class EchoRequestAttentionPresentationModel extends EchoEventPresentationModel {
 	public function getSecondaryLinks(): array {
 		$visitLink = [
 			'url' => $this->event->getExtraParam( 'request-url', 0 ),
-			'label' => $this->msg( 'importdump-notification-visit-request' )->text(),
+			'label' => $this->msg( 'requestimport-notification-visit-request' )->text(),
 			'prioritized' => true,
 		];
 

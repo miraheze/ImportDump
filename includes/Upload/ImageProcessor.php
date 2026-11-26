@@ -131,7 +131,7 @@ class ImageProcessor {
 
 		$format = $this->archiveReader->detectFormat( $path );
 		if ( $format === null ) {
-			return Status::newFatal( 'importdump-images-not-archive' );
+			return Status::newFatal( 'requestimport-images-not-archive' );
 		}
 
 		$maxSize = (int)$this->options->get( ConfigNames::MaxExtractedSize );
@@ -179,7 +179,7 @@ class ImageProcessor {
 			$extension = strtolower( pathinfo( $name, PATHINFO_EXTENSION ) );
 			$tempFile = $this->tempFSFileFactory->newTempFSFile( 'importdump-image', $extension );
 			if ( !$tempFile ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			// Sizes that an archive states can be wrong, so what was written counts against the limit.
@@ -223,7 +223,7 @@ class ImageProcessor {
 				if ( in_array( $mime, self::RASTER_TYPES, true ) ) {
 					$real = $this->findExtension( $mime, $allowed, $prohibited );
 					if ( $real === null ) {
-						$problem = new SkippedFile( $name, 'importdump-images-skip-type', [ $mime ] );
+						$problem = new SkippedFile( $name, 'requestimport-images-skip-type', [ $mime ] );
 					} elseif ( !$this->verifyFile( $name, $real, $tempFile->getPath() ) ) {
 						$problem = null;
 					}
@@ -283,7 +283,7 @@ class ImageProcessor {
 			$extension = strtolower( pathinfo( $name, PATHINFO_EXTENSION ) );
 			$tempFile = $this->tempFSFileFactory->newTempFSFile( 'importdump-held', $extension );
 			if ( !$tempFile ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			$status = $this->archiveReader->extractTo(
@@ -318,9 +318,9 @@ class ImageProcessor {
 	 * @param int $considered
 	 */
 	private function tooManySkipped( array $skipped, int $considered ): Status {
-		$status = Status::newFatal( 'importdump-images-too-many-skipped', count( $skipped ), $considered );
+		$status = Status::newFatal( 'requestimport-images-too-many-skipped', count( $skipped ), $considered );
 		foreach ( array_slice( $skipped, 0, self::MAX_REPORTED ) as $file ) {
-			$status->fatal( 'importdump-images-file-rejected', $file->name, Message::newFromKey(
+			$status->fatal( 'requestimport-images-file-rejected', $file->name, Message::newFromKey(
 				$file->reason,
 				...$file->params
 			) );
@@ -352,7 +352,7 @@ class ImageProcessor {
 				in_array( $extension, $prohibited, true ) ||
 				!in_array( $extension, $allowed, true )
 			) {
-				$rejected[$name] = new SkippedFile( $name, 'importdump-images-skip-extension', [ $extension ] );
+				$rejected[$name] = new SkippedFile( $name, 'requestimport-images-skip-extension', [ $extension ] );
 				continue;
 			}
 
@@ -399,7 +399,7 @@ class ImageProcessor {
 
 			$considered++;
 			if ( !$this->isValidName( $name ) ) {
-				$skipped[] = new SkippedFile( $name, 'importdump-images-skip-name', [] );
+				$skipped[] = new SkippedFile( $name, 'requestimport-images-skip-name', [] );
 				continue;
 			}
 
@@ -409,7 +409,7 @@ class ImageProcessor {
 				$extension !== '' &&
 				( in_array( $extension, $prohibited, true ) || !in_array( $extension, $allowed, true ) )
 			) {
-				$skipped[] = new SkippedFile( $name, 'importdump-images-skip-extension', [ $extension ] );
+				$skipped[] = new SkippedFile( $name, 'requestimport-images-skip-extension', [ $extension ] );
 				// Only an extension that is not prohibited can become accepted later.
 				$holdKey = $this->titleFactory->makeTitleSafe( NS_FILE, $name )?->getDBkey();
 				if ( !in_array( $extension, $prohibited, true ) && $holdKey !== null && !isset( $keys[$holdKey] ) ) {
@@ -423,12 +423,12 @@ class ImageProcessor {
 			// Two names that make the same title would overwrite each other, such as a.png and A.png.
 			$key = $this->titleFactory->makeTitleSafe( NS_FILE, $name )?->getDBkey();
 			if ( $key === null ) {
-				$skipped[] = new SkippedFile( $name, 'importdump-images-skip-name', [] );
+				$skipped[] = new SkippedFile( $name, 'requestimport-images-skip-name', [] );
 				continue;
 			}
 
 			if ( isset( $keys[$key] ) ) {
-				$skipped[] = new SkippedFile( $name, 'importdump-images-skip-duplicate', [] );
+				$skipped[] = new SkippedFile( $name, 'requestimport-images-skip-duplicate', [] );
 				continue;
 			}
 
@@ -436,12 +436,12 @@ class ImageProcessor {
 			$keep[$name] = $entry;
 			$size += $entry->size ?? 0;
 			if ( $size > $maxSize ) {
-				return Status::newFatal( 'importdump-archive-too-large', Message::sizeParam( $maxSize ) );
+				return Status::newFatal( 'requestimport-archive-too-large', Message::sizeParam( $maxSize ) );
 			}
 		}
 
 		if ( $considered === 0 ) {
-			return Status::newFatal( 'importdump-images-empty' );
+			return Status::newFatal( 'requestimport-images-empty' );
 		}
 
 		return Status::newGood( [
@@ -523,17 +523,17 @@ class ImageProcessor {
 	): string|SkippedFile {
 		$extension = $this->findExtension( $this->detectMime( $path ), $allowed, $prohibited );
 		if ( $extension === null ) {
-			return new SkippedFile( $name, 'importdump-images-skip-no-extension', [] );
+			return new SkippedFile( $name, 'requestimport-images-skip-no-extension', [] );
 		}
 
 		$fixed = "$name.$extension";
 		$key = $this->titleFactory->makeTitleSafe( NS_FILE, $fixed )?->getDBkey();
 		if ( $key === null || !$this->isValidName( $fixed ) ) {
-			return new SkippedFile( $name, 'importdump-images-skip-name', [] );
+			return new SkippedFile( $name, 'requestimport-images-skip-name', [] );
 		}
 
 		if ( isset( $taken[$key] ) ) {
-			return new SkippedFile( $name, 'importdump-images-skip-duplicate', [] );
+			return new SkippedFile( $name, 'requestimport-images-skip-duplicate', [] );
 		}
 
 		$taken[$key] = true;

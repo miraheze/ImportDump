@@ -120,64 +120,64 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 	public static function provideRejected(): Generator {
 		yield 'not an archive' => [
 			static fn ( self $test ): string => $test->newFile( self::png() ),
-			'importdump-images-not-archive',
+			'requestimport-images-not-archive',
 		];
 
 		yield 'no files' => [
 			static fn ( self $test ): string => $test->newZip( [ 'folder/' => '' ] ),
-			'importdump-images-empty',
+			'requestimport-images-empty',
 		];
 
 		yield 'only an extension that is not allowed' => [
 			static fn ( self $test ): string => $test->newZip( [ 'run.exe' => 'MZ' ] ),
-			'importdump-images-too-many-skipped',
+			'requestimport-images-too-many-skipped',
 		];
 
 		yield 'only an extension that is prohibited' => [
 			static fn ( self $test ): string => $test->newZip( [ 'a.jpg' => 'x' ] ),
-			'importdump-images-too-many-skipped',
+			'requestimport-images-too-many-skipped',
 		];
 
 		yield 'only a file without an extension' => [
 			static fn ( self $test ): string => $test->newZip( [ 'a' => 'x' ] ),
-			'importdump-images-too-many-skipped',
+			'requestimport-images-too-many-skipped',
 		];
 
 		yield 'backslash in the name' => [
 			static fn ( self $test ): string => $test->newZip( [ 'dir\\a.png' => self::png() ] ),
-			'importdump-archive-unsafe',
+			'requestimport-archive-unsafe',
 		];
 
 		yield 'path that leaves the folder' => [
 			static fn ( self $test ): string => $test->newZip( [ '../a.png' => self::png() ] ),
-			'importdump-archive-unsafe',
+			'requestimport-archive-unsafe',
 		];
 
 		yield 'only a colon in the name' => [
 			static fn ( self $test ): string => $test->newZip( [ 'File:a.png' => self::png() ] ),
-			'importdump-images-too-many-skipped',
+			'requestimport-images-too-many-skipped',
 		];
 
 		yield 'only a name that is too long' => [
 			static fn ( self $test ): string => $test->newZip( [ str_repeat( 'a', 250 ) . '.png' => self::png() ] ),
-			'importdump-images-too-many-skipped',
+			'requestimport-images-too-many-skipped',
 		];
 
 		yield 'only hidden files' => [
 			static fn ( self $test ): string => $test->newZip( [ '.hidden.png' => self::png() ] ),
-			'importdump-images-empty',
+			'requestimport-images-empty',
 		];
 
 		yield 'only a script hidden in an image' => [
 			static fn ( self $test ): string => $test->newZip( [
 				'a.png' => self::png() . '<script>alert(1)</script>',
 			] ),
-			'importdump-images-too-many-skipped',
+			'requestimport-images-too-many-skipped',
 		];
 
 		yield 'only contents that do not match the extension' => [
 			static fn ( self $test ): string => $test->newZip( [ 'a.png' => 'This is plain text.' ] ),
-			'importdump-images-too-many-skipped',
+			'requestimport-images-too-many-skipped',
 		];
 	}
 
@@ -202,9 +202,9 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 			'two.png' => 'more text',
 		] ), maxSize: self::DEFAULT_SIZE );
 
-		$this->assertStatusError( 'importdump-images-too-many-skipped', $status );
+		$this->assertStatusError( 'requestimport-images-too-many-skipped', $status );
 		$this->assertCount( 3, $status->getMessages() );
-		$this->assertSame( 'importdump-images-file-rejected', $status->getMessages()[1]->getKey() );
+		$this->assertSame( 'requestimport-images-file-rejected', $status->getMessages()[1]->getKey() );
 
 		$first = $status->getMessages()[1]->getParams()[0];
 		$second = $status->getMessages()[2]->getParams()[0];
@@ -258,9 +258,9 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		ksort( $reasons );
 		$this->assertSame(
 			[
-				'File:colon.png' => 'importdump-images-skip-name',
-				'noextension' => 'importdump-images-skip-no-extension',
-				'run.exe' => 'importdump-images-skip-extension',
+				'File:colon.png' => 'requestimport-images-skip-name',
+				'noextension' => 'requestimport-images-skip-no-extension',
+				'run.exe' => 'requestimport-images-skip-extension',
 			],
 			$reasons
 		);
@@ -309,10 +309,10 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		$checked = $processor->checkHeld( $paths, [ 'gif', 'jpg', 'png' ] );
 
 		$this->assertSame( [ 'a.gif' ], array_keys( $checked['accepted'] ) );
-		$this->assertSame( 'importdump-images-skip-extension', $checked['rejected']['c.jpg']->reason );
-		$this->assertSame( 'importdump-images-skip-extension', $checked['rejected']['d.svg']->reason );
+		$this->assertSame( 'requestimport-images-skip-extension', $checked['rejected']['c.jpg']->reason );
+		$this->assertSame( 'requestimport-images-skip-extension', $checked['rejected']['d.svg']->reason );
 		$this->assertArrayHasKey( 'b.png', $checked['rejected'] );
-		$this->assertNotSame( 'importdump-images-skip-extension', $checked['rejected']['b.png']->reason );
+		$this->assertNotSame( 'requestimport-images-skip-extension', $checked['rejected']['b.png']->reason );
 	}
 
 	public function testUsesTheExtensionsOfTheTarget(): void {
@@ -332,7 +332,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 
 		ksort( $reasons );
 		$this->assertSame(
-			[ 'b.png' => 'importdump-images-skip-type', 'c.gif' => 'importdump-images-skip-extension' ],
+			[ 'b.png' => 'requestimport-images-skip-type', 'c.gif' => 'requestimport-images-skip-extension' ],
 			$reasons
 		);
 	}
@@ -366,7 +366,7 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( [ 'logo.png' ], array_keys( $result->files ) );
 		$this->assertSame( [], $result->renamed );
 		$this->assertSame(
-			[ 'logo' => 'importdump-images-skip-duplicate' ],
+			[ 'logo' => 'requestimport-images-skip-duplicate' ],
 			array_column( array_map(
 				static fn ( SkippedFile $file ): array => [ $file->name, $file->reason ],
 				$result->skipped
@@ -388,13 +388,13 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( [ 'a.png', 'b.png' ], array_keys( $result->files ) );
 		$this->assertCount( 1, $result->skipped );
 		$this->assertSame( 'A.png', $result->skipped[0]->name );
-		$this->assertSame( 'importdump-images-skip-duplicate', $result->skipped[0]->reason );
+		$this->assertSame( 'requestimport-images-skip-duplicate', $result->skipped[0]->reason );
 	}
 
 	public function testNothingIsSkippedWhenNoneAreAllowed(): void {
 		$zip = $this->newZip( [ 'good.png' => self::png(), 'bad.png' => 'This is plain text.' ] );
 
-		$this->assertStatusError( 'importdump-images-too-many-skipped', $this->processWithLimit( $zip, 0 ) );
+		$this->assertStatusError( 'requestimport-images-too-many-skipped', $this->processWithLimit( $zip, 0 ) );
 		$this->assertStatusGood( $this->processWithLimit( $zip, 50 ) );
 	}
 
@@ -409,6 +409,6 @@ class ImageProcessorTest extends MediaWikiIntegrationTestCase {
 
 	public function testRejectsTooMuchData(): void {
 		$status = $this->process( $this->newZip( [ 'a.png' => self::png() ] ), maxSize: 10 );
-		$this->assertStatusError( 'importdump-archive-too-large', $status );
+		$this->assertStatusError( 'requestimport-archive-too-large', $status );
 	}
 }

@@ -125,7 +125,7 @@ final class TarReader {
 			}
 
 			if ( $block === false ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			$limit = $this->account( self::BLOCK_SIZE );
@@ -135,18 +135,18 @@ final class TarReader {
 
 			if ( !$this->countHeader() ) {
 				return Status::newFatal(
-					'importdump-archive-too-many-entries',
+					'requestimport-archive-too-many-entries',
 					Message::numParam( $this->maxEntries )
 				);
 			}
 
 			if ( !$this->hasValidChecksum( $block ) ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			$size = $this->parseSize( substr( $block, self::SIZE_OFFSET, self::SIZE_LENGTH ) );
 			if ( $size === null ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			$type = $block[self::TYPE_OFFSET];
@@ -156,7 +156,7 @@ final class TarReader {
 					self::MAX_LONG_NAME_SIZE;
 
 				if ( $size > $limit ) {
-					return Status::newFatal( 'importdump-archive-unsafe' );
+					return Status::newFatal( 'requestimport-archive-unsafe' );
 				}
 
 				$body = $this->readBody( $size );
@@ -169,7 +169,7 @@ final class TarReader {
 				} elseif ( $type === 'x' ) {
 					$records = $this->parsePax( $body->getValue() );
 					if ( $records === null || $this->isSparse( $records ) ) {
-						return Status::newFatal( 'importdump-archive-unsafe' );
+						return Status::newFatal( 'requestimport-archive-unsafe' );
 					}
 
 					$paxPath = $records['path'] ?? $paxPath;
@@ -181,13 +181,13 @@ final class TarReader {
 
 			$isDirectory = $type === '5';
 			if ( !$isDirectory && $type !== '0' && $type !== "\0" ) {
-				return Status::newFatal( 'importdump-archive-unsafe' );
+				return Status::newFatal( 'requestimport-archive-unsafe' );
 			}
 
 			$name = $paxPath ?? $longName ?? $this->readName( $block );
 			if ( $paxSize !== null ) {
 				if ( !ctype_digit( $paxSize ) || strlen( $paxSize ) > 18 ) {
-					return Status::newFatal( 'importdump-archive-unreadable' );
+					return Status::newFatal( 'requestimport-archive-unreadable' );
 				}
 
 				$size = (int)$paxSize;
@@ -200,7 +200,7 @@ final class TarReader {
 
 			$this->bodyBytes += $size;
 			if ( $this->bodyBytes > $this->maxBodyBytes ) {
-				return Status::newFatal( 'importdump-archive-too-large', Message::sizeParam( $this->maxBodyBytes ) );
+				return Status::newFatal( 'requestimport-archive-too-large', Message::sizeParam( $this->maxBodyBytes ) );
 			}
 
 			$this->pending = $size + $this->paddingFor( $size );
@@ -224,7 +224,7 @@ final class TarReader {
 		while ( $remaining > 0 ) {
 			$chunk = self::readUpTo( $this->stream, min( $remaining, ArchiveReader::COPY_CHUNK_SIZE ) );
 			if ( $chunk === '' ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			$limit = $this->account( strlen( $chunk ) );
@@ -233,7 +233,7 @@ final class TarReader {
 			}
 
 			if ( fwrite( $output, $chunk ) !== strlen( $chunk ) ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			$remaining -= strlen( $chunk );
@@ -271,7 +271,7 @@ final class TarReader {
 		$padding = $this->paddingFor( $size );
 		$padded = self::readUpTo( $this->stream, $padding );
 		if ( strlen( $body ) !== $size || strlen( $padded ) !== $padding ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		$limit = $this->account( $size + $padding );
@@ -282,7 +282,7 @@ final class TarReader {
 		while ( $bytes > 0 ) {
 			$chunk = self::readUpTo( $this->stream, min( $bytes, ArchiveReader::COPY_CHUNK_SIZE ) );
 			if ( $chunk === '' ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			$limit = $this->account( strlen( $chunk ) );
@@ -303,7 +303,7 @@ final class TarReader {
 			$this->consumed > ArchiveReader::RATIO_CHECK_AFTER &&
 			$this->consumed > max( 1, $this->compressedSize ) * ArchiveReader::MAX_COMPRESSION_RATIO
 		) {
-			return Status::newFatal( 'importdump-archive-ratio' );
+			return Status::newFatal( 'requestimport-archive-ratio' );
 		}
 
 		return Status::newGood();

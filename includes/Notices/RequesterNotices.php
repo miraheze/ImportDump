@@ -41,7 +41,7 @@ final class RequesterNotices implements NoticeProvider {
 		if ( $requestManager->isPrivate() ) {
 			$notices[] = new RequestNotice(
 				severity: NoticeSeverity::Warning,
-				html: $context->msg( 'importdump-info-request-private' )->escaped(),
+				html: $context->msg( 'requestimport-info-request-private' )->escaped(),
 				invalidates: false,
 				declines: false,
 				pinned: false,
@@ -52,7 +52,7 @@ final class RequesterNotices implements NoticeProvider {
 			$notices[] = new RequestNotice(
 				severity: NoticeSeverity::Warning,
 				html: $context->msg(
-					'importdump-info-requester-blocked',
+					'requestimport-info-requester-blocked',
 					$requester->getName(),
 					WikiMap::getCurrentWikiId()
 				)->escaped(),
@@ -65,7 +65,7 @@ final class RequesterNotices implements NoticeProvider {
 		if ( $requester->isLocked() ) {
 			$notices[] = new RequestNotice(
 				severity: NoticeSeverity::Error,
-				html: $context->msg( 'importdump-info-requester-locked', $requester->getName() )->escaped(),
+				html: $context->msg( 'requestimport-info-requester-locked', $requester->getName() )->escaped(),
 				invalidates: true,
 				declines: true,
 				pinned: false,

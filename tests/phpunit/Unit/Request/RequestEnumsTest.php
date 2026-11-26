@@ -28,7 +28,7 @@ class RequestEnumsTest extends MediaWikiUnitTestCase {
 	}
 
 	public function testStatusLabelKey(): void {
-		$this->assertSame( 'importdump-label-inprogress', RequestStatus::InProgress->getLabelKey() );
+		$this->assertSame( 'requestimport-label-inprogress', RequestStatus::InProgress->getLabelKey() );
 	}
 
 	/** @dataProvider provideRunning */
@@ -84,11 +84,11 @@ class RequestEnumsTest extends MediaWikiUnitTestCase {
 	}
 
 	public function testStageLabelKey(): void {
-		$this->assertSame( 'importdump-stage-textindex', RequestStage::TextIndex->getLabelKey() );
+		$this->assertSame( 'requestimport-stage-textindex', RequestStage::TextIndex->getLabelKey() );
 	}
 
 	public function testHistoryInfoKey(): void {
-		$this->assertSame( 'importdump-info-history-partial', RequestHistory::Partial->getInfoKey() );
+		$this->assertSame( 'requestimport-info-history-partial', RequestHistory::Partial->getInfoKey() );
 		$this->assertSame( [ 'full', 'partial', 'unknown' ], array_column( RequestHistory::cases(), 'value' ) );
 	}
 }

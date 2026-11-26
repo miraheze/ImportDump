@@ -171,11 +171,11 @@ class ExternalBinaries {
 			!$received->wasReceived( self::OUTPUT ) ||
 			!in_array( $received->getExitCode(), [ 0, self::SIGPIPE_EXIT_CODE ], true )
 		) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		$bytes = file_get_contents( $destination, false, null, 0, TarReader::BLOCK_SIZE );
-		return $bytes === false ? Status::newFatal( 'importdump-archive-unreadable' ) : Status::newGood( $bytes );
+		return $bytes === false ? Status::newFatal( 'requestimport-archive-unreadable' ) : Status::newGood( $bytes );
 	}
 
 	/**
@@ -232,26 +232,26 @@ class ExternalBinaries {
 		'@phan-var BoxedResult $received';
 		$size = file_exists( $destination ) ? (int)filesize( $destination ) : 0;
 		if ( $size > $limit ) {
-			return Status::newFatal( 'importdump-archive-too-many-entries', Message::numParam( $maxEntries ) );
+			return Status::newFatal( 'requestimport-archive-too-many-entries', Message::numParam( $maxEntries ) );
 		}
 
 		if ( !$received->wasReceived( self::OUTPUT ) || $received->getExitCode() !== 0 ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		$entries = $this->parseSevenZipListing( (string)file_get_contents( $destination ) );
 		if ( $entries === null ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		if ( count( $entries ) > $maxEntries ) {
-			return Status::newFatal( 'importdump-archive-too-many-entries', Message::numParam( $maxEntries ) );
+			return Status::newFatal( 'requestimport-archive-too-many-entries', Message::numParam( $maxEntries ) );
 		}
 
 		$dictionaryLimit = $this->getSettings( self::SEVEN_ZIP )->dictionary;
 		foreach ( $entries as $entry ) {
 			if ( $entry['memory'] > $dictionaryLimit ) {
-				return Status::newFatal( 'importdump-archive-memory', Message::sizeParam( $dictionaryLimit ) );
+				return Status::newFatal( 'requestimport-archive-memory', Message::sizeParam( $dictionaryLimit ) );
 			}
 		}
 
@@ -518,7 +518,7 @@ class ExternalBinaries {
 				[ 'message' => $e->getMessage(), 'exception' => $e ]
 			);
 
-			return Status::newFatal( 'importdump-archive-binary-unavailable' );
+			return Status::newFatal( 'requestimport-archive-binary-unavailable' );
 		}
 	}
 
@@ -544,12 +544,12 @@ class ExternalBinaries {
 
 		if ( $size > $allowed ) {
 			return $allowed < $maxBytes ?
-				Status::newFatal( 'importdump-archive-ratio' ) :
-				Status::newFatal( 'importdump-archive-too-large', Message::sizeParam( $maxBytes ) );
+				Status::newFatal( 'requestimport-archive-ratio' ) :
+				Status::newFatal( 'requestimport-archive-too-large', Message::sizeParam( $maxBytes ) );
 		}
 
 		if ( $result->getExitCode() !== 0 || !$result->wasReceived( self::OUTPUT ) ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		return Status::newGood( $size );

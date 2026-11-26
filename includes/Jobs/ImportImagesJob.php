@@ -117,7 +117,9 @@ class ImportImagesJob extends Job {
 			// A request that fits in one job is downloaded whole, only larger ones ask for a part of the files.
 			$directory = $chunked ? $this->downloadImages( $this->offset, $size ) : $this->downloadImages( 0, 0 );
 			if ( !$directory ) {
-				$missing = $this->messageLocalizer->msg( 'importdump-images-job-missing' )->inContentLanguage()->text();
+				$missing = $this->messageLocalizer->msg( 'requestimport-images-job-missing' )
+					->inContentLanguage()
+					->text();
 				$this->addOutput( "$missing\n" );
 				$this->queueNotification( RequestStatus::Failed, $missing );
 

@@ -12,6 +12,6 @@ enum RequestHistory: string {
 
 	/** The message key of the explanation of this result. */
 	public function getInfoKey(): string {
-		return 'importdump-info-history-' . $this->value;
+		return 'requestimport-info-history-' . $this->value;
 	}
 }

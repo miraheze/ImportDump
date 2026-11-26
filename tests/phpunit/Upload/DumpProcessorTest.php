@@ -283,21 +283,21 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 	public static function provideInvalidXml(): Generator {
 		$page = self::page( 1, [ 10 => 0 ] );
 
-		yield 'not xml' => [ 'content', 'importdump-xml-invalid' ];
-		yield 'truncated' => [ substr( self::dump( $page ), 0, -30 ), 'importdump-xml-invalid' ];
-		yield 'other root element' => [ '<html xmlns="http://www.w3.org/1999/xhtml"/>', 'importdump-xml-not-dump' ];
-		yield 'no export namespace' => [ '<mediawiki>' . $page . '</mediawiki>', 'importdump-xml-not-dump' ];
-		yield 'no pages' => [ self::dump( '' ), 'importdump-xml-no-pages' ];
+		yield 'not xml' => [ 'content', 'requestimport-xml-invalid' ];
+		yield 'truncated' => [ substr( self::dump( $page ), 0, -30 ), 'requestimport-xml-invalid' ];
+		yield 'other root element' => [ '<html xmlns="http://www.w3.org/1999/xhtml"/>', 'requestimport-xml-not-dump' ];
+		yield 'no export namespace' => [ '<mediawiki>' . $page . '</mediawiki>', 'requestimport-xml-not-dump' ];
+		yield 'no pages' => [ self::dump( '' ), 'requestimport-xml-no-pages' ];
 		yield 'doctype' => [
 			'<!DOCTYPE mediawiki><mediawiki xmlns="http://www.mediawiki.org/xml/export-0.11/">' .
 				$page . '</mediawiki>',
-			'importdump-xml-doctype',
+			'requestimport-xml-doctype',
 		];
 
 		yield 'entity declaration' => [
 			'<!DOCTYPE mediawiki [<!ENTITY a "aaaa">]>' .
 				'<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.11/">' . $page . '</mediawiki>',
-			'importdump-xml-doctype',
+			'requestimport-xml-doctype',
 		];
 	}
 
@@ -399,7 +399,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 	public function testArchiveWithXmlAndOtherFiles(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
 		$status = $this->process( $this->newZip( [ 'a.xml' => $xml, 'b.txt' => 'text' ] ) );
-		$this->assertStatusError( 'importdump-archive-mixed', $status );
+		$this->assertStatusError( 'requestimport-archive-mixed', $status );
 	}
 
 	public function testMergedFilesMustShareAVersion(): void {
@@ -408,7 +408,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 			'b.xml' => self::dumpWithVersion( self::page( 2, [ 20 => 0 ] ), '0.10' ),
 		] ) );
 
-		$this->assertStatusError( 'importdump-xml-version-mismatch', $status );
+		$this->assertStatusError( 'requestimport-xml-version-mismatch', $status );
 	}
 
 	public function testMergedFilesMayNotHaveADocumentType(): void {
@@ -418,7 +418,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 			'b.xml' => $withType,
 		] ) );
 
-		$this->assertStatusError( 'importdump-xml-doctype', $status );
+		$this->assertStatusError( 'requestimport-xml-doctype', $status );
 	}
 
 	public function testMergedFilesStayUnderTheSizeLimit(): void {
@@ -429,7 +429,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 			null
 		);
 
-		$this->assertStatusError( 'importdump-archive-too-large', $status );
+		$this->assertStatusError( 'requestimport-archive-too-large', $status );
 	}
 
 	public function testZipWithOnlyDirectories(): void {
@@ -437,13 +437,13 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 			$this->newZip( [ 'folder/' => '', 'other/' => '' ] )
 		);
 
-		$this->assertStatusError( 'importdump-archive-empty', $status );
+		$this->assertStatusError( 'requestimport-archive-empty', $status );
 	}
 
 	public function testZipWithUnsafeName(): void {
 		$xml = self::dump( self::page( 1, [ 10 => 0 ] ) );
 		$status = $this->process( $this->newZip( [ '../dump.xml' => $xml ] ) );
-		$this->assertStatusError( 'importdump-archive-unsafe', $status );
+		$this->assertStatusError( 'requestimport-archive-unsafe', $status );
 	}
 
 	public function testZipWithNestedArchive(): void {
@@ -452,7 +452,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 			$this->newZip( [ 'inner.zip' => file_get_contents( $inner ) ] )
 		);
 
-		$this->assertStatusError( 'importdump-xml-invalid', $status );
+		$this->assertStatusError( 'requestimport-xml-invalid', $status );
 	}
 
 	public function testCorruptZip(): void {
@@ -460,7 +460,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 			$this->newFile( "PK\x03\x04 this is not a zip file" )
 		);
 
-		$this->assertStatusError( 'importdump-archive-unreadable', $status );
+		$this->assertStatusError( 'requestimport-archive-unreadable', $status );
 	}
 
 	public function testGzip(): void {
@@ -477,7 +477,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 
 	public function testGzipWithInvalidXml(): void {
 		$status = $this->process( $this->newFile( gzencode( 'content' ) ) );
-		$this->assertStatusError( 'importdump-xml-invalid', $status );
+		$this->assertStatusError( 'requestimport-xml-invalid', $status );
 	}
 
 	public function testTar(): void {
@@ -546,7 +546,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 
 	public function testTarWithOnlyDirectories(): void {
 		$status = $this->process( $this->newTar( [ 'folder/' => '', 'other/' => '' ] ) );
-		$this->assertStatusError( 'importdump-archive-empty', $status );
+		$this->assertStatusError( 'requestimport-archive-empty', $status );
 	}
 
 	public function testTarWithLink(): void {
@@ -555,18 +555,18 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 			TarFixture::entry( 'dump.xml', $xml, '0' ) . TarFixture::link( 'link', 'dump.xml', '2' )
 		);
 
-		$this->assertStatusError( 'importdump-archive-unsafe', $this->process( $this->newFile( $tar ) ) );
+		$this->assertStatusError( 'requestimport-archive-unsafe', $this->process( $this->newFile( $tar ) ) );
 	}
 
 	public function testTarWithInvalidXml(): void {
 		$status = $this->process( $this->newTar( [ 'dump.xml' => 'content' ] ) );
-		$this->assertStatusError( 'importdump-xml-invalid', $status );
+		$this->assertStatusError( 'requestimport-xml-invalid', $status );
 	}
 
 	public function testTarWithNestedArchive(): void {
 		$inner = TarFixture::build( [ 'dump.xml' => self::dump( self::page( 1, [ 10 => 0 ] ) ) ] );
 		$status = $this->process( $this->newTar( [ 'inner.tar' => $inner ] ) );
-		$this->assertStatusError( 'importdump-xml-invalid', $status );
+		$this->assertStatusError( 'requestimport-xml-invalid', $status );
 	}
 
 	public function testArchiveExpandingPastTheLimit(): void {
@@ -574,22 +574,22 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 		$processor = $this->newProcessor( strlen( $xml ) - 1, true, [] );
 
 		$this->assertStatusError(
-			'importdump-archive-too-large',
+			'requestimport-archive-too-large',
 			$processor->process( $this->newFile( gzencode( $xml ) ), null )
 		);
 
 		$this->assertStatusError(
-			'importdump-archive-too-large',
+			'requestimport-archive-too-large',
 			$processor->process( $this->newZip( [ 'dump.xml' => $xml ] ), null )
 		);
 
 		$this->assertStatusError(
-			'importdump-archive-too-large',
+			'requestimport-archive-too-large',
 			$processor->process( $this->newTar( [ 'dump.xml' => $xml ] ), null )
 		);
 
 		$this->assertStatusError(
-			'importdump-archive-too-large',
+			'requestimport-archive-too-large',
 			$processor->process( $this->newFile( gzencode( TarFixture::build( [ 'dump.xml' => $xml ] ) ) ), null )
 		);
 	}
@@ -604,7 +604,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 
 	public function testHistoryDetectionOffStillRejectsInvalidXml(): void {
 		$status = $this->newProcessor( self::MAX_SIZE, false, [] )->process( $this->newFile( 'content' ), null );
-		$this->assertStatusError( 'importdump-xml-invalid', $status );
+		$this->assertStatusError( 'requestimport-xml-invalid', $status );
 	}
 
 	public function testMimeTypesFollowTheConfiguredPrograms(): void {
@@ -673,7 +673,7 @@ class DumpProcessorTest extends MediaWikiIntegrationTestCase {
 
 		foreach ( [ ExternalFixtures::XZ_XML, ExternalFixtures::SEVEN_ZIP_ONE ] as $fixture ) {
 			$status = $processor->process( $this->newFile( ExternalFixtures::decode( $fixture ) ), null );
-			$this->assertStatusError( 'importdump-xml-not-dump', $status );
+			$this->assertStatusError( 'requestimport-xml-not-dump', $status );
 		}
 	}
 }

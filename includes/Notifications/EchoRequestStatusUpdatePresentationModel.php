@@ -20,7 +20,7 @@ class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationMode
 	/** @inheritDoc */
 	public function getHeaderMessage(): Message {
 		return $this->msg(
-			'importdump-notification-header-status-update',
+			'requestimport-notification-header-status-update',
 			$this->event->getExtraParam( 'request-id' )
 		);
 	}
@@ -41,7 +41,7 @@ class EchoRequestStatusUpdatePresentationModel extends EchoEventPresentationMode
 	public function getSecondaryLinks(): array {
 		$visitLink = [
 			'url' => $this->event->getExtraParam( 'request-url', 0 ),
-			'label' => $this->msg( 'importdump-notification-visit-request' )->text(),
+			'label' => $this->msg( 'requestimport-notification-visit-request' )->text(),
 			'prioritized' => true,
 		];
 

@@ -123,7 +123,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	public function testListFilesUnsafeName(): void {
 		$path = $this->newZip( [ '../dump.xml' => 'content' ] );
 		$this->assertStatusError(
-			'importdump-archive-unsafe',
+			'requestimport-archive-unsafe',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100, self::MAX_SIZE )
 		);
 	}
@@ -137,7 +137,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$zip->close();
 
 		$this->assertStatusError(
-			'importdump-archive-unsafe',
+			'requestimport-archive-unsafe',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100, self::MAX_SIZE )
 		);
 	}
@@ -165,7 +165,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$zip->close();
 
 		$this->assertStatusError(
-			'importdump-archive-unsafe',
+			'requestimport-archive-unsafe',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100, self::MAX_SIZE )
 		);
 	}
@@ -179,7 +179,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$zip->close();
 
 		$this->assertStatusError(
-			'importdump-archive-unsafe',
+			'requestimport-archive-unsafe',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 10, self::MAX_SIZE )
 		);
 	}
@@ -191,7 +191,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$contents[30] = 'X';
 
 		$this->assertStatusError(
-			'importdump-archive-unreadable',
+			'requestimport-archive-unreadable',
 			$this->reader->listFiles( $this->newFile( $contents ), ArchiveReader::FORMAT_ZIP, 10, self::MAX_SIZE )
 		);
 	}
@@ -199,7 +199,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	/** @dataProvider provideInvalidGzipHeaders */
 	public function testListFilesInvalidGzipHeader( string $header ): void {
 		$this->assertStatusError(
-			'importdump-archive-unreadable',
+			'requestimport-archive-unreadable',
 			$this->reader->listFiles( $this->newFile( $header ), ArchiveReader::FORMAT_GZIP, 10, self::MAX_SIZE )
 		);
 	}
@@ -213,7 +213,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	public function testListFilesTooManyEntries(): void {
 		$path = $this->newZip( [ 'a' => '1', 'b' => '2', 'c' => '3' ] );
 		$this->assertStatusError(
-			'importdump-archive-too-many-entries',
+			'requestimport-archive-too-many-entries',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 2, self::MAX_SIZE )
 		);
 	}
@@ -221,7 +221,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	public function testListFilesUnreadable(): void {
 		$path = $this->newFile( "PK\x03\x04 this is not a zip file" );
 		$this->assertStatusError(
-			'importdump-archive-unreadable',
+			'requestimport-archive-unreadable',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_ZIP, 100, self::MAX_SIZE )
 		);
 	}
@@ -277,7 +277,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$zip = $this->newZip( [ 'dump.xml' => str_repeat( 'content ', 1000 ) ] );
 		$entry = $this->reader->listFiles( $zip, ArchiveReader::FORMAT_ZIP, 100, self::MAX_SIZE )->getValue()[0];
 		$this->assertStatusError(
-			'importdump-archive-too-large',
+			'requestimport-archive-too-large',
 			$this->reader->extractTo( $zip, ArchiveReader::FORMAT_ZIP, $entry, $this->getNewTempFile(), 100, null )
 		);
 
@@ -285,7 +285,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$entry = $this->reader->listFiles( $gzip, ArchiveReader::FORMAT_GZIP, 100, self::MAX_SIZE )->getValue()[0];
 		$destination = $this->getNewTempFile();
 		$this->assertStatusError(
-			'importdump-archive-too-large',
+			'requestimport-archive-too-large',
 			$this->reader->extractTo( $gzip, ArchiveReader::FORMAT_GZIP, $entry, $destination, 100, null )
 		);
 
@@ -298,7 +298,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 		$destination = $this->getNewTempFile();
 		$this->assertStatusError(
-			'importdump-archive-ratio',
+			'requestimport-archive-ratio',
 			$this->reader->extractTo( $path, ArchiveReader::FORMAT_GZIP, $entry, $destination, PHP_INT_MAX, null )
 		);
 	}
@@ -308,7 +308,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$entry = new ArchiveEntry( 0, 'dump.xml', 1000, 10 );
 
 		$this->assertStatusError(
-			'importdump-archive-unreadable',
+			'requestimport-archive-unreadable',
 			$this->reader->extractTo( $path, ArchiveReader::FORMAT_ZIP, $entry, $this->getNewTempFile(), 1048576, null )
 		);
 	}
@@ -415,7 +415,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		foreach ( $entries as $label => $entry ) {
 			$path = $this->newFile( TarFixture::finish( TarFixture::entry( 'ok.xml', 'ok', '0' ) . $entry ) );
 			$this->assertStatusError(
-				'importdump-archive-unsafe',
+				'requestimport-archive-unsafe',
 				$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE ),
 				$label
 			);
@@ -426,7 +426,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	public function testListFilesTarUnsafeName( string $name ): void {
 		$path = $this->newTar( [ $name => 'content' ] );
 		$this->assertStatusError(
-			'importdump-archive-unsafe',
+			'requestimport-archive-unsafe',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE )
 		);
 	}
@@ -443,7 +443,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	public function testListFilesTarUnsafeDirectoryName(): void {
 		$path = $this->newTar( [ '../folder/' => '', 'dump.xml' => 'content' ] );
 		$this->assertStatusError(
-			'importdump-archive-unsafe',
+			'requestimport-archive-unsafe',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE )
 		);
 	}
@@ -474,7 +474,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		);
 
 		$this->assertStatusError(
-			'importdump-archive-unsafe',
+			'requestimport-archive-unsafe',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE )
 		);
 	}
@@ -485,7 +485,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		) );
 
 		$this->assertStatusError(
-			'importdump-archive-unsafe',
+			'requestimport-archive-unsafe',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE )
 		);
 	}
@@ -501,7 +501,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	public function testListFilesTarTooManyEntries(): void {
 		$path = $this->newTar( [ 'a/' => '', 'b/' => '', 'dump.xml' => 'content' ] );
 		$this->assertStatusError(
-			'importdump-archive-too-many-entries',
+			'requestimport-archive-too-many-entries',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 2, self::MAX_SIZE )
 		);
 	}
@@ -509,7 +509,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	public function testListFilesTarTooLarge(): void {
 		$path = $this->newTar( [ 'dump.xml' => str_repeat( 'a', 1000 ) ] );
 		$this->assertStatusError(
-			'importdump-archive-too-large',
+			'requestimport-archive-too-large',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, 999 )
 		);
 	}
@@ -517,7 +517,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	public function testListFilesTarTooLargeTogether(): void {
 		$path = $this->newTar( [ 'dump.xml' => str_repeat( 'a', 600 ), '._dump.xml' => str_repeat( 'a', 600 ) ] );
 		$this->assertStatusError(
-			'importdump-archive-too-large',
+			'requestimport-archive-too-large',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, 1000 )
 		);
 	}
@@ -527,7 +527,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$path = $this->newFile( gzencode( $tar ) );
 
 		$this->assertStatusError(
-			'importdump-archive-ratio',
+			'requestimport-archive-ratio',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_GZIP, 100, PHP_INT_MAX )
 		);
 	}
@@ -555,7 +555,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 			}
 
 			$status = $this->reader->listFiles( $path, $format, 100, self::MAX_SIZE );
-			$this->assertStatusError( 'importdump-archive-unreadable', $status, $label );
+			$this->assertStatusError( 'requestimport-archive-unreadable', $status, $label );
 		}
 	}
 
@@ -618,7 +618,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_TAR, 100, self::MAX_SIZE )->getValue()[0];
 
 		$this->assertStatusError(
-			'importdump-archive-too-large',
+			'requestimport-archive-too-large',
 			$this->reader->extractTo( $path, ArchiveReader::FORMAT_TAR, $entry, $this->getNewTempFile(), 999, null )
 		);
 	}
@@ -627,7 +627,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$path = $this->newTar( [ 'dump.xml' => 'content' ] );
 
 		$this->assertStatusError(
-			'importdump-archive-unreadable',
+			'requestimport-archive-unreadable',
 			$this->reader->extractTo(
 				$path,
 				ArchiveReader::FORMAT_TAR,
@@ -639,7 +639,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		);
 
 		$this->assertStatusError(
-			'importdump-archive-unreadable',
+			'requestimport-archive-unreadable',
 			$this->reader->extractTo(
 				$path,
 				ArchiveReader::FORMAT_TAR,
@@ -655,7 +655,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$path = $this->newFile( substr( TarFixture::build( [ 'dump.xml' => str_repeat( 'a', 2000 ) ] ), 0, 1000 ) );
 
 		$this->assertStatusError(
-			'importdump-archive-unreadable',
+			'requestimport-archive-unreadable',
 			$this->reader->extractTo(
 				$path,
 				ArchiveReader::FORMAT_TAR,
@@ -674,7 +674,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 		$path = $this->newFile( "BZh9\x31\x41\x59\x26\x53\x59" . 'data' );
 		$this->assertStatusError(
-			'importdump-archive-bzip2-unavailable',
+			'requestimport-archive-bzip2-unavailable',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_BZIP2, 100, self::MAX_SIZE )
 		);
 	}
@@ -737,7 +737,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$entry = $this->reader->listFiles( $path, ArchiveReader::FORMAT_BZIP2, 100, self::MAX_SIZE )->getValue()[0];
 
 		$this->assertStatusError(
-			'importdump-archive-ratio',
+			'requestimport-archive-ratio',
 			$this->reader->extractTo(
 				$path,
 				ArchiveReader::FORMAT_BZIP2,
@@ -787,7 +787,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_ONE ) );
 
 		$this->assertStatusError(
-			'importdump-archive-unreadable',
+			'requestimport-archive-unreadable',
 			$reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 100, self::MAX_SIZE )
 		);
 	}
@@ -795,18 +795,18 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	public function testProgramFormatsThatAreNotTurnedOn(): void {
 		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::XZ_XML ) );
 		$this->assertStatusError(
-			'importdump-archive-binary-unavailable',
+			'requestimport-archive-binary-unavailable',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_XZ, 100, self::MAX_SIZE )
 		);
 
 		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_ONE ) );
 		$this->assertStatusError(
-			'importdump-archive-binary-unavailable',
+			'requestimport-archive-binary-unavailable',
 			$this->reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 100, self::MAX_SIZE )
 		);
 
 		$this->assertStatusError(
-			'importdump-archive-binary-unavailable',
+			'requestimport-archive-binary-unavailable',
 			$this->reader->extractTo(
 				$path,
 				ArchiveReader::FORMAT_SEVEN_ZIP,
@@ -905,7 +905,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::XZ_TAR_LINK ) );
 
 		$this->assertStatusError(
-			'importdump-archive-unsafe',
+			'requestimport-archive-unsafe',
 			$reader->listFiles( $path, ArchiveReader::FORMAT_XZ, 100, self::MAX_SIZE )
 		);
 	}
@@ -916,7 +916,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$entry = new ArchiveEntry( 0, '', null, (int)filesize( $path ) );
 
 		$this->assertStatusError(
-			'importdump-archive-ratio',
+			'requestimport-archive-ratio',
 			$reader->extractTo(
 				$path,
 				ArchiveReader::FORMAT_XZ,
@@ -928,7 +928,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		);
 
 		$this->assertStatusError(
-			'importdump-archive-too-large',
+			'requestimport-archive-too-large',
 			$reader->extractTo( $path, ArchiveReader::FORMAT_XZ, $entry, $this->getNewTempFile(), 100, null )
 		);
 	}
@@ -950,7 +950,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 			);
 		}
 
-		$this->assertStatusError( 'importdump-archive-unreadable', $status );
+		$this->assertStatusError( 'requestimport-archive-unreadable', $status );
 	}
 
 	public function testSevenZip(): void {
@@ -1032,7 +1032,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$this->assertCount( 2, $status->getValue() );
 
 		$this->assertStatusError(
-			'importdump-archive-too-many-entries',
+			'requestimport-archive-too-many-entries',
 			$reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 2, self::MAX_SIZE )
 		);
 	}
@@ -1097,9 +1097,12 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 	}
 
 	public static function provideUnacceptableSevenZipArchives(): Generator {
-		yield 'symbolic link' => [ ExternalFixtures::SEVEN_ZIP_LINK, 'importdump-archive-unsafe' ];
-		yield 'encrypted file' => [ ExternalFixtures::SEVEN_ZIP_ENCRYPTED, 'importdump-archive-unsafe' ];
-		yield 'encrypted headers' => [ ExternalFixtures::SEVEN_ZIP_ENCRYPTED_HEADERS, 'importdump-archive-unreadable' ];
+		yield 'symbolic link' => [ ExternalFixtures::SEVEN_ZIP_LINK, 'requestimport-archive-unsafe' ];
+		yield 'encrypted file' => [ ExternalFixtures::SEVEN_ZIP_ENCRYPTED, 'requestimport-archive-unsafe' ];
+		yield 'encrypted headers' => [
+			ExternalFixtures::SEVEN_ZIP_ENCRYPTED_HEADERS,
+			'requestimport-archive-unreadable',
+		];
 	}
 
 	public function testSevenZipExpandingPastTheLimits(): void {
@@ -1111,7 +1114,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		$entry = new ArchiveEntry( 0, 'zeros8.xml', null, (int)filesize( $path ) );
 
 		$this->assertStatusError(
-			'importdump-archive-ratio',
+			'requestimport-archive-ratio',
 			$reader->extractTo(
 				$path,
 				ArchiveReader::FORMAT_SEVEN_ZIP,
@@ -1123,7 +1126,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 		);
 
 		$this->assertStatusError(
-			'importdump-archive-too-large',
+			'requestimport-archive-too-large',
 			$reader->extractTo( $path, ArchiveReader::FORMAT_SEVEN_ZIP, $entry, $this->getNewTempFile(), 100, null )
 		);
 	}
@@ -1135,7 +1138,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_ONE ) );
 		$this->assertStatusError(
-			'importdump-archive-unreadable',
+			'requestimport-archive-unreadable',
 			$reader->extractTo(
 				$path,
 				ArchiveReader::FORMAT_SEVEN_ZIP,
@@ -1154,7 +1157,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_ONE ) );
 		$this->assertStatusError(
-			'importdump-archive-unreadable',
+			'requestimport-archive-unreadable',
 			$reader->extractTo(
 				$path,
 				ArchiveReader::FORMAT_SEVEN_ZIP,
@@ -1176,7 +1179,7 @@ class ArchiveReaderTest extends MediaWikiIntegrationTestCase {
 
 		$path = $this->newFile( ExternalFixtures::decode( ExternalFixtures::SEVEN_ZIP_ONE ) );
 		$this->assertStatusError(
-			'importdump-archive-memory',
+			'requestimport-archive-memory',
 			$reader->listFiles( $path, ArchiveReader::FORMAT_SEVEN_ZIP, 100, self::MAX_SIZE )
 		);
 	}

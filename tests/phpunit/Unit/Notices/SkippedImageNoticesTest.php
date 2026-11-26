@@ -56,7 +56,7 @@ class SkippedImageNoticesTest extends MediaWikiUnitTestCase {
 
 	public function testWarnsAboutTheSkippedFilesWithoutBlockingTheRequest(): void {
 		$notices = $this->getNotices( 2, [
-			new SkippedFile( 'a.png', 'importdump-images-skip-extension', [] ),
+			new SkippedFile( 'a.png', 'requestimport-images-skip-extension', [] ),
 			new SkippedFile( 'b<i>.png', 'filetype-mime-mismatch', [ 'png', 'image/jpeg' ] ),
 		] );
 
@@ -73,7 +73,7 @@ class SkippedImageNoticesTest extends MediaWikiUnitTestCase {
 
 	public function testSaysWhenTheListIsCutShort(): void {
 		$notices = $this->getNotices( 3, [
-			new SkippedFile( 'a.png', 'importdump-images-skip-extension', [] ),
+			new SkippedFile( 'a.png', 'requestimport-images-skip-extension', [] ),
 		] );
 
 		$this->assertStringContainsString( '<p>reason</p>', $notices[0]->html );

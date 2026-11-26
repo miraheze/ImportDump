@@ -2,8 +2,8 @@
 	"name": "ImportDump",
 	"author": "Universal Omega",
 	"url": "https://github.com/miraheze/ImportDump",
-	"descriptionmsg": "importdump-desc",
-	"namemsg": "importdump-extensionname",
+	"descriptionmsg": "requestimport-desc",
+	"namemsg": "requestimport-extensionname",
 	"license-name": "GPL-3.0-or-later",
 	"type": "specialpage",
 	"requires": {
@@ -236,8 +236,8 @@
 			],
 			"messages": [
 				"largefileserver",
-				"importdump-chunkedupload-error",
-				"importdump-chunkedupload-progress"
+				"requestimport-chunkedupload-error",
+				"requestimport-chunkedupload-progress"
 			]
 		},
 		"ext.importdump.importprogress": {
@@ -248,21 +248,21 @@
 				"oojs-ui-core"
 			],
 			"messages": [
-				"importdump-import-finished",
-				"importdump-import-step",
-				"importdump-import-step-pages",
-				"importdump-import-step-percent",
-				"importdump-import-stopped",
-				"importdump-import-waiting",
-				"importdump-stage-afterimport",
-				"importdump-stage-counts",
-				"importdump-stage-download",
-				"importdump-stage-import",
-				"importdump-stage-recentchanges",
-				"importdump-stage-refreshlinks",
-				"importdump-stage-sitestats",
-				"importdump-stage-textindex",
-				"importdump-verification-reload"
+				"requestimport-import-finished",
+				"requestimport-import-step",
+				"requestimport-import-step-pages",
+				"requestimport-import-step-percent",
+				"requestimport-import-stopped",
+				"requestimport-import-waiting",
+				"requestimport-stage-afterimport",
+				"requestimport-stage-counts",
+				"requestimport-stage-download",
+				"requestimport-stage-import",
+				"requestimport-stage-recentchanges",
+				"requestimport-stage-refreshlinks",
+				"requestimport-stage-sitestats",
+				"requestimport-stage-textindex",
+				"requestimport-verification-reload"
 			]
 		},
 		"ext.importdump.output": {
@@ -271,7 +271,7 @@
 				"mediawiki.api"
 			],
 			"messages": [
-				"importdump-output-empty"
+				"requestimport-output-empty"
 			]
 		},
 		"ext.importdump.oouiform": {
@@ -292,15 +292,15 @@
 				"oojs-ui-core"
 			],
 			"messages": [
-				"importdump-verification-checking",
-				"importdump-verification-done",
-				"importdump-verification-extracting",
-				"importdump-verification-joining",
-				"importdump-verification-label",
-				"importdump-verification-merging",
-				"importdump-verification-rejected",
-				"importdump-verification-reload",
-				"importdump-verification-waiting"
+				"requestimport-verification-checking",
+				"requestimport-verification-done",
+				"requestimport-verification-extracting",
+				"requestimport-verification-joining",
+				"requestimport-verification-label",
+				"requestimport-verification-merging",
+				"requestimport-verification-rejected",
+				"requestimport-verification-reload",
+				"requestimport-verification-waiting"
 			]
 		}
 	},

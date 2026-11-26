@@ -56,7 +56,7 @@ class RequestViewer {
 
 		if ( !$this->requestManager->isViewableBy( $authority ) ) {
 			$this->context->getOutput()->addHTML(
-				Html::errorBox( $this->context->msg( 'importdump-private' )->escaped() )
+				Html::errorBox( $this->context->msg( 'requestimport-private' )->escaped() )
 			);
 
 			return [];
@@ -93,17 +93,17 @@ class RequestViewer {
 		$percent = $progress['percent'] ?? null;
 
 		// Messages that can be used here:
-		// * importdump-verification-checking
-		// * importdump-verification-extracting
-		// * importdump-verification-joining
-		// * importdump-verification-storing
-		// * importdump-verification-waiting
+		// * requestimport-verification-checking
+		// * requestimport-verification-extracting
+		// * requestimport-verification-joining
+		// * requestimport-verification-storing
+		// * requestimport-verification-waiting
 		$label = $this->context->msg(
-			'importdump-verification-' . ( $progress['stage'] ?? 'waiting' )
+			'requestimport-verification-' . ( $progress['stage'] ?? 'waiting' )
 		)->text();
 
 		if ( $percent !== null ) {
-			$label = $this->context->msg( 'importdump-verification-label' )
+			$label = $this->context->msg( 'requestimport-verification-label' )
 				->plaintextParams( $label )
 				->numParams( $percent )
 				->text();
@@ -138,16 +138,16 @@ class RequestViewer {
 		$stages = $this->requestManager->getStages();
 
 		if ( $stage === null ) {
-			$label = $this->context->msg( 'importdump-import-waiting' )->text();
+			$label = $this->context->msg( 'requestimport-import-waiting' )->text();
 		} else {
 			// Messages that can be used here:
-			// * importdump-import-step
-			// * importdump-import-step-pages
-			// * importdump-import-step-percent
+			// * requestimport-import-step
+			// * requestimport-import-step-pages
+			// * requestimport-import-step-percent
 			$message = $this->context->msg( match ( true ) {
-				$percent === null => 'importdump-import-step',
-				$pages !== null => 'importdump-import-step-pages',
-				default => 'importdump-import-step-percent',
+				$percent === null => 'requestimport-import-step',
+				$pages !== null => 'requestimport-import-step-pages',
+				default => 'requestimport-import-step-percent',
 			} )->numParams( (int)array_search( $stage, $stages, true ) + 1, count( $stages ) )
 				->params( $this->context->msg( $stage->getLabelKey() )->text() );
 
@@ -248,7 +248,7 @@ class RequestViewer {
 		$out = $this->context->getOutput();
 		if ( $requestID === 0 || !$this->requestManager->exists() ) {
 			$out->addHTML(
-				Html::errorBox( $this->context->msg( 'importdump-unknown' )->escaped() )
+				Html::errorBox( $this->context->msg( 'requestimport-unknown' )->escaped() )
 			);
 
 			return null;

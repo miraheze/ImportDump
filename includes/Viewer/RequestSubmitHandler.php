@@ -49,11 +49,11 @@ class RequestSubmitHandler {
 			if ( $session->get( 'previous_posted_comment' ) !== $formData['comment'] ) {
 				$session->set( 'previous_posted_comment', $formData['comment'] );
 				$this->requestManager->addComment( $formData['comment'], $user );
-				$this->addSuccess( $this->context->msg( 'importdump-comment-success' ) );
+				$this->addSuccess( $this->context->msg( 'requestimport-comment-success' ) );
 				return;
 			}
 
-			$this->addError( $this->context->msg( 'importdump-duplicate-comment' ) );
+			$this->addError( $this->context->msg( 'requestimport-duplicate-comment' ) );
 			return;
 		}
 
@@ -64,7 +64,7 @@ class RequestSubmitHandler {
 
 			$changes = [];
 			if ( $this->requestManager->getReason() !== $formData['edit-reason'] ) {
-				$changes[] = $this->context->msg( 'importdump-request-edited-reason' )->plaintextParams(
+				$changes[] = $this->context->msg( 'requestimport-request-edited-reason' )->plaintextParams(
 					$this->requestManager->getReason(),
 					$formData['edit-reason']
 				)->escaped();
@@ -73,7 +73,7 @@ class RequestSubmitHandler {
 			}
 
 			if ( $this->requestManager->getSource() !== $formData['edit-source'] ) {
-				$changes[] = $this->context->msg( 'importdump-request-edited-source' )->plaintextParams(
+				$changes[] = $this->context->msg( 'requestimport-request-edited-source' )->plaintextParams(
 					$this->requestManager->getSource(),
 					$formData['edit-source']
 				)->escaped();
@@ -83,7 +83,7 @@ class RequestSubmitHandler {
 
 			if ( $this->requestManager->getTarget() !== $formData['edit-target'] ) {
 				$changes[] = $this->context->msg(
-					'importdump-request-edited-target',
+					'requestimport-request-edited-target',
 					$this->requestManager->getTarget(),
 					$formData['edit-target']
 				)->escaped();
@@ -99,7 +99,7 @@ class RequestSubmitHandler {
 				!$status->isRunning() &&
 				$this->requestManager->shouldSkipDupes() !== (bool)$formData['edit-skip-dupes']
 			) {
-				$changes[] = $this->context->msg( 'importdump-request-edited-skip-dupes' )->params(
+				$changes[] = $this->context->msg( 'requestimport-request-edited-skip-dupes' )->params(
 					$this->context->msg( $this->requestManager->shouldSkipDupes() ? 'htmlform-yes' : 'htmlform-no' )
 						->inContentLanguage()->text(),
 					$this->context->msg( $formData['edit-skip-dupes'] ? 'htmlform-yes' : 'htmlform-no' )
@@ -112,7 +112,7 @@ class RequestSubmitHandler {
 			if ( !$changes ) {
 				$this->requestManager->endAtomic( __METHOD__ );
 
-				$this->addError( $this->context->msg( 'importdump-no-changes' ) );
+				$this->addError( $this->context->msg( 'requestimport-no-changes' ) );
 
 				return;
 			}
@@ -120,7 +120,7 @@ class RequestSubmitHandler {
 			if ( $this->requestManager->getStatus() === RequestStatus::Declined ) {
 				$this->requestManager->setStatus( RequestStatus::Pending );
 
-				$comment = $this->context->msg( 'importdump-request-reopened', $user->getName() )->rawParams(
+				$comment = $this->context->msg( 'requestimport-request-reopened', $user->getName() )->rawParams(
 					implode( "\n\n", $changes )
 				)->inContentLanguage()->escaped();
 
@@ -132,7 +132,7 @@ class RequestSubmitHandler {
 					$comment, 'requestimport-request-status-update', $user
 				);
 			} else {
-				$comment = $this->context->msg( 'importdump-request-edited', $user->getName() )->rawParams(
+				$comment = $this->context->msg( 'requestimport-request-edited', $user->getName() )->rawParams(
 					implode( "\n\n", $changes )
 				)->inContentLanguage()->escaped();
 
@@ -141,7 +141,7 @@ class RequestSubmitHandler {
 
 			$this->requestManager->endAtomic( __METHOD__ );
 
-			$this->addSuccess( $this->context->msg( 'importdump-edit-success' ) );
+			$this->addSuccess( $this->context->msg( 'requestimport-edit-success' ) );
 
 			return;
 		}
@@ -153,7 +153,7 @@ class RequestSubmitHandler {
 				$user
 			) ) {
 				$this->addSuccess( $this->context->msg(
-					'importdump-interwiki-success',
+					'requestimport-interwiki-success',
 					$this->requestManager->getTarget()
 				) );
 
@@ -161,7 +161,7 @@ class RequestSubmitHandler {
 			}
 
 			$this->addError( $this->context->msg(
-				'importdump-interwiki-failed',
+				'requestimport-interwiki-failed',
 				$this->requestManager->getTarget()
 			) );
 
@@ -170,13 +170,13 @@ class RequestSubmitHandler {
 
 		if ( isset( $formData['submit-verify'] ) ) {
 			if ( $this->requestManager->getStatus() !== RequestStatus::Verifying ) {
-				$this->addError( $this->context->msg( 'importdump-verification-not-needed' ) );
+				$this->addError( $this->context->msg( 'requestimport-verification-not-needed' ) );
 
 				return;
 			}
 
 			$this->requestManager->retryVerification();
-			$this->addSuccess( $this->context->msg( 'importdump-verification-retried' ) );
+			$this->addSuccess( $this->context->msg( 'requestimport-verification-retried' ) );
 			return;
 		}
 
@@ -186,12 +186,12 @@ class RequestSubmitHandler {
 				$this->requestManager->getStatus() !== RequestStatus::Pending ||
 				$this->requestManager->getHeldImageCount() === 0
 			) {
-				$this->addError( $this->context->msg( 'importdump-recheck-not-needed' ) );
+				$this->addError( $this->context->msg( 'requestimport-recheck-not-needed' ) );
 				return;
 			}
 
 			$this->requestManager->recheckHeldImages();
-			$this->addSuccess( $this->context->msg( 'importdump-recheck-queued' ) );
+			$this->addSuccess( $this->context->msg( 'requestimport-recheck-queued' ) );
 			return;
 		}
 
@@ -205,7 +205,7 @@ class RequestSubmitHandler {
 				!in_array( $newStatus, [ RequestStatus::Declined, RequestStatus::Verifying ], true )
 			) {
 				$this->requestManager->endAtomic( __METHOD__ );
-				$this->addError( $this->context->msg( 'importdump-verifying-conflict' ) );
+				$this->addError( $this->context->msg( 'requestimport-verifying-conflict' ) );
 				return;
 			}
 
@@ -245,32 +245,32 @@ class RequestSubmitHandler {
 				$this->requestManager->endAtomic( __METHOD__ );
 
 				if ( !$changes ) {
-					$this->addError( $this->context->msg( 'importdump-no-changes' ) );
+					$this->addError( $this->context->msg( 'requestimport-no-changes' ) );
 					return;
 				}
 
 				if ( in_array( 'private', $changes, true ) ) {
-					$this->addSuccess( $this->context->msg( 'importdump-success-private' ) );
+					$this->addSuccess( $this->context->msg( 'requestimport-success-private' ) );
 				}
 
 				if ( in_array( 'public', $changes, true ) ) {
-					$this->addSuccess( $this->context->msg( 'importdump-success-public' ) );
+					$this->addSuccess( $this->context->msg( 'requestimport-success-public' ) );
 				}
 
 				if ( in_array( 'locked', $changes, true ) ) {
-					$this->addSuccess( $this->context->msg( 'importdump-success-locked' ) );
+					$this->addSuccess( $this->context->msg( 'requestimport-success-locked' ) );
 				}
 
 				if ( in_array( 'unlocked', $changes, true ) ) {
-					$this->addSuccess( $this->context->msg( 'importdump-success-unlocked' ) );
+					$this->addSuccess( $this->context->msg( 'requestimport-success-unlocked' ) );
 				}
 
 				if ( in_array( 'overwrite', $changes, true ) ) {
-					$this->addSuccess( $this->context->msg( 'importdump-success-overwrite' ) );
+					$this->addSuccess( $this->context->msg( 'requestimport-success-overwrite' ) );
 				}
 
 				if ( in_array( 'skip', $changes, true ) ) {
-					$this->addSuccess( $this->context->msg( 'importdump-success-skip' ) );
+					$this->addSuccess( $this->context->msg( 'requestimport-success-skip' ) );
 				}
 
 				return;
@@ -287,7 +287,7 @@ class RequestSubmitHandler {
 
 		$status = $this->requestManager->getStatus();
 		if ( $status === RequestStatus::Complete || $status->isRunning() ) {
-			$this->addError( $this->context->msg( 'importdump-status-conflict' ) );
+			$this->addError( $this->context->msg( 'requestimport-status-conflict' ) );
 
 			return;
 		}
@@ -301,7 +301,7 @@ class RequestSubmitHandler {
 
 		if ( isset( $formData['submit-start'] ) ) {
 			if ( $status === RequestStatus::Verifying ) {
-				$this->addError( $this->context->msg( 'importdump-verifying-conflict' ) );
+				$this->addError( $this->context->msg( 'requestimport-verifying-conflict' ) );
 				return;
 			}
 
@@ -313,7 +313,7 @@ class RequestSubmitHandler {
 			$blocking = $this->requestManager->getBlockingRequirementProblems();
 			if ( $blocking ) {
 				$this->addError(
-					$this->context->msg( 'importdump-requirement-blocked' )
+					$this->context->msg( 'requestimport-requirement-blocked' )
 						->params( $this->context->getLanguage()->listToText( array_unique(
 							array_column( $blocking, 'name' )
 						) ) )
@@ -325,7 +325,7 @@ class RequestSubmitHandler {
 			$this->requestManager->addHandler( $user );
 			$this->requestManager->setStatus( RequestStatus::Starting );
 			$this->requestManager->executeJob( $user->getName() );
-			$this->addSuccess( $this->context->msg( 'importdump-import-started' ) );
+			$this->addSuccess( $this->context->msg( 'requestimport-import-started' ) );
 		}
 	}
 
@@ -345,13 +345,13 @@ class RequestSubmitHandler {
 			->text();
 
 		$comment = $this->context->msg(
-			'importdump-status-updated-by',
+			'requestimport-status-updated-by',
 			mb_strtolower( $statusMessage ),
 			$user->getName()
 		)->inContentLanguage()->escaped();
 
 		if ( $formData['handle-comment'] ) {
-			$comment .= "\n" . $this->context->msg( 'importdump-status-comment-given' )
+			$comment .= "\n" . $this->context->msg( 'requestimport-status-comment-given' )
 				->inContentLanguage()
 				->escaped();
 
@@ -367,6 +367,6 @@ class RequestSubmitHandler {
 			$comment, 'requestimport-request-status-update', $user
 		);
 
-		$this->addSuccess( $this->context->msg( 'importdump-status-updated-success' ) );
+		$this->addSuccess( $this->context->msg( 'requestimport-status-updated-success' ) );
 	}
 }

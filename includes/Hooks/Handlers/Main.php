@@ -34,7 +34,7 @@ class Main implements
 
 	/** @inheritDoc */
 	public function onLoginFormValidErrorMessages( array &$messages ) {
-		$messages[] = 'importdump-notloggedin';
+		$messages[] = 'requestimport-notloggedin';
 	}
 
 	/** @inheritDoc */
