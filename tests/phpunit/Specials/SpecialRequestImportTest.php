@@ -1131,8 +1131,8 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 	public function testUploadHelpListsTheArchiveTypesThatAreSetUp(): void {
 		$help = $this->getUploadHelp();
 
-		$this->assertSame( 'requestimport-help-upload-file', $help[0]->getKey() );
-		$this->assertSame( 'requestimport-help-upload-file-types', $help[1]->getKey() );
+		$this->assertSame( 'requestimport-help-upload-xml', $help[0]->getKey() );
+		$this->assertSame( 'requestimport-help-upload-xml-types', $help[1]->getKey() );
 		$this->assertSame( [
 			'ZIP, TAR, GZIP and BZIP2',
 			'.tar.gz, .tgz and .tar.bz2',
@@ -1149,10 +1149,10 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		);
 
 		$this->overrideConfigValue( ConfigNames::EnableHistoryDetection, false );
-		$this->assertNotContains( 'requestimport-help-upload-file-history', $keys( $this->getUploadHelp() ) );
+		$this->assertNotContains( 'requestimport-help-upload-xml-history', $keys( $this->getUploadHelp() ) );
 
 		$this->overrideConfigValue( ConfigNames::EnableHistoryDetection, true );
-		$this->assertContains( 'requestimport-help-upload-file-history', $keys( $this->getUploadHelp() ) );
+		$this->assertContains( 'requestimport-help-upload-xml-history', $keys( $this->getUploadHelp() ) );
 	}
 
 	/**
