@@ -142,7 +142,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	}
 
 	private function getRequestManager( int $id ): RequestManager {
-		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		$manager = $this->getServiceContainer()->getService( 'RequestImport.RequestManager' );
 		'@phan-var RequestManager $manager';
 		$manager->loadFromID( $id );
 		return $manager;
@@ -152,7 +152,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 * @covers ::__construct
 	 */
 	public function testConstructor(): void {
-		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		$manager = $this->getServiceContainer()->getService( 'RequestImport.RequestManager' );
 		$this->assertInstanceOf( RequestManager::class, $manager );
 	}
 
@@ -1387,7 +1387,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	}
 
 	private function notifyRequester( RequestManager $manager ): void {
-		$notifier = $this->getServiceContainer()->getService( 'ImportDumpAttentionNotifier' );
+		$notifier = $this->getServiceContainer()->getService( 'RequestImport.AttentionNotifier' );
 		'@phan-var AttentionNotifier $notifier';
 		$notifier->notify( $manager );
 	}
@@ -1546,7 +1546,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 */
 	public function testGetVerificationProgress(): void {
 		$manager = $this->getRequestManager( id: 1 );
-		$progress = $this->getServiceContainer()->getService( 'ImportDumpVerificationProgress' );
+		$progress = $this->getServiceContainer()->getService( 'RequestImport.VerificationProgress' );
 		'@phan-var \Miraheze\ImportDump\Progress\VerificationProgress $progress';
 
 		$this->assertNull( $manager->getVerificationProgress() );
@@ -1587,7 +1587,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	 */
 	public function testRetryVerification(): void {
 		$manager = $this->getRequestManager( id: 1 );
-		$progress = $this->getServiceContainer()->getService( 'ImportDumpVerificationProgress' );
+		$progress = $this->getServiceContainer()->getService( 'RequestImport.VerificationProgress' );
 		'@phan-var \Miraheze\ImportDump\Progress\VerificationProgress $progress';
 
 		$progress->set( 1, 'checking', 40 );

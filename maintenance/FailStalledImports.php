@@ -42,9 +42,9 @@ class FailStalledImports extends Maintenance {
 	private function initServices(): void {
 		$services = $this->getServiceContainer();
 		$this->connectionProvider = $services->getConnectionProvider();
-		$this->heartbeat = $services->get( 'ImportDumpHeartbeat' );
+		$this->heartbeat = $services->get( 'RequestImport.Heartbeat' );
 		$this->jobQueueGroupFactory = $services->getJobQueueGroupFactory();
-		$this->requestManager = $services->get( 'ImportDumpRequestManager' );
+		$this->requestManager = $services->get( 'RequestImport.RequestManager' );
 	}
 
 	public function execute(): void {

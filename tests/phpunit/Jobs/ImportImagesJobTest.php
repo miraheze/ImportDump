@@ -84,7 +84,7 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 	}
 
 	private function getRequestManager( int $id ): RequestManager {
-		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		$manager = $this->getServiceContainer()->getService( 'RequestImport.RequestManager' );
 		'@phan-var RequestManager $manager';
 		$manager->loadFromID( $id );
 		return $manager;
@@ -133,7 +133,7 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 	}
 
 	private function getHeartbeat(): ImportHeartbeat {
-		$heartbeat = $this->getServiceContainer()->getService( 'ImportDumpHeartbeat' );
+		$heartbeat = $this->getServiceContainer()->getService( 'RequestImport.Heartbeat' );
 		'@phan-var ImportHeartbeat $heartbeat';
 		return $heartbeat;
 	}

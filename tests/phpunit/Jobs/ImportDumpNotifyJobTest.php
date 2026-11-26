@@ -99,7 +99,7 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase {
 	}
 
 	private function getRequestManager( int $id ): RequestManager {
-		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		$manager = $this->getServiceContainer()->getService( 'RequestImport.RequestManager' );
 		'@phan-var RequestManager $manager';
 		$manager->loadFromID( $id );
 		return $manager;

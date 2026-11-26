@@ -27,7 +27,7 @@ class ServiceWiringTest extends MediaWikiIntegrationTestCase {
 		$directory = $this->getNewTempDirectory() . '/made/on/demand';
 		$this->overrideConfigValue( ConfigNames::TempDirectory, $directory );
 
-		$factory = $this->getServiceContainer()->get( 'ImportDumpTempFSFileFactory' );
+		$factory = $this->getServiceContainer()->get( 'RequestImport.TempFSFileFactory' );
 		'@phan-var TempFSFileFactory $factory';
 
 		$file = $factory->newTempFSFile( 'importdump-test', 'tmp' );

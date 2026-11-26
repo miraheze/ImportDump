@@ -44,7 +44,7 @@ class ExpireFiles extends Maintenance {
 	private function initServices(): void {
 		$services = $this->getServiceContainer();
 		$this->connectionProvider = $services->getConnectionProvider();
-		$this->requestManager = $services->get( 'ImportDumpRequestManager' );
+		$this->requestManager = $services->get( 'RequestImport.RequestManager' );
 	}
 
 	public function execute(): void {

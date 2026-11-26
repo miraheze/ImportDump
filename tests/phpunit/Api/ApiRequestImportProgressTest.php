@@ -59,7 +59,7 @@ class ApiRequestImportProgressTest extends ApiTestCase {
 	}
 
 	private function getProgress(): VerificationProgress {
-		$progress = $this->getServiceContainer()->getService( 'ImportDumpVerificationProgress' );
+		$progress = $this->getServiceContainer()->getService( 'RequestImport.VerificationProgress' );
 		'@phan-var VerificationProgress $progress';
 		return $progress;
 	}
@@ -106,7 +106,7 @@ class ApiRequestImportProgressTest extends ApiTestCase {
 	public function testImportProgress(): void {
 		$id = $this->newRequest( RequestStatus::InProgress, 0 );
 
-		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		$manager = $this->getServiceContainer()->getService( 'RequestImport.RequestManager' );
 		'@phan-var \Miraheze\ImportDump\Request\RequestManager $manager';
 		$manager->loadFromID( $id );
 		$manager->setStage( RequestStage::TextIndex );

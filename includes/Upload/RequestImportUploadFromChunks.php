@@ -114,7 +114,7 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		$services = MediaWikiServices::getInstance();
 		$repo = $services->getRepoGroup()->getLocalRepo();
 
-		$factory = $services->get( 'ImportDumpTempFSFileFactory' );
+		$factory = $services->get( 'RequestImport.TempFSFileFactory' );
 		'@phan-var TempFSFileFactory $factory';
 		$file = $factory->newTempFSFile( 'importdump-chunks', '' );
 		$target = $file ? fopen( $file->getPath(), 'wb' ) : false;
@@ -200,7 +200,7 @@ class RequestImportUploadFromChunks extends UploadFromChunks {
 		$mime = $services->getMimeAnalyzer()->guessMimeType( $path );
 
 		$definition = self::TYPES[$this->type];
-		$processor = $services->getService( 'ImportDumpDumpProcessor' );
+		$processor = $services->getService( 'RequestImport.DumpProcessor' );
 		'@phan-var DumpProcessor $processor';
 
 		$accepted = $definition['archivesOnly'] ?

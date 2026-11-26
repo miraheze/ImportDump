@@ -90,7 +90,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 	}
 
 	private function getManager( int $id ): RequestManager {
-		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		$manager = $this->getServiceContainer()->getService( 'RequestImport.RequestManager' );
 		'@phan-var RequestManager $manager';
 		$manager->loadFromID( $id );
 		return $manager;
@@ -139,12 +139,12 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 		$job = new VerifyDumpJob(
 			[ 'requestid' => $manager->getID() ],
 			$services->getFormatterFactory(),
-			$services->getService( 'ImportDumpAttentionNotifier' ),
-			$services->getService( 'ImportDumpDumpProcessor' ),
-			$services->getService( 'ImportDumpImageProcessor' ),
+			$services->getService( 'RequestImport.AttentionNotifier' ),
+			$services->getService( 'RequestImport.DumpProcessor' ),
+			$services->getService( 'RequestImport.ImageProcessor' ),
 			$manager,
 			$services->getUserFactory(),
-			$services->getService( 'ImportDumpVerificationProgress' )
+			$services->getService( 'RequestImport.VerificationProgress' )
 		);
 
 		$this->assertTrue( $job->run() );

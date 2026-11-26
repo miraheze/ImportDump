@@ -31,27 +31,27 @@ use function wfMkdirParents;
 // @codeCoverageIgnoreStart
 
 return [
-	'ImportDumpAttentionNotifier' => static function ( MediaWikiServices $services ): AttentionNotifier {
+	'RequestImport.AttentionNotifier' => static function ( MediaWikiServices $services ): AttentionNotifier {
 		return new AttentionNotifier( $services->getNotificationService() );
 	},
-	'ImportDumpConfig' => static function ( MediaWikiServices $services ): Config {
+	'RequestImport.Config' => static function ( MediaWikiServices $services ): Config {
 		return $services->getConfigFactory()->makeConfig( 'RequestImport' );
 	},
-	'ImportDumpDumpProcessor' => static function ( MediaWikiServices $services ): DumpProcessor {
+	'RequestImport.DumpProcessor' => static function ( MediaWikiServices $services ): DumpProcessor {
 		return new DumpProcessor(
 			new ArchiveReader(
-				$services->get( 'ImportDumpExternalBinaries' ),
-				$services->get( 'ImportDumpTempFSFileFactory' )
+				$services->get( 'RequestImport.ExternalBinaries' ),
+				$services->get( 'RequestImport.TempFSFileFactory' )
 			),
 			new ServiceOptions(
 				DumpProcessor::CONSTRUCTOR_OPTIONS,
-				$services->get( 'ImportDumpConfig' )
+				$services->get( 'RequestImport.Config' )
 			),
-			$services->get( 'ImportDumpTempFSFileFactory' ),
+			$services->get( 'RequestImport.TempFSFileFactory' ),
 			$services->getUploadVerification()
 		);
 	},
-	'ImportDumpExtensionNames' => static function ( MediaWikiServices $services ): ExtensionNames {
+	'RequestImport.ExtensionNames' => static function ( MediaWikiServices $services ): ExtensionNames {
 		return new ExtensionNames(
 			$services->getObjectCacheFactory()->getLocalClusterInstance(),
 			new ServiceOptions(
@@ -60,25 +60,25 @@ return [
 			)
 		);
 	},
-	'ImportDumpExternalBinaries' => static function ( MediaWikiServices $services ): ExternalBinaries {
+	'RequestImport.ExternalBinaries' => static function ( MediaWikiServices $services ): ExternalBinaries {
 		return new ExternalBinaries(
 			$services->getShellCommandFactory(),
 			new ServiceOptions(
 				ExternalBinaries::CONSTRUCTOR_OPTIONS,
-				$services->get( 'ImportDumpConfig' )
+				$services->get( 'RequestImport.Config' )
 			)
 		);
 	},
-	'ImportDumpHeartbeat' => static function ( MediaWikiServices $services ): ImportHeartbeat {
+	'RequestImport.Heartbeat' => static function ( MediaWikiServices $services ): ImportHeartbeat {
 		return new ImportHeartbeat( $services->getMainObjectStash() );
 	},
-	'ImportDumpHookRunner' => static function ( MediaWikiServices $services ): HookRunner {
+	'RequestImport.HookRunner' => static function ( MediaWikiServices $services ): HookRunner {
 		return new HookRunner( $services->getHookContainer() );
 	},
-	'ImportDumpRequestManager' => static function ( MediaWikiServices $services ): RequestManager {
+	'RequestImport.RequestManager' => static function ( MediaWikiServices $services ): RequestManager {
 		return new RequestManager(
 			$services->getConnectionProvider(),
-			$services->get( 'ImportDumpHookRunner' ),
+			$services->get( 'RequestImport.HookRunner' ),
 			$services->getInterwikiLookup(),
 			$services->getJobQueueGroupFactory(),
 			$services->getNotificationService(),
@@ -86,56 +86,56 @@ return [
 			RequestContext::getMain(),
 			new ServiceOptions(
 				RequestManager::CONSTRUCTOR_OPTIONS,
-				$services->get( 'ImportDumpConfig' )
+				$services->get( 'RequestImport.Config' )
 			),
 			$services->getUserFactory(),
-			$services->get( 'ImportDumpImportOutput' ),
-			$services->get( 'ImportDumpImportProgress' ),
-			$services->get( 'ImportDumpRequirementChecker' ),
-			$services->get( 'ImportDumpTargetStateProvider' ),
-			$services->get( 'ImportDumpVerificationProgress' ),
+			$services->get( 'RequestImport.ImportOutput' ),
+			$services->get( 'RequestImport.ImportProgress' ),
+			$services->get( 'RequestImport.RequirementChecker' ),
+			$services->get( 'RequestImport.TargetStateProvider' ),
+			$services->get( 'RequestImport.VerificationProgress' ),
 			$services->has( 'ManageWikiModuleFactory' ) ?
 				$services->get( 'ManageWikiModuleFactory' ) : null
 		);
 	},
-	'ImportDumpImageProcessor' => static function ( MediaWikiServices $services ): ImageProcessor {
+	'RequestImport.ImageProcessor' => static function ( MediaWikiServices $services ): ImageProcessor {
 		return new ImageProcessor(
 			new ArchiveReader(
-				$services->get( 'ImportDumpExternalBinaries' ),
-				$services->get( 'ImportDumpTempFSFileFactory' )
+				$services->get( 'RequestImport.ExternalBinaries' ),
+				$services->get( 'RequestImport.TempFSFileFactory' )
 			),
 			$services->getMimeAnalyzer(),
 			new ServiceOptions(
 				ImageProcessor::CONSTRUCTOR_OPTIONS,
-				$services->get( 'ImportDumpConfig' ),
+				$services->get( 'RequestImport.Config' ),
 				$services->getMainConfig()
 			),
-			$services->get( 'ImportDumpTempFSFileFactory' ),
+			$services->get( 'RequestImport.TempFSFileFactory' ),
 			$services->getTitleFactory(),
 			$services->getUploadVerification()
 		);
 	},
-	'ImportDumpImportOutput' => static function ( MediaWikiServices $services ): ImportOutput {
+	'RequestImport.ImportOutput' => static function ( MediaWikiServices $services ): ImportOutput {
 		return new ImportOutput( $services->getMainObjectStash() );
 	},
-	'ImportDumpImportProgress' => static function ( MediaWikiServices $services ): ImportProgress {
+	'RequestImport.ImportProgress' => static function ( MediaWikiServices $services ): ImportProgress {
 		return new ImportProgress( $services->getMainObjectStash() );
 	},
-	'ImportDumpRequirementChecker' => static function ( MediaWikiServices $services ): RequirementChecker {
+	'RequestImport.RequirementChecker' => static function ( MediaWikiServices $services ): RequirementChecker {
 		return new RequirementChecker( new ServiceOptions(
 			RequirementChecker::CONSTRUCTOR_OPTIONS,
-			$services->get( 'ImportDumpConfig' )
+			$services->get( 'RequestImport.Config' )
 		) );
 	},
-	'ImportDumpTargetStateProvider' => static function ( MediaWikiServices $services ): TargetStateProvider {
+	'RequestImport.TargetStateProvider' => static function ( MediaWikiServices $services ): TargetStateProvider {
 		return new TargetStateProvider(
 			$services->getActorStoreFactory(),
-			$services->get( 'ImportDumpHookRunner' ),
+			$services->get( 'RequestImport.HookRunner' ),
 			$services->getUserGroupManagerFactory()
 		);
 	},
-	'ImportDumpTempFSFileFactory' => static function ( MediaWikiServices $services ): TempFSFileFactory {
-		$config = $services->get( 'ImportDumpConfig' );
+	'RequestImport.TempFSFileFactory' => static function ( MediaWikiServices $services ): TempFSFileFactory {
+		$config = $services->get( 'RequestImport.Config' );
 		'@phan-var Config $config';
 		$directory = $config->get( ConfigNames::TempDirectory );
 		if ( $directory === null || $directory === '' ) {
@@ -144,12 +144,12 @@ return [
 
 		// A directory that cannot be made is left for the first file that is written there to complain about.
 		if ( !is_dir( $directory ) ) {
-			wfMkdirParents( $directory, null, 'ImportDumpTempFSFileFactory' );
+			wfMkdirParents( $directory, null, 'RequestImport.TempFSFileFactory' );
 		}
 
 		return new TempFSFileFactory( $directory );
 	},
-	'ImportDumpVerificationProgress' => static function ( MediaWikiServices $services ): VerificationProgress {
+	'RequestImport.VerificationProgress' => static function ( MediaWikiServices $services ): VerificationProgress {
 		return new VerificationProgress( $services->getMainObjectStash() );
 	},
 ];

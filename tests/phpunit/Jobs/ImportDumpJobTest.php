@@ -77,14 +77,14 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 	}
 
 	private function getRequestManager( int $id ): RequestManager {
-		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		$manager = $this->getServiceContainer()->getService( 'RequestImport.RequestManager' );
 		'@phan-var RequestManager $manager';
 		$manager->loadFromID( $id );
 		return $manager;
 	}
 
 	private function getHeartbeat(): ImportHeartbeat {
-		$heartbeat = $this->getServiceContainer()->getService( 'ImportDumpHeartbeat' );
+		$heartbeat = $this->getServiceContainer()->getService( 'RequestImport.Heartbeat' );
 		'@phan-var ImportHeartbeat $heartbeat';
 		return $heartbeat;
 	}
@@ -232,9 +232,9 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 		$provider->method( 'getPrimaryDatabase' )->willReturnCallback( $real->getPrimaryDatabase( ... ) );
 		$provider->method( 'getReplicaDatabase' )->willReturnCallback( $real->getReplicaDatabase( ... ) );
 
-		$config = $services->getService( 'ImportDumpConfig' );
-		$heartbeat = $services->getService( 'ImportDumpHeartbeat' );
-		$hookRunner = $services->getService( 'ImportDumpHookRunner' );
+		$config = $services->getService( 'RequestImport.Config' );
+		$heartbeat = $services->getService( 'RequestImport.Heartbeat' );
+		$hookRunner = $services->getService( 'RequestImport.HookRunner' );
 		$job = new ImportDumpJob(
 			[ 'requestid' => $id, 'username' => $this->getTestUser()->getUser()->getName() ],
 			$provider,
@@ -422,7 +422,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 			$this->getStatuses( $this->popNotifications() )
 		);
 
-		$progress = $this->getServiceContainer()->getService( 'ImportDumpImportProgress' );
+		$progress = $this->getServiceContainer()->getService( 'RequestImport.ImportProgress' );
 		'@phan-var \Miraheze\ImportDump\Progress\ImportProgress $progress';
 		$total = (int)$dbw->newSelectQueryBuilder()
 			->select( 'COUNT(*)' )

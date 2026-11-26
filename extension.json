@@ -31,13 +31,13 @@
 		"requestimportoutput": {
 			"class": "Miraheze\\ImportDump\\Api\\ApiRequestImportOutput",
 			"services": [
-				"ImportDumpRequestManager"
+				"RequestImport.RequestManager"
 			]
 		},
 		"requestimportprogress": {
 			"class": "Miraheze\\ImportDump\\Api\\ApiRequestImportProgress",
 			"services": [
-				"ImportDumpRequestManager"
+				"RequestImport.RequestManager"
 			]
 		},
 		"requestimportupload": {
@@ -52,10 +52,10 @@
 			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpJob",
 			"services": [
 				"ConnectionProvider",
-				"ImportDumpConfig",
-				"ImportDumpHeartbeat",
-				"ImportDumpHookRunner",
-				"ImportDumpRequestManager",
+				"RequestImport.Config",
+				"RequestImport.Heartbeat",
+				"RequestImport.HookRunner",
+				"RequestImport.RequestManager",
 				"JobQueueGroupFactory",
 				"WikiImporterFactory"
 			],
@@ -64,8 +64,8 @@
 		"ImportDumpNotifyJob": {
 			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpNotifyJob",
 			"services": [
-				"ImportDumpConfig",
-				"ImportDumpRequestManager",
+				"RequestImport.Config",
+				"RequestImport.RequestManager",
 				"NotificationService",
 				"UserFactory"
 			],
@@ -75,12 +75,12 @@
 			"class": "Miraheze\\ImportDump\\Jobs\\VerifyDumpJob",
 			"services": [
 				"FormatterFactory",
-				"ImportDumpAttentionNotifier",
-				"ImportDumpDumpProcessor",
-				"ImportDumpImageProcessor",
-				"ImportDumpRequestManager",
+				"RequestImport.AttentionNotifier",
+				"RequestImport.DumpProcessor",
+				"RequestImport.ImageProcessor",
+				"RequestImport.RequestManager",
 				"UserFactory",
-				"ImportDumpVerificationProgress"
+				"RequestImport.VerificationProgress"
 			],
 			"needsPage": false
 		},
@@ -88,10 +88,10 @@
 			"class": "Miraheze\\ImportDump\\Jobs\\ImportImagesJob",
 			"services": [
 				"ConnectionProvider",
-				"ImportDumpConfig",
-				"ImportDumpHeartbeat",
-				"ImportDumpHookRunner",
-				"ImportDumpRequestManager",
+				"RequestImport.Config",
+				"RequestImport.Heartbeat",
+				"RequestImport.HookRunner",
+				"RequestImport.RequestManager",
 				"JobQueueGroupFactory"
 			],
 			"needsPage": false
@@ -99,7 +99,7 @@
 		"ImportOutputStoreJob": {
 			"class": "Miraheze\\ImportDump\\Jobs\\ImportOutputStoreJob",
 			"services": [
-				"ImportDumpRequestManager"
+				"RequestImport.RequestManager"
 			],
 			"needsPage": false
 		}
@@ -169,9 +169,9 @@
 			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImport",
 			"services": [
 				"ConnectionProvider",
-				"ImportDumpAttentionNotifier",
-				"ImportDumpDumpProcessor",
-				"ImportDumpRequestManager",
+				"RequestImport.AttentionNotifier",
+				"RequestImport.DumpProcessor",
+				"RequestImport.RequestManager",
 				"JobQueueGroup",
 				"MimeAnalyzer",
 				"NotificationService",
@@ -187,8 +187,8 @@
 			"class": "Miraheze\\ImportDump\\Specials\\SpecialRequestImportQueue",
 			"services": [
 				"ConnectionProvider",
-				"ImportDumpExtensionNames",
-				"ImportDumpRequestManager",
+				"RequestImport.ExtensionNames",
+				"RequestImport.RequestManager",
 				"UserFactory"
 			]
 		}

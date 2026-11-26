@@ -73,9 +73,9 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		$services = $this->getServiceContainer();
 		return new SpecialRequestImport(
 			$services->getConnectionProvider(),
-			$services->getService( 'ImportDumpAttentionNotifier' ),
-			$services->getService( 'ImportDumpDumpProcessor' ),
-			$services->getService( 'ImportDumpRequestManager' ),
+			$services->getService( 'RequestImport.AttentionNotifier' ),
+			$services->getService( 'RequestImport.DumpProcessor' ),
+			$services->getService( 'RequestImport.RequestManager' ),
 			$services->getJobQueueGroup(),
 			$services->getMimeAnalyzer(),
 			$notifications,
@@ -714,7 +714,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		$this->assertSame( 'images', $row->request_type );
 		$this->assertSame( RequestStatus::Verifying->value, $row->request_status );
 
-		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		$manager = $this->getServiceContainer()->getService( 'RequestImport.RequestManager' );
 		'@phan-var RequestManager $manager';
 		$manager->loadFromID( (int)$row->request_id );
 
@@ -776,7 +776,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		$this->assertSame( 'xml', $row->request_type );
 		$this->assertSame( RequestStatus::Verifying->value, $row->request_status );
 
-		$manager = $this->getServiceContainer()->getService( 'ImportDumpRequestManager' );
+		$manager = $this->getServiceContainer()->getService( 'RequestImport.RequestManager' );
 		'@phan-var RequestManager $manager';
 		$manager->loadFromID( (int)$row->request_id );
 
@@ -794,8 +794,8 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		$services = $this->getServiceContainer();
 		return new SpecialRequestImport(
 			$services->getConnectionProvider(),
-			$services->getService( 'ImportDumpAttentionNotifier' ),
-			$services->getService( 'ImportDumpDumpProcessor' ),
+			$services->getService( 'RequestImport.AttentionNotifier' ),
+			$services->getService( 'RequestImport.DumpProcessor' ),
 			$manager,
 			$services->getJobQueueGroup(),
 			$services->getMimeAnalyzer(),
