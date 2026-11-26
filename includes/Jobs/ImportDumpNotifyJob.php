@@ -119,7 +119,7 @@ class ImportDumpNotifyJob extends Job {
 
 		$commentKey = $this->requestManager->getType() === RequestType::Images && $status === RequestStatus::Failed ?
 			'requestimport-images-failed-comment' :
-			"requestimport-import-{$status->value}-comment";
+			"requestimport-xml-{$status->value}-comment";
 
 		$comment = $this->messageLocalizer->msg( $commentKey )
 			->inContentLanguage()
