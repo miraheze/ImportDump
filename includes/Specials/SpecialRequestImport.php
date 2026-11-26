@@ -184,8 +184,8 @@ class SpecialRequestImport extends FormSpecialPage {
 				],
 				'UploadFileURL' => [
 					'type' => 'url',
-					'label-message' => 'requestimport-label-upload-file-url',
-					'help-message' => 'requestimport-help-upload-file-url',
+					'label-message' => 'requestimport-label-upload-xml-url',
+					'help-message' => 'requestimport-help-upload-xml-url',
 					'hide-if' => [ '!==', 'wpUploadSourceType', 'Url' ],
 					'required' => true,
 				],
@@ -789,15 +789,15 @@ class SpecialRequestImport extends FormSpecialPage {
 
 		$language = $this->getLanguage();
 		$help = [
-			$this->msg( 'requestimport-help-upload-file' ),
-			$this->msg( 'requestimport-help-upload-file-types' )->params(
+			$this->msg( 'requestimport-help-upload-xml' ),
+			$this->msg( 'requestimport-help-upload-xml-types' )->params(
 				$language->listToText( $names ),
 				$language->listToText( $tarExtensions )
 			),
 		];
 
 		if ( $this->getConfig()->get( ConfigNames::EnableHistoryDetection ) ) {
-			$help[] = $this->msg( 'requestimport-help-upload-file-history' );
+			$help[] = $this->msg( 'requestimport-help-upload-xml-history' );
 		}
 
 		return $help;
