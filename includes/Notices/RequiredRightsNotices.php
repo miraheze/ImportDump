@@ -42,7 +42,7 @@ final class RequiredRightsNotices implements NoticeProvider {
 
 		return [ new RequestNotice(
 			severity: NoticeSeverity::Warning,
-			html: $context->msg( 'importdump-info-missing-rights',
+			html: $context->msg( 'requestimport-info-missing-rights',
 				$requestManager->getRequester()->getName(),
 				$requestManager->getTarget(),
 				$context->getLanguage()->commaList( $missing ),

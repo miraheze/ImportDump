@@ -18,7 +18,7 @@ class EchoImportFailedPresentationModel extends EchoEventPresentationModel {
 	/** @inheritDoc */
 	public function getHeaderMessage(): Message {
 		return $this->msg(
-			'importdump-notification-header-import-failed',
+			'requestimport-notification-header-import-failed',
 			$this->event->getExtraParam( 'request-id' )
 		);
 	}
@@ -31,7 +31,7 @@ class EchoImportFailedPresentationModel extends EchoEventPresentationModel {
 			1000
 		);
 
-		return $this->msg( 'importdump-notification-body-import-failed',
+		return $this->msg( 'requestimport-notification-body-import-failed',
 			$reason
 		);
 	}
@@ -45,7 +45,7 @@ class EchoImportFailedPresentationModel extends EchoEventPresentationModel {
 	public function getSecondaryLinks(): array {
 		$visitLink = [
 			'url' => $this->event->getExtraParam( 'request-url', 0 ),
-			'label' => $this->msg( 'importdump-notification-visit-request' )->text(),
+			'label' => $this->msg( 'requestimport-notification-visit-request' )->text(),
 			'prioritized' => true,
 		];
 

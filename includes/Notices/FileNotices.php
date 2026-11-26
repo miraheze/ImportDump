@@ -26,7 +26,7 @@ final class FileNotices implements NoticeProvider {
 			$context->msg( $requestManager->getStatus()->getLabelKey() )->text()
 		);
 
-		return $context->msg( 'importdump-info-file-expired' )
+		return $context->msg( 'requestimport-info-file-expired' )
 			->numParams( $requestManager->getFileExpiryDays() )
 			->params( $status )
 			->escaped();
@@ -56,7 +56,7 @@ final class FileNotices implements NoticeProvider {
 		if ( $status === RequestStatus::Verifying ) {
 			return [ new RequestNotice(
 				severity: NoticeSeverity::Notice,
-				html: $context->msg( 'importdump-info-verifying' )->escaped(),
+				html: $context->msg( 'requestimport-info-verifying' )->escaped(),
 				invalidates: true,
 				declines: false,
 				pinned: true,
@@ -96,7 +96,7 @@ final class FileNotices implements NoticeProvider {
 
 		return [ new RequestNotice(
 			severity: NoticeSeverity::Error,
-			html: $context->msg( 'importdump-info-no-file-found', $requestManager->getFilePath() )->escaped(),
+			html: $context->msg( 'requestimport-info-no-file-found', $requestManager->getFilePath() )->escaped(),
 			invalidates: true,
 			declines: true,
 			pinned: true,
@@ -108,7 +108,7 @@ final class FileNotices implements NoticeProvider {
 		IContextSource $context,
 		RequestStatus $status
 	): string {
-		$fileInfo = $context->msg( 'importdump-info-command' )->plaintextParams(
+		$fileInfo = $context->msg( 'requestimport-info-command' )->plaintextParams(
 			$requestManager->getCommand()
 		)->parse();
 
@@ -117,7 +117,7 @@ final class FileNotices implements NoticeProvider {
 				'onclick' => 'navigator.clipboard.writeText(
       								$( \'.oo-ui-flaggedElement-notice\' ).text() );',
 			],
-			$context->msg( 'importdump-button-copy' )->text()
+			$context->msg( 'requestimport-button-copy' )->text()
 		);
 
 		if ( $this->config->get( ConfigNames::EnableAutomatedJob ) && $status !== RequestStatus::Failed ) {
@@ -129,7 +129,7 @@ final class FileNotices implements NoticeProvider {
 				$fileInfo .= Html::element( 'br' );
 			}
 
-			$fileInfo .= $context->msg( 'importdump-info-filesize' )->sizeParams(
+			$fileInfo .= $context->msg( 'requestimport-info-filesize' )->sizeParams(
 				$requestManager->getFileSize()
 			)->parse();
 		}
@@ -142,12 +142,12 @@ final class FileNotices implements NoticeProvider {
 		IContextSource $context,
 		RequestStage $stage
 	): string {
-		$info = $context->msg( 'importdump-info-already-imported', $context->msg( $stage->getLabelKey() )->text() )
+		$info = $context->msg( 'requestimport-info-already-imported', $context->msg( $stage->getLabelKey() )->text() )
 			->parse();
 
 		$commands = $requestManager->getRemainingCommands();
 		if ( $commands ) {
-			$info .= Html::element( 'br' ) . $context->msg( 'importdump-info-remaining-commands' )
+			$info .= Html::element( 'br' ) . $context->msg( 'requestimport-info-remaining-commands' )
 				->rawParams( Html::element( 'pre', [], implode( "\n", $commands ) ) )
 				->parse();
 		}

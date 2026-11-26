@@ -92,7 +92,7 @@ class VerifyDumpJob extends Job {
 	): void {
 		$status = $path !== null ?
 			$this->dumpProcessor->process( $path, $onProgress ) :
-			Status::newFatal( 'importdump-verify-missing' );
+			Status::newFatal( 'requestimport-verify-missing' );
 
 		if ( !$status->isOK() ) {
 			$this->reject( $status );
@@ -139,7 +139,7 @@ class VerifyDumpJob extends Job {
 		$parts = $this->requestManager->getPartsReference();
 		$upload = $parts ? $this->getPartsUpload( $parts ) : null;
 		if ( $parts && !$upload ) {
-			$this->reject( Status::newFatal( 'importdump-verify-missing' ) );
+			$this->reject( Status::newFatal( 'requestimport-verify-missing' ) );
 			return;
 		}
 
@@ -188,7 +188,7 @@ class VerifyDumpJob extends Job {
 				// The target wiki decides which extensions are accepted, when it tells us.
 				$this->requestManager->getTargetFileExtensions()
 			) :
-			Status::newFatal( 'importdump-verify-missing' );
+			Status::newFatal( 'requestimport-verify-missing' );
 
 		if ( !$status->isOK() ) {
 			$this->reject( $status );
@@ -273,7 +273,7 @@ class VerifyDumpJob extends Job {
 		// Files that fail a check now are not worth keeping, as another extension would not change that.
 		$remove = array_keys( array_filter(
 			$rejected,
-			static fn ( SkippedFile $file ): bool => $file->reason !== 'importdump-images-skip-extension'
+			static fn ( SkippedFile $file ): bool => $file->reason !== 'requestimport-images-skip-extension'
 		) );
 
 		if ( $remove ) {
@@ -346,7 +346,7 @@ class VerifyDumpJob extends Job {
 			->getMessage( $status, [] )
 			->inContentLanguage()
 			->text();
-		$comment = $this->messageLocalizer->msg( 'importdump-verification-failed', $reason )
+		$comment = $this->messageLocalizer->msg( 'requestimport-verification-failed', $reason )
 			->inContentLanguage()
 			->escaped();
 

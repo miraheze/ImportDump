@@ -50,6 +50,6 @@ enum RequestStage: string {
 
 	/** The message key of the name of this stage. */
 	public function getLabelKey(): string {
-		return 'importdump-stage-' . $this->value;
+		return 'requestimport-stage-' . $this->value;
 	}
 }

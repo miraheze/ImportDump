@@ -19,7 +19,7 @@ class EchoRequestCommentPresentationModel extends EchoEventPresentationModel {
 	/** @inheritDoc */
 	public function getHeaderMessage(): Message {
 		return $this->msg(
-			'importdump-notification-header-comment',
+			'requestimport-notification-header-comment',
 			$this->event->getExtraParam( 'request-id' )
 		);
 	}
@@ -41,7 +41,7 @@ class EchoRequestCommentPresentationModel extends EchoEventPresentationModel {
 	public function getSecondaryLinks(): array {
 		$visitLink = [
 			'url' => $this->event->getExtraParam( 'request-url', 0 ),
-			'label' => $this->msg( 'importdump-notification-visit-request' )->text(),
+			'label' => $this->msg( 'requestimport-notification-visit-request' )->text(),
 			'prioritized' => true,
 		];
 

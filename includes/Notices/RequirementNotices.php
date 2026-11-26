@@ -74,10 +74,10 @@ final class RequirementNotices implements NoticeProvider {
 			$kind = $kinds[$key];
 
 			// Messages that can be used here:
-			// * importdump-requirement-unknown
-			// * importdump-requirement-missing
-			// * importdump-requirement-setting-unknown
-			// * importdump-requirement-setting
+			// * requestimport-requirement-unknown
+			// * requestimport-requirement-missing
+			// * requestimport-requirement-setting-unknown
+			// * requestimport-requirement-setting
 			$notices[] = new RequestNotice(
 				severity: $kind->isError() ? NoticeSeverity::Error : NoticeSeverity::Warning,
 				html: $context->msg(

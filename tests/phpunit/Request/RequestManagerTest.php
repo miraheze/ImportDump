@@ -735,9 +735,9 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$comment = $this->getRequestManager( id: 1 )->getImportComment();
 
 		$this->assertMatchesRegularExpression(
-			'~^\(importdump-images-comment(?: = \S+)?: https://requestimporttest\.com, ' .
+			'~^\(requestimport-images-comment(?: = \S+)?: https://requestimporttest\.com, ' .
 				'\S+Special:RequestImportQueue/1, 1\)$|' .
-				'^\(importdump-images-comment-plain(?: = \S+)?: https://requestimporttest\.com, 1\)$~',
+				'^\(requestimport-images-comment-plain(?: = \S+)?: https://requestimporttest\.com, 1\)$~',
 			$comment
 		);
 	}
@@ -820,7 +820,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$manager = $this->getRequestManager( id: 1 );
 
 		$this->assertSame(
-			[ wfMessage( 'importdump-usergroups-none' )->text() ],
+			[ wfMessage( 'requestimport-usergroups-none' )->text() ],
 			$manager->getUserGroupsFromTarget()
 		);
 
@@ -855,7 +855,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame(
 			array_map(
 				static fn ( string $group ): string => $group === 'none' ?
-					wfMessage( 'importdump-usergroups-none' )->text() : $group,
+					wfMessage( 'requestimport-usergroups-none' )->text() : $group,
 				$expected
 			),
 			$manager->getUserGroupsFromTarget()
@@ -1020,7 +1020,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$this->assertSame( [ 'total' => 0, 'files' => [] ], $manager->getSkippedImages() );
 
 		$files = [
-			new SkippedFile( 'a.png', 'importdump-images-skip-extension', [] ),
+			new SkippedFile( 'a.png', 'requestimport-images-skip-extension', [] ),
 			new SkippedFile( 'b.png', 'filetype-mime-mismatch', [ 'png', 'image/jpeg' ] ),
 		];
 
@@ -1042,7 +1042,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 	public function testOnlyTheFirstSkippedImagesAreKept(): void {
 		$files = [];
 		for ( $i = 0; $i < 600; $i++ ) {
-			$files[] = new SkippedFile( "$i.png", 'importdump-images-skip-extension', [] );
+			$files[] = new SkippedFile( "$i.png", 'requestimport-images-skip-extension', [] );
 		}
 
 		$manager = $this->getRequestManager( id: 1 );
@@ -1062,7 +1062,7 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 		$manager = $this->getRequestManager( id: 1 );
 		$this->assertSame( 0, $manager->getHeldImageCount() );
 
-		$files = [ new SkippedFile( 'a.gif', 'importdump-images-skip-extension', [ 'gif' ] ) ];
+		$files = [ new SkippedFile( 'a.gif', 'requestimport-images-skip-extension', [ 'gif' ] ) ];
 		$manager->setSkippedImages( $files, 1, 1 );
 		$this->assertSame( 1, $this->getRequestManager( id: 1 )->getHeldImageCount() );
 

@@ -15,33 +15,33 @@
 	function showProgress( stage, step, steps, percent, done, total ) {
 		if ( !stage ) {
 			bar.setProgress( false );
-			$label.text( mw.msg( 'importdump-import-waiting' ) );
+			$label.text( mw.msg( 'requestimport-import-waiting' ) );
 			return;
 		}
 
 		// Messages that can be used here:
-		// * importdump-stage-afterimport
-		// * importdump-stage-counts
-		// * importdump-stage-download
-		// * importdump-stage-import
-		// * importdump-stage-recentchanges
-		// * importdump-stage-refreshlinks
-		// * importdump-stage-sitestats
-		// * importdump-stage-textindex
-		const name = mw.msg( 'importdump-stage-' + stage );
+		// * requestimport-stage-afterimport
+		// * requestimport-stage-counts
+		// * requestimport-stage-download
+		// * requestimport-stage-import
+		// * requestimport-stage-recentchanges
+		// * requestimport-stage-refreshlinks
+		// * requestimport-stage-sitestats
+		// * requestimport-stage-textindex
+		const name = mw.msg( 'requestimport-stage-' + stage );
 		const stepNumber = mw.language.convertNumber( step );
 		const stepCount = mw.language.convertNumber( steps );
 
 		if ( percent === null ) {
 			bar.setProgress( false );
-			$label.text( mw.msg( 'importdump-import-step', stepNumber, stepCount, name ) );
+			$label.text( mw.msg( 'requestimport-import-step', stepNumber, stepCount, name ) );
 			return;
 		}
 
 		bar.setProgress( percent );
 		if ( done !== null && total !== null ) {
 			$label.text( mw.msg(
-				'importdump-import-step-pages',
+				'requestimport-import-step-pages',
 				stepNumber,
 				stepCount,
 				name,
@@ -53,7 +53,7 @@
 		}
 
 		$label.text( mw.msg(
-			'importdump-import-step-percent',
+			'requestimport-import-step-percent',
 			stepNumber,
 			stepCount,
 			name,
@@ -64,12 +64,12 @@
 	// The rest of the page is rendered by the server, so it only changes after a reload.
 	function showResult( status ) {
 		const message = status === 'complete' ?
-			'importdump-import-finished' :
-			'importdump-import-stopped';
+			'requestimport-import-finished' :
+			'requestimport-import-stopped';
 
 		const $reload = $( '<a>' )
 			.attr( 'href', '#' )
-			.text( mw.msg( 'importdump-verification-reload' ) )
+			.text( mw.msg( 'requestimport-verification-reload' ) )
 			.on( 'click', ( e ) => {
 				e.preventDefault();
 				window.location.reload();

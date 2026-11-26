@@ -103,13 +103,13 @@ class SpecialRequestImport extends FormSpecialPage {
 	 * @throws ErrorPageError
 	 */
 	public function execute( $par ): void {
-		$this->requireLogin( 'importdump-notloggedin' );
+		$this->requireLogin( 'requestimport-notloggedin' );
 		$this->setParameter( $par );
 		$this->setHeaders();
 
 		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		if ( !WikiMap::isCurrentWikiDbDomain( $dbr->getDomainID() ) ) {
-			throw new ErrorPageError( 'importdump-notcentral', 'importdump-notcentral-text' );
+			throw new ErrorPageError( 'requestimport-notcentral', 'requestimport-notcentral-text' );
 		}
 
 		$this->checkPermissions();
@@ -133,14 +133,14 @@ class SpecialRequestImport extends FormSpecialPage {
 		$formDescriptor = [
 			'source' => [
 				'type' => 'url',
-				'label-message' => 'importdump-label-source',
-				'help-message' => 'importdump-help-source',
+				'label-message' => 'requestimport-label-source',
+				'help-message' => 'requestimport-help-source',
 				'required' => true,
 			],
 			'target' => [
 				'type' => 'text',
-				'label-message' => 'importdump-label-target',
-				'help-message' => 'importdump-help-target',
+				'label-message' => 'requestimport-label-target',
+				'help-message' => 'requestimport-help-target',
 				'required' => true,
 				'validation-callback' => [ $this, 'isValidDatabase' ],
 			],
@@ -148,16 +148,16 @@ class SpecialRequestImport extends FormSpecialPage {
 
 		// With images that can also be uploaded, say that this field is for the XML.
 		// Messages that can be used here:
-		// * importdump-label-upload-file
-		// * importdump-label-upload-xml
+		// * requestimport-label-upload-file
+		// * requestimport-label-upload-xml
 		$fileLabel = $this->getConfig()->get( ConfigNames::EnableImageImports ) ?
-			'importdump-label-upload-xml' :
-			'importdump-label-upload-file';
+			'requestimport-label-upload-xml' :
+			'requestimport-label-upload-file';
 
 		if ( $this->getConfig()->get( ConfigNames::EnableImageImports ) ) {
 			$formDescriptor['UploadEither'] = [
 				'type' => 'info',
-				'default' => $this->msg( 'importdump-help-upload-either' )->text(),
+				'default' => $this->msg( 'requestimport-help-upload-either' )->text(),
 			];
 		}
 
@@ -168,11 +168,11 @@ class SpecialRequestImport extends FormSpecialPage {
 			$formDescriptor += [
 				'UploadSourceType' => [
 					'type' => 'radio',
-					'label-message' => 'importdump-label-upload-source-type',
+					'label-message' => 'requestimport-label-upload-source-type',
 					'default' => 'File',
 					'options-messages' => [
-						'importdump-label-upload-source-file' => 'File',
-						'importdump-label-upload-source-url' => 'Url',
+						'requestimport-label-upload-source-file' => 'File',
+						'requestimport-label-upload-source-url' => 'Url',
 					],
 				],
 				'UploadFile' => [
@@ -184,8 +184,8 @@ class SpecialRequestImport extends FormSpecialPage {
 				],
 				'UploadFileURL' => [
 					'type' => 'url',
-					'label-message' => 'importdump-label-upload-file-url',
-					'help-message' => 'importdump-help-upload-file-url',
+					'label-message' => 'requestimport-label-upload-file-url',
+					'help-message' => 'requestimport-help-upload-file-url',
 					'hide-if' => [ '!==', 'wpUploadSourceType', 'Url' ],
 					'required' => true,
 				],
@@ -204,15 +204,15 @@ class SpecialRequestImport extends FormSpecialPage {
 		if ( $this->getConfig()->get( ConfigNames::EnableImageImports ) ) {
 			$formDescriptor['UploadImages'] = [
 				'type' => 'file',
-				'label-message' => 'importdump-label-upload-images',
-				'help-message' => 'importdump-help-upload-images',
+				'label-message' => 'requestimport-label-upload-images',
+				'help-message' => 'requestimport-help-upload-images',
 				'accept' => $this->dumpProcessor->getArchiveClientMimeTypes(),
 			];
 
 			$formDescriptor['SkipDupes'] = [
 				'type' => 'check',
-				'label-message' => 'importdump-label-skip-dupes',
-				'help-message' => 'importdump-help-skip-dupes',
+				'label-message' => 'requestimport-label-skip-dupes',
+				'help-message' => 'requestimport-help-skip-dupes',
 				'default' => false,
 			];
 		}
@@ -235,8 +235,8 @@ class SpecialRequestImport extends FormSpecialPage {
 			'reason' => [
 				'type' => 'textarea',
 				'rows' => 6,
-				'label-message' => 'importdump-label-reason',
-				'help-message' => 'importdump-help-reason',
+				'label-message' => 'requestimport-label-reason',
+				'help-message' => 'requestimport-help-reason',
 				'required' => true,
 				'validation-callback' => [ $this, 'isValidReason' ],
 			],
@@ -275,7 +275,7 @@ class SpecialRequestImport extends FormSpecialPage {
 			->fetchRow();
 
 		if ( (bool)$duplicate ) {
-			return Status::newFatal( 'importdump-duplicate-request' );
+			return Status::newFatal( 'requestimport-duplicate-request' );
 		}
 
 		$timestamp = $dbw->timestamp();
@@ -289,7 +289,7 @@ class SpecialRequestImport extends FormSpecialPage {
 		if ( $this->getConfig()->get( ConfigNames::EnableImageImports ) && !$this->hasXmlUpload( $data ) ) {
 			return $images ?
 				$this->submitImagesOnly( $data, $timestamp, $images, $imagesKey ) :
-				Status::newFatal( 'importdump-upload-nothing' );
+				Status::newFatal( 'requestimport-upload-nothing' );
 		}
 		$fileName = $data['target'] . '-' . $timestamp . '.xml';
 
@@ -309,7 +309,7 @@ class SpecialRequestImport extends FormSpecialPage {
 			if ( $stage === ApiRequestImportUpload::STAGE_PARTS ) {
 				$parts = new UploadedParts( $stashKey );
 			} elseif ( $stage === 'uploading' ) {
-				return Status::newFatal( 'importdump-xml-parts-incomplete' );
+				return Status::newFatal( 'requestimport-xml-parts-incomplete' );
 			}
 		}
 
@@ -568,7 +568,7 @@ class SpecialRequestImport extends FormSpecialPage {
 			}
 
 			if ( ( $progress['stage'] ?? '' ) === 'uploading' ) {
-				return Status::newFatal( 'importdump-images-parts-incomplete' );
+				return Status::newFatal( 'requestimport-images-parts-incomplete' );
 			}
 
 			$uploadBase = new UploadFromStash( $this->getUser() );
@@ -607,7 +607,7 @@ class SpecialRequestImport extends FormSpecialPage {
 
 		$mime = $this->mimeAnalyzer->guessMimeType( $uploadBase->getTempPath() );
 		if ( !in_array( $mime, $this->dumpProcessor->getArchiveMimeTypes(), true ) ) {
-			return Status::newFatal( 'importdump-images-not-archive' );
+			return Status::newFatal( 'requestimport-images-not-archive' );
 		}
 
 		return $uploadBase;
@@ -672,7 +672,7 @@ class SpecialRequestImport extends FormSpecialPage {
 	 */
 	private function setPartsReference( int $requestID, UploadedParts $parts ): Status {
 		if ( $requestID <= 0 ) {
-			return Status::newFatal( 'importdump-duplicate-request' );
+			return Status::newFatal( 'requestimport-duplicate-request' );
 		}
 
 		$this->requestManager->loadFromID( $requestID );
@@ -718,7 +718,7 @@ class SpecialRequestImport extends FormSpecialPage {
 
 		$requestID = $dbw->insertId();
 		if ( $requestID <= 0 ) {
-			return Status::newFatal( 'importdump-duplicate-request' );
+			return Status::newFatal( 'requestimport-duplicate-request' );
 		}
 
 		// The job reads this, so it has to be there before the job is queued.
@@ -756,15 +756,16 @@ class SpecialRequestImport extends FormSpecialPage {
 	private function showSuccess( int $requestID, int $imagesID, int $verifying ): void {
 		$requestLink = $this->makeRequestLink( $requestID );
 		$message = $imagesID > 0 ?
-			$this->msg( 'importdump-success-both' )->rawParams( $requestLink, $this->makeRequestLink( $imagesID ) ) :
-			$this->msg( 'importdump-success' )->rawParams( $requestLink );
+			$this->msg( 'requestimport-success-both' )->rawParams( $requestLink, $this->makeRequestLink( $imagesID ) ) :
+			$this->msg( 'requestimport-success' )->rawParams( $requestLink );
 
 		$this->getOutput()->addHTML( Html::successBox( $message->escaped() ) );
 
 		if ( $verifying > 0 ) {
-			$this->getOutput()->addHTML(
-				Html::noticeBox( $this->msg( 'importdump-success-verifying' )->numParams( $verifying )->escaped(), '' )
-			);
+			$this->getOutput()->addHTML( Html::noticeBox(
+				$this->msg( 'requestimport-success-verifying' )->numParams( $verifying )->escaped(),
+				''
+			) );
 		}
 	}
 
@@ -788,15 +789,15 @@ class SpecialRequestImport extends FormSpecialPage {
 
 		$language = $this->getLanguage();
 		$help = [
-			$this->msg( 'importdump-help-upload-file' ),
-			$this->msg( 'importdump-help-upload-file-types' )->params(
+			$this->msg( 'requestimport-help-upload-file' ),
+			$this->msg( 'requestimport-help-upload-file-types' )->params(
 				$language->listToText( $names ),
 				$language->listToText( $tarExtensions )
 			),
 		];
 
 		if ( $this->getConfig()->get( ConfigNames::EnableHistoryDetection ) ) {
-			$help[] = $this->msg( 'importdump-help-upload-file-history' );
+			$help[] = $this->msg( 'requestimport-help-upload-file-history' );
 		}
 
 		return $help;
@@ -881,7 +882,7 @@ class SpecialRequestImport extends FormSpecialPage {
 
 	public function isValidDatabase( ?string $target ): Message|true {
 		if ( !in_array( $target, $this->getConfig()->get( MainConfigNames::LocalDatabases ), true ) ) {
-			return $this->msg( 'importdump-invalid-target' );
+			return $this->msg( 'requestimport-invalid-target' );
 		}
 
 		return true;

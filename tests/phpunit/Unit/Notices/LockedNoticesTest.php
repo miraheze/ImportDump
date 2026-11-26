@@ -24,7 +24,7 @@ class LockedNoticesTest extends MediaWikiUnitTestCase {
 
 		$context = $this->createMock( IContextSource::class );
 		// @phan-suppress-next-line PhanTypeMismatchArgumentProbablyReal
-		$context->method( 'msg' )->with( 'importdump-request-locked' )->willReturn( $message );
+		$context->method( 'msg' )->with( 'requestimport-request-locked' )->willReturn( $message );
 
 		$requestManager = $this->createMock( RequestManager::class );
 		$requestManager->method( 'isLocked' )->willReturn( $locked );

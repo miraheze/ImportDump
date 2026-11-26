@@ -40,7 +40,7 @@ final class LockedNotices implements NoticeProvider {
 
 		return [ new RequestNotice(
 			severity: NoticeSeverity::Error,
-			html: $context->msg( 'importdump-request-locked' )->escaped(),
+			html: $context->msg( 'requestimport-request-locked' )->escaped(),
 			invalidates: false,
 			declines: false,
 			pinned: false,

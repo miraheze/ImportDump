@@ -49,7 +49,7 @@ class XmlMerger {
 		if ( $first ) {
 			$writer = new XMLWriter();
 			if ( !$writer->openUri( $this->destination ) ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			$writer->setIndent( false );
@@ -65,7 +65,7 @@ class XmlMerger {
 		$this->writer?->flush();
 		clearstatcache( true, $this->destination );
 		if ( (int)filesize( $this->destination ) > $this->maxSize ) {
-			return Status::newFatal( 'importdump-archive-too-large', Message::sizeParam( $this->maxSize ) );
+			return Status::newFatal( 'requestimport-archive-too-large', Message::sizeParam( $this->maxSize ) );
 		}
 
 		return Status::newGood();
@@ -74,7 +74,7 @@ class XmlMerger {
 	/** Finishes the merged file, which has to have at least one export in it. */
 	public function finish(): Status {
 		if ( $this->writer === null ) {
-			return Status::newFatal( 'importdump-xml-invalid' );
+			return Status::newFatal( 'requestimport-xml-invalid' );
 		}
 
 		$this->writer->endElement();
@@ -98,7 +98,7 @@ class XmlMerger {
 	private function copyFile( string $path, bool $first ): Status {
 		$reader = new XMLReader();
 		if ( !$reader->open( $path, null, LIBXML_NONET | LIBXML_COMPACT ) ) {
-			return Status::newFatal( 'importdump-xml-invalid' );
+			return Status::newFatal( 'requestimport-xml-invalid' );
 		}
 
 		try {
@@ -107,14 +107,14 @@ class XmlMerger {
 			while ( $more ) {
 				if ( $reader->nodeType === XMLReader::DOC_TYPE ) {
 					// A document type can declare entities, which an export never needs.
-					return Status::newFatal( 'importdump-xml-doctype' );
+					return Status::newFatal( 'requestimport-xml-doctype' );
 				}
 
 				if ( $reader->nodeType === XMLReader::ELEMENT && $reader->depth === 1 ) {
 					$name = $reader->localName;
 					if ( $name === 'page' ) {
 						if ( !$this->copyPage( $reader ) ) {
-							return Status::newFatal( 'importdump-xml-invalid' );
+							return Status::newFatal( 'requestimport-xml-invalid' );
 						}
 					} elseif ( ( $first && $name === 'siteinfo' ) || $name === 'logitem' ) {
 						$this->writer?->writeRaw( $reader->readOuterXml() );
@@ -137,11 +137,11 @@ class XmlMerger {
 
 			foreach ( libxml_get_errors() as $error ) {
 				if ( $error->level >= LIBXML_ERR_ERROR ) {
-					return Status::newFatal( 'importdump-xml-invalid' );
+					return Status::newFatal( 'requestimport-xml-invalid' );
 				}
 			}
 
-			return $sawRoot ? Status::newGood() : Status::newFatal( 'importdump-xml-invalid' );
+			return $sawRoot ? Status::newGood() : Status::newFatal( 'requestimport-xml-invalid' );
 		} finally {
 			$reader->close();
 		}
@@ -180,14 +180,14 @@ class XmlMerger {
 	private function startRoot( XMLReader $reader, bool $first ): Status {
 		$namespace = $reader->namespaceURI;
 		if ( $reader->localName !== 'mediawiki' || !str_starts_with( $namespace, self::EXPORT_NAMESPACE ) ) {
-			return Status::newFatal( 'importdump-xml-invalid' );
+			return Status::newFatal( 'requestimport-xml-invalid' );
 		}
 
 		$version = (string)$reader->getAttribute( 'version' );
 		if ( !$first ) {
 			return $namespace === $this->namespace && $version === $this->version ?
 				Status::newGood() :
-				Status::newFatal( 'importdump-xml-version-mismatch' );
+				Status::newFatal( 'requestimport-xml-version-mismatch' );
 		}
 
 		$this->namespace = $namespace;

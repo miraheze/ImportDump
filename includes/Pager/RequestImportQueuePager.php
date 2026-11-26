@@ -32,10 +32,10 @@ class RequestImportQueuePager extends TablePager {
 	/** @inheritDoc */
 	protected function getFieldNames(): array {
 		return [
-			'request_timestamp' => $this->msg( 'importdump-table-requested-date' )->text(),
-			'request_actor' => $this->msg( 'importdump-table-requester' )->text(),
-			'request_status' => $this->msg( 'importdump-table-status' )->text(),
-			'request_target' => $this->msg( 'importdump-table-target' )->text(),
+			'request_timestamp' => $this->msg( 'requestimport-table-requested-date' )->text(),
+			'request_actor' => $this->msg( 'requestimport-table-requester' )->text(),
+			'request_status' => $this->msg( 'requestimport-table-status' )->text(),
+			'request_target' => $this->msg( 'requestimport-table-target' )->text(),
 		];
 	}
 
@@ -58,7 +58,7 @@ class RequestImportQueuePager extends TablePager {
 				$row = $this->getCurrentRow();
 				$formatted = $this->getLinkRenderer()->makeLink(
 					SpecialPage::getTitleValueFor( 'RequestImportQueue', (string)$row->request_id ),
-					$this->msg( "importdump-label-$value" )->text()
+					$this->msg( "requestimport-label-$value" )->text()
 				);
 				break;
 			case 'request_actor':

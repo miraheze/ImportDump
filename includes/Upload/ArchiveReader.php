@@ -221,11 +221,11 @@ final class ArchiveReader {
 
 		if ( $format === self::FORMAT_GZIP || $format === self::FORMAT_BZIP2 ) {
 			if ( $format === self::FORMAT_BZIP2 && !function_exists( 'bzopen' ) ) {
-				return Status::newFatal( 'importdump-archive-bzip2-unavailable' );
+				return Status::newFatal( 'requestimport-archive-bzip2-unavailable' );
 			}
 
 			if ( $format === self::FORMAT_GZIP && !$this->hasValidGzipHeader( $path ) ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			return $this->containsTar( $path, $format ) ?
@@ -239,19 +239,19 @@ final class ArchiveReader {
 
 		$zip = $this->openZip( $path );
 		if ( !$zip ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		try {
 			if ( $zip->numFiles > $maxEntries ) {
-				return Status::newFatal( 'importdump-archive-too-many-entries', Message::numParam( $maxEntries ) );
+				return Status::newFatal( 'requestimport-archive-too-many-entries', Message::numParam( $maxEntries ) );
 			}
 
 			$entries = [];
 			for ( $index = 0; $index < $zip->numFiles; $index++ ) {
 				$stat = $zip->statIndex( $index );
 				if ( $stat === false ) {
-					return Status::newFatal( 'importdump-archive-unreadable' );
+					return Status::newFatal( 'requestimport-archive-unreadable' );
 				}
 
 				if ( str_starts_with( $stat['name'], '__MACOSX/' ) ) {
@@ -259,7 +259,7 @@ final class ArchiveReader {
 				}
 
 				if ( !$this->isSafeName( $stat['name'] ) ) {
-					return Status::newFatal( 'importdump-archive-unsafe' );
+					return Status::newFatal( 'requestimport-archive-unsafe' );
 				}
 
 				if ( str_ends_with( $stat['name'], '/' ) ) {
@@ -267,7 +267,7 @@ final class ArchiveReader {
 				}
 
 				if ( !$this->isPlainFile( $zip, $index, $stat ) ) {
-					return Status::newFatal( 'importdump-archive-unsafe' );
+					return Status::newFatal( 'requestimport-archive-unsafe' );
 				}
 
 				$entries[] = new ArchiveEntry( $index, $stat['name'], (int)$stat['size'], (int)$stat['comp_size'] );
@@ -299,7 +299,7 @@ final class ArchiveReader {
 		?Closure $onProgress
 	): Status {
 		if ( $entry->size !== null && $entry->size > $maxSize ) {
-			return Status::newFatal( 'importdump-archive-too-large', Message::sizeParam( $maxSize ) );
+			return Status::newFatal( 'requestimport-archive-too-large', Message::sizeParam( $maxSize ) );
 		}
 
 		if (
@@ -307,7 +307,7 @@ final class ArchiveReader {
 			$entry->size > self::RATIO_CHECK_AFTER &&
 			$entry->size > max( 1, $entry->compressedSize ) * self::MAX_COMPRESSION_RATIO
 		) {
-			return Status::newFatal( 'importdump-archive-ratio' );
+			return Status::newFatal( 'requestimport-archive-ratio' );
 		}
 
 		if ( $format === self::FORMAT_XZ ) {
@@ -337,7 +337,7 @@ final class ArchiveReader {
 			}
 
 			$zip?->close();
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		try {
@@ -375,7 +375,7 @@ final class ArchiveReader {
 		while ( !feof( $input ) ) {
 			$chunk = fread( $input, self::COPY_CHUNK_SIZE );
 			if ( $chunk === false ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			if ( $chunk === '' ) {
@@ -384,15 +384,15 @@ final class ArchiveReader {
 
 			$total += strlen( $chunk );
 			if ( $total > $maxSize ) {
-				return Status::newFatal( 'importdump-archive-too-large', Message::sizeParam( $maxSize ) );
+				return Status::newFatal( 'requestimport-archive-too-large', Message::sizeParam( $maxSize ) );
 			}
 
 			if ( $total > self::RATIO_CHECK_AFTER && $total > $maxRatioSize ) {
-				return Status::newFatal( 'importdump-archive-ratio' );
+				return Status::newFatal( 'requestimport-archive-ratio' );
 			}
 
 			if ( fwrite( $output, $chunk ) !== strlen( $chunk ) ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			if ( $onProgress && $declaredSize > 0 ) {
@@ -405,7 +405,7 @@ final class ArchiveReader {
 		}
 
 		if ( $entry->size !== null && $total !== $entry->size ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		return Status::newGood();
@@ -414,12 +414,12 @@ final class ArchiveReader {
 	/** Lists an XZ file, which holds a single file or a TAR. */
 	private function listXz( string $path, int $maxEntries, int $maxSize ): Status {
 		if ( !$this->externalBinaries->isEnabled( ExternalBinaries::XZ ) ) {
-			return Status::newFatal( 'importdump-archive-binary-unavailable' );
+			return Status::newFatal( 'requestimport-archive-binary-unavailable' );
 		}
 
 		$temp = $this->tempFSFileFactory->newTempFSFile( 'importdump-xz', 'tmp' );
 		if ( !$temp ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		$peek = $this->externalBinaries->peekXz( $path, $temp->getPath() );
@@ -456,7 +456,7 @@ final class ArchiveReader {
 		?Closure $onProgress
 	): Status {
 		if ( !$this->externalBinaries->isEnabled( ExternalBinaries::XZ ) ) {
-			return Status::newFatal( 'importdump-archive-binary-unavailable' );
+			return Status::newFatal( 'requestimport-archive-binary-unavailable' );
 		}
 
 		if ( $onProgress ) {
@@ -475,7 +475,7 @@ final class ArchiveReader {
 		if ( !$this->xz || $this->xz['path'] !== $path ) {
 			$temp = $this->tempFSFileFactory->newTempFSFile( 'importdump-xz', 'tmp' );
 			if ( !$temp ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			$unpacked = $this->externalBinaries->decompressXz(
@@ -505,12 +505,12 @@ final class ArchiveReader {
 	/** Lists the files of a 7z archive. */
 	private function listSevenZip( string $path, int $maxEntries, int $maxSize ): Status {
 		if ( !$this->externalBinaries->isEnabled( ExternalBinaries::SEVEN_ZIP ) ) {
-			return Status::newFatal( 'importdump-archive-binary-unavailable' );
+			return Status::newFatal( 'requestimport-archive-binary-unavailable' );
 		}
 
 		$temp = $this->tempFSFileFactory->newTempFSFile( 'importdump-7z', 'tmp' );
 		if ( !$temp ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		$listed = $this->externalBinaries->listSevenZip( $path, $temp->getPath(), $maxEntries );
@@ -524,18 +524,18 @@ final class ArchiveReader {
 		foreach ( $listed->getValue() as $index => $record ) {
 			if ( $record['kind'] === ExternalBinaries::KIND_DIRECTORY ) {
 				if ( !$this->isSafeName( $record['path'] ) ) {
-					return Status::newFatal( 'importdump-archive-unsafe' );
+					return Status::newFatal( 'requestimport-archive-unsafe' );
 				}
 
 				continue;
 			}
 
 			if ( $record['kind'] !== ExternalBinaries::KIND_FILE || $record['encrypted'] ) {
-				return Status::newFatal( 'importdump-archive-unsafe' );
+				return Status::newFatal( 'requestimport-archive-unsafe' );
 			}
 
 			if ( !$this->isSafeName( $record['path'] ) || str_ends_with( $record['path'], '/' ) ) {
-				return Status::newFatal( 'importdump-archive-unsafe' );
+				return Status::newFatal( 'requestimport-archive-unsafe' );
 			}
 
 			// The program writes every file in the order of the listing, also the ones that are skipped here.
@@ -569,7 +569,7 @@ final class ArchiveReader {
 		?Closure $onProgress
 	): Status {
 		if ( !$this->externalBinaries->isEnabled( ExternalBinaries::SEVEN_ZIP ) ) {
-			return Status::newFatal( 'importdump-archive-binary-unavailable' );
+			return Status::newFatal( 'requestimport-archive-binary-unavailable' );
 		}
 
 		if ( $onProgress ) {
@@ -589,7 +589,7 @@ final class ArchiveReader {
 				$onProgress( 100 );
 			}
 
-			return $copied ? Status::newGood() : Status::newFatal( 'importdump-archive-unreadable' );
+			return $copied ? Status::newGood() : Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		$unpacked = $this->externalBinaries->extractSevenZip( $path, $entry->name, $destination, $maxSize );
@@ -599,7 +599,7 @@ final class ArchiveReader {
 
 		// The archive says how big the file is, so anything else means it was not what was listed.
 		if ( $entry->size !== null && $unpacked->getValue() !== $entry->size ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		if ( $onProgress ) {
@@ -712,7 +712,7 @@ final class ArchiveReader {
 	private function listTar( string $path, string $format, int $maxEntries, int $maxSize ): Status {
 		$input = $this->openStream( $path, $format );
 		if ( !$input ) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		try {
@@ -733,14 +733,14 @@ final class ArchiveReader {
 				$name = $this->normalizeTarName( $tarEntry->name );
 				if ( $tarEntry->isDirectory ) {
 					if ( $name !== '' && !$this->isSafeName( $name ) ) {
-						return Status::newFatal( 'importdump-archive-unsafe' );
+						return Status::newFatal( 'requestimport-archive-unsafe' );
 					}
 
 					continue;
 				}
 
 				if ( !$this->isSafeName( $name ) ) {
-					return Status::newFatal( 'importdump-archive-unsafe' );
+					return Status::newFatal( 'requestimport-archive-unsafe' );
 				}
 
 				if ( $this->isMetadata( $name ) ) {
@@ -772,7 +772,7 @@ final class ArchiveReader {
 			$this->closeCursor();
 			$input = $this->openStream( $path, $format );
 			if ( !$input ) {
-				return Status::newFatal( 'importdump-archive-unreadable' );
+				return Status::newFatal( 'requestimport-archive-unreadable' );
 			}
 
 			$cursor = [
@@ -788,10 +788,10 @@ final class ArchiveReader {
 		$output = fopen( $destination, 'wb' );
 		if ( !$output ) {
 			$this->closeCursor();
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
-		$status = Status::newFatal( 'importdump-archive-unreadable' );
+		$status = Status::newFatal( 'requestimport-archive-unreadable' );
 		try {
 			$status = $this->copyTarEntry( $cursor['reader'], $entry, $output, $onProgress );
 		} finally {
@@ -835,7 +835,7 @@ final class ArchiveReader {
 			$tarEntry->isDirectory ||
 			$this->normalizeTarName( $tarEntry->name ) !== $entry->name
 		) {
-			return Status::newFatal( 'importdump-archive-unreadable' );
+			return Status::newFatal( 'requestimport-archive-unreadable' );
 		}
 
 		if ( $onProgress ) {

@@ -32,7 +32,7 @@ class RequestImportLogFormatter extends LogFormatter {
 	}
 
 	private function formatRequestStatus( string $status ): string {
-		$message = $this->msg( "importdump-label-$status" );
+		$message = $this->msg( "requestimport-label-$status" );
 		if ( !$message->exists() ) {
 			return $status;
 		}

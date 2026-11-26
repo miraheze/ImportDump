@@ -25,6 +25,6 @@ enum RequirementProblemKind: string {
 
 	/** The message key that explains this kind of problem. */
 	public function getMessageKey(): string {
-		return 'importdump-requirement-' . $this->value;
+		return 'requestimport-requirement-' . $this->value;
 	}
 }

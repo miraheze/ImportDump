@@ -18,7 +18,7 @@ class EchoNewRequestPresentationModel extends EchoEventPresentationModel {
 	/** @inheritDoc */
 	public function getHeaderMessage(): Message {
 		return $this->msg(
-			'importdump-notification-header-new-request',
+			'requestimport-notification-header-new-request',
 			$this->event->getExtraParam( 'request-id' )
 		);
 	}
@@ -30,7 +30,7 @@ class EchoNewRequestPresentationModel extends EchoEventPresentationModel {
 			$this->language
 		);
 
-		return $this->msg( 'importdump-notification-body-new-request',
+		return $this->msg( 'requestimport-notification-body-new-request',
 			$reason,
 			$this->event->getExtraParam( 'requester' ),
 			$this->event->getExtraParam( 'target' )
@@ -46,7 +46,7 @@ class EchoNewRequestPresentationModel extends EchoEventPresentationModel {
 	public function getSecondaryLinks(): array {
 		$visitLink = [
 			'url' => $this->event->getExtraParam( 'request-url', 0 ),
-			'label' => $this->msg( 'importdump-notification-visit-request' )->text(),
+			'label' => $this->msg( 'requestimport-notification-visit-request' )->text(),
 			'prioritized' => true,
 		];
 

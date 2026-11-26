@@ -25,11 +25,11 @@ class ApiRequestImportProgress extends ApiBase {
 	public function execute(): void {
 		$this->requestManager->loadFromID( $this->extractRequestParams()['requestid'] );
 		if ( !$this->requestManager->exists() ) {
-			$this->dieWithError( 'importdump-unknown', 'notfound' );
+			$this->dieWithError( 'requestimport-unknown', 'notfound' );
 		}
 
 		if ( !$this->requestManager->isViewableBy( $this->getAuthority() ) ) {
-			$this->dieWithError( 'importdump-private', 'permissiondenied' );
+			$this->dieWithError( 'requestimport-private', 'permissiondenied' );
 		}
 
 		$status = $this->requestManager->getStatus();

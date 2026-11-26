@@ -42,7 +42,7 @@ final class PartialHistoryNotices implements NoticeProvider {
 
 		return [ new RequestNotice(
 			severity: NoticeSeverity::Warning,
-			html: $context->msg( 'importdump-info-history-partial' )->escaped(),
+			html: $context->msg( 'requestimport-info-history-partial' )->escaped(),
 			invalidates: false,
 			declines: false,
 			pinned: false,

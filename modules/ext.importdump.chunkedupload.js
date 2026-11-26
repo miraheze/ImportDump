@@ -235,7 +235,7 @@
 			const totalSize = uploads.reduce( ( sum, item ) => sum + item.file.size, 0 );
 			let finished = 0;
 			$wrapper.show();
-			$status.text( mw.message( 'importdump-chunkedupload-progress' ).text() );
+			$status.text( mw.message( 'requestimport-chunkedupload-progress' ).text() );
 
 			// One after the other, so that the parts of different files are never mixed.
 			uploads.reduce( ( previous, item ) => previous.then( async () => {
@@ -259,7 +259,7 @@
 				const message = error && error.result ?
 					new mw.Api().getErrorMessage( error.result ).text() :
 					String( error && error.code );
-				fail( mw.message( 'importdump-chunkedupload-error', message ).text() );
+				fail( mw.message( 'requestimport-chunkedupload-error', message ).text() );
 			} );
 		} );
 

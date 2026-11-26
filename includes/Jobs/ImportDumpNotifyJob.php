@@ -80,7 +80,7 @@ class ImportDumpNotifyJob extends Job {
 			->inContentLanguage()
 			->text();
 
-		$comment = $this->messageLocalizer->msg( 'importdump-status-updated', mb_strtolower( $statusMessage ) )
+		$comment = $this->messageLocalizer->msg( 'requestimport-status-updated', mb_strtolower( $statusMessage ) )
 			->inContentLanguage()
 			->escaped();
 
@@ -118,8 +118,8 @@ class ImportDumpNotifyJob extends Job {
 		}
 
 		$commentKey = $this->requestManager->getType() === RequestType::Images && $status === RequestStatus::Failed ?
-			'importdump-images-failed-comment' :
-			"importdump-import-{$status->value}-comment";
+			'requestimport-images-failed-comment' :
+			"requestimport-import-{$status->value}-comment";
 
 		$comment = $this->messageLocalizer->msg( $commentKey )
 			->inContentLanguage()
@@ -143,7 +143,7 @@ class ImportDumpNotifyJob extends Job {
 			->text();
 
 		$comment = $this->messageLocalizer->msg(
-			'importdump-status-updated-by',
+			'requestimport-status-updated-by',
 			mb_strtolower( $statusMessage ),
 			$user->getName()
 		)->inContentLanguage()->escaped();

@@ -14,13 +14,13 @@
 
 	function showProgress( stage, percent ) {
 		// Messages that can be used here:
-		// * importdump-verification-checking
-		// * importdump-verification-extracting
-		// * importdump-verification-joining
-		// * importdump-verification-merging
-		// * importdump-verification-storing
-		// * importdump-verification-waiting
-		const text = mw.msg( 'importdump-verification-' + stage );
+		// * requestimport-verification-checking
+		// * requestimport-verification-extracting
+		// * requestimport-verification-joining
+		// * requestimport-verification-merging
+		// * requestimport-verification-storing
+		// * requestimport-verification-waiting
+		const text = mw.msg( 'requestimport-verification-' + stage );
 		if ( percent === null ) {
 			bar.setProgress( false );
 			$label.text( text );
@@ -29,7 +29,7 @@
 
 		bar.setProgress( percent );
 		$label.text(
-			mw.msg( 'importdump-verification-label', text, mw.language.convertNumber( percent ) )
+			mw.msg( 'requestimport-verification-label', text, mw.language.convertNumber( percent ) )
 		);
 	}
 
@@ -37,12 +37,12 @@
 	// That is left to the handler, because it would lose anything they have typed.
 	function showResult( status ) {
 		const message = status === 'declined' ?
-			'importdump-verification-rejected' :
-			'importdump-verification-done';
+			'requestimport-verification-rejected' :
+			'requestimport-verification-done';
 
 		const $reload = $( '<a>' )
 			.attr( 'href', '#' )
-			.text( mw.msg( 'importdump-verification-reload' ) )
+			.text( mw.msg( 'requestimport-verification-reload' ) )
 			.on( 'click', ( e ) => {
 				e.preventDefault();
 				window.location.reload();

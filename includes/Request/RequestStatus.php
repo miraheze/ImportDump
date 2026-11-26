@@ -17,7 +17,7 @@ enum RequestStatus: string {
 
 	/** The message key of the name of this status. */
 	public function getLabelKey(): string {
-		return 'importdump-label-' . $this->value;
+		return 'requestimport-label-' . $this->value;
 	}
 
 	/** Whether the import is running or about to run. */

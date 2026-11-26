@@ -43,21 +43,21 @@ class RequestFormBuilder {
 
 		$formDescriptor = [
 			'source' => [
-				'label-message' => 'importdump-label-source',
+				'label-message' => 'requestimport-label-source',
 				'type' => 'url',
 				'readonly' => true,
 				'section' => 'details',
 				'default' => $this->requestManager->getSource(),
 			],
 			'target' => [
-				'label-message' => 'importdump-label-target',
+				'label-message' => 'requestimport-label-target',
 				'type' => 'text',
 				'readonly' => true,
 				'section' => 'details',
 				'default' => $this->requestManager->getTarget(),
 			],
 			'requester' => [
-				'label-message' => 'importdump-label-requester',
+				'label-message' => 'requestimport-label-requester',
 				'type' => 'info',
 				'section' => 'details',
 				'default' => htmlspecialchars( $this->requestManager->getRequester()->getName() ) .
@@ -68,7 +68,7 @@ class RequestFormBuilder {
 				'raw' => true,
 			],
 			'requestedDate' => [
-				'label-message' => 'importdump-label-requested-date',
+				'label-message' => 'requestimport-label-requested-date',
 				'type' => 'info',
 				'section' => 'details',
 				'default' => $this->context->getLanguage()->timeanddate(
@@ -76,7 +76,7 @@ class RequestFormBuilder {
 				),
 			],
 			'status' => [
-				'label-message' => 'importdump-label-status',
+				'label-message' => 'requestimport-label-status',
 				'type' => 'text',
 				'readonly' => true,
 				'section' => 'details',
@@ -91,7 +91,7 @@ class RequestFormBuilder {
 				'type' => 'textarea',
 				'rows' => 6,
 				'readonly' => true,
-				'label-message' => 'importdump-label-reason',
+				'label-message' => 'requestimport-label-reason',
 				'default' => $this->requestManager->getReason(),
 				'raw' => true,
 				'cssclass' => 'ext-importdump-infuse',
@@ -106,7 +106,7 @@ class RequestFormBuilder {
 				'section' => 'comments',
 				'rows' => 6,
 				'label-message' => [
-					'importdump-header-comment-withtimestamp',
+					'requestimport-header-comment-withtimestamp',
 					$comment['user']->getName(),
 					$this->context->getLanguage()->timeanddate( $comment['timestamp'], true ),
 				],
@@ -122,19 +122,19 @@ class RequestFormBuilder {
 				'comment' => [
 					'type' => 'textarea',
 					'rows' => 6,
-					'label-message' => 'importdump-label-comment',
+					'label-message' => 'requestimport-label-comment',
 					'section' => 'comments',
 					'validation-callback' => [ $this, 'isValidComment' ],
 					'disabled' => $this->requestManager->isLocked(),
 				],
 				'submit-comment' => [
 					'type' => 'submit',
-					'buttonlabel-message' => 'importdump-label-add-comment',
+					'buttonlabel-message' => 'requestimport-label-add-comment',
 					'disabled' => $this->requestManager->isLocked(),
 					'section' => 'comments',
 				],
 				'edit-source' => [
-					'label-message' => 'importdump-label-source',
+					'label-message' => 'requestimport-label-source',
 					'type' => 'url',
 					'section' => 'editing',
 					'required' => true,
@@ -142,7 +142,7 @@ class RequestFormBuilder {
 					'disabled' => $this->requestManager->isLocked(),
 				],
 				'edit-target' => [
-					'label-message' => 'importdump-label-target',
+					'label-message' => 'requestimport-label-target',
 					'type' => 'text',
 					'section' => 'editing',
 					'required' => true,
@@ -153,7 +153,7 @@ class RequestFormBuilder {
 				'edit-reason' => [
 					'type' => 'textarea',
 					'rows' => 6,
-					'label-message' => 'importdump-label-reason',
+					'label-message' => 'requestimport-label-reason',
 					'section' => 'editing',
 					'required' => true,
 					'default' => $this->requestManager->getReason(),
@@ -168,8 +168,8 @@ class RequestFormBuilder {
 				$formDescriptor += [
 					'edit-skip-dupes' => [
 						'type' => 'check',
-						'label-message' => 'importdump-label-skip-dupes',
-						'help-message' => 'importdump-help-skip-dupes',
+						'label-message' => 'requestimport-label-skip-dupes',
+						'help-message' => 'requestimport-help-skip-dupes',
 						'section' => 'editing',
 						'default' => $this->requestManager->shouldSkipDupes(),
 						'disabled' => $this->requestManager->isLocked() ||
@@ -181,7 +181,7 @@ class RequestFormBuilder {
 			$formDescriptor += [
 				'submit-edit' => [
 					'type' => 'submit',
-					'buttonlabel-message' => 'importdump-label-edit-request',
+					'buttonlabel-message' => 'requestimport-label-edit-request',
 					'disabled' => $this->requestManager->isLocked(),
 					'section' => 'editing',
 				],
@@ -205,7 +205,7 @@ class RequestFormBuilder {
 				],
 				'handle-lock' => [
 					'type' => 'check',
-					'label-message' => 'importdump-label-lock',
+					'label-message' => 'requestimport-label-lock',
 					'default' => $this->requestManager->isLocked(),
 					'section' => 'handling',
 				],
@@ -215,7 +215,7 @@ class RequestFormBuilder {
 				$formDescriptor += [
 					'handle-private' => [
 						'type' => 'check',
-						'label-message' => 'importdump-label-private',
+						'label-message' => 'requestimport-label-private',
 						'default' => $this->requestManager->isPrivate(),
 						'disabled' => $this->requestManager->isTargetPrivate(),
 						'section' => 'handling',
@@ -227,8 +227,8 @@ class RequestFormBuilder {
 				$formDescriptor += [
 					'handle-overwrite' => [
 						'type' => 'check',
-						'label-message' => 'importdump-label-overwrite',
-						'help-message' => 'importdump-help-overwrite',
+						'label-message' => 'requestimport-label-overwrite',
+						'help-message' => 'requestimport-help-overwrite',
 						'default' => $this->requestManager->shouldOverwrite(),
 						'disabled' => $status === RequestStatus::Complete || $status->isRunning(),
 						'section' => 'handling',
@@ -240,12 +240,12 @@ class RequestFormBuilder {
 				$formDescriptor += [
 					'handle-status' => [
 						'type' => 'select',
-						'label-message' => 'importdump-label-update-status',
+						'label-message' => 'requestimport-label-update-status',
 						'options-messages' => array_unique( [
 							$status->getLabelKey() => $status->value,
-							'importdump-label-pending' => RequestStatus::Pending->value,
-							'importdump-label-inprogress' => RequestStatus::InProgress->value,
-							'importdump-label-complete' => RequestStatus::Complete->value,
+							'requestimport-label-pending' => RequestStatus::Pending->value,
+							'requestimport-label-inprogress' => RequestStatus::InProgress->value,
+							'requestimport-label-complete' => RequestStatus::Complete->value,
 						] ),
 						'default' => $status->value,
 						'disabled' => !$validRequest,
@@ -272,12 +272,12 @@ class RequestFormBuilder {
 				$formDescriptor += [
 					'handle-interwiki-info' => [
 						'type' => 'info',
-						'default' => $this->context->msg( 'importdump-info-interwiki', $target )->text(),
+						'default' => $this->context->msg( 'requestimport-info-interwiki', $target )->text(),
 						'section' => 'handling',
 					],
 					'handle-interwiki-prefix' => [
 						'type' => 'text',
-						'label-message' => 'importdump-label-interwiki-prefix',
+						'label-message' => 'requestimport-label-interwiki-prefix',
 						'default' => '',
 						'validation-callback' => [ $this, 'isValidInterwikiPrefix' ],
 						'section' => 'handling',
@@ -285,7 +285,7 @@ class RequestFormBuilder {
 					'handle-interwiki-url' => [
 						'type' => 'url',
 						'label-message' => [
-							'importdump-label-interwiki-url',
+							'requestimport-label-interwiki-url',
 							( parse_url( $source, PHP_URL_SCHEME ) ?: 'https' ) . '://' .
 							( parse_url( $source, PHP_URL_HOST ) ?: 'www.example.com' ) .
 							'/wiki/$1',
@@ -313,21 +313,21 @@ class RequestFormBuilder {
 					'handle-comment' => [
 						'type' => 'textarea',
 						'rows' => 6,
-						'label-message' => 'importdump-label-status-updated-comment',
+						'label-message' => 'requestimport-label-status-updated-comment',
 						'section' => 'handling',
 					],
 					'submit-start' => [
 						'type' => 'submit',
 						'buttonlabel-message' => $this->requestManager->hasImported() ?
-							'importdump-label-resume-import' :
-							'importdump-label-start-import',
+							'requestimport-label-resume-import' :
+							'requestimport-label-start-import',
 						'disabled' => !$validRequest || !$validStatus,
 						'section' => 'handling',
 					],
 					'submit-decline' => [
 						'type' => 'submit',
 						'flags' => [ 'destructive', 'primary' ],
-						'buttonlabel-message' => 'importdump-label-decline-import',
+						'buttonlabel-message' => 'requestimport-label-decline-import',
 						'disabled' => !$validStatus || $status === RequestStatus::Declined,
 						'section' => 'handling',
 					],
@@ -336,12 +336,12 @@ class RequestFormBuilder {
 				$formDescriptor += [
 					'handle-status' => [
 						'type' => 'select',
-						'label-message' => 'importdump-label-update-status',
+						'label-message' => 'requestimport-label-update-status',
 						'options-messages' => [
-							'importdump-label-pending' => RequestStatus::Pending->value,
-							'importdump-label-inprogress' => RequestStatus::InProgress->value,
-							'importdump-label-complete' => RequestStatus::Complete->value,
-							'importdump-label-declined' => RequestStatus::Declined->value,
+							'requestimport-label-pending' => RequestStatus::Pending->value,
+							'requestimport-label-inprogress' => RequestStatus::InProgress->value,
+							'requestimport-label-complete' => RequestStatus::Complete->value,
+							'requestimport-label-declined' => RequestStatus::Declined->value,
 						],
 						'default' => $status->value,
 						'disabled' => !$validRequest,
@@ -351,7 +351,7 @@ class RequestFormBuilder {
 					'handle-comment' => [
 						'type' => 'textarea',
 						'rows' => 6,
-						'label-message' => 'importdump-label-status-updated-comment',
+						'label-message' => 'requestimport-label-status-updated-comment',
 						'section' => 'handling',
 					],
 					'submit-handle' => [
@@ -370,7 +370,7 @@ class RequestFormBuilder {
 				$formDescriptor += [
 					'submit-recheck' => [
 						'type' => 'submit',
-						'buttonlabel-message' => 'importdump-label-recheck-skipped',
+						'buttonlabel-message' => 'requestimport-label-recheck-skipped',
 						'section' => 'handling',
 					],
 				];
@@ -380,7 +380,7 @@ class RequestFormBuilder {
 				$formDescriptor += [
 					'submit-verify' => [
 						'type' => 'submit',
-						'buttonlabel-message' => 'importdump-label-retry-verification',
+						'buttonlabel-message' => 'requestimport-label-retry-verification',
 						'section' => 'handling',
 					],
 				];
@@ -420,7 +420,7 @@ class RequestFormBuilder {
 
 		return [
 			'stage' => [
-				'label-message' => 'importdump-label-stage',
+				'label-message' => 'requestimport-label-stage',
 				'type' => 'text',
 				'readonly' => true,
 				'section' => 'details',
@@ -439,7 +439,7 @@ class RequestFormBuilder {
 
 	public function isValidDatabase( ?string $target ): Message|true {
 		if ( !in_array( $target, $this->config->get( MainConfigNames::LocalDatabases ), true ) ) {
-			return $this->context->msg( 'importdump-invalid-target' );
+			return $this->context->msg( 'requestimport-invalid-target' );
 		}
 
 		return true;
@@ -474,7 +474,7 @@ class RequestFormBuilder {
 			!parse_url( $url, PHP_URL_SCHEME ) ||
 			!parse_url( $url, PHP_URL_HOST )
 		) {
-			return $this->context->msg( 'importdump-invalid-interwiki-url' );
+			return $this->context->msg( 'requestimport-invalid-interwiki-url' );
 		}
 
 		return true;

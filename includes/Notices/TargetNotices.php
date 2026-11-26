@@ -40,7 +40,7 @@ final class TargetNotices implements NoticeProvider {
 		if ( !$requestManager->targetExists() ) {
 			return [ new RequestNotice(
 				severity: NoticeSeverity::Error,
-				html: $context->msg( 'importdump-info-target-missing', $requestManager->getTarget() )->escaped(),
+				html: $context->msg( 'requestimport-info-target-missing', $requestManager->getTarget() )->escaped(),
 				invalidates: true,
 				declines: true,
 				pinned: false,
@@ -49,7 +49,7 @@ final class TargetNotices implements NoticeProvider {
 
 		$notices = [ new RequestNotice(
 			severity: NoticeSeverity::Notice,
-			html: $context->msg( 'importdump-info-groups',
+			html: $context->msg( 'requestimport-info-groups',
 				$requestManager->getRequester()->getName(),
 				$requestManager->getTarget(),
 				$context->getLanguage()->commaList( $requestManager->getUserGroupsFromTarget() )
@@ -62,7 +62,7 @@ final class TargetNotices implements NoticeProvider {
 		if ( $requestManager->getType() !== RequestType::Images && !$requestManager->getInterwikiPrefix() ) {
 			$notices[] = new RequestNotice(
 				severity: NoticeSeverity::Error,
-				html: $context->msg( 'importdump-info-no-interwiki-prefix',
+				html: $context->msg( 'requestimport-info-no-interwiki-prefix',
 					$requestManager->getTarget(),
 					parse_url( $requestManager->getSource(), PHP_URL_HOST )
 				)->escaped(),
