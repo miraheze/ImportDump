@@ -48,7 +48,7 @@
 	"logentry-requestimportprivate-started": "$1 {{GENDER:$2|started}} an import for private wiki $4 in $5.",
 	"logentry-requestimportprivate-statusupdate": "$1 {{GENDER:$2|updated}} status of private import request $4 to '$5'.",
 	"requestimport": "Request import",
-	"requestimport-apierror-chunking-disabled": "Chunked uploads are not enabled for ImportDump on this wiki.",
+	"requestimport-apierror-chunking-disabled": "Chunked uploads are not enabled for RequestImport on this wiki.",
 	"requestimport-apierror-type-mismatch": "This type of file cannot be added to the upload in progress.",
 	"requestimport-archive-binary-unavailable": "This kind of archive cannot be read because the server is not set up for it.",
 	"requestimport-archive-bzip2-unavailable": "BZIP2 files cannot be read because this server does not support them.",
