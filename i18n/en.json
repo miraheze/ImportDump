@@ -62,7 +62,7 @@
 	"requestimport-archive-unsafe": "The archive contains an entry that is not accepted. Encrypted files, links, special files and unusual names are not allowed.",
 	"requestimport-button-copy": "(Copy to Clipboard)",
 	"requestimport-chunkedupload-error": "The file could not be uploaded: $1",
-	"requestimport-chunkedupload-progress": "Uploading file in parts. Please keep this page open.",
+	"requestimport-chunkedupload-progress": "Uploading file. Please keep this page open.",
 	"requestimport-comment-success": "Comment successfully added to this request.",
 	"requestimport-desc": "An extension designed to automate user import requests.",
 	"requestimport-duplicate-comment": "Unable to resubmit the same comment as your previous request.",
