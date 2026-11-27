@@ -9,7 +9,7 @@ use MediaWiki\JobQueue\JobSpecification;
 use MediaWiki\Maintenance\Maintenance;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
+use Miraheze\ImportDump\Jobs\NotifyRequestJob;
 use Miraheze\ImportDump\Progress\ImportHeartbeat;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
@@ -100,7 +100,7 @@ class FailStalledImports extends Maintenance {
 
 				$this->jobQueueGroupFactory->makeJobQueueGroup( $dbr->getDomainID() )->push(
 					new JobSpecification(
-						ImportDumpNotifyJob::JOB_NAME,
+						NotifyRequestJob::JOB_NAME,
 						[
 							'joberror' => "The import did not report progress for $hours hours.",
 							'requestid' => $lastId,

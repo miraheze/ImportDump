@@ -41,9 +41,9 @@ use function max;
  * Until then the request is 'verifying' and the file waits in the unverified directory, or
  * it is kept in the parts that it was uploaded in, which are joined here.
  */
-class VerifyDumpJob extends Job {
+class ProcessUploadJob extends Job {
 
-	public const string JOB_NAME = 'ImportDumpVerifyDump';
+	public const string JOB_NAME = 'ProcessUploadJob';
 
 	public const string STAGE_JOINING = 'joining';
 

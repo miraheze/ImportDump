@@ -23,7 +23,7 @@ use MediaWiki\User\UserIdentityValue;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\Jobs\VerifyDumpJob;
+use Miraheze\ImportDump\Jobs\ProcessUploadJob;
 use Miraheze\ImportDump\Notifications\AttentionNotifier;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\Request\RequestHistory;
@@ -1596,11 +1596,11 @@ class RequestManagerTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertNull( $manager->getVerificationProgress() );
 
-		$queue = $this->getServiceContainer()->getJobQueueGroup()->get( VerifyDumpJob::JOB_NAME );
+		$queue = $this->getServiceContainer()->getJobQueueGroup()->get( ProcessUploadJob::JOB_NAME );
 		$this->assertSame( 1, $queue->getSize() );
 
 		$job = $queue->pop();
-		$this->assertInstanceOf( VerifyDumpJob::class, $job );
+		$this->assertInstanceOf( ProcessUploadJob::class, $job );
 		$this->assertSame( 1, $job->getParams()['requestid'] );
 	}
 

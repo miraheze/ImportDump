@@ -27,9 +27,9 @@ use MediaWiki\User\UserIdentity;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
 use Miraheze\ImportDump\Hooks\HookRunner;
-use Miraheze\ImportDump\Jobs\ImportDumpJob;
 use Miraheze\ImportDump\Jobs\ImportImagesJob;
-use Miraheze\ImportDump\Jobs\VerifyDumpJob;
+use Miraheze\ImportDump\Jobs\ImportXmlJob;
+use Miraheze\ImportDump\Jobs\ProcessUploadJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\Progress\ImportOutput;
 use Miraheze\ImportDump\Progress\ImportProgress;
@@ -1515,7 +1515,7 @@ class RequestManager {
 	public function retryVerification(): void {
 		$this->verificationProgress->clear( $this->ID );
 		$this->jobQueueGroupFactory->makeJobQueueGroup()->push(
-			new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => $this->ID ] )
+			new JobSpecification( ProcessUploadJob::JOB_NAME, [ 'requestid' => $this->ID ] )
 		);
 	}
 
@@ -1529,7 +1529,7 @@ class RequestManager {
 		$this->dbw->onTransactionCommitOrIdle(
 			function () use ( $requestID ): void {
 				$this->jobQueueGroupFactory->makeJobQueueGroup()->push(
-					new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => $requestID ] )
+					new JobSpecification( ProcessUploadJob::JOB_NAME, [ 'requestid' => $requestID ] )
 				);
 			},
 			__METHOD__
@@ -1537,7 +1537,7 @@ class RequestManager {
 	}
 
 	public function executeJob( string $username ): void {
-		$jobName = $this->getType() === RequestType::Images ? ImportImagesJob::JOB_NAME : ImportDumpJob::JOB_NAME;
+		$jobName = $this->getType() === RequestType::Images ? ImportImagesJob::JOB_NAME : ImportXmlJob::JOB_NAME;
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getTarget() )->push(
 			new JobSpecification(
 				$jobName,

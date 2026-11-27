@@ -48,42 +48,6 @@
 		}
 	},
 	"JobClasses": {
-		"ImportDumpJob": {
-			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpJob",
-			"services": [
-				"ConnectionProvider",
-				"RequestImport.Config",
-				"RequestImport.Heartbeat",
-				"RequestImport.HookRunner",
-				"RequestImport.RequestManager",
-				"JobQueueGroupFactory",
-				"WikiImporterFactory"
-			],
-			"needsPage": false
-		},
-		"ImportDumpNotifyJob": {
-			"class": "Miraheze\\ImportDump\\Jobs\\ImportDumpNotifyJob",
-			"services": [
-				"RequestImport.Config",
-				"RequestImport.RequestManager",
-				"NotificationService",
-				"UserFactory"
-			],
-			"needsPage": false
-		},
-		"ImportDumpVerifyDump": {
-			"class": "Miraheze\\ImportDump\\Jobs\\VerifyDumpJob",
-			"services": [
-				"FormatterFactory",
-				"RequestImport.AttentionNotifier",
-				"RequestImport.DumpProcessor",
-				"RequestImport.ImageProcessor",
-				"RequestImport.RequestManager",
-				"UserFactory",
-				"RequestImport.VerificationProgress"
-			],
-			"needsPage": false
-		},
 		"ImportImagesJob": {
 			"class": "Miraheze\\ImportDump\\Jobs\\ImportImagesJob",
 			"services": [
@@ -96,8 +60,44 @@
 			],
 			"needsPage": false
 		},
-		"ImportOutputStoreJob": {
-			"class": "Miraheze\\ImportDump\\Jobs\\ImportOutputStoreJob",
+		"ImportXmlJob": {
+			"class": "Miraheze\\ImportDump\\Jobs\\ImportXmlJob",
+			"services": [
+				"ConnectionProvider",
+				"RequestImport.Config",
+				"RequestImport.Heartbeat",
+				"RequestImport.HookRunner",
+				"RequestImport.RequestManager",
+				"JobQueueGroupFactory",
+				"WikiImporterFactory"
+			],
+			"needsPage": false
+		},
+		"NotifyRequestJob": {
+			"class": "Miraheze\\ImportDump\\Jobs\\NotifyRequestJob",
+			"services": [
+				"RequestImport.Config",
+				"RequestImport.RequestManager",
+				"NotificationService",
+				"UserFactory"
+			],
+			"needsPage": false
+		},
+		"ProcessUploadJob": {
+			"class": "Miraheze\\ImportDump\\Jobs\\ProcessUploadJob",
+			"services": [
+				"FormatterFactory",
+				"RequestImport.AttentionNotifier",
+				"RequestImport.DumpProcessor",
+				"RequestImport.ImageProcessor",
+				"RequestImport.RequestManager",
+				"UserFactory",
+				"RequestImport.VerificationProgress"
+			],
+			"needsPage": false
+		},
+		"StoreImportOutputJob": {
+			"class": "Miraheze\\ImportDump\\Jobs\\StoreImportOutputJob",
 			"services": [
 				"RequestImport.RequestManager"
 			],

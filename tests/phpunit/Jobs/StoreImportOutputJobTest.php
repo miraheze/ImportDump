@@ -9,7 +9,7 @@ use MediaWiki\FileRepo\RepoGroup;
 use MediaWiki\MainConfigNames;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
-use Miraheze\ImportDump\Jobs\ImportOutputStoreJob;
+use Miraheze\ImportDump\Jobs\StoreImportOutputJob;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
 use Miraheze\ImportDump\Request\RequestType;
@@ -22,9 +22,9 @@ use Wikimedia\Timestamp\ConvertibleTimestamp;
  * @group ImportDump
  * @group Database
  * @group medium
- * @covers \Miraheze\ImportDump\Jobs\ImportOutputStoreJob
+ * @covers \Miraheze\ImportDump\Jobs\StoreImportOutputJob
  */
-class ImportOutputStoreJobTest extends MediaWikiIntegrationTestCase {
+class StoreImportOutputJobTest extends MediaWikiIntegrationTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -75,14 +75,14 @@ class ImportOutputStoreJobTest extends MediaWikiIntegrationTestCase {
 		return $manager;
 	}
 
-	private function newJob( int $requestID, int $part, string $text ): ImportOutputStoreJob {
-		$job = $this->getServiceContainer()->getJobFactory()->newJob( ImportOutputStoreJob::JOB_NAME, [
+	private function newJob( int $requestID, int $part, string $text ): StoreImportOutputJob {
+		$job = $this->getServiceContainer()->getJobFactory()->newJob( StoreImportOutputJob::JOB_NAME, [
 			'part' => $part,
 			'requestid' => $requestID,
 			'text' => $text,
 		] );
 
-		$this->assertInstanceOf( ImportOutputStoreJob::class, $job );
+		$this->assertInstanceOf( StoreImportOutputJob::class, $job );
 		return $job;
 	}
 
@@ -122,7 +122,7 @@ class ImportOutputStoreJobTest extends MediaWikiIntegrationTestCase {
 		$this->assertTrue( $this->newJob( $id, 0, 'a' )->run() );
 		$this->assertTrue( $this->newJob( $id, 1, 'b' )->run() );
 
-		$job = $this->getServiceContainer()->getJobFactory()->newJob( ImportOutputStoreJob::JOB_NAME, [
+		$job = $this->getServiceContainer()->getJobFactory()->newJob( StoreImportOutputJob::JOB_NAME, [
 			'requestid' => $id,
 			'reset' => true,
 		] );

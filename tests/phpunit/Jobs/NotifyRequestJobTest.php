@@ -12,7 +12,7 @@ use MediaWiki\User\UserIdentity;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
+use Miraheze\ImportDump\Jobs\NotifyRequestJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
@@ -24,9 +24,9 @@ use function array_map;
  * @group ImportDump
  * @group Database
  * @group medium
- * @covers \Miraheze\ImportDump\Jobs\ImportDumpNotifyJob
+ * @covers \Miraheze\ImportDump\Jobs\NotifyRequestJob
  */
-class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase {
+class NotifyRequestJobTest extends MediaWikiIntegrationTestCase {
 
 	use IsolatesManageWikiTrait;
 
@@ -77,14 +77,14 @@ class ImportDumpNotifyJobTest extends MediaWikiIntegrationTestCase {
 	}
 
 	private function runJob( int $requestID, RequestStatus $status, string $error, string $username ): void {
-		$job = $this->getServiceContainer()->getJobFactory()->newJob( ImportDumpNotifyJob::JOB_NAME, [
+		$job = $this->getServiceContainer()->getJobFactory()->newJob( NotifyRequestJob::JOB_NAME, [
 			'requestid' => $requestID,
 			'username' => $username,
 			'status' => $status->value,
 			'joberror' => $error,
 		] );
 
-		$this->assertInstanceOf( ImportDumpNotifyJob::class, $job );
+		$this->assertInstanceOf( NotifyRequestJob::class, $job );
 		$this->assertTrue( $job->run() );
 	}
 

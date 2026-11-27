@@ -308,7 +308,7 @@ class ImportImagesJob extends Job {
 		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $dbr->getDomainID() )->push(
 			new JobSpecification(
-				ImportOutputStoreJob::JOB_NAME,
+				StoreImportOutputJob::JOB_NAME,
 				[ 'requestid' => $this->requestID ] + $params
 			)
 		);
@@ -348,7 +348,7 @@ class ImportImagesJob extends Job {
 		$dbr = $this->connectionProvider->getReplicaDatabase( RequestManager::VIRTUAL_DOMAIN );
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $dbr->getDomainID() )->push(
 			new JobSpecification(
-				ImportDumpNotifyJob::JOB_NAME,
+				NotifyRequestJob::JOB_NAME,
 				[
 					'joberror' => $error,
 					'requestid' => $this->requestID,

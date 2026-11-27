@@ -23,9 +23,9 @@ use function array_map;
 use function array_values;
 use function mb_strtolower;
 
-class ImportDumpNotifyJob extends Job {
+class NotifyRequestJob extends Job {
 
-	public const string JOB_NAME = 'ImportDumpNotifyJob';
+	public const string JOB_NAME = 'NotifyRequestJob';
 
 	private readonly MessageLocalizer $messageLocalizer;
 

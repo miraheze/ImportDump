@@ -8,7 +8,7 @@ use MediaWiki\MainConfigNames;
 use MediaWiki\Tests\Maintenance\MaintenanceBaseTestCase;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
+use Miraheze\ImportDump\Jobs\NotifyRequestJob;
 use Miraheze\ImportDump\Maintenance\FailStalledImports;
 use Miraheze\ImportDump\Progress\ImportHeartbeat;
 use Miraheze\ImportDump\Request\RequestManager;
@@ -89,7 +89,7 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase {
 		$this->maintenance->execute();
 
 		$this->assertSame( 1, $this->getServiceContainer()->getJobQueueGroup()
-			->get( ImportDumpNotifyJob::JOB_NAME )->getSize() );
+			->get( NotifyRequestJob::JOB_NAME )->getSize() );
 
 		$this->assertSame( RequestStatus::InProgress, $this->getRequestManager( $alive )->getStatus() );
 		$this->assertSame( RequestStatus::InProgress, $this->getRequestManager( $recent )->getStatus() );
@@ -103,7 +103,7 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase {
 		$this->expectOutputRegex( '/Marked 1 import\(s\)/' );
 		$this->maintenance->execute();
 
-		$queue = $this->getServiceContainer()->getJobQueueGroup()->get( ImportDumpNotifyJob::JOB_NAME );
+		$queue = $this->getServiceContainer()->getJobQueueGroup()->get( NotifyRequestJob::JOB_NAME );
 		$job = $queue->pop();
 		$this->assertSame( RequestStatus::Partial->value, $job->getParams()['status'] );
 	}
@@ -117,7 +117,7 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase {
 		$this->maintenance->execute();
 
 		$this->assertSame( 0, $this->getServiceContainer()->getJobQueueGroup()
-			->get( ImportDumpNotifyJob::JOB_NAME )->getSize() );
+			->get( NotifyRequestJob::JOB_NAME )->getSize() );
 	}
 
 	public function testBatchSize(): void {
@@ -142,6 +142,6 @@ class FailStalledImportsTest extends MaintenanceBaseTestCase {
 		$this->maintenance->execute();
 
 		$this->assertSame( 0, $this->getServiceContainer()->getJobQueueGroup()
-			->get( ImportDumpNotifyJob::JOB_NAME )->getSize() );
+			->get( NotifyRequestJob::JOB_NAME )->getSize() );
 	}
 }
