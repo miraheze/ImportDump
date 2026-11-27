@@ -13,7 +13,7 @@ use MediaWiki\Upload\UploadStash;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\Jobs\VerifyDumpJob;
+use Miraheze\ImportDump\Jobs\ProcessUploadJob;
 use Miraheze\ImportDump\Request\RequestHistory;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
@@ -40,9 +40,9 @@ use function substr_count;
  * @group ImportDump
  * @group Database
  * @group medium
- * @covers \Miraheze\ImportDump\Jobs\VerifyDumpJob
+ * @covers \Miraheze\ImportDump\Jobs\ProcessUploadJob
  */
-class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
+class ProcessUploadJobTest extends MediaWikiIntegrationTestCase {
 
 	use IsolatesManageWikiTrait;
 
@@ -136,7 +136,7 @@ class VerifyDumpJobTest extends MediaWikiIntegrationTestCase {
 
 	private function runJob( RequestManager $manager ): void {
 		$services = $this->getServiceContainer();
-		$job = new VerifyDumpJob(
+		$job = new ProcessUploadJob(
 			[ 'requestid' => $manager->getID() ],
 			$services->getFormatterFactory(),
 			$services->getService( 'RequestImport.AttentionNotifier' ),

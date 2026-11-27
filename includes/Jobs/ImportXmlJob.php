@@ -53,9 +53,9 @@ use const E_PARSE;
 use const E_RECOVERABLE_ERROR;
 use const E_USER_ERROR;
 
-class ImportDumpJob extends Job {
+class ImportXmlJob extends Job {
 
-	public const string JOB_NAME = 'ImportDumpJob';
+	public const string JOB_NAME = 'ImportXmlJob';
 
 	private const int HEARTBEAT_INTERVAL = 60;
 	private const int MEMORY_RESERVE = 2097152;
@@ -414,7 +414,7 @@ class ImportDumpJob extends Job {
 	private function queueNotification( RequestStatus $status, string $error ): void {
 		$this->jobQueueGroupFactory->makeJobQueueGroup( $this->getLoggingWiki() )->push(
 			new JobSpecification(
-				ImportDumpNotifyJob::JOB_NAME,
+				NotifyRequestJob::JOB_NAME,
 				[
 					'joberror' => $error,
 					'requestid' => $this->requestID,

@@ -8,8 +8,8 @@ use MediaWiki\MainConfigNames;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\Jobs\ImportDumpJob;
-use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
+use Miraheze\ImportDump\Jobs\ImportXmlJob;
+use Miraheze\ImportDump\Jobs\NotifyRequestJob;
 use Miraheze\ImportDump\Progress\ImportHeartbeat;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStage;
@@ -30,9 +30,9 @@ use function wfTempDir;
  * @group ImportDump
  * @group Database
  * @group medium
- * @covers \Miraheze\ImportDump\Jobs\ImportDumpJob
+ * @covers \Miraheze\ImportDump\Jobs\ImportXmlJob
  */
-class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
+class ImportXmlJobTest extends MediaWikiIntegrationTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -66,13 +66,13 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 		return $dbw->insertId();
 	}
 
-	private function newJob( int $requestID ): ImportDumpJob {
-		$job = $this->getServiceContainer()->getJobFactory()->newJob( ImportDumpJob::JOB_NAME, [
+	private function newJob( int $requestID ): ImportXmlJob {
+		$job = $this->getServiceContainer()->getJobFactory()->newJob( ImportXmlJob::JOB_NAME, [
 			'requestid' => $requestID,
 			'username' => $this->getTestUser()->getUser()->getName(),
 		] );
 
-		$this->assertInstanceOf( ImportDumpJob::class, $job );
+		$this->assertInstanceOf( ImportXmlJob::class, $job );
 		return $job;
 	}
 
@@ -94,7 +94,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 	 */
 	private function popNotifications(): array {
 		$queue = $this->getServiceContainer()->getJobQueueGroup()
-			->get( ImportDumpNotifyJob::JOB_NAME );
+			->get( NotifyRequestJob::JOB_NAME );
 
 		$notifications = [];
 		for ( $job = $queue->pop(); $job; $job = $queue->pop() ) {
@@ -235,7 +235,7 @@ class ImportDumpJobTest extends MediaWikiIntegrationTestCase {
 		$config = $services->getService( 'RequestImport.Config' );
 		$heartbeat = $services->getService( 'RequestImport.Heartbeat' );
 		$hookRunner = $services->getService( 'RequestImport.HookRunner' );
-		$job = new ImportDumpJob(
+		$job = new ImportXmlJob(
 			[ 'requestid' => $id, 'username' => $this->getTestUser()->getUser()->getName() ],
 			$provider,
 			$config,

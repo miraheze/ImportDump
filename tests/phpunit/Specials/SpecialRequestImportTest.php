@@ -23,7 +23,7 @@ use MediaWiki\User\UserIdentity;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\Api\ApiRequestImportUpload;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\Jobs\VerifyDumpJob;
+use Miraheze\ImportDump\Jobs\ProcessUploadJob;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
@@ -307,7 +307,7 @@ class SpecialRequestImportTest extends SpecialPageTestBase {
 		$this->assertSame( $expectedStatus->value, $row->request_status );
 		$this->assertNull( $row->request_history );
 
-		$queued = $this->getServiceContainer()->getJobQueueGroup()->get( VerifyDumpJob::JOB_NAME )->getSize();
+		$queued = $this->getServiceContainer()->getJobQueueGroup()->get( ProcessUploadJob::JOB_NAME )->getSize();
 		$this->assertSame( $expectedStatus === RequestStatus::Verifying ? 1 : 0, $queued );
 	}
 

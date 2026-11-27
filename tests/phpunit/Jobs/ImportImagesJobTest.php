@@ -10,9 +10,9 @@ use MediaWiki\MainConfigNames;
 use MediaWiki\WikiMap\WikiMap;
 use MediaWikiIntegrationTestCase;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\Jobs\ImportDumpNotifyJob;
 use Miraheze\ImportDump\Jobs\ImportImagesJob;
-use Miraheze\ImportDump\Jobs\ImportOutputStoreJob;
+use Miraheze\ImportDump\Jobs\NotifyRequestJob;
+use Miraheze\ImportDump\Jobs\StoreImportOutputJob;
 use Miraheze\ImportDump\Progress\ImportHeartbeat;
 use Miraheze\ImportDump\Request\RequestManager;
 use Miraheze\ImportDump\Request\RequestStatus;
@@ -141,7 +141,7 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 	/** @return array[] The params of every queued notification, in queue order. */
 	private function popNotifications(): array {
 		$queue = $this->getServiceContainer()->getJobQueueGroup()
-			->get( ImportDumpNotifyJob::JOB_NAME );
+			->get( NotifyRequestJob::JOB_NAME );
 
 		$notifications = [];
 		for ( $job = $queue->pop(); $job; $job = $queue->pop() ) {
@@ -154,7 +154,7 @@ class ImportImagesJobTest extends MediaWikiIntegrationTestCase {
 	/** @return array[] The params of every queued job that stores output, in queue order. */
 	private function popStoredOutput(): array {
 		$queue = $this->getServiceContainer()->getJobQueueGroup()
-			->get( ImportOutputStoreJob::JOB_NAME );
+			->get( StoreImportOutputJob::JOB_NAME );
 
 		$stored = [];
 		for ( $job = $queue->pop(); $job; $job = $queue->pop() ) {

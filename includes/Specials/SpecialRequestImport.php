@@ -35,7 +35,7 @@ use MediaWiki\User\UserIdentity;
 use MediaWiki\WikiMap\WikiMap;
 use Miraheze\ImportDump\Api\ApiRequestImportUpload;
 use Miraheze\ImportDump\ConfigNames;
-use Miraheze\ImportDump\Jobs\VerifyDumpJob;
+use Miraheze\ImportDump\Jobs\ProcessUploadJob;
 use Miraheze\ImportDump\Notifications\AttentionNotifier;
 use Miraheze\ImportDump\Notifications\RequestNotification;
 use Miraheze\ImportDump\Request\RequestManager;
@@ -659,7 +659,7 @@ class SpecialRequestImport extends FormSpecialPage {
 		$dbw->onTransactionCommitOrIdle(
 			function () use ( $requestID ): void {
 				$this->jobQueueGroup->push(
-					new JobSpecification( VerifyDumpJob::JOB_NAME, [ 'requestid' => $requestID ] )
+					new JobSpecification( ProcessUploadJob::JOB_NAME, [ 'requestid' => $requestID ] )
 				);
 			},
 			__METHOD__

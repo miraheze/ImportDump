@@ -12,9 +12,9 @@ use Miraheze\ImportDump\Request\RequestManager;
  * It runs on the wiki that stores the requests, because the import itself runs on the wiki that is
  * imported to, which has other storage.
  */
-class ImportOutputStoreJob extends Job {
+class StoreImportOutputJob extends Job {
 
-	public const string JOB_NAME = 'ImportOutputStoreJob';
+	public const string JOB_NAME = 'StoreImportOutputJob';
 
 	public function __construct(
 		array $params,
